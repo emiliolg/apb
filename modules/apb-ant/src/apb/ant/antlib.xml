@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<!--
+    $Id$
+ -->
+<antlib xmlns:current="ant:current">
+    <taskdef name="apb"      classname="apb.ant.ApbTask"/>
+</antlib>
