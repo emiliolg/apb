@@ -13,22 +13,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-import apb.metadata.Module;
-import libraries.IdeaAnnotations;
-import libraries.Ant;
+package libraries;
 
-public final class ApbAnt
-    extends Module
+import apb.metadata.LocalLibrary;
+
+public class Junit3
+    extends LocalLibrary
 {
-    //~ Instance initializers ................................................................................
+    //~ Constructors .........................................................................................
 
+    private Junit3()
     {
-        description = "APB Ant Tasks";
-        dependencies(new Apb(), IdeaAnnotations.LIB, Ant.LIB);
-
-        pkg.dir = "../lib";
-        pkg.name = "ant-apb";
-        pkg.addClassPath = true;
-        compiler.lint = true;
+        super("../lib/junit3.jar");
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    public static final Junit3 LIB = new Junit3();
 }

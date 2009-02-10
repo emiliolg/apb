@@ -15,6 +15,8 @@
 
 
 import apb.metadata.Module;
+import libraries.IdeaAnnotations;
+import libraries.Junit3;
 
 public final class Apb
     extends Module
@@ -23,7 +25,7 @@ public final class Apb
 
     {
         description = "APB Project Builder";
-        dependencies(localLibrary("../lib/annotations.jar"), localLibrary("../lib/junit3.jar"));
+        dependencies(IdeaAnnotations.LIB, Junit3.LIB);
 
         pkg.mainClass = "apb.Main";
         pkg.dir = "../lib";

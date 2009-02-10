@@ -13,22 +13,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-import apb.metadata.Module;
-import libraries.IdeaAnnotations;
-import libraries.Ant;
+package libraries;
 
-public final class ApbAnt
-    extends Module
+import apb.metadata.LocalLibrary;
+
+public class Ant
+    extends LocalLibrary
 {
-    //~ Instance initializers ................................................................................
+    //~ Constructors .........................................................................................
 
+    private Ant()
     {
-        description = "APB Ant Tasks";
-        dependencies(new Apb(), IdeaAnnotations.LIB, Ant.LIB);
-
-        pkg.dir = "../lib";
-        pkg.name = "ant-apb";
-        pkg.addClassPath = true;
-        compiler.lint = true;
+        super("../lib/ant.jar");
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    public static final Ant LIB = new Ant();
 }
