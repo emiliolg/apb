@@ -48,9 +48,9 @@ public class DirectoryScanner
                             @NotNull List<String> excludes)
     {
         this.baseDir = baseDir;
-        this.includes = normalize(includes);
-        this.excludes = normalize(excludes);
-        this.excludes.addAll(normalize(DEFAULT_EXCLUDES));
+        this.includes = StringUtils.normalizePaths(includes);
+        this.excludes = StringUtils.normalizePaths(excludes);
+        this.excludes.addAll(StringUtils.normalizePaths(DEFAULT_EXCLUDES));
 
         if (!baseDir.exists()) {
             throw new IllegalStateException("baseDir " + baseDir + " does not exist");
@@ -112,30 +112,6 @@ public class DirectoryScanner
         }
 
         return false;
-    }
-
-    private static List<String> normalize(List<String> list)
-    {
-        List<String> patterns = new ArrayList<String>();
-
-        for (String include : list) {
-            String pattern = normalize(include);
-            patterns.add(pattern);
-        }
-
-        return patterns;
-    }
-
-    private static String normalize(String include)
-    {
-        // Normalize slashes
-        String pattern = include.trim().replace('/', File.separatorChar);
-
-        if (pattern.endsWith(File.separator)) {
-            pattern += "**";
-        }
-
-        return pattern;
     }
 
     private void scandir(File dir, String relativePath)

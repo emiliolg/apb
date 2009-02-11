@@ -224,10 +224,9 @@ public class FileUtils
     }
 
     public static File makeRelative(@NotNull File baseDir, @NotNull File file)
-        throws IOException
     {
-        List<String> base = getParts(baseDir.getCanonicalFile());
-        List<String> f = getParts(file.getCanonicalFile());
+        List<String> base = getParts(baseDir.getAbsoluteFile());
+        List<String> f = getParts(file.getAbsoluteFile());
         int          i = 0;
 
         while (i < base.size() && i < f.size()) {
@@ -249,6 +248,11 @@ public class FileUtils
         }
 
         return result;
+    }
+
+    public static String makeRelative(@NotNull File baseDir, @NotNull String filePath)
+    {
+        return makeRelative(baseDir, new File(filePath)).getPath();
     }
 
     public static List<String> getParts(final File file)

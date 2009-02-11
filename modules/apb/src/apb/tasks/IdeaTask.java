@@ -295,18 +295,11 @@ public class IdeaTask
 
     private void addModuleToProject(Element modulesElement, ModuleHelper module)
     {
-        File          modulePath = ideaFile(module, ".iml").getAbsoluteFile();
         final Element moduleElement = createElement(modulesElement, "module");
-        String        result;
 
-        try {
-            result = makeRelative(modulesHome, modulePath).getPath();
-        }
-        catch (IOException e) {
-            throw new BuildException(e);
-        }
+        String filePath = makeRelative(modulesHome, ideaFile(module, ".iml")).getPath();
 
-        moduleElement.setAttribute("filepath", "$PROJECT_DIR$/" + result);
+        moduleElement.setAttribute("filepath", "$PROJECT_DIR$/" + filePath);
     }
 
     private void setWildcardResourcePatterns(@NotNull Element content,
@@ -374,16 +367,7 @@ public class IdeaTask
 
     private String relativeUrl(@NotNull final String type, @NotNull File file)
     {
-        String result;
-
-        try {
-            result = makeRelative(modulesHome, file).getPath();
-        }
-        catch (IOException e) {
-            throw new BuildException(e);
-        }
-
-        return type + "://$MODULE_DIR$/" + result;
+        return type + "://$MODULE_DIR$/" + makeRelative(modulesHome, file).getPath();
     }
 
     private Element getElementByName(Element element, String name)

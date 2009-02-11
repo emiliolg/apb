@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.utils;
 
@@ -162,6 +165,14 @@ public class StringUtils
         return allStars(pattern, patternStart, patternEnd);
     }
 
+    public static void main(String[] args)
+    {
+        String  pattern = "/**/X.java";
+        String  str = "/A/B/C/X.java";
+        boolean match = matchPath(pattern, str, true);
+        System.out.println("match = " + match);
+    }
+
     public static String encode(String str)
     {
         final int           len = str.length();
@@ -299,6 +310,30 @@ public class StringUtils
         pw.flush();
         pw.close();
         return sw.toString();
+    }
+
+    public static String normalizePath(String include)
+    {
+        // Normalize slashes
+        String pattern = include.trim().replace('/', File.separatorChar);
+
+        if (pattern.endsWith(File.separator)) {
+            pattern += "**";
+        }
+
+        return pattern;
+    }
+
+    public static List<String> normalizePaths(List<String> list)
+    {
+        List<String> patterns = new ArrayList<String>();
+
+        for (String include : list) {
+            String pattern = normalizePath(include);
+            patterns.add(pattern);
+        }
+
+        return patterns;
     }
 
     private static boolean matchPathStart(List<String> patterns, List<String> paths, boolean caseSensitive)

@@ -119,12 +119,7 @@ public class ModuleHelper
         File jarFileDir = getPackageFile().getParentFile();
 
         for (File file : classPath(true, false)) {
-            try {
-                files.add(FileUtils.makeRelative(jarFileDir, file));
-            }
-            catch (IOException e) {
-                env.handle(e);
-            }
+            files.add(FileUtils.makeRelative(jarFileDir, file));
         }
 
         String result = FileUtils.makePath(files, " ");

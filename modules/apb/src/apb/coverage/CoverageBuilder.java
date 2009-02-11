@@ -33,6 +33,8 @@ import apb.TestModuleHelper;
 import apb.metadata.CoverageInfo;
 
 import apb.utils.FileUtils;
+import static apb.utils.FileUtils.makeRelative;
+import static apb.utils.FileUtils.listDirsWithFiles;
 
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -250,9 +252,9 @@ public class CoverageBuilder
                 ps.println("-" + p);
             }
 
-            for (File dir : apb.utils.FileUtils.listDirsWithFiles(testsDir, ".class")) {
+            for (File dir : listDirsWithFiles(testsDir, ".class")) {
                 ps.printf("-%s.*\n",
-                          apb.utils.FileUtils.makeRelative(testsDir, dir).getPath().replace(File.separatorChar,
+                          makeRelative(testsDir, dir).getPath().replace(File.separatorChar,
                                                                                             '.'));
             }
 

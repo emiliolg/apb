@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.tasks;
 
@@ -26,6 +29,7 @@ import java.util.Map;
 import apb.Environment;
 import apb.ModuleHelper;
 
+import apb.compiler.DiagnosticReporter;
 import apb.compiler.JavaC;
 
 import apb.metadata.CompileInfo;
@@ -35,6 +39,7 @@ import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
+
 //
 // User: emilio
 // Date: Oct 20, 2008
@@ -51,9 +56,11 @@ public class JavacTask
     private boolean                   debug;
     private boolean                   deprecated;
     private List<String>              excludes;
+    private boolean                   failOnWarning;
     private List<String>              includes;
     private boolean                   lint;
     private String                    lintOptions;
+    private DiagnosticReporter        reporter;
     private String                    source;
     @NotNull private final List<File> sourceDirs;
     private String                    target;
@@ -70,6 +77,7 @@ public class JavacTask
         classPath = new ArrayList<File>();
         includes = Collections.singletonList("**/*.java");
         excludes = Collections.emptyList();
+        reporter = new DiagnosticReporter(env);
     }
 
     //~ Methods ..............................................................................................
@@ -95,10 +103,18 @@ public class JavacTask
         javac.source = info.source;
         javac.target = info.target;
         javac.warn = info.warn;
+        javac.failOnWarning = info.failOnWarning;
         javac.annnotationOptions = info.annotationOptions();
         javac.lintOptions = info.lintOptions;
         javac.includes = info.includes();
         javac.excludes = info.excludes();
+
+        if (info.defaultErrorFormatter) {
+            javac.reporter = null;
+        }
+        else {
+            javac.reporter.setExcludes(info.warnExcludes());
+        }
 
         javac.execute();
     }
@@ -115,7 +131,7 @@ public class JavacTask
             env.logVerbose("Nothing to compile\n");
         }
         else {
-            env.logInfo("Compiling %3d file%s\n", files.size(), files.size() > 1 ? "s" : "");
+            env.logInfo("Compiling %3d file%s\n", files.size(), (files.size() > 1) ? "s" : "");
 
             if (env.isVerbose()) {
                 for (File file : FileUtils.removePrefix(sourceDirs, files)) {
@@ -138,6 +154,7 @@ public class JavacTask
             }
 
             classPath.add(0, targetDir);
+
             List<String> options = new ArrayList<String>();
 
             if (debug) {
@@ -161,6 +178,10 @@ public class JavacTask
                 options.add("-nowarn");
             }
 
+            if (reporter == null && failOnWarning) {
+                options.add("-Werror");
+            }
+
             if (!source.isEmpty()) {
                 options.add("-source " + source);
             }
@@ -173,7 +194,14 @@ public class JavacTask
                 options.add("-A" + entry.getKey() + "=" + entry.getValue());
             }
 
-            if (!jc.compile(files, sourceDirs, targetDir, FileUtils.makePath(classPath), options)) {
+            final boolean status =
+                jc.compile(files, sourceDirs, targetDir, FileUtils.makePath(classPath), options, reporter);
+
+            if (reporter != null) {
+                reporter.flush();
+                reporter.reportError(failOnWarning);
+            }
+            if (!status) {
                 env.handle("Compilation failed");
             }
         }
@@ -243,7 +271,7 @@ public class JavacTask
             else {
                 File classFile = new File(targetDir, FileUtils.changeExtension(file, ".class"));
 
-                if (!classFile.exists() || classFile.lastModified() < sourceFile.lastModified()) {
+                if (!classFile.exists() || (classFile.lastModified() < sourceFile.lastModified())) {
                     result.add(sourceFile);
                 }
             }

@@ -34,6 +34,7 @@ public final class Apb
         pkg.generateSourcesJar = true;
 
         compiler.lint = true;
+        compiler.failOnWarning = true;
 
         javadoc.deprecatedList = false;
         javadoc.links("http://java.sun.com/javase/6/docs/api");

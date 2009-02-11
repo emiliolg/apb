@@ -68,6 +68,11 @@ public class CompileInfo
     public boolean warn = true;
 
     /**
+     * Do not generate warnings for the following list of files
+     */
+    private final List<String> warnExcludes = new ArrayList<String>();
+
+    /**
      * Options to pass to the annotation processor
      */
     private final Map<String, String> annotationOptions = new HashMap<String, String>();
@@ -89,6 +94,18 @@ public class CompileInfo
      */
     private final List<String> includes = new ArrayList<String>(asList("**/*.java"));
 
+    /**
+     * Use of the default error formatting
+     * Warning ! This options is incompatible with warnExcludes and failOnWarnings
+     *
+     */
+    public boolean defaultErrorFormatter = false;
+
+    /**
+     * Fail on warnings
+     */
+    public boolean failOnWarning;
+
     //~ Methods ..............................................................................................
 
     public List<String> includes()
@@ -99,6 +116,11 @@ public class CompileInfo
     public List<String> excludes()
     {
         return excludes;
+    }
+
+    public List<String> warnExcludes()
+    {
+        return warnExcludes;
     }
 
     public List<LocalLibrary> extraLibraries()
@@ -122,6 +144,14 @@ public class CompileInfo
     public void excludes(String... patterns)
     {
         excludes.addAll(asList(patterns));
+    }
+    /**
+     * Method used to define the list of files to be excluded from warning generation
+     * @param patterns The list of patterns to be excluded
+     */
+    public void warnExcludes(String... patterns)
+    {
+        warnExcludes.addAll(asList(patterns));
     }
 
     /**
