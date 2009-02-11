@@ -1,0 +1,27 @@
+h1. APB - Project Build System Readme
+
+Welcome to APB!
+APB is a simple, yet powerfull, project build system that inherits some ideas from Ant and Maven while trying to avoid the use of complex XML files to define the metadata of the project. Project Definition is done in Java so you have the full power of Java plus the benefit of using your favorite IDE to edit the configuration files. Here are some of the features APB provides out-of-the-box:
+
+* Simple project definition based on default layouts, but with flexibility to accomodate your preferred one.
+* Model based builds: APB is able to build projects based on metadata about the project.
+* Full extensibility using Java
+* Dependency management
+* Full project lifecycle, including compilation, packaging and testing.
+* Coverage support during testing
+* Documentation generation
+* Generation of project files for common IDEs (Currently Intellij Idea)
+* Ant tasks to integrate APB projects into foreign contexts.
+* Command line invocation including shell-completion
+
+h2. Project Info
+
+* *Source*: "http://github.com/emiliolg/apb":http://github.com/emiliolg/apb
+* *Wiki*: "http://github.com/emiliolg/apb/wikis/home":http://github.com/emiliolg/apb/wikis/home
+
+h2. Installation
+
+h2. License
+
+Licensed under the Apache License, Version 2.0 (the "License");
+You may obtain a copy of the License at: "http://www.apache.org/licenses/LICENSE-2.0":http://www.apache.org/licenses/LICENSE-2.0
