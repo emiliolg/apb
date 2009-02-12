@@ -21,6 +21,48 @@ h2. Project Info
 
 h2. Installation
 
+Currently you can only get APB from source code. We'll be updating the installation instructions soon.
+
+h3. Building from source code
+
+APB requires at least Java 6.
+
+You should first get APB's source code from git:
+<pre>
+	<code>
+~> git clone git@github.com:emiliolg/apb.git
+	</code>
+</pre>
+
+Go to APB's directory and run @build.sh@
+<pre>
+	<code>
+~> cd apb
+~/apb> ./build.sh
+[Apb.resources]           Copying  3 resources
+[Apb.resources]           to /Users/juancn/apb/modules/apb/output/classes
+[Apb.compile]             Compiling  73 files
+[Apb.package]             Building: /Users/juancn/apb/lib/apb.jar
+[Apb.package]             Building: /Users/juancn/apb/lib/apb-src.jar
+[ApbAnt.resources]        Copying  1 resource
+[ApbAnt.resources]        to /Users/juancn/apb/modules/apb-ant/output/classes
+[ApbAnt.compile]          Compiling   2 files
+[ApbAnt.package]          Building: /Users/juancn/apb/lib/ant-apb.jar
+
+BUILD COMPLETED in 2448 milliseconds.
+	</code>
+</pre>
+
+You can now add the @bin@ directory to your @PATH@ environment variable and install the command line completion handler.
+Add the following to your @.profile@.
+<pre>
+	<code>
+export PATH="$PATH:~/apb/bin"
+. ~/apb/bin/completion/apb-complete.sh
+	</code>
+</pre>
+
+ 
 h2. License
 
 Licensed under the Apache License, Version 2.0 (the "License");
