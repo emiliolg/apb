@@ -16,9 +16,7 @@
 package apb.metadata;
 
 import apb.Environment;
-
 import apb.tasks.IdeaTask;
-
 import apb.utils.NameUtils;
 
 /**
@@ -50,6 +48,10 @@ public abstract class ProjectElement
      * The module version
      */
     @BuildProperty public String version = "";
+    /**
+     * The jdk version used for the module
+     */
+    @BuildProperty public String jdk = "1.6";
 
     //~ Methods ..............................................................................................
 

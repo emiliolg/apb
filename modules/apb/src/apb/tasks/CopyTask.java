@@ -15,6 +15,14 @@
 
 package apb.tasks;
 
+import apb.Environment;
+import apb.ModuleHelper;
+import apb.metadata.ResourcesInfo;
+import apb.utils.DirectoryScanner;
+import apb.utils.FileUtils;
+import static apb.utils.StringUtils.isEmpty;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,18 +33,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import apb.Environment;
-import apb.ModuleHelper;
-
-import apb.metadata.ResourcesInfo;
-
-import apb.utils.DirectoryScanner;
-import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NotNull;
-
-import static apb.utils.StringUtils.isEmpty;
 //
 // User: emilio
 // Date: Oct 1, 2008
@@ -90,7 +86,7 @@ public class CopyTask
         ModuleHelper  helper = env.getModuleHelper();
         ResourcesInfo resources = helper.getResourcesInfo();
 
-        CopyTask copy = new CopyTask(env, env.fileFromBase(resources.dir), helper.getOutput());
+        CopyTask copy = new CopyTask(env, env.fileFromBase(resources.dir), env.fileFromBase(resources.output));
 
         if (!isEmpty(resources.encoding)) {
             copy.setEncoding(resources.encoding);

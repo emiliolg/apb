@@ -15,19 +15,17 @@
 
 package apb.metadata;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import apb.Environment;
 import apb.ModuleHelper;
-
 import apb.tasks.CopyTask;
 import apb.tasks.JarTask;
 import apb.tasks.JavacTask;
 import apb.tasks.JavadocTask;
 import apb.tasks.RemoveTask;
 
+import java.util.ArrayList;
 import static java.util.Arrays.asList;
+import java.util.List;
 
 /**
  * This class defines a Module for the building system
@@ -47,7 +45,7 @@ import static java.util.Arrays.asList;
  *                    +-- src    --   <-- Sources here
  *                    +-- gsrc   --   <-- Generated Sources here
  *                    .
- *                    +-- output +-- classes --   <-- Compiled classes here
+ *                    +-- output +-- classes --   <-- Compiled classes and resources here
  *                               +-- javadoc --   <-- javadoc here
  *        +--- module2/
  *        .

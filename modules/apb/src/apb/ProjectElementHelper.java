@@ -15,19 +15,18 @@
 
 package apb;
 
+import apb.metadata.Module;
+import apb.metadata.Project;
+import apb.metadata.ProjectElement;
+import apb.metadata.TestModule;
+import apb.utils.IdentitySet;
+import apb.utils.NameUtils;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import apb.metadata.Module;
-import apb.metadata.Project;
-import apb.metadata.ProjectElement;
-import apb.metadata.TestModule;
-
-import apb.utils.IdentitySet;
-import apb.utils.NameUtils;
 //
 // User: emilio
 // Date: Oct 10, 2008
@@ -43,7 +42,6 @@ public abstract class ProjectElementHelper
     private final List<ProjectElementHelper> allElements;
     private ProjectElement                   element;
     private Set<String>                      executedCommands;
-    private String                           jdkName;
     private boolean                          topLevel;
 
     //~ Constructors .........................................................................................
@@ -141,7 +139,7 @@ public abstract class ProjectElementHelper
 
     public String getJdkName()
     {
-        return jdkName;
+        return element.jdk;
     }
 
     public void build(String commandName)

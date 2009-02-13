@@ -30,9 +30,14 @@ public class ResourcesInfo
 
     /**
      * The directory for the resources.
-     * The defaul is the source directory for the module.
+     * The default is the source directory for the module.
      */
     @BuildProperty public String dir = "$source";
+    /**
+     * The target directory for the resources.
+     * The default is the output directory for the module.
+     */
+    @BuildProperty public String output = "$output";
 
     /**
      * The encoding used when filtering resources.

@@ -15,6 +15,17 @@
 
 package apb.tasks;
 
+import apb.BuildException;
+import apb.Environment;
+import apb.ModuleHelper;
+import apb.metadata.Dependency;
+import apb.metadata.Module;
+import apb.metadata.PackageInfo;
+import apb.metadata.PackageType;
+import apb.utils.DirectoryScanner;
+import apb.utils.FileUtils;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -36,20 +47,6 @@ import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import apb.BuildException;
-import apb.Environment;
-import apb.ModuleHelper;
-
-import apb.metadata.Dependency;
-import apb.metadata.Module;
-import apb.metadata.PackageInfo;
-import apb.metadata.PackageType;
-
-import apb.utils.DirectoryScanner;
-import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Sep 9, 2008
@@ -81,7 +78,7 @@ public class JarTask
         includes = Arrays.asList("**/**");
         manifest = new Manifest();
         manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
-        manifest.getMainAttributes().putValue("Created-By", "ELG");
+        manifest.getMainAttributes().putValue("Created-By", "APB");
     }
 
     //~ Methods ..............................................................................................
@@ -112,6 +109,7 @@ public class JarTask
                     }
                 }
             }
+
 
             jarTask.execute();
 
