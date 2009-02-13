@@ -18,6 +18,16 @@
 
 package apb.tasks;
 
+import apb.Environment;
+import apb.ModuleHelper;
+import apb.compiler.DiagnosticReporter;
+import apb.compiler.JavaC;
+import apb.metadata.CompileInfo;
+import apb.metadata.LocalLibrary;
+import apb.utils.DirectoryScanner;
+import apb.utils.FileUtils;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,20 +35,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import apb.Environment;
-import apb.ModuleHelper;
-
-import apb.compiler.DiagnosticReporter;
-import apb.compiler.JavaC;
-
-import apb.metadata.CompileInfo;
-import apb.metadata.LocalLibrary;
-
-import apb.utils.DirectoryScanner;
-import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NotNull;
 
 //
 // User: emilio
@@ -183,11 +179,13 @@ public class JavacTask
             }
 
             if (!source.isEmpty()) {
-                options.add("-source " + source);
+                options.add("-source");
+                options.add(source);
             }
 
             if (!target.isEmpty()) {
-                options.add("-target " + target);
+                options.add("-target");
+                options.add(target);
             }
 
             for (Map.Entry<String, String> entry : annnotationOptions.entrySet()) {
