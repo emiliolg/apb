@@ -93,7 +93,6 @@ public abstract class Environment
         // Read System Properties
         copyProperties(System.getProperties());
 
-        loadProjectPath();
     }
 
     //~ Methods ..............................................................................................
@@ -604,7 +603,7 @@ public abstract class Environment
         return clazz;
     }
 
-    private void loadProjectPath()
+    protected void loadProjectPath()
     {
         projectPath = new LinkedHashSet<File>();
 
@@ -622,7 +621,6 @@ public abstract class Environment
 
         for (String p : path.split(File.pathSeparator)) {
             File dir = new File(p);
-
             if (dir.isAbsolute() && (!dir.exists() || !dir.isDirectory())) {
                 logWarning(Messages.INV_PROJECT_DIR(dir));
             }

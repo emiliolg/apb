@@ -11,16 +11,30 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
-//
 
-import apb.metadata.Project;
 
-public class ApbAll
-    extends Project
-{
+import apb.metadata.Module;
+import libraries.IdeaAnnotations;
+import com.sun.tools.javac.resources.compiler;
+
+public final class ApbInstaller
+        extends DefaultModule {
     //~ Instance initializers ................................................................................
 
     {
-        components(new Apb(), new ApbAnt(), new ApbInstaller());
+        description = "APB Installer";
+
+        resources.dir = "../";
+        resources.includes("README.textile", //
+                           "lib/apb.jar", "lib/junit.jar", "lib/emma.jar", "lib/apb-src.jar", //
+                           "antlib/ant-apb.jar",
+                           "bin/completion/apb-complete.sh");
+        resources.output = "$output/apb-$version";
+
+        pkg.mainClass = "apb.installer.Main";
+        pkg.name = "apb-${version}-installer";
+        pkg.addClassPath = true;
+
+        compiler.source = "1.4";
     }
 }

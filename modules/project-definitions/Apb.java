@@ -19,7 +19,7 @@ import libraries.IdeaAnnotations;
 import libraries.Junit3;
 
 public final class Apb
-    extends Module
+    extends DefaultModule
 {
     //~ Instance initializers ................................................................................
 
@@ -28,13 +28,9 @@ public final class Apb
         dependencies(IdeaAnnotations.LIB, Junit3.LIB);
 
         pkg.mainClass = "apb.Main";
-        pkg.dir = "../lib";
         pkg.name = "apb";
         pkg.addClassPath = true;
         pkg.generateSourcesJar = true;
-
-        compiler.lint = true;
-        compiler.failOnWarning = true;
 
         javadoc.deprecatedList = false;
         javadoc.links("http://java.sun.com/javase/6/docs/api");

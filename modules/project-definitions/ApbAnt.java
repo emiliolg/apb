@@ -18,7 +18,7 @@ import libraries.IdeaAnnotations;
 import libraries.Ant;
 
 public final class ApbAnt
-    extends Module
+    extends DefaultModule
 {
     //~ Instance initializers ................................................................................
 
@@ -26,9 +26,8 @@ public final class ApbAnt
         description = "APB Ant Tasks";
         dependencies(new Apb(), IdeaAnnotations.LIB, Ant.LIB);
 
-        pkg.dir = "../lib";
         pkg.name = "ant-apb";
         pkg.addClassPath = true;
-        compiler.lint = true;
+        pkg.dir = "../antlib";
     }
 }

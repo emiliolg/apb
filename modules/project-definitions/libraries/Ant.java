@@ -24,7 +24,7 @@ public class Ant
 
     private Ant()
     {
-        super("../lib/ant.jar");
+        super("../antlib/ant.jar");
     }
 
     //~ Static fields/initializers ...........................................................................

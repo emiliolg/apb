@@ -40,6 +40,7 @@ public class StandaloneEnv
     {
         super();
         logger = createLogger(name);
+        loadProjectPath();
     }
 
     //~ Methods ..............................................................................................

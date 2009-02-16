@@ -64,7 +64,6 @@ public class FileUtils
         if (dir.exists()) {
             addDirsWithFiles(result, dir, ext);
         }
-
         return result;
     }
 
@@ -261,6 +260,10 @@ public class FileUtils
 
         for (File f = file; f != null; f = f.getParentFile()) {
             final String name = f.getName();
+            if ("..".equals(name))
+                f = f.getParentFile();
+            else
+            
             result.addFirst(name.isEmpty() ? "/" : name);
         }
 

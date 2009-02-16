@@ -24,7 +24,7 @@ public class Junit3
 
     private Junit3()
     {
-        super("../lib/junit3.jar");
+        super("../lib/junit.jar");
     }
 
     //~ Static fields/initializers ...........................................................................
