@@ -25,10 +25,12 @@ h2. Installation
 You can grab the installer from "here":http://cloud.github.com/downloads/emiliolg/apb/apb-0.9-installer.jar
 And then run it with _java - jar_.
 It supports 2 basic modes:
-* Simple extraction (Option _-x_): 
+* Simple extraction (Option *&#45;x*): 
 Extracts everything under a subdirectory of the current working directory.
 * Installation under specified _bin_ and _lib_ directories: 
-Just pass the _bin_ directory as an argument. you can also use the _--lib_ option to specify a directory where to copy all the jars. Additionally the _--ant_ option can be used to indicate a directory where to install the jar with the ant tasks for *apb*.
+Just pass the _bin_ directory as an argument.
+You can also use the *&#45;&#45;lib* option to specify a directory where to copy all the jars. 
+Additionally the *&#45;&#45;ant* option can be used to indicate a directory where to install the jar with the ant tasks for *apb*.
 
 h3. Building from source code
 
