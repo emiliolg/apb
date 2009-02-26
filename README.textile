@@ -39,7 +39,7 @@ APB requires at least Java 6.
 You should first get APB's source code from git:
 <pre>
 	<code>
-~> git clone git@github.com:emiliolg/apb.git
+~> git clone git://github.com/emiliolg/apb.git
 	</code>
 </pre>
 
