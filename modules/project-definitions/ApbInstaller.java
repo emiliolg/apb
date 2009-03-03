@@ -1,3 +1,5 @@
+
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -11,24 +13,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
 
 
-import apb.metadata.Module;
-import libraries.IdeaAnnotations;
-import com.sun.tools.javac.resources.compiler;
 
 public final class ApbInstaller
-        extends DefaultModule {
+    extends DefaultModule
+{
     //~ Instance initializers ................................................................................
 
     {
         description = "APB Installer";
 
         resources.dir = "../";
-        resources.includes("README.textile", //
-                           "lib/apb.jar", "lib/junit.jar", "lib/emma.jar", "lib/apb-src.jar", //
-                           "antlib/ant-apb.jar",
-                           "bin/completion/apb-complete.sh");
+        resources.includes("README.textile",  //
+                           "lib/apb.jar", "lib/junit.jar", "lib/emma.jar", "lib/apb-src.jar",  //
+                           "antlib/ant-apb.jar", "bin/completion/apb-complete.sh");
         resources.output = "$output/apb-$version";
 
         pkg.mainClass = "apb.installer.Main";

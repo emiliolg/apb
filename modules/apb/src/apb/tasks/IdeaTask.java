@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -33,27 +32,21 @@ import apb.BuildException;
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
-
 import apb.metadata.LocalLibrary;
 import apb.metadata.Module;
 import apb.metadata.PackageType;
 import apb.metadata.ProjectElement;
 import apb.metadata.TestModule;
-
 import apb.utils.FileUtils;
+import static apb.utils.FileUtils.makeRelative;
 import apb.utils.XmlUtils;
-
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
 import org.xml.sax.SAXException;
-
-import static apb.utils.FileUtils.makeRelative;
 //
 // User: emilio
 // Date: Oct 7, 2008
@@ -508,16 +501,26 @@ public class IdeaTask
         // Now libraries
 
         for (LocalLibrary l : module.getLocalLibraries()) {
-            File libraryFile = l.getFile(env);
+            addLibrary(l, component, modulesByUrl, unusedModules);
+        }
 
-            if (libraryFile != null) {
-                addLibrary(libraryFile, component, unusedModules, modulesByUrl, l.getSourcesFile(env));
-            }
+        // Extra Libraries
+
+        for (LocalLibrary l : module.getCompileInfo().extraLibraries()) {
+            addLibrary(l, component, modulesByUrl, unusedModules);
         }
 
         // Now remove unused modules
         for (Element e : unusedModules) {
             component.removeChild(e);
+        }
+    }
+
+    private void addLibrary(LocalLibrary library, Element component, Map<String, Element> modulesByUrl, Set<Element> unusedModules) {
+        File libraryFile = library.getFile(env);
+
+        if (libraryFile != null) {
+            addLibrary(libraryFile, component, unusedModules, modulesByUrl, library.getSourcesFile(env));
         }
     }
 
@@ -594,6 +597,10 @@ public class IdeaTask
     //    @NonNls private static final String LIBRARY_JAVADOC_TAG = "JAVADOC";
     @NonNls private static final String MODULE_ENTRY = "orderEntry";
     @NonNls private static final String SOURCE_FOLDER = "sourceFolder";
+
+    public static void execute(Environment env) {
+        new IdeaTask(env).execute();
+    }
 
     //~ Inner Classes ........................................................................................
 

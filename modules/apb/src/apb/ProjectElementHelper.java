@@ -227,4 +227,4 @@ public abstract class ProjectElementHelper
     {
         return !executedCommands.contains(commandName);
     }
-}
+    }

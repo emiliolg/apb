@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +13,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.metadata;
 
 import apb.Environment;
+
 import apb.tasks.IdeaTask;
+
 import apb.utils.NameUtils;
 
 /**
@@ -45,13 +50,14 @@ public abstract class ProjectElement
     @BuildProperty public String group = "";
 
     /**
-     * The module version
-     */
-    @BuildProperty public String version = "";
-    /**
      * The jdk version used for the module
      */
     @BuildProperty public String jdk = "1.6";
+
+    /**
+     * The module version
+     */
+    @BuildProperty public String version = "";
 
     //~ Methods ..............................................................................................
 
@@ -76,7 +82,7 @@ public abstract class ProjectElement
 
     @BuildTarget public void genIdea(Environment env)
     {
-        new IdeaTask(env).execute();
+        IdeaTask.execute(env);
     }
 
     public String getName()
