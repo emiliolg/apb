@@ -17,11 +17,20 @@ APB is a simple, yet powerfull, project build system that inherits some ideas fr
 h2. Project Info
 
 * *Source*: "http://github.com/emiliolg/apb":http://github.com/emiliolg/apb
-* *Wiki*: "http://github.com/emiliolg/apb/wikis/home":http://github.com/emiliolg/apb/wikis/home
+* *Wiki*:     "http://github.com/emiliolg/apb/wikis/home":http://github.com/emiliolg/apb/wikis/home
+* *Installer*: "Simple Installer":http://cloud.github.com/downloads/emiliolg/apb/apb-0.9-installer.jar
 
 h2. Installation
 
-Currently you can only get APB from source code. We'll be updating the installation instructions soon.
+You can grab the installer from "here":http://cloud.github.com/downloads/emiliolg/apb/apb-0.9-installer.jar
+And then run it with _java - jar_.
+It supports 2 basic modes:
+* Simple extraction (Option *&#45;x*): 
+Extracts everything under a subdirectory of the current working directory.
+* Installation under specified _bin_ and _lib_ directories: 
+Just pass the _bin_ directory as an argument.
+You can also use the *&#45;&#45;lib* option to specify a directory where to copy all the jars. 
+Additionally the *&#45;&#45;ant* option can be used to indicate a directory where to install the jar with the ant tasks for *apb*.
 
 h3. Building from source code
 
@@ -30,7 +39,7 @@ APB requires at least Java 6.
 You should first get APB's source code from git:
 <pre>
 	<code>
-~> git clone git@github.com:emiliolg/apb.git
+~> git clone git://github.com/emiliolg/apb.git
 	</code>
 </pre>
 
