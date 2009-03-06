@@ -66,14 +66,15 @@ public class DiagnosticReporter
 
     public void report(Diagnostic<? extends JavaFileObject> diagnostic)
     {
-        final String source = diagnostic.getSource().toString();
+        final JavaFileObject source = diagnostic.getSource();
 
-        if (!isExcluded(source)) {
+        if (source != null && !isExcluded(source)) {
             count(diagnostic);
+            String fileName = source.toString();
 
-            if (!source.equals(lastFile)) {
+            if (!fileName.equals(lastFile)) {
                 doReport();
-                lastFile = source;
+                lastFile = fileName;
             }
 
             ds.add(diagnostic);
@@ -186,13 +187,15 @@ public class DiagnosticReporter
         }
     }
 
-    private boolean isExcluded(String name)
+    private boolean isExcluded(JavaFileObject fileObject)
     {
-        name = FileUtils.makeRelative(env.getBaseDir(), name);
+        if (!excludes.isEmpty()) {
+            String name = FileUtils.makeRelative(env.getBaseDir(), fileObject.toString());
 
-        for (String exclude : excludes) {
-            if (StringUtils.matchPath(exclude, name, true)) {
-                return true;
+            for (String exclude : excludes) {
+                if (StringUtils.matchPath(exclude, name, true)) {
+                    return true;
+                }
             }
         }
 

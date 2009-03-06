@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,20 +13,24 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.metadata;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import apb.Environment;
 import apb.ModuleHelper;
+
 import apb.tasks.CopyTask;
 import apb.tasks.JarTask;
 import apb.tasks.JavacTask;
 import apb.tasks.JavadocTask;
 import apb.tasks.RemoveTask;
 
-import java.util.ArrayList;
 import static java.util.Arrays.asList;
-import java.util.List;
 
 /**
  * This class defines a Module for the building system
@@ -75,7 +80,7 @@ public class Module
     /**
      * The directory where the generated source files for this module are placed
      */
-    @BuildProperty public String generatedSource = "$module-dir/gsrc";
+    @BuildProperty public String generatedSource = "$moduledir/gsrc";
 
     /**
      * All the info for Javadoc
@@ -83,15 +88,9 @@ public class Module
     @BuildProperty public JavadocInfo javadoc = new JavadocInfo();
 
     /**
-     * The root directory of the module
-     */
-    @BuildProperty(order = 0)
-    public String moduleDir = "$module";
-
-    /**
      * The directory for the output classes
      */
-    @BuildProperty public String output = "$module-dir/output/classes";
+    @BuildProperty public String output = "$moduledir/output/classes";
 
     /**
      * All the info for the package (Jar,War, etc)
@@ -106,7 +105,7 @@ public class Module
     /**
      * The directory where the source files for this module are placed
      */
-    @BuildProperty public String source = "$module-dir/src";
+    @BuildProperty public String source = "$moduledir/src";
 
     /**
      * The list of modules & libraries this module depends from
@@ -136,6 +135,7 @@ public class Module
         RemoveTask.remove(env, helper.getOutput());
         RemoveTask.remove(env, helper.getPackageFile());
         RemoveTask.remove(env, helper.getGeneratedSource());
+        env.forward("clean", tests);
     }
 
     public void resources(Environment env)
@@ -163,7 +163,8 @@ public class Module
         JarTask.execute(env);
     }
 
-    @BuildTarget public void javadoc(Environment env)
+    @BuildTarget(description = "Generates the Standard Java Documentation (Javadoc) for the module.")
+    public void javadoc(Environment env)
     {
         JavadocTask.execute(env);
     }
@@ -208,4 +209,5 @@ public class Module
     {
         return Library.create(g, id, vers);
     }
+
 }

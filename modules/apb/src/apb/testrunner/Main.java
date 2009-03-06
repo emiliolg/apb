@@ -103,17 +103,13 @@ public class Main
 
     @NotNull private static TestReport restoreOutput(@Nullable String file)
     {
-        final TestReport result;
+        TestReport result = null;
 
-        if (file == null) {
-            result = new SimpleReport(true, true);
-        }
-        else {
+        if (file != null) {
             try {
                 ObjectInputStream is = new ObjectInputStream(new FileInputStream(file));
                 result = (TestReport) is.readObject();
                 is.close();
-                return result;
             }
             catch (IOException e) {
                 throw new RuntimeException(e);
@@ -123,7 +119,7 @@ public class Main
             }
         }
 
-        return result;
+        return result == null ? new SimpleReport(true, true) : result;
     }
 
     private static void saveOutput(@NotNull TestReport report, @Nullable String reportSpecFile)

@@ -94,7 +94,7 @@ public abstract class BaseTestReport
         }
     }
 
-    protected File reporFile(@NotNull String suffix, @NotNull String ext)
+    protected File reportFile(@NotNull String suffix, @NotNull String ext)
     {
         return new File(reportsDir, fileName + suffix + ext);
     }

@@ -243,7 +243,7 @@ public class XmlTestReport
         final String suite = getCurrentSuite();
 
         if (suite != null) {
-            XmlUtils.writeDocument(document, reporFile(suite, ".xml"));
+            XmlUtils.writeDocument(document, reportFile(suite, ".xml"));
         }
     }
 

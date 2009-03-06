@@ -43,6 +43,7 @@ import apb.testrunner.Invocation;
 import apb.testrunner.TestRunner;
 import apb.testrunner.output.TestReport;
 import apb.testrunner.output.TestReportBroadcaster;
+import apb.testrunner.output.SimpleReport;
 
 import apb.utils.FileUtils;
 
@@ -132,6 +133,7 @@ public class TestTask
     public TestTask(@NotNull Environment env)
     {
         super(env);
+        report = new SimpleReport(true, true);
         moduleHelper = env.getTestModuleHelper();
         classPath = moduleHelper.deepClassPath(false);
 
@@ -140,7 +142,8 @@ public class TestTask
 
         coverage = moduleHelper.getCoverageInfo();
 
-        reportDir = moduleHelper.getReportsDir();
+        if (!moduleHelper.getReports().isEmpty())
+            reportDir = moduleHelper.getReportsDir();
 
         setReport(moduleHelper.getReports());
 

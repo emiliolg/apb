@@ -23,4 +23,4 @@ fi
 DIRLIB=$(dirname $(type -p $0))/../lib
 
 
-java -Xmx256m -jar $(ospath "$DIRLIB/apb.jar") $*
+java $DEBUG -Xmx256m -jar $(ospath "$DIRLIB/apb.jar") $*

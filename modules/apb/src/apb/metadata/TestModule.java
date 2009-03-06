@@ -109,7 +109,7 @@ public class TestModule
     /**
       * The directory to generate the reports output
       */
-    @BuildProperty public String reportsDir = "$module-dir/output/reports";
+    @BuildProperty public String reportsDir = "$moduledir/output/reports";
 
     /**
      * The type of runner for the test
@@ -119,7 +119,7 @@ public class TestModule
     /**
      * Working directory for running the tests
      */
-    @BuildProperty public String workingDirectory = "$module-dir";
+    @BuildProperty public String workingDirectory = "$moduledir";
 
     /**
      * Environment variables to be set when running the tests

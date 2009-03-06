@@ -30,7 +30,7 @@ public class PackageInfo
     /**
      * The name of the package file without the extension
      */
-    @BuildProperty public String name = "${group}-${module}-${version}";
+    @BuildProperty public String name = "${group}-${moduleid}-${version}";
 
     /**
      * The packaging type for the module

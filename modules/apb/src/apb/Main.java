@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb;
 
@@ -35,26 +38,26 @@ public class Main
     public static boolean execute(Environment env, String element, String command)
         throws Throwable
     {
-        boolean              result = true;
-        ProjectElementHelper projectElement = env.constructProjectElement(element);
 
-        if (projectElement != null) {
-            try {
-                projectElement.setTopLevel(true);
-                projectElement.build(command);
-            }
-            catch (BuildException b) {
-                Throwable e = b.getCause() == null ? b : b.getCause();
-                env.logSevere("%s\n", b.getMessage());
-                result = false;
+        try {
+            ProjectElementHelper projectElement = env.constructProjectElement(element);
+            projectElement.setTopLevel(true);
+            projectElement.build(command);
+            return true;
+        }
+        catch (DefinitionException e) {
+            env.logSevere("%s\n", e.getMessage());
+        }
+        catch (BuildException b) {
+            Throwable e = b.getCause() == null ? b : b.getCause();
+            env.logSevere("%s\n", b.getMessage());
 
-                if (env.showStackTrace()) {
-                    throw e;
-                }
+            if (env.showStackTrace()) {
+                throw e;
             }
         }
 
-        return result;
+        return false;
     }
 
     private static void execute(Environment env, List<String> arguments)

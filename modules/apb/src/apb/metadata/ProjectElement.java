@@ -61,26 +61,37 @@ public abstract class ProjectElement
 
     //~ Methods ..............................................................................................
 
-    @BuildTarget public abstract void clean(Environment env);
+    @BuildTarget(description = "Deletes all output directories (compiled code and packages).")
+    public abstract void clean(Environment env);
 
-    @BuildTarget public abstract void resources(Environment env);
+    @BuildTarget(description = "Copy (eventually filtering) resources to the output directory.")
+    public abstract void resources(Environment env);
 
-    @BuildTarget(depends = "resources")
+    @BuildTarget(
+                 depends = "resources",
+                 description = "Compile classes and place them in the output directory."
+                )
     public abstract void compile(Environment env);
 
-    @BuildTarget(depends = "compile")
+    @BuildTarget(depends = "compile", description = "Compile test classes.")
     public abstract void compileTests(Environment env);
 
-    @BuildTarget(depends = "compile-tests")
+    @BuildTarget(
+                 depends = "compile-tests",
+                 description = "Test the compiled sources, generating reports and (optional) coverage information."
+                )
     public abstract void runTests(Environment env);
 
     @BuildTarget(
                  depends = "compile",
-                 name = "package"
+                 name = "package",
+                 description =
+                 "Creates a jar file containing the compiled classes and resources of the module."
                 )
     public abstract void packageit(Environment env);
 
-    @BuildTarget public void genIdea(Environment env)
+    @BuildTarget(description = "Generate Idea project and module files.")
+    public void genIdea(Environment env)
     {
         IdeaTask.execute(env);
     }
@@ -94,4 +105,5 @@ public abstract class ProjectElement
     {
         return getName();
     }
+
 }

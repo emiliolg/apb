@@ -39,7 +39,7 @@ public class OptionParser
     private final String  appName;
     private final boolean exitOnStopParsing = true;
 
-    private List<Option> options = null;
+    protected List<Option> options = null;
     private final String versionNumber;
 
     //~ Constructors .........................................................................................
@@ -185,32 +185,6 @@ public class OptionParser
         }
 
         System.exit(0);
-    }
-
-    protected List<String> findOptions(String opt)
-    {
-        List<String> result = new ArrayList<String>();
-
-        for (Option option : options) {
-            if (option.getName().startsWith(opt)) {
-                result.add("--" + option.getName());
-            }
-        }
-
-        return result;
-    }
-
-    protected List<String> findShortOptions(char chr)
-    {
-        List<String> result = new ArrayList<String>();
-
-        for (Option option : options) {
-            if (option.getLetter() == chr) {
-                result.add("-" + option.getLetter());
-            }
-        }
-
-        return result;
     }
 
     Option findOption(char option)

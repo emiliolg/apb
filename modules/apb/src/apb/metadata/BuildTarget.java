@@ -24,4 +24,6 @@ public @interface BuildTarget
     String[] depends() default {};
     String before() default "";
     String name() default "";
+
+    String description() default "";
 }

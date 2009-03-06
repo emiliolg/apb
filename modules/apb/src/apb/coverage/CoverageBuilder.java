@@ -253,7 +253,7 @@ public class CoverageBuilder
             }
 
             for (File dir : listDirsWithFiles(testsDir, ".class")) {
-                ps.printf("-%s.*\n",
+                ps.printf("-%s.*Test\n",
                           makeRelative(testsDir, dir).getPath().replace(File.separatorChar,
                                                                                             '.'));
             }

@@ -18,25 +18,22 @@ package apb;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import static java.lang.reflect.Modifier.isPublic;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 import apb.metadata.BuildTarget;
 import apb.metadata.DefaultTarget;
 import apb.metadata.ProjectElement;
-
 import apb.utils.IdentitySet;
 import apb.utils.NameUtils;
-
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static java.lang.reflect.Modifier.isPublic;
 //
 // User: emilio
 // Date: Sep 4, 2008
@@ -53,42 +50,29 @@ public class Command
 
     private final Method method;
     private final String name;
+    private String description;
 
     //~ Constructors .........................................................................................
 
-    private Command(String name, Method method)
+    protected Command(String name, Method method, String description)
     {
         this.name = name;
         this.method = method;
+        this.description = description;
         commands = Collections.emptyList();
         directDeps = new ArrayList<Command>();
     }
 
     private Command(Method method, BuildTarget annotation)
     {
-        this(annotation.name().isEmpty() ? NameUtils.idFromMethod(method) : annotation.name(), method);
+        this(annotation.name().isEmpty() ? NameUtils.idFromMethod(method) : annotation.name(), method, annotation.description());
     }
 
     //~ Methods ..............................................................................................
 
-    public static String printCommands(final Class<? extends ProjectElement> projectElementClass)
+    public static Collection<Command> listCommands(Class<? extends ProjectElement> projectElementClass)
     {
-        StringBuilder cmds = new StringBuilder();
-
-        for (String cmd : listCommands(projectElementClass)) {
-            if (!cmd.equals(DEFAULT_COMMAND)) {
-                cmds.append(cmds.length() == 0 ? "[ " : " | ");
-                cmds.append(cmd);
-            }
-        }
-
-        cmds.append(" ]");
-        return cmds.toString();
-    }
-
-    public static Set<String> listCommands(Class<? extends ProjectElement> projectElementClass)
-    {
-        return buildCommands(projectElementClass).keySet();
+        return buildCommands(projectElementClass).values();
     }
 
     @Nullable public static Command findCommand(@NotNull ProjectElement element, @NotNull String commandName)
@@ -252,33 +236,14 @@ public class Command
 
     @NonNls public static final String DEFAULT_COMMAND = "default";
 
+    public boolean isDefault() {
+        return DEFAULT_COMMAND.equals(name);
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
     //~ Inner Classes ........................................................................................
 
-    public static class Help
-        extends Command
-    {
-        private Help()
-        {
-            super("help", getHelpMethod());
-        }
-
-        @BuildTarget
-        @SuppressWarnings({ "UnusedDeclaration" })
-        public static void help(ProjectElement element, Environment env)
-        {
-            System.err.println("Commands for '" + element.getName() + "' : " +
-                               printCommands(element.getClass()));
-            System.exit(0);
-        }
-
-        private static Method getHelpMethod()
-        {
-            try {
-                return Help.class.getMethod("help", ProjectElement.class, Environment.class);
-            }
-            catch (NoSuchMethodException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
 }

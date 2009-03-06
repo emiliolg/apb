@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb;
 
@@ -19,15 +22,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import apb.compiler.InMemJavaC;
 
@@ -35,12 +35,13 @@ import apb.metadata.Module;
 import apb.metadata.Project;
 import apb.metadata.ProjectElement;
 
-import apb.utils.FileUtils;
 import apb.utils.NameUtils;
 
 import org.jetbrains.annotations.NotNull;
 
 import static java.lang.Character.isJavaIdentifierPart;
+
+import static apb.utils.FileUtils.JAVA_EXT;
 
 /**
  * This class represents an Environment that includes common services like:
@@ -92,7 +93,6 @@ public abstract class Environment
 
         // Read System Properties
         copyProperties(System.getProperties());
-
     }
 
     //~ Methods ..............................................................................................
@@ -154,7 +154,12 @@ public abstract class Environment
         return forceBuild;
     }
 
-    public String getProperty(String id)
+    /**
+     * Return the value of the specified property
+     * @param id The property to search
+     * @return The value of the property or the empty String if the Property is not found and failOnError is not set
+     */
+    @NotNull public String getProperty(@NotNull String id)
     {
         String result = properties.get(id);
 
@@ -178,6 +183,18 @@ public abstract class Environment
         }
 
         return result;
+    }
+
+    /**
+     * Return the value of the specified property
+     * @param id The property to search
+     * @param defaultValue The default value to return in case the property is not set
+     * @return The value of the property
+     */
+    @NotNull public String getProperty(@NotNull String id, @NotNull String defaultValue)
+    {
+        String result = properties.get(id);
+        return result == null ? defaultValue : result;
     }
 
     public boolean isVerbose()
@@ -247,7 +264,7 @@ public abstract class Environment
         properties.put(PROJECTS_HOME_PROP_KEY, file.getAbsolutePath());
     }
 
-    public ProjectElementHelper getHelper(ProjectElement element)
+    @NotNull public ProjectElementHelper getHelper(ProjectElement element)
     {
         synchronized (helpersByElement) {
             final String         className = element.getClass().getName();
@@ -305,9 +322,11 @@ public abstract class Environment
     {
         currentElement = getHelper(element);
 
-        final String prop = element instanceof Project ? PROJECT_NAME_PROP_KEY : MODULE_NAME_PROP_KEY;
+        final String prop = element instanceof Project ? PROJECT_PROP_KEY : MODULE_PROP_KEY;
         putProperty(prop, getCurrentName());
-        putProperty(prop.toLowerCase(), NameUtils.idFromJavaId(getCurrentName()));
+        final String id = NameUtils.idFromJavaId(getCurrentName());
+        putProperty(prop + ID_SUFFIX, id);
+        putProperty(prop + DIR_SUFFIX, id.replace('.', '/'));
 
         ProjectElement result = expandProperties("", element);
 
@@ -381,39 +400,6 @@ public abstract class Environment
         return projectPath;
     }
 
-    public Collection<String> listModules(String last)
-    {
-        SortedSet<String> result = new TreeSet<String>();
-
-        for (File f : FileUtils.listAllFilesWithExt(getProjectPath(), FileUtils.JAVA_EXT)) {
-            final String fileName = f.getName();
-
-            if (fileName.startsWith(last)) {
-                result.add(fileName.substring(0, fileName.length() - FileUtils.JAVA_EXT.length()));
-            }
-        }
-
-        if (result.size() == 1) {
-            return listCommands(result.first(), "");
-        }
-
-        return result;
-    }
-
-    public Collection<String> listCommands(String module, String command)
-    {
-        Set<String>          result = new TreeSet<String>();
-        ProjectElementHelper helper = constructProjectElement(module);
-
-        for (String cmd : Command.listCommands(helper.getElement().getClass())) {
-            if (cmd.startsWith(command)) {
-                result.add(module + "." + cmd);
-            }
-        }
-
-        return result;
-    }
-
     public void forward(@NotNull String command, Iterable<? extends Module> modules)
     {
         for (Module module : modules) {
@@ -453,6 +439,33 @@ public abstract class Environment
         return os;
     }
 
+    protected void loadProjectPath()
+    {
+        projectPath = new LinkedHashSet<File>();
+
+        String path = System.getenv("APB_PROJECT_PATH");
+
+        String path2 = properties.get("project.path");
+
+        if (path2 != null) {
+            path = path == null ? path2 : path + File.pathSeparator + path2;
+        }
+
+        if (path == null) {
+            path = "./project-definitions";
+        }
+
+        for (String p : path.split(File.pathSeparator)) {
+            File dir = new File(p);
+
+            if (dir.isAbsolute() && (!dir.exists() || !dir.isDirectory())) {
+                logWarning(Messages.INV_PROJECT_DIR(dir));
+            }
+
+            projectPath.add(dir);
+        }
+    }
+
     void putProperty(String name, String value)
     {
         // Special handling to canonize basedir
@@ -472,7 +485,7 @@ public abstract class Environment
 
     /**
      * Expand the property attributes
-     * The expansion order is done usinf Bread First Sequence.
+     * The expansion order is done using Bread First Sequence.
      * So first the primitive fields are expanded and then the fields
      * with complex objects.
      *
@@ -518,28 +531,29 @@ public abstract class Environment
     @NotNull File projectElementFile(String projectElement)
         throws IOException
     {
-        File   file = new File(projectElement);
-        String name = file.getName();
-        int    ext = name.lastIndexOf('.');
-
-        if (ext == -1) {
-            projectElement += FileUtils.JAVA_EXT;
-            file = new File(projectElement);
+        // Strip JAVA_EXT
+        if (projectElement.endsWith(JAVA_EXT)) {
+            projectElement.substring(0, projectElement.length() - JAVA_EXT.length());
         }
 
-        return file.exists() ? file : searchInProjectPath(projectElement);
+        File f = new File(projectElement);
+
+        // Replace 'dots' by file separators BUT ONLY IN THE FILE NAME.
+        File file = new File(f.getParentFile(), f.getName().replace('.', File.separatorChar) + JAVA_EXT);
+
+        return file.exists() ? file : searchInProjectPath(file.getPath());
     }
 
     File projectDir(File projectElementFile)
     {
-        File   parent = projectElementFile.getParentFile();
-        String p = parent.getAbsolutePath();
+        File   parent = projectElementFile.getAbsoluteFile().getParentFile();
+        String p = parent.getPath();
 
         while (p != null) {
             final File file = new File(p);
 
             for (File pathElement : getProjectPath()) {
-                if (parent.equals(pathElement)) {
+                if (file.equals(pathElement)) {
                     return file;
                 }
             }
@@ -557,10 +571,9 @@ public abstract class Environment
      * @param name The module or project name
      * @return
      */
-    ProjectElementHelper constructProjectElement(String name)
+    @NotNull ProjectElementHelper constructProjectElement(String name)
+        throws DefinitionException
     {
-        ProjectElementHelper result = null;
-
         try {
             File       source = projectElementFile(name);
             final File pdir = projectDir(source);
@@ -569,19 +582,17 @@ public abstract class Environment
 
             setProjectsHome(pdir);
             ProjectElement projectElement = (ProjectElement) clazz.newInstance();
-            result = getHelper(projectElement);
+            return getHelper(projectElement);
         }
         catch (IllegalAccessException e) {
-            handle(e);
+            throw new DefinitionException(name, e);
         }
         catch (InstantiationException e) {
-            handle(e);
+            throw new DefinitionException(name, e);
         }
         catch (IOException e) {
-            handle("Cannot find definition file for: '" + name + "'");
+            throw new DefinitionException(name, e);
         }
-
-        return result;
     }
 
     private Class<?> loadClass(File pdir, File source)
@@ -601,32 +612,6 @@ public abstract class Environment
         }
 
         return clazz;
-    }
-
-    protected void loadProjectPath()
-    {
-        projectPath = new LinkedHashSet<File>();
-
-        String path = System.getenv("APB_PROJECT_PATH");
-
-        String path2 = properties.get("project.path");
-
-        if (path2 != null) {
-            path = path == null ? path2 : path + File.pathSeparator + path2;
-        }
-
-        if (path == null) {
-            path = "./project-definitions";
-        }
-
-        for (String p : path.split(File.pathSeparator)) {
-            File dir = new File(p);
-            if (dir.isAbsolute() && (!dir.exists() || !dir.isDirectory())) {
-                logWarning(Messages.INV_PROJECT_DIR(dir));
-            }
-
-            projectPath.add(dir);
-        }
     }
 
     private void loadUserProperties()
@@ -709,6 +694,9 @@ public abstract class Environment
 
     //~ Static fields/initializers ...........................................................................
 
+    private static final String ID_SUFFIX = "id";
+    private static final String DIR_SUFFIX = "dir";
+
     private static final String JAR_FILE_URL_PREFIX = "jar:file:";
 
     private static final String APB_DIR = ".apb";
@@ -716,11 +704,10 @@ public abstract class Environment
 
     static final String BASEDIR_PROP_KEY = "basedir";
 
-    static final String PROJECT_NAME_PROP_KEY = "Project";
     static final String PROJECT_PROP_KEY = "project";
 
-    static final String MODULE_NAME_PROP_KEY = "Module";
     static final String MODULE_PROP_KEY = "module";
+    static final String MODULE_DIR_PROP_KEY = "moduledir";
 
     //
     private static final String PROJECTS_HOME_PROP_KEY = "projects-home";

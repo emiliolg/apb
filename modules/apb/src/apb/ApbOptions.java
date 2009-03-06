@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +13,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb;
 
-import java.util.Collection;
 import java.util.List;
 
 import apb.metadata.ProjectElement;
@@ -62,7 +64,22 @@ class ApbOptions
 
     public String[] getArgFullDescription()
     {
-        return new String[] { MODULE_OR_PROJECT, COMMANDS(Command.printCommands(ProjectElement.class)) };
+        return new String[] { MODULE_OR_PROJECT, COMMANDS(printCommands(ProjectElement.class)) };
+    }
+
+    private static String printCommands(final Class<? extends ProjectElement> projectElementClass)
+    {
+        StringBuilder cmds = new StringBuilder();
+
+        for (Command cmd : Command.listCommands(projectElementClass)) {
+            if (!cmd.isDefault()) {
+                cmds.append(cmds.length() == 0 ? "[ " : " | ");
+                cmds.append(cmd.getName());
+            }
+        }
+
+        cmds.append(" ]");
+        return cmds.toString();
     }
 
     public List<String> parse()
@@ -93,38 +110,9 @@ class ApbOptions
     private void doCompletion()
     {
         if (arguments.size() >= 3 && "--complete".equals(arguments.get(0))) {
-            int    argc = Integer.parseInt(arguments.get(1)) + 2;
-            String last = argc < arguments.size() ? arguments.get(argc) : "";
+            OptionCompletion op = new OptionCompletion(environment, options);
 
-            if ("-".equals(last)) {
-                last = "--";
-            }
-
-            if (last.startsWith("--")) {
-                print(findOptions(last.substring(2)));
-            }
-            else if (last.startsWith("-")) {
-                print(findShortOptions(last.charAt(1)));
-            }
-            else {
-                int dot = last.indexOf(".");
-
-                if (dot == -1) {
-                    print(environment.listModules(last));
-                }
-                else {
-                    print(environment.listCommands(last.substring(0, dot), last.substring(dot + 1)));
-                }
-            }
-
-            System.exit(0);
-        }
-    }
-
-    private void print(Collection<String> opts)
-    {
-        for (String opt : opts) {
-            System.out.print(opt + " ");
+            op.execute(arguments);
         }
     }
 }

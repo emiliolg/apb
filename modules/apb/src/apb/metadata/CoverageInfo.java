@@ -53,7 +53,7 @@ public class CoverageInfo
     /**
      * The output directory for reports
      */
-    public String output = "$module-dir/output/coverage";
+    public String output = "$moduledir/output/coverage";
 
     /**
      * The list of classes to exclude from coverage

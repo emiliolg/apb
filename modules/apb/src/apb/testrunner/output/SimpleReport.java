@@ -54,7 +54,7 @@ public class SimpleReport
         super(showOutput, fileName);
 
         try {
-            output = new PrintWriter(reporFile("", ".txt"));
+            output = new PrintWriter(reportFile("", ".txt"));
         }
         catch (FileNotFoundException e) {
             throw new RuntimeException(e);

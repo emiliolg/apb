@@ -57,6 +57,7 @@ public class ModuleHelper
     private String             packageName;
     private ResourcesInfo      resourcesInfo;
     private File               source;
+    private File moduledir;
 
     //~ Constructors .........................................................................................
 
@@ -67,9 +68,9 @@ public class ModuleHelper
 
     //~ Methods ..............................................................................................
 
-    public File getModuleDir()
+    public File getModuledir()
     {
-        return env.fileFromBase(getModule().moduleDir);
+        return moduledir;
     }
 
     public Module getModule()
@@ -247,6 +248,7 @@ public class ModuleHelper
     void activate()
     {
         Module module = getModule();
+        moduledir = env.fileFromBase(env.getProperty(Environment.MODULE_DIR_PROP_KEY));
         output = env.fileFromBase(module.output);
         source = env.fileFromBase(module.source);
         generatedSource = env.fileFromBase(module.generatedSource);
@@ -268,6 +270,7 @@ public class ModuleHelper
             helper.setModuleToTest(this);
         }
     }
+
 
     //~ Static fields/initializers ...........................................................................
 

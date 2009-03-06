@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Oct 10, 2008
@@ -56,6 +58,7 @@ public abstract class ProjectElementHelper
 
     //~ Methods ..............................................................................................
 
+    @NotNull
     public static ProjectElementHelper create(ProjectElement element, Environment environment)
     {
         ProjectElementHelper result;
@@ -205,8 +208,8 @@ public abstract class ProjectElementHelper
                 for (Command cmd : command.getAllCommands()) {
                     if (notExecuted(cmd.getName())) {
                         env.setCurrentCommand(cmd);
-                        cmd.invoke(projectElement, env);
                         markExecuted(cmd.getName());
+                        cmd.invoke(projectElement, env);
                     }
                 }
 

@@ -121,7 +121,7 @@ public class IdeaTask
 
                 Element content = findElement(component, "content");
 
-                content.setAttribute(URL_ATTRIBUTE, relativeUrl("file", module.getModuleDir()));
+                content.setAttribute(URL_ATTRIBUTE, relativeUrl("file", module.getModuledir()));
 
                 removeOldElements(content, SOURCE_FOLDER);
                 addSourceFolder(content, module.getSource());
@@ -613,7 +613,7 @@ public class IdeaTask
             throws IOException
         {
             pkg.type = PackageType.NONE;
-            source = "$module";
+            source = "$moduledir";
             final String       path = jarFile.getPath();
             File               srcFile =
                 new File(path.substring(0, path.length() - 4) + ModuleHelper.SRC_JAR);

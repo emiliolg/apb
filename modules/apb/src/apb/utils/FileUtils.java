@@ -405,9 +405,27 @@ public class FileUtils
         }
     }
 
-    public static List<File> listAllJavaSources(List<File> sourceDirs)
+    /**
+     * List all Java Sources under a given set of directories
+     * Return the RELATIVE file name
+     * @param sourceDirs The directories that can contain java sources
+     * @return The relative list of file names
+     */
+    public static List<File> listJavaSources(Collection<File> sourceDirs)
     {
-        return listAllFilesWithExt(sourceDirs, JAVA_EXT);
+        List<File> result = new ArrayList<File>();
+
+        for (File dir : sourceDirs) {
+            if (dir != null && dir.exists()) {
+                List<File> abs = new ArrayList<File>();
+                addAll(abs, dir, JAVA_EXT);
+                for (File ab : abs) {
+                    result.add(makeRelative(dir, ab));
+                }
+            }
+        }
+
+        return result;
     }
 
     public static void close(Closeable closeable)

@@ -44,7 +44,7 @@ public class NameUtils
                 result.append('-');
             }
 
-            if (chr == '.' || chr == '_' || chr == '$') {
+            if (chr == '_' || chr == '$') {
                 result.append('-');
             }
             else {
@@ -66,7 +66,7 @@ public class NameUtils
             result = clazz.getName();
 
             // remove package
-            result = result.substring(result.lastIndexOf(".") + 1);
+            // result = result.substring(result.lastIndexOf(".") + 1);
 
             //replace '$' by '.'
             result = result.replace('$', '.');
