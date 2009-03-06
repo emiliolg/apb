@@ -21,19 +21,13 @@ package apb.compiler;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 
 import apb.Environment;
-
 import apb.utils.FileUtils;
 import apb.utils.StringUtils;
-
-import com.sun.tools.javac.util.JCDiagnostic;
-
-import static apb.utils.StringUtils.nChars;
 
 public class DiagnosticReporter
     implements DiagnosticListener<JavaFileObject>
@@ -120,46 +114,6 @@ public class DiagnosticReporter
         }
     }
 
-    private static String format(Diagnostic d)
-    {
-        String result;
-
-        if (d instanceof JCDiagnostic) {
-            JCDiagnostic  jd = (JCDiagnostic) d;
-            StringBuilder msg = new StringBuilder(nChars(8, ' '));
-            final String  prefix = jd.getPrefix();
-            msg.append(prefix.substring(0, 1).toUpperCase());
-            msg.append(prefix.substring(1));
-            msg.append('(');
-            msg.append(d.getLineNumber());
-            msg.append(',');
-            msg.append(d.getColumnNumber());
-            msg.append(") ");
-            appendLines(msg, jd.getText());
-            result = msg.toString();
-        }
-        else {
-            result = d.toString();
-        }
-
-        return result;
-    }
-
-    private static void appendLines(StringBuilder result, String msg)
-    {
-        String indent = nChars(result.length(), ' ');
-        int    nl;
-
-        while ((nl = msg.indexOf('\n')) >= 0) {
-            result.append(msg.substring(0, ++nl));
-            msg = msg.substring(nl);
-            result.append(indent);
-        }
-
-        if (!msg.isEmpty()) {
-            result.append(msg);
-        }
-    }
 
     private void count(Diagnostic<? extends JavaFileObject> diagnostic)
     {
@@ -180,7 +134,7 @@ public class DiagnosticReporter
             env.logSevere("%s:\n", lastFile);
 
             for (Diagnostic d : ds) {
-                env.logSevere("%s\n", format(d));
+                env.logSevere("%s\n", new DiagnosticFormat(d).format());
             }
 
             ds.clear();
