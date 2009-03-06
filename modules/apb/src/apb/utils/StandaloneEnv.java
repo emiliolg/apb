@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.utils;
 
@@ -21,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import apb.Environment;
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Dec 10, 2008
@@ -91,9 +95,16 @@ public class StandaloneEnv
         Logger lg = Logger.getLogger(name);
         lg.setUseParentHandlers(false);
         Handler h = new ConsoleHandler();
-        h.setFormatter(new SimpleFormatter(this));
+        h.setFormatter(createFormatter());
         lg.addHandler(h);
         lg.setLevel(Level.INFO);
         return lg;
     }
+
+    private SimpleFormatter createFormatter()
+    {
+        boolean useColor = getBooleanProperty("color") && System.console() != null;
+        return useColor ? new ColorFormatter(this) : new SimpleFormatter(this);
+    }
+
 }

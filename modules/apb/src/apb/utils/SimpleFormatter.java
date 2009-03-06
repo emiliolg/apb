@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.utils;
 
@@ -45,7 +48,10 @@ public class SimpleFormatter
     {
         StringBuilder result = new StringBuilder();
 
-        appendHeader(result);
+        if (eol) {
+            appendHeader(result);
+            eol = false;
+        }
 
         String msg = formatMsg(record);
 
@@ -56,7 +62,11 @@ public class SimpleFormatter
                 result.append(msg.substring(0, ++p));
                 msg = msg.substring(p);
                 eol = !msg.isEmpty();
-                appendHeader(result);
+
+                if (eol) {
+                    appendHeader(result);
+                    eol = false;
+                }
             }
 
             if (msg.isEmpty()) {
@@ -82,32 +92,24 @@ public class SimpleFormatter
         return msg;
     }
 
-    private void appendHeader(StringBuilder result)
+    protected void appendHeader(StringBuilder result)
     {
-        if (eol) {
+        if (env.getCurrent() != null) {
             int n = result.length();
+            result.append("[");
+            result.append(env.getCurrent().getName());
 
-            if (env.getCurrent() != null) {
-                result.append("[");
-                result.append(env.getCurrent().getName());
-
-                if (env.getCurrentCommand() != null) {
-                    result.append(".");
-                    result.append(env.getCurrentCommand().getName());
-                }
-
-                result.append("] ");
+            if (env.getCurrentCommand() != null) {
+                result.append(".");
+                result.append(env.getCurrentCommand().getName());
             }
 
+            result.append("] ");
             n = result.length() - n;
 
-            if (n > 0) {
-                for (int i = 25 - n; i >= 0; i--) {
-                    result.append(' ');
-                }
+            for (int i = 25 - n; i >= 0; i--) {
+                result.append(' ');
             }
         }
-
-        eol = false;
     }
 }

@@ -197,6 +197,16 @@ public abstract class Environment
         return result == null ? defaultValue : result;
     }
 
+    /**
+     * Return the value of the specified boolean property
+     * @param id The property to search
+     * @return The value of the property or false if the property is not set
+     */
+    public boolean getBooleanProperty(@NotNull String id)
+    {
+        return Boolean.parseBoolean(getProperty(id, "false"));
+    }
+
     public boolean isVerbose()
     {
         return verbose;
