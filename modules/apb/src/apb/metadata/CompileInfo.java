@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.metadata;
 
@@ -37,9 +40,21 @@ public class CompileInfo
     public boolean debug = true;
 
     /**
+     * Use of the default error formatting
+     * Warning ! This options is incompatible with warnExcludes and failOnWarnings
+     *
+     */
+    public boolean defaultErrorFormatter = false;
+
+    /**
      * Output source location where deprecated APIs are used
      */
     public boolean deprecated = false;
+
+    /**
+     * Fail on warnings
+     */
+    public boolean failOnWarning = false;
 
     /**
      * Whether to enable recommended warnings
@@ -63,14 +78,15 @@ public class CompileInfo
     public String target = "";
 
     /**
+     * Wheter to validate that all dependencies are being used
+     * If it's true and there are some unused dependencies it will fail with the list of unused ones
+     */
+    public boolean validateDependencies = false;
+
+    /**
      * Generate warnings
      */
     public boolean warn = true;
-
-    /**
-     * Do not generate warnings for the following list of files
-     */
-    private final List<String> warnExcludes = new ArrayList<String>();
 
     /**
      * Options to pass to the annotation processor
@@ -95,16 +111,9 @@ public class CompileInfo
     private final List<String> includes = new ArrayList<String>(asList("**/*.java"));
 
     /**
-     * Use of the default error formatting
-     * Warning ! This options is incompatible with warnExcludes and failOnWarnings
-     *
+     * Do not generate warnings for the following list of files
      */
-    public boolean defaultErrorFormatter = false;
-
-    /**
-     * Fail on warnings
-     */
-    public boolean failOnWarning;
+    private final List<String> warnExcludes = new ArrayList<String>();
 
     //~ Methods ..............................................................................................
 
@@ -145,6 +154,7 @@ public class CompileInfo
     {
         excludes.addAll(asList(patterns));
     }
+
     /**
      * Method used to define the list of files to be excluded from warning generation
      * @param patterns The list of patterns to be excluded

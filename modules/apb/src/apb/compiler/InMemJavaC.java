@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.compiler;
 
@@ -26,43 +29,57 @@ import java.util.List;
 import java.util.Map;
 
 import javax.tools.FileObject;
-import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
-import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
+import apb.Environment;
+
+import apb.utils.StandaloneEnv;
+
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 
 /**
  * A class that allows invoking 'javac' and generating an 'in-memory' representation
  * of the compiled classes.
+ * It also keeps a cache of already compiled classes by file name
  */
 public class InMemJavaC
-    extends JavaC
 {
     //~ Instance fields ......................................................................................
 
-    private JavaCompiler          compiler;
-    private MemoryJavaFileManager fileManager;
-    private MemoryClassLoader     memoryClassLoader;
+    @NotNull private final Map<File, Class> classesByFile;
+
+    @NotNull private final JavaCompiler          compiler;
+    @NotNull private final Environment           env;
+    @NotNull private final MemoryJavaFileManager fileManager;
+    @NotNull private final MemoryClassLoader     memoryClassLoader;
 
     //~ Constructors .........................................................................................
 
-    public InMemJavaC()
+    /**
+     * Creates the Compiler
+     * @param environment
+     */
+    public InMemJavaC(@NotNull Environment environment)
     {
         compiler = ToolProvider.getSystemJavaCompiler();
         memoryClassLoader = new MemoryClassLoader(getClass().getClassLoader());
         fileManager = new MemoryJavaFileManager(compiler, memoryClassLoader);
+        classesByFile = new HashMap<File, Class>();
+        env = environment;
     }
 
     //~ Methods ..............................................................................................
 
     /**
      * Compile the file and invoke the main method of the compiled class
+     * Mainly a test method.
      */
     public static void main(String[] args)
         throws ClassNotFoundException
@@ -81,7 +98,7 @@ public class InMemJavaC
 
         System.arraycopy(args, 1, args, 0, args.length - 1);
 
-        InMemJavaC javac = new InMemJavaC();
+        InMemJavaC javac = new InMemJavaC(new StandaloneEnv(""));
 
         invokeMain(javac.compileToClass(null, source), args);
     }
@@ -94,25 +111,59 @@ public class InMemJavaC
 
     /**
      * Compile the source in the specified File and return the associated class
+     * @param sourcePath The (optional) sourcePath where to find the source for he class
+     * @param source the file to be compiled
+     * @return The compiled class
+     * @throws ClassNotFoundException if the compilation fails or the class cannot be loaded
+     */
+    @NotNull public Class<?> compileToClass(@Nullable File sourcePath, @NotNull File source)
+        throws ClassNotFoundException
+    {
+        // Set the sourcepah option apropiately
+        List<String> options =
+            sourcePath == null ? null : asList("-sourcepath", sourcePath.getAbsolutePath());
+
+        // Get the compilation task and invoke it
+        boolean result =
+            compiler.getTask(null, fileManager, null, options, null,
+                             fileManager.getJavaFileObjects(singleton(source))).call();
+        fileManager.close();
+
+        if (!result) {
+            throw new ClassNotFoundException("Compilation Error");
+        }
+
+        // If the compilation was successfull load the compiled class and return it
+
+        return memoryClassLoader.getClassFromSource(source);
+    }
+
+    /**
+     * Compile the source in the specified File load it and return the associated class.
+     * It also keeps a cache of already loaded classes
+     * @param sourcePath The (optional) sourcePath where to find the source for he class
      * @param source the file to be compiled
      * @return The compiled class
      */
-    public Class<?> compileToClass(File dir, File source)
+    @NotNull public Class<?> loadClass(@Nullable File sourcePath, @NotNull File source)
+        throws ClassNotFoundException
     {
-        List<String> options = dir == null ? null : asList("-sourcepath", dir.getAbsolutePath());
-        boolean      result =
-            compiler.getTask(null, fileManager, null, options, null, fileManager.getJavaFileObjects(source))
-                    .call();
-        close(fileManager);
+        Class<?> clazz = classesByFile.get(source);
 
-        try {
-            return result ? memoryClassLoader.getClassFromSource(source) : null;
+        if (clazz == null) {
+            env.logVerbose("Loading: %s\n", source);
+            clazz = compileToClass(sourcePath, source);
+            classesByFile.put(source, clazz);
         }
-        catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+
+        return clazz;
     }
 
+    /**
+     * Invoke the main Method over the compiled class
+     * @param clazz The clazz to invoke main over
+     * @param args  The arguments to pass to the main method
+     */
     private static void invokeMain(Class<?> clazz, String[] args)
     {
         try {
@@ -133,7 +184,38 @@ public class InMemJavaC
 
     //~ Inner Classes ........................................................................................
 
-    static class ClassInfo
+    /**
+     * This class is an implementation of a {@link javax.tools.SimpleJavaFileObject} that stores the generated classes in
+     * an in-memory classloader {@link MemoryClassLoader }
+     */
+    static class MemoryJavaOutput
+        extends SimpleJavaFileObject
+    {
+        private String            className;
+        private long              lastModified;
+        private MemoryClassLoader memoryClassLoader;
+
+        public MemoryJavaOutput(FileObject fileObject, String className, MemoryClassLoader memoryClassLoader)
+        {
+            super(fileObject.toUri(), Kind.CLASS);
+            this.className = className;
+            this.memoryClassLoader = memoryClassLoader;
+            lastModified = fileObject.getLastModified();
+        }
+
+        public OutputStream openOutputStream()
+            throws IOException
+        {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            memoryClassLoader.addClass(className, outputStream, lastModified);
+            return outputStream;
+        }
+    }
+
+    /**
+     * A simpe data object structure that keeps track of the bytes of a class and when the corresponding source was modified
+     */
+    private static class ClassInfo
     {
         private ByteArrayOutputStream bytes;
         private long                  lastModified;
@@ -150,47 +232,18 @@ public class InMemJavaC
         }
     }
 
-    static class MemoryClassLoader
+    /**
+     * An in-memory Classoader to load classes generated by the {@link MemoryJavaOutput}
+     */
+    private static class MemoryClassLoader
         extends ClassLoader
     {
-        private HashMap<String, ClassInfo> classMap;
+        @NotNull private final HashMap<String, ClassInfo> classMap;
 
         MemoryClassLoader(ClassLoader parent)
         {
             super(parent);
             classMap = new HashMap<String, ClassInfo>();
-        }
-
-        public HashMap<String, ClassInfo> getClassMap()
-        {
-            return classMap;
-        }
-
-        public Class<?> getClassFromSource(File source)
-            throws ClassNotFoundException
-        {
-            String path = source.getPath();
-            int    lastDot = path.lastIndexOf('.');
-
-            if (lastDot != -1) {
-                path = path.substring(0, lastDot);
-            }
-
-            path = path.replace('/', '.');
-
-            for (String className : getClassMap().keySet()) {
-                if (path.endsWith(className)) {
-                    return findClass(className);
-                }
-            }
-
-            throw new ClassNotFoundException();
-        }
-
-        public long sourceLastModified(String className)
-        {
-            ClassInfo classInfo = classMap.get(className);
-            return classInfo == null ? 0 : classInfo.lastModified;
         }
 
         protected Class<?> findClass(String className)
@@ -205,41 +258,58 @@ public class InMemJavaC
             final byte[] bytes = classInfo.getBytes();
             return defineClass(className, bytes, 0, bytes.length);
         }
-    }
 
-    static class MemoryJavaOutput
-        extends SimpleJavaFileObject
-    {
-        private String                 className;
-        private Map<String, ClassInfo> compiledClasses;
-        private long                   lastModified;
-
-        public MemoryJavaOutput(FileObject fileObject, String className,
-                                Map<String, ClassInfo> compiledClasses)
+        /**
+         * Return the class that corresponds to a given source file
+         * @param source The source file
+         * @return The class that corresponds to the source file
+         * @throws ClassNotFoundException If the class is not found
+         */
+        @NotNull Class<?> getClassFromSource(@NotNull File source)
+            throws ClassNotFoundException
         {
-            super(fileObject.toUri(), Kind.CLASS);
-            this.compiledClasses = compiledClasses;
-            this.className = className;
-            lastModified = fileObject.getLastModified();
+            String path = source.getPath();
+            int    lastDot = path.lastIndexOf('.');
+
+            if (lastDot != -1) {
+                path = path.substring(0, lastDot);
+            }
+
+            path = path.replace('/', '.');
+
+            for (String className : classMap.keySet()) {
+                if (path.endsWith(className)) {
+                    return findClass(className);
+                }
+            }
+
+            throw new ClassNotFoundException();
         }
 
-        public OutputStream openOutputStream()
-            throws IOException
+        void addClass(final String name, ByteArrayOutputStream outputStream, final long lastModified)
         {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            compiledClasses.put(className, new ClassInfo(outputStream, lastModified));
-            return outputStream;
+            classMap.put(name, new ClassInfo(outputStream, lastModified));
+        }
+
+        long sourceLastModified(String className)
+        {
+            ClassInfo classInfo = classMap.get(className);
+            return classInfo == null ? 0 : classInfo.lastModified;
         }
     }
 
+    /**
+     * This class is an implementation of a {@link javax.tools.JavaFileManager} that stores the generated classes in
+     * an in-memory classloader {@link MemoryClassLoader }
+     */
     private static class MemoryJavaFileManager
-        extends ForwardingJavaFileManager<StandardJavaFileManager>
+        extends DefaultJavaFileManager
     {
         private MemoryClassLoader memoryClassLoader;
 
         public MemoryJavaFileManager(JavaCompiler stdFileManager, MemoryClassLoader memoryClassLoader)
         {
-            super(stdFileManager.getStandardFileManager(null, null, null));
+            super(stdFileManager);
             this.memoryClassLoader = memoryClassLoader;
         }
 
@@ -248,12 +318,7 @@ public class InMemJavaC
             throws IOException
         {
             assert kind == JavaFileObject.Kind.CLASS;
-            return new MemoryJavaOutput(fileObject, s, memoryClassLoader.getClassMap());
-        }
-
-        public Iterable<? extends JavaFileObject> getJavaFileObjects(File... files)
-        {
-            return fileManager.getJavaFileObjects(files);
+            return new MemoryJavaOutput(fileObject, s, memoryClassLoader);
         }
     }
 }

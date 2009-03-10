@@ -18,16 +18,6 @@
 
 package apb.tasks;
 
-import apb.Environment;
-import apb.ModuleHelper;
-import apb.compiler.DiagnosticReporter;
-import apb.compiler.JavaC;
-import apb.metadata.CompileInfo;
-import apb.metadata.LocalLibrary;
-import apb.utils.DirectoryScanner;
-import apb.utils.FileUtils;
-import org.jetbrains.annotations.NotNull;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +25,21 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import apb.Environment;
+import apb.ModuleHelper;
+
+import apb.compiler.DiagnosticReporter;
+import apb.compiler.JavaC;
+
+import apb.metadata.CompileInfo;
+import apb.metadata.LocalLibrary;
+
+import apb.utils.DirectoryScanner;
+import apb.utils.FileUtils;
+import apb.utils.StringUtils;
+
+import org.jetbrains.annotations.NotNull;
 
 //
 // User: emilio
@@ -61,6 +66,7 @@ public class JavacTask
     @NotNull private final List<File> sourceDirs;
     private String                    target;
     @NotNull private final File       targetDir;
+    private boolean                   trackUnusedDependencies;
     private boolean                   warn;
 
     //~ Constructors .........................................................................................
@@ -102,6 +108,7 @@ public class JavacTask
         javac.failOnWarning = info.failOnWarning;
         javac.annnotationOptions = info.annotationOptions();
         javac.lintOptions = info.lintOptions;
+        javac.trackUnusedDependencies = info.validateDependencies;
         javac.includes = info.includes();
         javac.excludes = info.excludes();
 
@@ -119,7 +126,7 @@ public class JavacTask
     {
         validateDirectories(env, sourceDirs, targetDir);
 
-        JavaC jc = new JavaC();
+        JavaC jc = new JavaC(reporter);
 
         List<File> files = findFiles();
 
@@ -148,8 +155,6 @@ public class JavacTask
 
                 env.logVerbose("Target directory: %s\n", targetDir);
             }
-
-            classPath.add(0, targetDir);
 
             List<String> options = new ArrayList<String>();
 
@@ -193,14 +198,22 @@ public class JavacTask
             }
 
             final boolean status =
-                jc.compile(files, sourceDirs, targetDir, FileUtils.makePath(classPath), options, reporter);
+                jc.compile(files, sourceDirs, targetDir, classPath, options, trackUnusedDependencies);
 
             if (reporter != null) {
-                reporter.flush();
-                reporter.reportError(failOnWarning);
+                reporter.reportSumary(failOnWarning);
             }
+
             if (!status) {
                 env.handle("Compilation failed");
+            }
+            else if (trackUnusedDependencies) {
+                final List<File> unused = jc.unusedPathElements(classPath);
+
+                if (!unused.isEmpty()) {
+                    env.handle(StringUtils.appendIndenting("Unused path elements: ",
+                                                           FileUtils.makePath(unused, "\n")));
+                }
             }
         }
     }

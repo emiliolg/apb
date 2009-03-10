@@ -336,6 +336,32 @@ public class StringUtils
         return patterns;
     }
 
+    /**
+     * Append the lines contained in the 'msg' String to the header String
+     * indenting the lines to respect the original length of the header
+     * @param header The String that will be used as the header to append the lines to
+     * @param msg  The msg to be appended
+     */
+    public static String appendIndenting(@NotNull String header, @NotNull String msg)
+    {
+        String indent = nChars(header.length(), ' ');
+        int    nl;
+
+        StringBuilder result = new StringBuilder(header);
+
+        while ((nl = msg.indexOf('\n')) >= 0) {
+            result.append(msg.substring(0, ++nl));
+            msg = msg.substring(nl);
+            result.append(indent);
+        }
+
+        if (!msg.isEmpty()) {
+            result.append(msg);
+        }
+
+        return result.toString();
+    }
+
     private static boolean matchPathStart(List<String> patterns, List<String> paths, boolean caseSensitive)
     {
         int patternStart = 0;

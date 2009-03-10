@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,21 +13,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.compiler;
 
-import apb.utils.FileUtils;
-
-import javax.tools.DiagnosticListener;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
+
+import apb.utils.FileUtils;
 //
 // User: emilio
 // Date: Sep 8, 2008
@@ -35,37 +37,62 @@ import java.util.List;
 //
 public class JavaC
 {
+    //~ Instance fields ......................................................................................
+
+    private JavaCompiler       compiler;
+    private DiagnosticReporter diagnostics;
+    private Set<File>          usedPathElements;
+
+    //~ Constructors .........................................................................................
+
+    public JavaC(DiagnosticReporter reporter)
+    {
+        compiler = ToolProvider.getSystemJavaCompiler();
+        diagnostics = reporter;
+        usedPathElements = new HashSet<File>();
+    }
+
     //~ Methods ..............................................................................................
 
-    public boolean compile(List<File> files, List<File> sourceDirs, File targetDir, String classPath,
-                           List<String> additionalOptions, DiagnosticListener<JavaFileObject> diagnostics)
+    public boolean compile(List<File> files, List<File> sourceDirs, File targetDir, List<File> classPath,
+                           List<String> additionalOptions, boolean trackUnusedPathElements)
     {
-        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        DefaultJavaFileManager fileManager =
+            trackUnusedPathElements ? new TrackingJavaFileManager(compiler, usedPathElements)
+                                    : new DefaultJavaFileManager(compiler);
 
-        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
-
-        List<String>  options = new ArrayList<String>(additionalOptions);
+        List<String> options = new ArrayList<String>(additionalOptions);
         options.add("-d");
         options.add(targetDir.getPath());
         options.add("-classpath");
-        options.add(classPath);
+        options.add(targetDir + File.pathSeparator + FileUtils.makePath(classPath));
         options.add("-sourcepath");
         options.add(FileUtils.makePath(sourceDirs));
 
         boolean result =
             compiler.getTask(null, fileManager, diagnostics, options, null,
-                             fileManager.getJavaFileObjectsFromFiles(files)).call();
-        close(fileManager);
+                             fileManager.getJavaFileObjects(files)).call();
+        fileManager.close();
         return result;
     }
 
-    protected void close(JavaFileManager fileManager)
+    public List<File> unusedPathElements(List<File> classPath)
     {
-        try {
-            fileManager.close();
+        List<File> result = new ArrayList<File>();
+
+        for (File file : classPath) {
+            try {
+                final File f = file.getCanonicalFile();
+
+                if (!usedPathElements.contains(f)) {
+                    result.add(f);
+                }
+            }
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+        return result;
     }
 }

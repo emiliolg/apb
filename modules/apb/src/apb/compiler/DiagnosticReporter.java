@@ -21,30 +21,44 @@ package apb.compiler;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 
 import apb.Environment;
+
 import apb.utils.FileUtils;
 import apb.utils.StringUtils;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+/**
+ * A Diagnostic Reporter for the Java Compiler
+ * This class implements the DiagnosticListener interface for the JavaCompiler
+ * It allows to specify files for which warnings will be excluded.
+ */
 public class DiagnosticReporter
     implements DiagnosticListener<JavaFileObject>
 {
     //~ Instance fields ......................................................................................
 
-    List<Diagnostic<? extends JavaFileObject>> ds;
-    String                                     lastFile;
-    private Environment                        env;
-    private List<String>                       excludes;
-    private int                                warns, errors;
+    @NotNull private final List<Diagnostic<? extends JavaFileObject>> ds;
+    @NotNull private final Environment                                env;
+    @NotNull private List<String>                                     excludes;
+    @Nullable private String                                          lastFile;
+    private int                                                       warns, errors;
 
     //~ Constructors .........................................................................................
 
-    public DiagnosticReporter(Environment env)
+    /**
+     * Cosntruct a DiagnosticReporter
+     * @param environment The apb Environment
+     */
+    public DiagnosticReporter(@NotNull Environment environment)
     {
-        this.env = env;
+        env = environment;
         lastFile = null;
         ds = new LinkedList<Diagnostic<? extends JavaFileObject>>();
         excludes = Collections.emptyList();
@@ -53,17 +67,21 @@ public class DiagnosticReporter
 
     //~ Methods ..............................................................................................
 
-    public void setExcludes(List<String> excludes)
+    /**
+     * This is the implementation of the method that is invoked
+     * when a problem is found.
+     * Messages are grouped by file, so this method just add them to the 'ds' list
+     * and then they are output by the  {@link #doReport } method
+     *
+     * @param diagnostic  a diagnostic representing the problem that was found
+     */
+    public void report(@Nullable Diagnostic<? extends JavaFileObject> diagnostic)
     {
-        this.excludes = StringUtils.normalizePaths(excludes);
-    }
-
-    public void report(Diagnostic<? extends JavaFileObject> diagnostic)
-    {
-        final JavaFileObject source = diagnostic.getSource();
+        final JavaFileObject source = diagnostic == null ? null : diagnostic.getSource();
 
         if (source != null && !isExcluded(source)) {
             count(diagnostic);
+
             String fileName = source.toString();
 
             if (!fileName.equals(lastFile)) {
@@ -75,37 +93,40 @@ public class DiagnosticReporter
         }
     }
 
-    public void flush()
+    /**
+     * Set the patterns that defines which files to exclude warnings from
+     * @param patterns The patterns
+     */
+    public void setExcludes(@NotNull List<String> patterns)
     {
-        doReport();
+        excludes = StringUtils.normalizePaths(patterns);
     }
 
-    public void reportError(boolean failOnWarning)
+    /**
+     * Check if compilation must failed.
+     * Report the count of errors and warnings if so.
+     * @param failOnWarning Wheter to fail if there are only warnings
+     */
+    public void reportSumary(boolean failOnWarning)
     {
+        // Ensure the last messages are output
+        doReport();
+
+        // Report failure with summary information
         if (errors > 0 || failOnWarning && warns > 0) {
             StringBuilder msg = new StringBuilder();
             msg.append("Compilation failed: ");
 
             if (errors != 0) {
-                if (errors == 1) {
-                    msg.append("1 error");
-                }
-                else {
-                    msg.append(errors).append(" errors");
-                }
+                msg.append(errors == 1 ? "1 error" : errors + " errors");
 
                 if (warns > 0) {
                     msg.append(" and ");
                 }
             }
 
-            if (warns == 1) {
-                msg.append("1 warning");
-            }
-            else {
-                if (warns > 1) {
-                    msg.append(warns).append(" warnings");
-                }
+            if (warns > 0) {
+                msg.append(warns == 1 ? "1 warning" : warns + " warnings");
             }
 
             msg.append(".");
@@ -114,8 +135,11 @@ public class DiagnosticReporter
         }
     }
 
-
-    private void count(Diagnostic<? extends JavaFileObject> diagnostic)
+    /**
+     * Count the number of error & warnings
+     * @param diagnostic  a diagnostic representing the problem that was found
+     */
+    private void count(@NotNull Diagnostic<? extends JavaFileObject> diagnostic)
     {
         switch (diagnostic.getKind()) {
         case ERROR:
@@ -128,20 +152,28 @@ public class DiagnosticReporter
         }
     }
 
+    /**
+     * Output the list of messages for a given file.
+     */
     private void doReport()
     {
         if (lastFile != null) {
             env.logSevere("%s:\n", lastFile);
 
             for (Diagnostic d : ds) {
-                env.logSevere("%s\n", new DiagnosticFormat(d).format());
+                env.logSevere("%s\n", new DiagnosticFormatter(d).format());
             }
 
             ds.clear();
         }
     }
 
-    private boolean isExcluded(JavaFileObject fileObject)
+    /**
+     * Verify if this fileObject must be excluded from the output
+     * @param fileObject The file to check
+     * @return true if the file must be excluded, false otherwise
+     */
+    private boolean isExcluded(@NotNull JavaFileObject fileObject)
     {
         if (!excludes.isEmpty()) {
             String name = FileUtils.makeRelative(env.getBaseDir(), fileObject.toString());

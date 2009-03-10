@@ -55,9 +55,8 @@ public abstract class Environment
 {
     //~ Instance fields ......................................................................................
 
-    private File             basedir;
-    private Map<File, Class> classesByFile;
-    private long             clock;
+    private File basedir;
+    private long clock;
 
     private Command currentCommand;
 
@@ -82,8 +81,7 @@ public abstract class Environment
         os = Os.getInstance();
         properties = new TreeMap<String, String>();
         helpersByElement = new HashMap<String, ProjectElementHelper>();
-        classesByFile = new HashMap<File, Class>();
-        javac = new InMemJavaC();
+        javac = new InMemJavaC(this);
 
         // Read Environment
         //        for (Map.Entry<String,String> entry : System.getenv().entrySet()) {
@@ -274,7 +272,7 @@ public abstract class Environment
         properties.put(PROJECTS_HOME_PROP_KEY, file.getAbsolutePath());
     }
 
-    @NotNull public ProjectElementHelper getHelper(ProjectElement element)
+    @NotNull public ProjectElementHelper getHelper(@NotNull ProjectElement element)
     {
         synchronized (helpersByElement) {
             final String         className = element.getClass().getName();
@@ -587,41 +585,13 @@ public abstract class Environment
         try {
             File       source = projectElementFile(name);
             final File pdir = projectDir(source);
-
-            Class<?> clazz = loadClass(pdir, source);
-
             setProjectsHome(pdir);
-            ProjectElement projectElement = (ProjectElement) clazz.newInstance();
-            return getHelper(projectElement);
+
+            return getHelper(javac.loadClass(pdir, source).asSubclass(ProjectElement.class).newInstance());
         }
-        catch (IllegalAccessException e) {
+        catch (Exception e) {
             throw new DefinitionException(name, e);
         }
-        catch (InstantiationException e) {
-            throw new DefinitionException(name, e);
-        }
-        catch (IOException e) {
-            throw new DefinitionException(name, e);
-        }
-    }
-
-    private Class<?> loadClass(File pdir, File source)
-    {
-        Class<?> clazz = classesByFile.get(source);
-
-        if (clazz == null) {
-            logVerbose("Loading: %s\n", source);
-
-            clazz = javac.compileToClass(pdir, source);
-
-            if (clazz == null || !ProjectElement.class.isAssignableFrom(clazz)) {
-                abort("Invalid file: " + source);
-            }
-
-            classesByFile.put(source, clazz);
-        }
-
-        return clazz;
     }
 
     private void loadUserProperties()
