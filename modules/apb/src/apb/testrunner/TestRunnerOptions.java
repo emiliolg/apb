@@ -62,18 +62,21 @@ class TestRunnerOptions
         factory = new TestSetCreator.Factory();
         factory.register(new JunitTestSetCreator());
 
-        quiet = addOption('q', "quiet", Messages.QUIET_OUTPUT, false);
-        verbose = addOption('v', "verbose", Messages.VERBOSE, false);
-        failEmpty = addOption('f', "fail-empty", "Fail if no tests.", false);
-        suite = addOption('s', "suite", "Run the specified test suite");
-        includes = addOption('i', "includes", Messages.SET_TO_INCLUDE, asString(TestModule.DEFAULT_INCLUDES));
-        excludes = addOption('e', "excludes", Messages.SET_TO_EXCLUDE, asString(TestModule.DEFAULT_EXCLUDES));
-        type = addOption('t', "type", "The test type", "junit");
-        classpath = addOption('c', "classpath", "The classpath used to load the test classes");
-        reports = addOption('r', "reports", "The reports to be generated");
-        reportSpecs = addOption("report-specs-file", Messages.REPORT_SPEC_FILE);
-        output = addOption('o', "output", Messages.OUTPUT_FOR_REPORTS);
-        creator = addOption("creator", "A class defining a creator for a test type.");
+        quiet = addBooleanOption('q', "quiet", Messages.QUIET_OUTPUT);
+        verbose = addBooleanOption('v', "verbose", Messages.VERBOSE);
+        failEmpty = addBooleanOption('f', "fail-empty", "Fail if no tests.");
+        suite = addOption('s', "suite", "Run the specified test suite", "<test name>");
+        includes = addOption('i', "includes", Messages.SET_TO_INCLUDE, Messages.COLON_SEPARATED_PATTERNS);
+        includes.setValue(asString(TestModule.DEFAULT_INCLUDES));
+        excludes = addOption('e', "excludes", Messages.SET_TO_EXCLUDE, Messages.COLON_SEPARATED_PATTERNS);
+        excludes.setValue(asString(TestModule.DEFAULT_EXCLUDES));
+        type = addOption('t', "type", "The test type", "<type>");
+        type.setValue("junit");
+        classpath = addOption('c', "classpath", "The classpath used to load the test classes", "<classpath>");
+        reports = addOption('r', "reports", "The reports to be generated", "<reports>");
+        reportSpecs = addOption("report-specs-file", Messages.REPORT_SPEC_FILE, "<file name>");
+        output = addOption('o', "output", Messages.OUTPUT_FOR_REPORTS, "<directory>");
+        creator = addOption("creator", "A class defining a creator for a test type.", "<class>");
 
         for (String testType : factory.names()) {
             type.addValidValue(testType);

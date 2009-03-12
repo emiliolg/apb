@@ -29,23 +29,32 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
 import apb.utils.FileUtils;
+
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Sep 8, 2008
 // Time: 4:42:07 PM
 
-//
+/**
+ * A simple wrapper to JavaCompiler
+ */
 public class JavaC
 {
     //~ Instance fields ......................................................................................
 
-    private JavaCompiler       compiler;
-    private DiagnosticReporter diagnostics;
-    private Set<File>          usedPathElements;
+    @NotNull private final JavaCompiler       compiler;
+    @NotNull private final DiagnosticReporter diagnostics;
+    @NotNull private final Set<File>          usedPathElements;
 
     //~ Constructors .........................................................................................
 
-    public JavaC(DiagnosticReporter reporter)
+    /**
+     * Construct a JavaC instance
+     * Intialize the underlying compiler.
+     * @param reporter
+     */
+    public JavaC(@NotNull DiagnosticReporter reporter)
     {
         compiler = ToolProvider.getSystemJavaCompiler();
         diagnostics = reporter;
@@ -54,8 +63,19 @@ public class JavaC
 
     //~ Methods ..............................................................................................
 
-    public boolean compile(List<File> files, List<File> sourceDirs, File targetDir, List<File> classPath,
-                           List<String> additionalOptions, boolean trackUnusedPathElements)
+    /**
+     * Innvoke the compiler
+     * @param files  The files to be compiled
+     * @param sourceDirs The Source Directories where the above files reside
+     * @param targetDir The target directory where the output will be generated
+     * @param classPath The ClassPath where dependencies will be sought
+     * @param additionalOptions Additional Options for the compiler.
+     * @param trackUnusedPathElements Wheter to track unused path elements or not.
+     * @return true if the compilation was succesful, false otherwise
+     */
+    public boolean compile(@NotNull List<File> files, @NotNull List<File> sourceDirs, @NotNull File targetDir,
+                           @NotNull List<File> classPath, @NotNull List<String> additionalOptions,
+                           boolean trackUnusedPathElements)
     {
         DefaultJavaFileManager fileManager =
             trackUnusedPathElements ? new TrackingJavaFileManager(compiler, usedPathElements)
@@ -76,7 +96,13 @@ public class JavaC
         return result;
     }
 
-    public List<File> unusedPathElements(List<File> classPath)
+    /**
+     * Return the list of unused path Elements. For this to be meaningfull the compiler must be called with
+     * trackUnusedPathElements in true
+     * @param classPath The classPath to check against
+     * @return The list of unusedPath elements from the provided path
+     */
+    @NotNull public List<File> unusedPathElements(@NotNull List<File> classPath)
     {
         List<File> result = new ArrayList<File>();
 

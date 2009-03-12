@@ -29,9 +29,10 @@ public class Main
     public static void main(String[] args)
         throws Throwable
     {
-        Environment  env = new StandaloneEnv(Main.class.getPackage().getName());
-        ApbOptions   options = new ApbOptions(args, env);
+        ApbOptions   options = new ApbOptions(args);
         List<String> arguments = options.parse();
+        Environment  env = new StandaloneEnv(Main.class.getPackage().getName(), options.definedProperties());
+        options.initEnv(env);
         Main.execute(env, arguments);
     }
 

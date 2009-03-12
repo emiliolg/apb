@@ -409,9 +409,9 @@ public class JavadocTask
 
         if (activeProxy != null) {
             String protocol =
-                StringUtils.isNotEmpty(activeProxy.getProtocol()) ? activeProxy.getProtocol() + "." : "";
+                    activeProxy.getProtocol().isEmpty() ? "" : activeProxy.getProtocol() + ".";
 
-            if (StringUtils.isNotEmpty(activeProxy.getHost())) {
+            if (!activeProxy.getHost().isEmpty()) {
                 cmd.add("-J-D" + protocol + "proxySet=true");
                 cmd.add("-J-D" + protocol + "proxyHost=" + activeProxy.getHost());
 
@@ -419,14 +419,14 @@ public class JavadocTask
                     cmd.add("-J-D" + protocol + "proxyPort=" + activeProxy.getPort());
                 }
 
-                if (StringUtils.isNotEmpty(activeProxy.getNonProxyHosts())) {
+                if (!activeProxy.getNonProxyHosts().isEmpty()) {
                     cmd.add("-J-D" + protocol + "nonProxyHosts=\"" + activeProxy.getNonProxyHosts() + "\"");
                 }
 
-                if (StringUtils.isNotEmpty(activeProxy.getUsername())) {
+                if (!activeProxy.getUsername().isEmpty()) {
                     cmd.add("-J-Dhttp.proxyUser=\"" + activeProxy.getUsername() + "\"");
 
-                    if (StringUtils.isNotEmpty(activeProxy.getPassword())) {
+                    if (!activeProxy.getPassword().isEmpty()) {
                         cmd.add("-J-Dhttp.proxyPassword=\"" + activeProxy.getPassword() + "\"");
                     }
                 }

@@ -65,7 +65,7 @@ public class Command
 
     private Command(Method method, BuildTarget annotation)
     {
-        this(annotation.name().isEmpty() ? NameUtils.idFromMethod(method) : annotation.name(), method, annotation.description());
+        this(annotation.name().isEmpty() ? NameUtils.idFromMember(method) : annotation.name(), method, annotation.description());
     }
 
     //~ Methods ..............................................................................................
@@ -122,7 +122,7 @@ public class Command
         }
     }
 
-    private static Map<String, Command> buildCommands(@NotNull final Class<? extends ProjectElement> projectElementClass)
+    static Map<String, Command> buildCommands(@NotNull final Class<? extends ProjectElement> projectElementClass)
     {
         Map<String, Command> commandsMap = new TreeMap<String, Command>();
 

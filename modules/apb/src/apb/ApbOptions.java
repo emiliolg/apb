@@ -18,7 +18,9 @@
 
 package apb;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import apb.metadata.ProjectElement;
 
@@ -35,7 +37,8 @@ class ApbOptions
 {
     //~ Instance fields ......................................................................................
 
-    private Environment     environment;
+    private Option<String> defineProperty;
+
     private Option<Boolean> forceBuild;
     private Option<Boolean> noFailOnError;
     private Option<Boolean> quiet;
@@ -44,15 +47,16 @@ class ApbOptions
 
     //~ Constructors .........................................................................................
 
-    public ApbOptions(String[] ops, Environment env)
+    public ApbOptions(String[] ops)
     {
         super(ops, "apb", "0.1");
-        showStackTrace = addOption('t', "show-stack-trace", SHOW_STACK_TRACE, false);
-        quiet = addOption('q', "quiet", QUIET_OUTPUT, false);
-        verbose = addOption('v', "verbose", VERBOSE, false);
-        noFailOnError = addOption('c', "continue", CONTINUE_AFTER_ERROR, false);
-        forceBuild = addOption('f', "force-build", FORCE_BUILD, false);
-        environment = env;
+        showStackTrace = addBooleanOption('t', "show-stack-trace", SHOW_STACK_TRACE);
+        quiet = addBooleanOption('q', "quiet", QUIET_OUTPUT);
+        verbose = addBooleanOption('v', "verbose", VERBOSE);
+        noFailOnError = addBooleanOption('c', "continue", CONTINUE_AFTER_ERROR);
+        forceBuild = addBooleanOption('f', "force-build", FORCE_BUILD);
+        defineProperty = addOption('D', "define", DEFINE_PROPERTY, "<name>=<value>");
+        defineProperty.setCanRepeat(true);
     }
 
     //~ Methods ..............................................................................................
@@ -64,22 +68,7 @@ class ApbOptions
 
     public String[] getArgFullDescription()
     {
-        return new String[] { MODULE_OR_PROJECT, COMMANDS(printCommands(ProjectElement.class)) };
-    }
-
-    private static String printCommands(final Class<? extends ProjectElement> projectElementClass)
-    {
-        StringBuilder cmds = new StringBuilder();
-
-        for (Command cmd : Command.listCommands(projectElementClass)) {
-            if (!cmd.isDefault()) {
-                cmds.append(cmds.length() == 0 ? "[ " : " | ");
-                cmds.append(cmd.getName());
-            }
-        }
-
-        cmds.append(" ]");
-        return cmds.toString();
+        return new String[] { MODULE_OR_PROJECT, COMMANDS(printCommands()) };
     }
 
     public List<String> parse()
@@ -90,7 +79,11 @@ class ApbOptions
         if (result.isEmpty()) {
             printHelp();
         }
+        return result;
+    }
 
+    public void initEnv(Environment environment)
+    {
         if (verbose.getValue()) {
             environment.setVerbose();
         }
@@ -104,13 +97,45 @@ class ApbOptions
 
         environment.setFailOnError(!noFailOnError.getValue());
         environment.setForceBuild(forceBuild.getValue());
+    }
+
+    private static String printCommands()
+    {
+        StringBuilder cmds = new StringBuilder();
+
+        for (Command cmd : Command.buildCommands(ProjectElement.class).values()) {
+            if (!cmd.isDefault()) {
+                cmds.append(cmds.length() == 0 ? "[ " : " | ");
+                cmds.append(cmd.getName());
+            }
+        }
+
+        cmds.append(" ]");
+        return cmds.toString();
+    }
+
+    public Map<String, String> definedProperties()
+    {
+        Map<String, String> result = new LinkedHashMap<String, String>();
+
+        for (String define : defineProperty.getValues()) {
+            int pos = define.indexOf('=');
+
+            if (pos == -1) {
+                result.put(define, "true");
+            }
+            else {
+                result.put(define.substring(0, pos).trim(), define.substring(pos + 1).trim());
+            }
+        }
+
         return result;
     }
 
     private void doCompletion()
     {
         if (arguments.size() >= 3 && "--complete".equals(arguments.get(0))) {
-            OptionCompletion op = new OptionCompletion(environment, options);
+            OptionCompletion op = new OptionCompletion(options);
 
             op.execute(arguments);
         }

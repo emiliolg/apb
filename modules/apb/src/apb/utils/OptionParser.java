@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.utils;
 
@@ -22,6 +25,9 @@ import java.util.List;
 import apb.Messages;
 
 import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.StringUtils.nChars;
 
 /**
  * This class parses command line arguments using two alternatives:
@@ -36,11 +42,11 @@ public class OptionParser
 
     protected final List<String> arguments;
 
+    protected List<Option> options = null;
+
     private final String  appName;
     private final boolean exitOnStopParsing = true;
-
-    protected List<Option> options = null;
-    private final String versionNumber;
+    private final String  versionNumber;
 
     //~ Constructors .........................................................................................
 
@@ -68,32 +74,28 @@ public class OptionParser
         return null;
     }
 
-    public final Option<String> addOption(final char letter, final String name, String description)
+    public final Option<String> addOption(final char letter, @NotNull final String name,
+                                          @NotNull String description, String valueDescription)
     {
-        return addOption(String.class, letter, name, description, null);
+        return addOption(String.class, letter, name, description, valueDescription);
     }
 
-    public final Option<String> addOption(final String name, String description)
+    public final Option<String> addOption(@NotNull final String name, @NotNull String description,
+                                          @NotNull String valueDescription)
     {
-        return addOption(String.class, '\0', name, description, null);
+        return addOption(String.class, '\0', name, description, valueDescription);
     }
 
-    public final Option<String> addOption(final char letter, final String name, String description,
-                                          String defaultValue)
+    protected final Option<Boolean> addBooleanOption(final char letter, @NotNull final String name,
+                                                     @NotNull String description)
     {
-        return addOption(String.class, letter, name, description, defaultValue);
+        return addOption(Boolean.class, letter, name, description, "");
     }
 
-    protected final Option<Boolean> addOption(final char letter, final String name, String description,
-                                              final boolean defaultValue)
+    protected final Option<Integer> addIntegerOption(final char letter, @NotNull final String name,
+                                                     @NotNull String description, String valueDescription)
     {
-        return addOption(Boolean.class, letter, name, description, defaultValue);
-    }
-
-    protected final Option<Integer> addOption(final char letter, final String name, String description,
-                                              final int defaultValue)
-    {
-        return addOption(Integer.class, letter, name, description, defaultValue);
+        return addOption(Integer.class, letter, name, description, valueDescription);
     }
 
     protected List<String> parse()
@@ -103,35 +105,30 @@ public class OptionParser
         for (i = 0; i < arguments.size(); ++i) {
             String arg = arguments.get(i);
 
-            if (arg.charAt(0) != '-' || "--".equals(arg)) {
+            if (!arg.startsWith("-")) {
+                break;
+            }
+            if ("--".equals(arg) || "-".equals(arg)) {
+                i++;
                 break;
             }
 
-            boolean longOpt = arg.charAt(1) == '-';
-
-            final boolean negation = arg.startsWith(NEG_PREFIX);
-
-            arg = arg.substring(negation ? NEG_PREFIX.length() : longOpt ? 2 : 1);
-
-            if (arg.isEmpty()) {
-                printError(Messages.INVOPT(arguments.get(i)));
-                stopParsing();
-            }
-
-            if (longOpt) {
+            if (arg.charAt(1) == '-') {
                 Option opt = findOption(arg);
-                i = execute(opt, negation, i);
+                i = execute(opt, i);
             }
             else {
-                for (int j = 0; j < arg.length(); j++) {
+                for (int j = 1; j < arg.length(); j++) {
                     char   optChar = arg.charAt(j);
                     Option opt = findOption(optChar);
 
-                    if (j > 0 && !opt.isBoolean()) {
-                        printError(Messages.CANTCOMBINE);
+                    // Check if the value is embedded (e.g -Daaaa)
+                    if (!opt.isBoolean() && j < arg.length() - 1) {
+                        opt.execute(arg.substring(j + 1));
+                        break;
                     }
 
-                    i = execute(opt, negation, i);
+                    i = execute(opt, i);
                 }
             }
         }
@@ -159,29 +156,15 @@ public class OptionParser
 
         System.err.println(Messages.OPTIONS);
 
+        int len = 0;
+
         for (Option opt : options) {
-            String ops = opt.getName();
+            len = Math.max(len, opt.getHelp().length());
+        }
 
-            if (opt.isString()) {
-                ops += " " + STRING_VALUE;
-            }
-            else if (opt.isInteger()) {
-                ops += " " + VALUE;
-            }
-
-            System.err.print(SPACES);
-
-            final char letter = opt.getLetter();
-
-            if (letter == 0) {
-                System.err.print("   ");
-            }
-            else {
-                System.err.print("-" + letter + ",");
-            }
-
-            System.err.printf(" --%-18s: %s", ops, opt.getDescription());
-            System.err.println();
+        for (Option opt : options) {
+            String ops = opt.getHelp();
+            System.err.println(ops + nChars(len - ops.length(), ' ') + ": " + opt.getDescription());
         }
 
         System.exit(0);
@@ -202,9 +185,13 @@ public class OptionParser
 
     Option findOption(String option)
     {
+        final boolean negation = option.startsWith(NEG_PREFIX);
+
+        option = option.substring(negation ? NEG_PREFIX.length() : 2);
+
         for (Option o : options) {
             if (o.getName().equals(option)) {
-                return o;
+                return negation ? o.negate() : o;
             }
         }
 
@@ -224,23 +211,18 @@ public class OptionParser
         System.exit(0);
     }
 
-    private int execute(Option opt, boolean negation, int i)
+    private int execute(Option opt, int i)
     {
         if (opt.isBoolean()) {
-            opt.execute(negation);
+            opt.execute("true");
         }
         else {
-            if (negation) {
-                printError(Messages.NONBOOLNEG(opt.getLetter(), opt.getName()));
-                stopParsing();
-            }
-
             if (i == arguments.size() - 1) {
                 printError(Messages.EXPECTEDARG(opt.getLetter(), opt.getName()));
                 stopParsing();
             }
 
-            opt.execute(negation, arguments.get(++i));
+            opt.execute(arguments.get(++i));
         }
 
         return i;
@@ -251,11 +233,12 @@ public class OptionParser
         System.err.println(msg);
     }
 
-    private <T> Option<T> addOption(final Class<T> type, final char letter, final String name,
-                                    String description, final T defaultValue)
+    private <T> Option<T> addOption(@NotNull final Class<T> type, final char letter,
+                                    @NotNull final String name, @NotNull String description,
+                                    @NotNull String valueDescription)
     {
         init();
-        final Option<T> opt = new Option<T>(this, type, letter, name, description, defaultValue);
+        final Option<T> opt = new Option<T>(this, type, letter, name, description, valueDescription);
         options.add(opt);
         return opt;
     }
@@ -265,24 +248,20 @@ public class OptionParser
         if (options == null) {
             options = new ArrayList<Option>();
             final Option<Boolean> helpOption =
-                new Option<Boolean>(this, Boolean.class, 'h', Option.HELP, Messages.HELP, null) {
-                    public void execute(final boolean negated)
+                new Option<Boolean>(this, Boolean.class, 'h', Option.HELP, Messages.HELP, "") {
+                    public void execute(String v)
                     {
-                        if (!negated) {
-                            printHelp();
-                        }
+                        printHelp();
                     }
                 };
 
             options.add(helpOption);
 
             final Option<Boolean> versionOption =
-                new Option<Boolean>(this, Boolean.class, '\0', Option.VERSION, Messages.VERSION, null) {
-                    public void execute(final boolean negated)
+                new Option<Boolean>(this, Boolean.class, '\0', Option.VERSION, Messages.VERSION, "") {
+                    public void execute(String v)
                     {
-                        if (!negated) {
-                            printVersion();
-                        }
+                        printVersion();
                     }
                 };
             options.add(versionOption);
@@ -302,9 +281,6 @@ public class OptionParser
 
     @NonNls private static final String SPACES = "    ";
 
-    @NonNls private static final String STRING_VALUE = "<string>";
-    @NonNls private static final String VALUE = "<value>";
-
     @NonNls private static final String NEG_PREFIX = "--no-";
 
     //~ Inner Classes ........................................................................................
@@ -316,25 +292,36 @@ public class OptionParser
     */
     public static class Option<T>
     {
+        private boolean            canRepeat;
         private final String       description;
         private final char         letter;
         private final String       name;
         private final OptionParser optionParser;
         private final Class<T>     type;
-        private final ArrayList<T> validValues;
+        private final List<T>      validValues;
 
-        private T value;
+        private T      value;
+        private String valueDescription;
 
-        Option(OptionParser optionParser, final Class<T> type, final char letter, final String name,
-               String description, final T defaultValue)
+        private List<T> values;
+
+        Option(OptionParser optionParser, final Class<T> type, final char letter, @NotNull final String name,
+               @NotNull String description, @NotNull String valueDescription)
         {
             this.optionParser = optionParser;
             this.letter = letter;
             this.name = name.startsWith("--") ? name.substring(2) : name;
             this.type = type;
-            this.description = description == null ? "" : description;
-            value = defaultValue;
+            this.description = description;
             validValues = new ArrayList<T>();
+            values = new ArrayList<T>();
+            this.valueDescription = valueDescription;
+            setValue("");
+        }
+
+        public List<T> getValues()
+        {
+            return values;
         }
 
         public char getLetter()
@@ -381,48 +368,48 @@ public class OptionParser
             return name;
         }
 
-        @SuppressWarnings({ "unchecked" })
-        void execute(final boolean negated)
+        public String getValueDescription()
         {
-            if (!negated && name.equals(HELP)) {
-                optionParser.printHelp();
-            }
-
-            if (isBoolean()) {
-                value = (T) Boolean.valueOf(!negated);
-            }
+            return valueDescription;
         }
 
-        @SuppressWarnings({ "unchecked" })
-        void execute(final boolean negated, final String str)
+        public void setCanRepeat(boolean canRepeat)
         {
-            if (isBoolean()) {
-                Boolean b = Boolean.valueOf(str);
-
-                if (negated) {
-                    b = !b;
-                }
-
-                value = (T) b;
-            }
-            else {
-                if (isInteger()) {
-                    value = (T) Integer.valueOf(str);
-                }
-                else {
-                    value = (T) str;
-                }
-
-                if (!validValues.isEmpty() && !validValues.contains(value)) {
-                    optionParser.printError(Messages.INVARG(str, name));
-                    optionParser.stopParsing();
-                }
-            }
+            this.canRepeat = canRepeat;
         }
 
-        boolean isString()
+        public void setValue(String str)
         {
-            return type == String.class;
+            value =
+                type.cast(type == Integer.class ? Integer.valueOf(str)
+                                                : type == Boolean.class ? Boolean.valueOf(str) : str);
+        }
+
+        public Option<T> negate()
+        {
+            if (!isBoolean()) {
+                optionParser.printError(Messages.NONBOOLNEG(letter, name));
+                optionParser.stopParsing();
+            }
+
+            final Option<T> result =
+                new Option<T>(optionParser, type, letter, name, description, valueDescription);
+            result.value = type.cast(!(Boolean) value);
+            return result;
+        }
+
+        void execute(final String str)
+        {
+            setValue(str);
+
+            if (canRepeat) {
+                values.add(value);
+            }
+
+            if (!validValues.isEmpty() && !validValues.contains(value)) {
+                optionParser.printError(Messages.INVARG(str, name));
+                optionParser.stopParsing();
+            }
         }
 
         boolean isBoolean()
@@ -430,9 +417,25 @@ public class OptionParser
             return type == Boolean.class;
         }
 
-        boolean isInteger()
+        private String getHelp()
         {
-            return type == Integer.class;
+            StringBuilder result = new StringBuilder(SPACES);
+
+            if (letter == 0) {
+                result.append("   ");
+            }
+            else {
+                result.append('-').append(letter).append(',');
+            }
+
+            result.append(" --");
+            result.append(getName());
+
+            if (getValueDescription() != null) {
+                result.append(' ').append(getValueDescription());
+            }
+
+            return result.toString();
         }
 
         @NonNls static final String HELP = "help";

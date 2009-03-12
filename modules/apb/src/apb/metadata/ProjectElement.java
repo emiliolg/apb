@@ -24,6 +24,8 @@ import apb.tasks.IdeaTask;
 
 import apb.utils.NameUtils;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * The base class for project elements
  */
@@ -73,12 +75,16 @@ public abstract class ProjectElement
                 )
     public abstract void compile(Environment env);
 
-    @BuildTarget(depends = "compile", description = "Compile test classes.")
+    @BuildTarget(
+                 depends = "compile",
+                 description = "Compile test classes."
+                )
     public abstract void compileTests(Environment env);
 
     @BuildTarget(
                  depends = "compile-tests",
-                 description = "Test the compiled sources, generating reports and (optional) coverage information."
+                 description =
+                 "Test the compiled sources, generating reports and (optional) coverage information."
                 )
     public abstract void runTests(Environment env);
 
@@ -96,14 +102,23 @@ public abstract class ProjectElement
         IdeaTask.execute(env);
     }
 
-    public String getName()
+    @NotNull public final String getName()
     {
         return NameUtils.name(getClass());
+    }
+
+    @NotNull public final String getId()
+    {
+        return NameUtils.idFromClass(getClass());
+    }
+
+    @NotNull public final String getDir()
+    {
+        return NameUtils.dirFromId(getId());
     }
 
     public String toString()
     {
         return getName();
     }
-
 }

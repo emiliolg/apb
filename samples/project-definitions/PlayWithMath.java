@@ -25,11 +25,12 @@ public class PlayWithMath
     //~ Instance initializers ................................................................................
 
     {
-        dependencies(new Math());
+        dependencies(new Math(), localLibrary("../lib/emma.jar"));
 
         group = "samples";
         version = "1.0";
         pkg.mainClass = "Play";
         pkg.addClassPath = true;
+       compiler.validateDependencies = false;
     }
 }

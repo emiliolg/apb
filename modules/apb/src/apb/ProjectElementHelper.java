@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +13,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb;
-
-import apb.metadata.Module;
-import apb.metadata.Project;
-import apb.metadata.ProjectElement;
-import apb.metadata.TestModule;
-import apb.utils.IdentitySet;
-import apb.utils.NameUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -28,7 +24,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import apb.metadata.Module;
+import apb.metadata.Project;
+import apb.metadata.ProjectElement;
+import apb.metadata.TestModule;
+
+import apb.utils.IdentitySet;
+
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Oct 10, 2008
@@ -42,24 +46,25 @@ public abstract class ProjectElementHelper
     public Environment env;
 
     private final List<ProjectElementHelper> allElements;
-    private ProjectElement                   element;
+    @Nullable private ProjectElement         element;
     private Set<String>                      executedCommands;
-    private boolean                          topLevel;
+
+    @NotNull private final ProjectElement proto;
+    private boolean                       topLevel;
 
     //~ Constructors .........................................................................................
 
-    public ProjectElementHelper(ProjectElement element, Environment env)
+    public ProjectElementHelper(ProjectElement element, Environment environment)
     {
-        this.element = element;
-        this.env = env;
+        proto = element;
+        env = environment;
         allElements = new ArrayList<ProjectElementHelper>();
         executedCommands = new HashSet<String>();
     }
 
     //~ Methods ..............................................................................................
 
-    @NotNull
-    public static ProjectElementHelper create(ProjectElement element, Environment environment)
+    @NotNull public static ProjectElementHelper create(ProjectElement element, Environment environment)
     {
         ProjectElementHelper result;
 
@@ -82,14 +87,14 @@ public abstract class ProjectElementHelper
         return getName();
     }
 
-    public String getName()
+    @NotNull public String getName()
     {
-        return element.getName();
+        return proto.getName();
     }
 
     public String getId()
     {
-        return NameUtils.idFromJavaId(getName());
+        return proto.getId();
     }
 
     public Environment getEnv()
@@ -120,8 +125,12 @@ public abstract class ProjectElementHelper
         return result;
     }
 
-    public ProjectElement getElement()
+    @NotNull public ProjectElement getElement()
     {
+        if (element == null) {
+            throw new IllegalStateException("Not activated element: " + getName());
+        }
+
         return element;
     }
 
@@ -142,7 +151,7 @@ public abstract class ProjectElementHelper
 
     public String getJdkName()
     {
-        return element.jdk;
+        return getElement().jdk;
     }
 
     public void build(String commandName)
@@ -161,9 +170,17 @@ public abstract class ProjectElementHelper
         return env.sourceLastModified(getElement().getClass());
     }
 
+    public Class<? extends ProjectElement> getElementClass()
+    {
+        return proto.getClass();
+    }
+
     protected abstract List<? extends ProjectElementHelper> addChildren();
 
-    void activate() {}
+    void activate(@NotNull ProjectElement activatedElement)
+    {
+        element = activatedElement;
+    }
 
     void initDependencyGraph()
     {
@@ -197,13 +214,13 @@ public abstract class ProjectElementHelper
         boolean result = true;
 
         if (notExecuted(commandName)) {
-            Command command = Command.findCommand(element, commandName);
+            Command command = Command.findCommand(proto, commandName);
 
             if (command == null) {
                 result = false;
             }
             else {
-                ProjectElement projectElement = env.activate(element);
+                ProjectElement projectElement = env.activate(proto);
 
                 for (Command cmd : command.getAllCommands()) {
                     if (notExecuted(cmd.getName())) {
@@ -230,4 +247,4 @@ public abstract class ProjectElementHelper
     {
         return !executedCommands.contains(commandName);
     }
-    }
+}

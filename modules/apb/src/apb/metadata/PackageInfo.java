@@ -10,7 +10,7 @@ public class PackageInfo
     /**
      * Whether to generate a Class-Path manifest entry.
      */
-    public boolean addClassPath;
+    @BuildProperty public boolean addClassPath;
 
     /**
      * The directory for the package.
@@ -20,7 +20,7 @@ public class PackageInfo
     /**
      * Whether to generate a jar with the sources or not.
      */
-    public boolean generateSourcesJar;
+    @BuildProperty public boolean generateSourcesJar;
 
     /**
      * The main class of the package

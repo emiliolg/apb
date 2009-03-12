@@ -20,6 +20,7 @@ import java.util.List;
 
 import apb.metadata.Project;
 import apb.metadata.ProjectElement;
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Oct 10, 2008
@@ -29,11 +30,14 @@ import apb.metadata.ProjectElement;
 public class ProjectHelper
     extends ProjectElementHelper
 {
+    private final @NotNull
+    List<ProjectElement> components;
     //~ Constructors .........................................................................................
 
-    public ProjectHelper(Project project, Environment env)
+    public ProjectHelper(@NotNull Project project, @NotNull Environment env)
     {
         super(project, env);
+        components = project.components();
     }
 
     //~ Methods ..............................................................................................
@@ -47,7 +51,7 @@ public class ProjectHelper
     {
         List<ProjectElementHelper> result = new ArrayList<ProjectElementHelper>();
 
-        for (ProjectElement module : getProject().components()) {
+        for (ProjectElement module : components) {
             result.add(env.getHelper(module));
         }
 

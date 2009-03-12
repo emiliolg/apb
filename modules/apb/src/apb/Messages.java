@@ -90,10 +90,12 @@ public class Messages
     @NonNls public static final String VERBOSE = "Be extra verbose.";
     @NonNls public static final String CONTINUE_AFTER_ERROR = "Continue after error.";
     @NonNls public static final String FORCE_BUILD = "Force build (Do not check timestamps).";
+    @NonNls public static final String DEFINE_PROPERTY = "Define a property.";
+    @NonNls public static final String COLON_SEPARATED_PATTERNS = "<pattern:pattern..>";
     @NonNls public static final String SET_TO_INCLUDE =
-        "Set of test files to include (patterns separated by ':')";
+        "Set of test files to include.";
     @NonNls public static final String SET_TO_EXCLUDE =
-        "Set of test files to exclude (patterns separated by ':')";
+        "Set of test files to exclude.";
     @NonNls public static final String REPORT_SPEC_FILE =
         "Specify a serialized object with the report specification";
     @NonNls public static final String OUTPUT_FOR_REPORTS =

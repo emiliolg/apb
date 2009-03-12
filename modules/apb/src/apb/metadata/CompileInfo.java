@@ -37,56 +37,56 @@ public class CompileInfo
     /**
      * Generate Debug information.
      */
-    public boolean debug = true;
+    @BuildProperty public boolean debug = true;
 
     /**
      * Use of the default error formatting
      * Warning ! This options is incompatible with warnExcludes and failOnWarnings
      *
      */
-    public boolean defaultErrorFormatter = false;
+    @BuildProperty public boolean defaultErrorFormatter = false;
 
     /**
      * Output source location where deprecated APIs are used
      */
-    public boolean deprecated = false;
+    @BuildProperty public boolean deprecated = false;
 
     /**
      * Fail on warnings
      */
-    public boolean failOnWarning = false;
+    @BuildProperty public boolean failOnWarning = false;
 
     /**
      * Whether to enable recommended warnings
      */
-    public boolean lint = false;
+    @BuildProperty public boolean lint = false;
 
     /**
      * Enable specific warnings (Comma separated list) :
      * {all,cast,deprecation,divzero,empty,unchecked,fallthrough,path,serial,finally,overrides,
      * -cast,-deprecation,-divzero,-empty,-unchecked,-fallthrough,-path,-serial,-finally,-overrides,none}
      */
-    public String lintOptions = "";
+    @BuildProperty public String lintOptions = "";
 
     /**-     * Provide source compatibility with specified release
      */
-    public String source = "";
+    @BuildProperty public String source = "";
 
     /**
      * Generate class files for specific VM version
      */
-    public String target = "";
+    @BuildProperty public String target = "";
 
     /**
      * Wheter to validate that all dependencies are being used
      * If it's true and there are some unused dependencies it will fail with the list of unused ones
      */
-    public boolean validateDependencies = false;
+    @BuildProperty public boolean validateDependencies = false;
 
     /**
      * Generate warnings
      */
-    public boolean warn = true;
+    @BuildProperty public boolean warn = true;
 
     /**
      * Options to pass to the annotation processor

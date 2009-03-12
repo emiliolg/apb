@@ -22,6 +22,7 @@ import java.util.Map;
 
 import apb.metadata.CoverageInfo;
 import apb.metadata.TestModule;
+import apb.metadata.ProjectElement;
 
 import apb.testrunner.output.TestReport;
 
@@ -130,9 +131,9 @@ public class TestModuleHelper
         return m.testType.creatorClass(m.customCreator);
     }
 
-    void activate()
+    void activate(@NotNull ProjectElement activatedTestModule)
     {
-        super.activate();
+        super.activate(activatedTestModule);
         TestModule m = getModule();
         workingDirectory = env.fileFromBase(m.workingDirectory);
         reportsDir = env.fileFromBase(m.reportsDir);

@@ -626,11 +626,6 @@ public class IdeaTask
             dependencies(library);
         }
 
-        public String getName()
-        {
-            return getClass().getSimpleName();
-        }
-
         private String makePath(ProjectElementHelper project, File file)
             throws IOException
         {
