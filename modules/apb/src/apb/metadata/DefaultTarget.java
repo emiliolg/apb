@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +13,25 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.metadata;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import static java.lang.annotation.ElementType.TYPE;
 
-@Retention(value = RetentionPolicy.RUNTIME)
+/**
+ * This annotation specify the <b>default</b> build target for a given module.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(TYPE)
 public @interface DefaultTarget
 {
+    /**
+     * The name of a build target
+     */
     public abstract String value();
 }
