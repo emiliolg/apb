@@ -29,6 +29,8 @@ import javax.tools.ForwardingJavaFileObject;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 
+import org.jetbrains.annotations.NotNull;
+
 // User: emilio
 // Date: Mar 9, 2009
 // Time: 2:03:01 PM
@@ -45,11 +47,15 @@ public class TrackingJavaFileManager
 {
     //~ Instance fields ......................................................................................
 
-    private Set<File> usedPathElements;
+    /**
+     * The set of used path elements (jars & dirs)
+     */
+    @NotNull
+    private final Set<File> usedPathElements;
 
     //~ Constructors .........................................................................................
 
-    protected TrackingJavaFileManager(JavaCompiler compiler, Set<File> usedPathElements)
+    protected TrackingJavaFileManager(@NotNull JavaCompiler compiler, @NotNull Set<File> usedPathElements)
     {
         super(compiler);
         this.usedPathElements = usedPathElements;
@@ -57,6 +63,10 @@ public class TrackingJavaFileManager
 
     //~ Methods ..............................................................................................
 
+    /**
+     * Implementation of {@link javax.tools.JavaFileManager#list} that wraps every JavaFileObject
+     * returned to be able to track if the file was used.
+     */
     @Override public Iterable<JavaFileObject> list(Location location, String packageName,
                                                    Set<JavaFileObject.Kind> kinds, boolean recurse)
         throws IOException
@@ -71,6 +81,10 @@ public class TrackingJavaFileManager
         return result;
     }
 
+    /**
+     * Implements {@link javax.tools.JavaFileManager#inferBinaryName} invoking the default implementation
+     * over the original JavaFileObject (Not the wrapped one).
+     */
     @Override public String inferBinaryName(Location location, JavaFileObject file)
     {
         return super.inferBinaryName(location,
@@ -78,31 +92,23 @@ public class TrackingJavaFileManager
                                      ? ((TrackingJavaFileObject) file).getTarget() : file);
     }
 
-    private void track(JavaFileObject fileObject, String packageName)
-    {
-        String s = fileObject.toUri().getPath();
-        s = s.substring(0, s.length() - fileObject.getName().length() - packageName.length() - 2);
-
-        try {
-            usedPathElements.add(new File(s).getCanonicalFile());
-        }
-        catch (IOException e) {
-            // This should not happen
-            throw new RuntimeException(e);
-        }
-    }
-
     //~ Inner Classes ........................................................................................
 
+    /**
+     * Wrapper to {@link JavaFileObject} that tracks when a file object was used
+     */
     class TrackingJavaFileObject
         extends ForwardingJavaFileObject<JavaFileObject>
     {
-        private String packageName;
+        /**
+         * The package name of the file object
+         */
+        @NotNull final private String packageName;
 
         /**
          * Creates a new instance of ForwardingJavaFileObject.
          *
-         * @param packageName
+         * @param packageName  The package name of the file object
          * @param fileObject delegate to this file object
          */
         protected TrackingJavaFileObject(String packageName, JavaFileObject fileObject)
@@ -111,16 +117,43 @@ public class TrackingJavaFileManager
             this.packageName = packageName;
         }
 
+        /**
+         * Override {@link javax.tools.JavaFileObject#openInputStream()} to track when a JavaFileObject was actually used
+         */
+
         @Override public InputStream openInputStream()
             throws IOException
         {
-            track(fileObject, packageName);
+            track();
             return super.openInputStream();
         }
 
+        /**
+         * Return the original file Object
+         */
         JavaFileObject getTarget()
         {
             return fileObject;
         }
+
+        /**
+         * Track the usage of this file Object
+         * It extracts the jar or directory name of the class and adds it to the set of
+         * used path elements.
+         */
+        private void track()
+        {
+            String s = fileObject.toUri().getPath();
+            s = s.substring(0, s.length() - fileObject.getName().length() - packageName.length() - 2);
+
+            try {
+                usedPathElements.add(new File(s).getCanonicalFile());
+            }
+            catch (IOException e) {
+                // This should not happen
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 }

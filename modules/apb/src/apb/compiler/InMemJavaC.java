@@ -98,7 +98,7 @@ public class InMemJavaC
 
         System.arraycopy(args, 1, args, 0, args.length - 1);
 
-        InMemJavaC javac = new InMemJavaC(new StandaloneEnv(""));
+        InMemJavaC javac = new InMemJavaC(new StandaloneEnv());
 
         invokeMain(javac.compileToClass(null, source), args);
     }

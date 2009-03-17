@@ -28,6 +28,7 @@ import java.util.TreeSet;
 
 import apb.utils.FileUtils;
 import apb.utils.OptionParser;
+import apb.utils.StandaloneEnv;
 //
 // User: emilio
 // Date: Mar 4, 2009
@@ -45,9 +46,9 @@ public class OptionCompletion
 
     //~ Constructors .........................................................................................
 
-    public OptionCompletion(Environment env, List<OptionParser.Option> options)
+    public OptionCompletion(List<OptionParser.Option> options)
     {
-        this.env = env;
+        env = new StandaloneEnv();
         this.options = options;
         excludeDirs = env.getProperty("project.path.exclude", DEFAULT_EXCLUDES).split(",");
     }
@@ -173,7 +174,7 @@ public class OptionCompletion
         Set<String>          result = new TreeSet<String>();
         ProjectElementHelper helper = env.constructProjectElement(module);
 
-        for (Command cmd : Command.listCommands(helper.getElement().getClass())) {
+        for (Command cmd : Command.listCommands(helper.getElementClass())) {
             String cmdName = cmd.getName();
             if (cmdName.startsWith(command)) {
                 result.add(module + "." + cmdName);

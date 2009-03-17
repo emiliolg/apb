@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb;
 
@@ -29,6 +32,7 @@ import apb.metadata.JavadocInfo;
 import apb.metadata.LocalLibrary;
 import apb.metadata.Module;
 import apb.metadata.PackageInfo;
+import apb.metadata.ProjectElement;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
 
@@ -46,24 +50,20 @@ public class ModuleHelper
 {
     //~ Instance fields ......................................................................................
 
-    private CompileInfo compileInfo;
-
+    private List<Dependency>   dependencies;
     private List<ModuleHelper> directDependencies;
     private File               generatedSource;
-    private JavadocInfo        javadocInfo;
+    private File               moduledir;
     private File               output;
     private File               packageDir;
-    private PackageInfo        packageInfo;
-    private String             packageName;
-    private ResourcesInfo      resourcesInfo;
     private File               source;
-    private File moduledir;
 
     //~ Constructors .........................................................................................
 
     ModuleHelper(Module module, Environment env)
     {
         super(module, env);
+        dependencies = module.dependencies();
     }
 
     //~ Methods ..............................................................................................
@@ -94,12 +94,12 @@ public class ModuleHelper
 
     public File getPackageFile()
     {
-        return new File(packageDir, packageName + getPackageInfo().type.getExt());
+        return new File(packageDir, getPackageName() + getPackageInfo().type.getExt());
     }
 
     public File getSourcePackageFile()
     {
-        return new File(packageDir, packageName + SRC_JAR);
+        return new File(packageDir, getPackageName() + SRC_JAR);
     }
 
     public String getClassPath()
@@ -109,7 +109,7 @@ public class ModuleHelper
 
     public PackageInfo getPackageInfo()
     {
-        return packageInfo;
+        return getModule().pkg;
     }
 
     public String classFileForManifest()
@@ -147,7 +147,7 @@ public class ModuleHelper
 
     public ResourcesInfo getResourcesInfo()
     {
-        return resourcesInfo;
+        return getModule().resources;
     }
 
     public Iterable<ModuleHelper> getDirectDependencies()
@@ -219,24 +219,24 @@ public class ModuleHelper
 
     public JavadocInfo getJavadocInfo()
     {
-        return javadocInfo;
+        return getModule().javadoc;
     }
 
     public CompileInfo getCompileInfo()
     {
-        return compileInfo;
+        return getModule().compiler;
     }
 
     public String getPackageName()
     {
-        return packageName;
+        return trimDashes(getModule().pkg.name);
     }
 
     protected List<ModuleHelper> addChildren()
     {
         directDependencies = new ArrayList<ModuleHelper>();
 
-        for (Dependency dependency : getModule().dependencies()) {
+        for (Dependency dependency : dependencies) {
             if (dependency instanceof Module) {
                 directDependencies.add((ModuleHelper) env.getHelper((Module) dependency));
             }
@@ -245,21 +245,18 @@ public class ModuleHelper
         return directDependencies;
     }
 
-    void activate()
+    void activate(@NotNull ProjectElement activatedModule)
     {
+        super.activate(activatedModule);
+
         Module module = getModule();
-        moduledir = env.fileFromBase(env.getProperty(Environment.MODULE_DIR_PROP_KEY));
+        moduledir = env.fileFromBase(module.getDir());
         output = env.fileFromBase(module.output);
         source = env.fileFromBase(module.source);
         generatedSource = env.fileFromBase(module.generatedSource);
-        resourcesInfo = module.resources;
-        javadocInfo = module.javadoc;
-        compileInfo = module.compiler;
-        packageInfo = module.pkg;
-        packageName = env.expand(packageInfo.name);
 
         try {
-            packageDir = env.fileFromBase(packageInfo.dir).getCanonicalFile();
+            packageDir = env.fileFromBase(module.pkg.dir).getCanonicalFile();
         }
         catch (IOException e) {
             throw new BuildException(e);
@@ -271,6 +268,11 @@ public class ModuleHelper
         }
     }
 
+    private static String trimDashes(String s)
+    {
+        int l = s.length();
+        return s.substring(s.charAt(0) == '-' ? 1 : 0, s.charAt(l - 1) == '-' ? l - 1 : l);
+    }
 
     //~ Static fields/initializers ...........................................................................
 

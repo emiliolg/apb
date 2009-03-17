@@ -32,10 +32,9 @@ import java.util.TreeMap;
 import apb.compiler.InMemJavaC;
 
 import apb.metadata.Module;
-import apb.metadata.Project;
 import apb.metadata.ProjectElement;
 
-import apb.utils.NameUtils;
+import apb.utils.PropertyExpansor;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -56,7 +55,13 @@ public abstract class Environment
     //~ Instance fields ......................................................................................
 
     private File basedir;
-    private long clock;
+
+    /**
+     * Base properties are enviroment or argument properties
+     * They take preference over the properties defined in project elements
+     */
+    private Map<String, String> baseProperties;
+    private long                clock;
 
     private Command currentCommand;
 
@@ -67,9 +72,13 @@ public abstract class Environment
     private InMemJavaC                        javac;
     private Os                                os;
 
-    private Set<File>           projectPath;
+    private Set<File> projectPath;
+
+    /**
+     * Project properties are the properties defined in project elements
+     */
+    private Map<String, String> projectProperties;
     private File                projectsHome;
-    private Map<String, String> properties;
     private boolean             quiet;
     private boolean             showStackTrace;
     private boolean             verbose;
@@ -79,13 +88,15 @@ public abstract class Environment
     public Environment()
     {
         os = Os.getInstance();
-        properties = new TreeMap<String, String>();
+        baseProperties = new TreeMap<String, String>();
+        projectProperties = new TreeMap<String, String>();
+
         helpersByElement = new HashMap<String, ProjectElementHelper>();
         javac = new InMemJavaC(this);
 
         // Read Environment
         //        for (Map.Entry<String,String> entry : System.getenv().entrySet()) {
-        //            properties.put(entry.getKey(), entry.getValue());
+        //            baseProperties.put(entry.getKey(), entry.getValue());
         //        }
         loadUserProperties();
 
@@ -159,25 +170,29 @@ public abstract class Environment
      */
     @NotNull public String getProperty(@NotNull String id)
     {
-        String result = properties.get(id);
+        String result = baseProperties.get(id);
 
         if (result == null) {
-            PropertyException e = new PropertyException(id);
+            result = projectProperties.get(id);
 
-            if (isVerbose()) {
-                //                StringBuilder additionalInfo = new StringBuilder();
-                //                additionalInfo.append("\nDefined properties are: \n");
-                //
-                //                for (Map.Entry<String, String> entry : properties.entrySet()) {
-                //                    additionalInfo.append("  ").append(entry.getKey()).append(" = ")
-                //                      .append(StringUtils.encode(entry.getValue())).append("\n");
-                //                }
-                //
-                //                e.setAdditionalInfo(additionalInfo.toString());
+            if (result == null) {
+                PropertyException e = new PropertyException(id);
+
+                if (isVerbose()) {
+                    //                StringBuilder additionalInfo = new StringBuilder();
+                    //                additionalInfo.append("\nDefined properties are: \n");
+                    //
+                    //                for (Map.Entry<String, String> entry : properties.entrySet()) {
+                    //                    additionalInfo.append("  ").append(entry.getKey()).append(" = ")
+                    //                      .append(StringUtils.encode(entry.getValue())).append("\n");
+                    //                }
+                    //
+                    //                e.setAdditionalInfo(additionalInfo.toString());
+                }
+
+                handle(e);
+                result = "";
             }
-
-            handle(e);
-            result = "";
         }
 
         return result;
@@ -191,8 +206,8 @@ public abstract class Environment
      */
     @NotNull public String getProperty(@NotNull String id, @NotNull String defaultValue)
     {
-        String result = properties.get(id);
-        return result == null ? defaultValue : result;
+        String result = baseProperties.get(id);
+        return result != null ? result : (result = projectProperties.get(id)) != null ? result : defaultValue;
     }
 
     /**
@@ -269,7 +284,7 @@ public abstract class Environment
     public void setProjectsHome(File file)
     {
         projectsHome = file;
-        properties.put(PROJECTS_HOME_PROP_KEY, file.getAbsolutePath());
+        putProperty(PROJECTS_HOME_PROP_KEY, file.getAbsolutePath());
     }
 
     @NotNull public ProjectElementHelper getHelper(@NotNull ProjectElement element)
@@ -326,26 +341,14 @@ public abstract class Environment
         return child.isAbsolute() ? child : new File(basedir, child.getPath());
     }
 
-    public ProjectElement activate(@NotNull ProjectElement element)
+    @NotNull public ProjectElement activate(@NotNull ProjectElement element)
     {
         currentElement = getHelper(element);
 
-        final String prop = element instanceof Project ? PROJECT_PROP_KEY : MODULE_PROP_KEY;
-        putProperty(prop, getCurrentName());
-        final String id = NameUtils.idFromJavaId(getCurrentName());
-        putProperty(prop + ID_SUFFIX, id);
-        putProperty(prop + DIR_SUFFIX, id.replace('.', '/'));
+        ProjectElement result = new PropertyExpansor(this).expand(element);
 
-        ProjectElement result = expandProperties("", element);
-
-        try {
-            basedir = new File(getProperty(BASEDIR_PROP_KEY)).getCanonicalFile();
-        }
-        catch (IOException e) {
-            throw new BuildException(e);
-        }
-
-        currentElement.activate();
+        basedir = new File(result.basedir);
+        currentElement.activate(result);
         return result;
     }
 
@@ -447,13 +450,27 @@ public abstract class Environment
         return os;
     }
 
+    public void putProperty(String name, String value)
+    {
+        if (isVerbose()) {
+            logVerbose("property %s=%s\n", name, value);
+        }
+
+        projectProperties.put(name, value);
+    }
+
+    public void setProperties(Map<String, String> values)
+    {
+        System.out.println("values = " + values);
+    }
+
     protected void loadProjectPath()
     {
         projectPath = new LinkedHashSet<File>();
 
         String path = System.getenv("APB_PROJECT_PATH");
 
-        String path2 = properties.get("project.path");
+        String path2 = baseProperties.get("project.path");
 
         if (path2 != null) {
             path = path == null ? path2 : path + File.pathSeparator + path2;
@@ -472,54 +489,6 @@ public abstract class Environment
 
             projectPath.add(dir);
         }
-    }
-
-    void putProperty(String name, String value)
-    {
-        // Special handling to canonize basedir
-        if (name.equals(BASEDIR_PROP_KEY)) {
-            try {
-                value = new File(value).getCanonicalPath();
-            }
-            catch (IOException e) {}
-        }
-
-        if (isVerbose()) {
-            logVerbose("property %s=%s\n", name, value);
-        }
-
-        properties.put(name, value);
-    }
-
-    /**
-     * Expand the property attributes
-     * The expansion order is done using Bread First Sequence.
-     * So first the primitive fields are expanded and then the fields
-     * with complex objects.
-     *
-     * @param parent
-     * @param object
-     */
-    <T> T expandProperties(String parent, T object)
-    {
-        T result = newInstance(object);
-
-        final Map<FieldHelper, Object> innerMap = new HashMap<FieldHelper, Object>();
-
-        // Expand the top level
-        // add other fields to the map
-        for (FieldHelper field : FieldHelper.publicAndDeclaredfields(this, parent, object)) {
-            expandProperty(field, object, result, innerMap);
-        }
-
-        // Expand the inner level
-        for (Map.Entry<FieldHelper, Object> entry : innerMap.entrySet()) {
-            final FieldHelper field = entry.getKey();
-            Object            inner = expandProperties(field.getCompoundName(), entry.getValue());
-            field.setFieldValue(result, inner);
-        }
-
-        return result;
     }
 
     @NotNull File searchInProjectPath(String projectElement)
@@ -594,6 +563,13 @@ public abstract class Environment
         }
     }
 
+    protected void copyProperties(Map<?, ?> p)
+    {
+        for (Map.Entry<?, ?> entry : p.entrySet()) {
+            baseProperties.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+        }
+    }
+
     private void loadUserProperties()
     {
         final String home = System.getProperty("user.home");
@@ -609,85 +585,12 @@ public abstract class Environment
         }
     }
 
-    private void copyProperties(Properties p)
-    {
-        for (Map.Entry<Object, Object> entry : p.entrySet()) {
-            properties.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
-        }
-    }
-
-    @SuppressWarnings({ "unchecked" })
-    private <T> T newInstance(T object)
-    {
-        final Class<? extends T> c = (Class<? extends T>) object.getClass();
-
-        try {
-            return c.newInstance();
-        }
-        catch (InstantiationException e) {
-            handle(e);
-        }
-        catch (IllegalAccessException e) {
-            handle(e);
-        }
-
-        return object;
-    }
-
-    private <T> void expandProperty(FieldHelper field, T object, T result, Map<FieldHelper, Object> innerMap)
-    {
-        Object fieldValue = field.getFieldValue(object);
-        field.setFieldValue(result, fieldValue);
-
-        if (field.isProperty()) {
-            final Class<?> type = field.getType();
-
-            if (type.equals(String.class) || type.isPrimitive() || type.isEnum()) {
-                final String value = field.expand(fieldValue);
-                field.setFieldValue(result, convert(value, type));
-                putProperty(field.getCompoundName(), value);
-            }
-            else if (fieldValue != null) {
-                innerMap.put(field, fieldValue);
-            }
-        }
-    }
-
-    private Object convert(String value, Class<?> type)
-    {
-        Object result = value;
-
-        if (type != String.class) {
-            if (type == Boolean.TYPE) {
-                result = Boolean.parseBoolean(value);
-            }
-            else if (type == Integer.TYPE) {
-                result = Integer.parseInt(value);
-            }
-            else {
-                handle("Unsuported conversion to " + type.getName());
-            }
-        }
-
-        return result;
-    }
-
     //~ Static fields/initializers ...........................................................................
-
-    private static final String ID_SUFFIX = "id";
-    private static final String DIR_SUFFIX = "dir";
 
     private static final String JAR_FILE_URL_PREFIX = "jar:file:";
 
     private static final String APB_DIR = ".apb";
     private static final String APB_PROPERTIES = "apb.properties";
-
-    static final String BASEDIR_PROP_KEY = "basedir";
-
-    static final String PROJECT_PROP_KEY = "project";
-
-    static final String MODULE_PROP_KEY = "module";
-    static final String MODULE_DIR_PROP_KEY = "moduledir";
 
     //
     private static final String PROJECTS_HOME_PROP_KEY = "projects-home";
@@ -696,4 +599,9 @@ public abstract class Environment
     static final String VERSION_PROP_KEY = "version";
     static final String PKG_PROP_KEY = "pkg";
     static final String PKG_DIR_KEY = PKG_PROP_KEY + ".dir";
+
+    public String getBaseProperty(String propertyName) {
+        return baseProperties.get(propertyName);
+
+    }
 }

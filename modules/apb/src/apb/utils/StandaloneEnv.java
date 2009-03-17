@@ -22,9 +22,10 @@ import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.Map;
+import java.util.Collections;
 
 import apb.Environment;
-import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Dec 10, 2008
@@ -40,9 +41,15 @@ public class StandaloneEnv
 
     //~ Constructors .........................................................................................
 
-    public StandaloneEnv(final String name)
+    public StandaloneEnv()
+    {
+        this("", Collections.emptyMap());
+    }
+
+    public StandaloneEnv(final String name, Map<?,?> properties)
     {
         super();
+        copyProperties(properties);
         logger = createLogger(name);
         loadProjectPath();
     }
@@ -106,5 +113,4 @@ public class StandaloneEnv
         boolean useColor = getBooleanProperty("color") && System.console() != null;
         return useColor ? new ColorFormatter(this) : new SimpleFormatter(this);
     }
-
 }

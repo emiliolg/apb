@@ -16,8 +16,12 @@
 package apb.utils;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 
 import static java.lang.Character.*;
+
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Sep 9, 2008
@@ -28,14 +32,21 @@ public class NameUtils
 {
     //~ Methods ..............................................................................................
 
-    public static String idFromMethod(Method method)
+    @NotNull
+    public static String idFromMember(@NotNull Member member)
     {
-        return idFromJavaId(method.getName());
+        return idFromJavaId(member.getName());
     }
 
-    public static String idFromJavaId(String className)
+    @NotNull
+    public static String idFromClass(@NotNull Class<?> clazz)
     {
-        StringBuilder result = new StringBuilder();
+        return idFromJavaId(name(clazz));
+    }
+
+    private static String idFromJavaId(String className)
+    {
+        final StringBuilder result = new StringBuilder();
 
         for (int i = 0; i < className.length(); i++) {
             final char chr = className.charAt(i);
@@ -55,23 +66,22 @@ public class NameUtils
         return result.toString();
     }
 
-    public static String name(Class clazz)
+    @NotNull public static String name(@NotNull Class clazz)
     {
-        String result;
+        final String result;
 
         if (clazz.isArray()) {
             result = name(clazz.getComponentType()) + "[]";
         }
         else {
-            result = clazz.getName();
-
-            // remove package
-            // result = result.substring(result.lastIndexOf(".") + 1);
-
-            //replace '$' by '.'
-            result = result.replace('$', '.');
+            //replace '$' by '.' for Inner classes
+            result = clazz.getName().replace('$', '.');
         }
 
         return result;
+    }
+
+    @NotNull public static String dirFromId(@NotNull String id) {
+        return id.replace('.', '/');
     }
 }
