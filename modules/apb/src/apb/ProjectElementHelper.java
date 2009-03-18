@@ -20,6 +20,7 @@ package apb;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -46,6 +47,7 @@ public abstract class ProjectElementHelper
     public Environment env;
 
     private final List<ProjectElementHelper> allElements;
+    private CommandBuilder                   builder;
     @Nullable private ProjectElement         element;
     private Set<String>                      executedCommands;
 
@@ -170,9 +172,15 @@ public abstract class ProjectElementHelper
         return env.sourceLastModified(getElement().getClass());
     }
 
-    public Class<? extends ProjectElement> getElementClass()
+    public Collection<Command> listCommands()
     {
-        return proto.getClass();
+        return getBuilder().listCommands();
+    }
+
+
+    public Command findCommand(String commandName)
+    {
+        return getBuilder().commands().get(commandName);
     }
 
     protected abstract List<? extends ProjectElementHelper> addChildren();
@@ -209,12 +217,12 @@ public abstract class ProjectElementHelper
         elements.add(this);
     }
 
-    private boolean execute(String commandName)
+    private boolean execute(@NotNull String commandName)
     {
         boolean result = true;
 
         if (notExecuted(commandName)) {
-            Command command = Command.findCommand(proto, commandName);
+            Command command = findCommand(commandName);
 
             if (command == null) {
                 result = false;
@@ -222,10 +230,10 @@ public abstract class ProjectElementHelper
             else {
                 ProjectElement projectElement = env.activate(proto);
 
-                for (Command cmd : command.getAllCommands()) {
-                    if (notExecuted(cmd.getName())) {
+                for (Command cmd : command.getDependencies()) {
+                    if (notExecuted(cmd.getQName())) {
                         env.setCurrentCommand(cmd);
-                        markExecuted(cmd.getName());
+                        markExecuted(cmd);
                         cmd.invoke(projectElement, env);
                     }
                 }
@@ -238,9 +246,18 @@ public abstract class ProjectElementHelper
         return result;
     }
 
-    private void markExecuted(String commandName)
+    @NotNull private CommandBuilder getBuilder()
     {
-        executedCommands.add(commandName);
+        if (builder == null) {
+            builder = new CommandBuilder(proto);
+        }
+
+        return builder;
+    }
+
+    private void markExecuted(Command cmd)
+    {
+        executedCommands.add(cmd.getQName());
     }
 
     private boolean notExecuted(String commandName)

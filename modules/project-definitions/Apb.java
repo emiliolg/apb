@@ -14,7 +14,6 @@
 // limitations under the License
 
 
-import apb.metadata.Module;
 import libraries.IdeaAnnotations;
 import libraries.Junit3;
 
@@ -31,6 +30,7 @@ public final class Apb
         pkg.name = "apb";
         pkg.addClassPath = true;
         pkg.generateSourcesJar = true;
+        pkg.services("apb.Command", "apb.commands.idegen.Idea", "apb.commands.idegen.Eclipse");
 
         javadoc.deprecatedList = false;
         javadoc.links("http://java.sun.com/javase/6/docs/api");

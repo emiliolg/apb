@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.Map;
+import java.util.TreeMap;
 
 import apb.utils.FileUtils;
 import apb.utils.OptionParser;
@@ -40,7 +42,7 @@ public class OptionCompletion
     //~ Instance fields ......................................................................................
 
     private Environment env;
-    private String[] excludeDirs;
+    private String[]    excludeDirs;
 
     private List<OptionParser.Option> options;
 
@@ -174,8 +176,8 @@ public class OptionCompletion
         Set<String>          result = new TreeSet<String>();
         ProjectElementHelper helper = env.constructProjectElement(module);
 
-        for (Command cmd : Command.listCommands(helper.getElementClass())) {
-            String cmdName = cmd.getName();
+        for (Command cmd : helper.listCommands()) {
+            String cmdName = cmd.getQName();
             if (cmdName.startsWith(command)) {
                 result.add(module + "." + cmdName);
             }

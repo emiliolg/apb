@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,20 +13,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.tasks;
 
-import apb.BuildException;
-import apb.Environment;
-import apb.ModuleHelper;
-import apb.metadata.Dependency;
-import apb.metadata.Module;
-import apb.metadata.PackageInfo;
-import apb.metadata.PackageType;
-import apb.utils.DirectoryScanner;
-import apb.utils.FileUtils;
-import org.jetbrains.annotations.NotNull;
-
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -47,6 +40,20 @@ import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import apb.BuildException;
+import apb.Environment;
+import apb.ModuleHelper;
+
+import apb.metadata.Dependency;
+import apb.metadata.Module;
+import apb.metadata.PackageInfo;
+import apb.metadata.PackageType;
+
+import apb.utils.DirectoryScanner;
+import apb.utils.FileUtils;
+
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Sep 9, 2008
@@ -63,9 +70,10 @@ public class JarTask
     private List<String> excludes, includes;
     private File         jarFile;
 
-    private int               level = Deflater.DEFAULT_COMPRESSION;
-    @NotNull private Manifest manifest;
-    private List<File>        sourceDir;
+    private int                      level = Deflater.DEFAULT_COMPRESSION;
+    @NotNull private Manifest        manifest;
+    @NotNull private Map<String, Set<String>> services;
+    private List<File>               sourceDir;
 
     //~ Constructors .........................................................................................
 
@@ -76,6 +84,7 @@ public class JarTask
         sourceDir = new ArrayList<File>();
         excludes = Collections.emptyList();
         includes = Arrays.asList("**/**");
+        services = Collections.emptyMap();
         manifest = new Manifest();
         manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
         manifest.getMainAttributes().putValue("Created-By", "APB");
@@ -110,7 +119,7 @@ public class JarTask
                 }
             }
 
-
+            jarTask.setServices(packageInfo.services());
             jarTask.execute();
 
             if (packageInfo.generateSourcesJar) {
@@ -174,6 +183,11 @@ public class JarTask
         includes = patterns;
     }
 
+    private void setServices(@NotNull Map<String, Set<String>> services)
+    {
+        this.services = services;
+    }
+
     private void addDir(File file)
     {
         sourceDir.add(file);
@@ -212,11 +226,16 @@ public class JarTask
                 jarOutputStream = openJar();
 
                 Set<String> addedDirs = new HashSet<String>();
+                writeMetaInfEntries(jarOutputStream, addedDirs);
 
                 for (File dir : files.keySet()) {
                     for (String fileName : files.get(dir)) {
-                        writeToJar(jarOutputStream, dir.getAbsolutePath(), new File(dir, fileName),
-                                   addedDirs);
+                        final File file = new File(dir, fileName);
+
+                        if (file.length() != 0 && !file.isDirectory()) {
+                            writeToJar(jarOutputStream, fileName.replace(File.separatorChar, '/'),
+                                       new FileInputStream(file), addedDirs);
+                        }
                     }
                 }
 
@@ -283,22 +302,10 @@ public class JarTask
         return true;
     }
 
-    private void writeToJar(JarOutputStream jarOut, String baseDir, File file, Set<String> addedDirs)
+    private void writeToJar(JarOutputStream jarOut, final String fileName, final InputStream is,
+                            Set<String> addedDirs)
         throws IOException
     {
-        String fileName = file.getAbsolutePath();
-
-        if (!fileName.startsWith(baseDir)) {
-            env.handle("Wrong basedir");
-            return;
-        }
-
-        fileName = fileName.substring(baseDir.length() + 1).replace(File.separatorChar, '/');
-
-        if (fileName.isEmpty() || file.length() == 0 || file.isDirectory()) {
-            return;
-        }
-
         writeParentDirs(jarOut, fileName, addedDirs);
 
         env.logVerbose("Adding entry... %s\n", fileName);
@@ -306,16 +313,30 @@ public class JarTask
         JarEntry entry = new JarEntry(fileName);
         jarOut.putNextEntry(entry);
 
-        byte[]          arr = new byte[1024];
-        FileInputStream fileIn = new FileInputStream(file);
-        int             n;
+        byte[] arr = new byte[1024];
+        int    n;
 
-        while ((n = fileIn.read(arr)) > 0) {
+        while ((n = is.read(arr)) > 0) {
             jarOut.write(arr, 0, n);
         }
 
-        fileIn.close();
+        is.close();
         jarOut.flush();
+    }
+
+    private void writeMetaInfEntries(JarOutputStream jarOut, Set<String> addedDirs)
+        throws IOException
+    {
+        for (Map.Entry<String, Set<String>> e : services.entrySet()) {
+            String        fileName = "META-INF/services/" + e.getKey();
+            StringBuilder buff = new StringBuilder();
+
+            for (String provider : e.getValue()) {
+                buff.append(provider).append('\n');
+            }
+
+            writeToJar(jarOut, fileName, new ByteArrayInputStream(buff.toString().getBytes()), addedDirs);
+        }
     }
 
     private void writeParentDirs(JarOutputStream jarOut, String fileName, Set<String> addedDirs)

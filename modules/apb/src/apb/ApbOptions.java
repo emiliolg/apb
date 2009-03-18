@@ -21,12 +21,14 @@ package apb;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import apb.metadata.ProjectElement;
+import java.util.Set;
+import java.util.TreeSet;
 
 import apb.utils.OptionParser;
+import apb.utils.StandaloneEnv;
 
 import static apb.Messages.*;
+import apb.metadata.Module;
 //
 // User: emilio
 // Date: Sep 3, 2008
@@ -103,11 +105,20 @@ class ApbOptions
     {
         StringBuilder cmds = new StringBuilder();
 
-        for (Command cmd : Command.buildCommands(ProjectElement.class).values()) {
-            if (!cmd.isDefault()) {
+        // Create a Mock Module Helper
+        ModuleHelper mock = new ModuleHelper(new Module(), new StandaloneEnv());
+        Set<String> nameSpaces = new TreeSet<String>();
+        for (Command cmd : mock.listCommands()) {
+            if (cmd.hasNameSpace()) {
+                nameSpaces.add(cmd.getNameSpace());
+            }
+            else if (!cmd.isDefault()) {
                 cmds.append(cmds.length() == 0 ? "[ " : " | ");
                 cmds.append(cmd.getName());
             }
+        }
+        for (String nameSpace : nameSpaces) {
+            cmds.append(" | " ).append(nameSpace).append(":*");
         }
 
         cmds.append(" ]");

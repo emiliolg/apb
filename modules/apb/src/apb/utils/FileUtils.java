@@ -414,19 +414,43 @@ public class FileUtils
     public static List<File> listJavaSources(Collection<File> sourceDirs)
     {
         List<File> result = new ArrayList<File>();
+        Set<File>         files = new HashSet<File>();
 
         for (File dir : sourceDirs) {
             if (dir != null && dir.exists()) {
                 List<File> abs = new ArrayList<File>();
                 addAll(abs, dir, JAVA_EXT);
                 for (File ab : abs) {
-                    result.add(makeRelative(dir, ab));
+                    if (!alreadyProcesses(ab, files))
+                        result.add(makeRelative(dir, ab));
                 }
             }
         }
 
         return result;
     }
+
+    private static boolean alreadyProcesses(File f, Set<File> files)
+    {
+        boolean result;
+
+        try {
+            File canonical = f.getCanonicalFile();
+
+            result = files.contains(canonical);
+
+            if (!result) {
+                files.add(canonical);
+            }
+        }
+        catch (IOException e) {
+            result = true;
+        }
+
+        return result;
+    }
+
+
 
     public static void close(Closeable closeable)
     {

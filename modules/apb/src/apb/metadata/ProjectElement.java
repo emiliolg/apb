@@ -96,11 +96,11 @@ public abstract class ProjectElement
                 )
     public abstract void packageit(Environment env);
 
-    @BuildTarget(description = "Generate Idea project and module files.")
-    public void genIdea(Environment env)
-    {
-        IdeaTask.execute(env);
-    }
+//    @BuildTarget(description = "Generate Idea project and module files.")
+//    public void genIdea(Environment env)
+//    {
+//        IdeaTask.execute(env);
+//    }
 
     @NotNull public final String getName()
     {

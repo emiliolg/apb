@@ -101,7 +101,7 @@ public class SimpleFormatter
 
             if (env.getCurrentCommand() != null) {
                 result.append(".");
-                result.append(env.getCurrentCommand().getName());
+                result.append(env.getCurrentCommand().getQName());
             }
 
             result.append("] ");

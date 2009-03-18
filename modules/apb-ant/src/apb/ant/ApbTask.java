@@ -15,8 +15,8 @@
 
 package apb.ant;
 
-import apb.Command;
 import apb.Main;
+import apb.Command;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
