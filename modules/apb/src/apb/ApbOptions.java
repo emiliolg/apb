@@ -51,7 +51,7 @@ class ApbOptions
 
     public ApbOptions(String[] ops)
     {
-        super(ops, "apb", "0.1");
+        super(ops, "apb", "0.9.1");
         showStackTrace = addBooleanOption('t', "show-stack-trace", SHOW_STACK_TRACE);
         quiet = addBooleanOption('q', "quiet", QUIET_OUTPUT);
         verbose = addBooleanOption('v', "verbose", VERBOSE);
