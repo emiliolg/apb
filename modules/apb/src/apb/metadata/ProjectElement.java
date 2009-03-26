@@ -102,14 +102,14 @@ public abstract class ProjectElement
 //        IdeaTask.execute(env);
 //    }
 
-    @NotNull public final String getName()
+    @NotNull public String getName()
     {
         return NameUtils.name(getClass());
     }
 
     @NotNull public final String getId()
     {
-        return NameUtils.idFromClass(getClass());
+        return NameUtils.idFromJavaId(getName());
     }
 
     @NotNull public final String getDir()

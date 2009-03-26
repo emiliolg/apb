@@ -44,14 +44,14 @@ public class NameUtils
         return idFromJavaId(name(clazz));
     }
 
-    private static String idFromJavaId(String className)
+    public static String idFromJavaId(String name)
     {
         final StringBuilder result = new StringBuilder();
 
-        for (int i = 0; i < className.length(); i++) {
-            final char chr = className.charAt(i);
+        for (int i = 0; i < name.length(); i++) {
+            final char chr = name.charAt(i);
 
-            if (i > 0 && isUpperCase(chr) && isLowerCase(className.charAt(i - 1))) {
+            if (i > 0 && isUpperCase(chr) && isLowerCase(name.charAt(i - 1))) {
                 result.append('-');
             }
 

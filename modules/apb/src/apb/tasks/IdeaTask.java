@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.tasks;
 
@@ -24,6 +27,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -32,21 +36,27 @@ import apb.BuildException;
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
+
 import apb.metadata.LocalLibrary;
 import apb.metadata.Module;
 import apb.metadata.PackageType;
 import apb.metadata.ProjectElement;
 import apb.metadata.TestModule;
+
 import apb.utils.FileUtils;
-import static apb.utils.FileUtils.makeRelative;
 import apb.utils.XmlUtils;
+
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 import org.xml.sax.SAXException;
+
+import static apb.utils.FileUtils.makeRelative;
 //
 // User: emilio
 // Date: Oct 7, 2008
@@ -81,6 +91,11 @@ public class IdeaTask
     }
 
     //~ Methods ..............................................................................................
+
+    public static void execute(Environment env)
+    {
+        new IdeaTask(env).execute();
+    }
 
     public void execute()
     {
@@ -516,7 +531,9 @@ public class IdeaTask
         }
     }
 
-    private void addLibrary(LocalLibrary library, Element component, Map<String, Element> modulesByUrl, Set<Element> unusedModules) {
+    private void addLibrary(LocalLibrary library, Element component, Map<String, Element> modulesByUrl,
+                            Set<Element> unusedModules)
+    {
         File libraryFile = library.getFile(env);
 
         if (libraryFile != null) {
@@ -598,10 +615,6 @@ public class IdeaTask
     @NonNls private static final String MODULE_ENTRY = "orderEntry";
     @NonNls private static final String SOURCE_FOLDER = "sourceFolder";
 
-    public static void execute(Environment env) {
-        new IdeaTask(env).execute();
-    }
-
     //~ Inner Classes ........................................................................................
 
     public static class ProjectDefinitions
@@ -624,6 +637,15 @@ public class IdeaTask
             }
 
             dependencies(library);
+        }
+
+        /**
+         * Make name absolute
+         * @return
+         */
+        @NotNull @Override public String getName()
+        {
+            return getClass().getSimpleName();
         }
 
         private String makePath(ProjectElementHelper project, File file)

@@ -224,8 +224,8 @@ public class FileUtils
 
     public static File makeRelative(@NotNull File baseDir, @NotNull File file)
     {
-        List<String> base = getParts(baseDir.getAbsoluteFile());
-        List<String> f = getParts(file.getAbsoluteFile());
+        List<String> base = getAbsoluteParts(baseDir);
+        List<String> f = getAbsoluteParts(file);
         int          i = 0;
 
         while (i < base.size() && i < f.size()) {
@@ -249,6 +249,22 @@ public class FileUtils
         return result;
     }
 
+    public static List<String> getAbsoluteParts(File file) {
+        final List<String> parts = getParts(file.getAbsoluteFile());
+        final List<String> result = new ArrayList<String>();
+
+        for (String s : parts) {
+            if ("..".equals(s)) {
+                // remove last
+                result.remove(result.size()-1);
+            }
+            else {
+                result.add(s);
+            }
+        }
+        return result;
+    }
+
     public static String makeRelative(@NotNull File baseDir, @NotNull String filePath)
     {
         return makeRelative(baseDir, new File(filePath)).getPath();
@@ -260,10 +276,6 @@ public class FileUtils
 
         for (File f = file; f != null; f = f.getParentFile()) {
             final String name = f.getName();
-            if ("..".equals(name))
-                f = f.getParentFile();
-            else
-            
             result.addFirst(name.isEmpty() ? "/" : name);
         }
 

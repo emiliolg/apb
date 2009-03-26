@@ -136,7 +136,7 @@ public class ModuleHelper
     {
         List<LocalLibrary> result = new ArrayList<LocalLibrary>();
 
-        for (Dependency dependency : getModule().dependencies()) {
+        for (Dependency dependency : dependencies) {
             if (dependency instanceof LocalLibrary) {
                 result.add((LocalLibrary) dependency);
             }
