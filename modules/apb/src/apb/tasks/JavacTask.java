@@ -54,6 +54,7 @@ public class JavacTask
 
     private Map<String, String>       annnotationOptions;
     @NotNull private final List<File> classPath;
+    @NotNull private final List<File> extraLibraries;
     private boolean                   debug;
     private boolean                   deprecated;
     private List<String>              excludes;
@@ -77,6 +78,7 @@ public class JavacTask
         this.targetDir = targetDir;
         this.sourceDirs = sourceDirs;
         classPath = new ArrayList<File>();
+        extraLibraries = new ArrayList<File>();
         includes = Collections.singletonList("**/*.java");
         excludes = Collections.emptyList();
         reporter = new DiagnosticReporter(env);
@@ -147,6 +149,12 @@ public class JavacTask
                     env.logVerbose("         %s\n", file);
                 }
 
+                env.logVerbose("Extra Libraries: \n");
+
+                for (File file : extraLibraries) {
+                    env.logVerbose("         %s\n", file);
+                }
+
                 env.logVerbose("Source:\n");
 
                 for (File dir : sourceDirs) {
@@ -198,7 +206,7 @@ public class JavacTask
             }
 
             final boolean status =
-                jc.compile(files, sourceDirs, targetDir, classPath, options, trackUnusedDependencies);
+                jc.compile(files, sourceDirs, targetDir, classPath, extraLibraries, options, trackUnusedDependencies);
 
             if (reporter != null) {
                 reporter.reportSumary(failOnWarning);
@@ -249,7 +257,7 @@ public class JavacTask
     private void addExtraLibraries(List<LocalLibrary> libraries)
     {
         for (LocalLibrary library : libraries) {
-            classPath.add(library.getFile(env));
+            extraLibraries.add(library.getFile(env));
         }
     }
 

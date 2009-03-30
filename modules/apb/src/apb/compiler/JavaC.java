@@ -28,9 +28,9 @@ import java.util.Set;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
-import apb.utils.FileUtils;
-
 import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.FileUtils.makePath;
 //
 // User: emilio
 // Date: Sep 8, 2008
@@ -69,13 +69,13 @@ public class JavaC
      * @param sourceDirs The Source Directories where the above files reside
      * @param targetDir The target directory where the output will be generated
      * @param classPath The ClassPath where dependencies will be sought
-     * @param additionalOptions Additional Options for the compiler.
-     * @param trackUnusedPathElements Wheter to track unused path elements or not.
-     * @return true if the compilation was succesful, false otherwise
+     * @param extraLibraries
+     *@param additionalOptions Additional Options for the compiler.
+     * @param trackUnusedPathElements Wheter to track unused path elements or not.   @return true if the compilation was succesful, false otherwise
      */
     public boolean compile(@NotNull List<File> files, @NotNull List<File> sourceDirs, @NotNull File targetDir,
-                           @NotNull List<File> classPath, @NotNull List<String> additionalOptions,
-                           boolean trackUnusedPathElements)
+                           @NotNull List<File> classPath, List<File> extraLibraries,
+                           @NotNull List<String> additionalOptions, boolean trackUnusedPathElements)
     {
         DefaultJavaFileManager fileManager =
             trackUnusedPathElements ? new TrackingJavaFileManager(compiler, usedPathElements)
@@ -85,9 +85,10 @@ public class JavaC
         options.add("-d");
         options.add(targetDir.getPath());
         options.add("-classpath");
-        options.add(targetDir + File.pathSeparator + FileUtils.makePath(classPath));
+        options.add(targetDir + File.pathSeparator + makePath(classPath) + File.pathSeparator +
+                    makePath(extraLibraries));
         options.add("-sourcepath");
-        options.add(FileUtils.makePath(sourceDirs));
+        options.add(makePath(sourceDirs));
 
         boolean result =
             compiler.getTask(null, fileManager, diagnostics, options, null,

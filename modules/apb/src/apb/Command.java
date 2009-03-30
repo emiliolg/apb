@@ -118,13 +118,7 @@ public abstract class Command
      */
     private void tsort(List<Command> elements, IdentitySet<Command> visited)
     {
-        // Tranverse in the reverse direction
-
-        List<Command> d = getDirectDependencies();
-
-        for (int i = d.size() - 1; i >= 0; i--) {
-            Command dependency = d.get(i);
-
+        for (Command dependency : getDirectDependencies()) {
             if (!visited.contains(dependency)) {
                 visited.add(dependency);
                 dependency.tsort(elements, visited);
