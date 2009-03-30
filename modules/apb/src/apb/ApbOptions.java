@@ -24,11 +24,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import apb.metadata.Module;
+
 import apb.utils.OptionParser;
 import apb.utils.StandaloneEnv;
 
 import static apb.Messages.*;
-import apb.metadata.Module;
 //
 // User: emilio
 // Date: Sep 3, 2008
@@ -51,7 +52,7 @@ class ApbOptions
 
     public ApbOptions(String[] ops)
     {
-        super(ops, "apb", "0.9.1");
+        super(ops, "apb", version());
         showStackTrace = addBooleanOption('t', "show-stack-trace", SHOW_STACK_TRACE);
         quiet = addBooleanOption('q', "quiet", QUIET_OUTPUT);
         verbose = addBooleanOption('v', "verbose", VERBOSE);
@@ -81,6 +82,7 @@ class ApbOptions
         if (result.isEmpty()) {
             printHelp();
         }
+
         return result;
     }
 
@@ -101,30 +103,6 @@ class ApbOptions
         environment.setForceBuild(forceBuild.getValue());
     }
 
-    private static String printCommands()
-    {
-        StringBuilder cmds = new StringBuilder();
-
-        // Create a Mock Module Helper
-        ModuleHelper mock = new ModuleHelper(new Module(), new StandaloneEnv());
-        Set<String> nameSpaces = new TreeSet<String>();
-        for (Command cmd : mock.listCommands()) {
-            if (cmd.hasNameSpace()) {
-                nameSpaces.add(cmd.getNameSpace());
-            }
-            else if (!cmd.isDefault()) {
-                cmds.append(cmds.length() == 0 ? "[ " : " | ");
-                cmds.append(cmd.getName());
-            }
-        }
-        for (String nameSpace : nameSpaces) {
-            cmds.append(" | " ).append(nameSpace).append(":*");
-        }
-
-        cmds.append(" ]");
-        return cmds.toString();
-    }
-
     public Map<String, String> definedProperties()
     {
         Map<String, String> result = new LinkedHashMap<String, String>();
@@ -141,6 +119,38 @@ class ApbOptions
         }
 
         return result;
+    }
+
+    private static String version()
+    {
+        final String result = ApbOptions.class.getPackage().getImplementationVersion();
+        return result == null ? "" : result;
+    }
+
+    private static String printCommands()
+    {
+        StringBuilder cmds = new StringBuilder();
+
+        // Create a Mock Module Helper
+        ModuleHelper mock = new ModuleHelper(new Module(), new StandaloneEnv());
+        Set<String>  nameSpaces = new TreeSet<String>();
+
+        for (Command cmd : mock.listCommands()) {
+            if (cmd.hasNameSpace()) {
+                nameSpaces.add(cmd.getNameSpace());
+            }
+            else if (!cmd.isDefault()) {
+                cmds.append(cmds.length() == 0 ? "[ " : " | ");
+                cmds.append(cmd.getName());
+            }
+        }
+
+        for (String nameSpace : nameSpaces) {
+            cmds.append(" | ").append(nameSpace).append(":*");
+        }
+
+        cmds.append(" ]");
+        return cmds.toString();
     }
 
     private void doCompletion()

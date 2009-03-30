@@ -109,7 +109,7 @@ public class JarTask
             if (packageInfo.addClassPath) {
                 jarTask.setManifestAttribute(Attributes.Name.CLASS_PATH, helper.classFileForManifest());
             }
-
+            jarTask.setManifestAttribute(Attributes.Name.IMPLEMENTATION_VERSION, helper.getModule().version);
             if (!packageInfo.includeDependencies().isEmpty()) {
                 for (Dependency d : packageInfo.includeDependencies()) {
                     if (d instanceof Module) {
