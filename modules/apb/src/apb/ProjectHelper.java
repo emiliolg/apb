@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb;
 
@@ -20,6 +23,7 @@ import java.util.List;
 
 import apb.metadata.Project;
 import apb.metadata.ProjectElement;
+
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -30,14 +34,20 @@ import org.jetbrains.annotations.NotNull;
 public class ProjectHelper
     extends ProjectElementHelper
 {
-    private final @NotNull
-    List<ProjectElement> components;
+    //~ Instance fields ......................................................................................
+
+    @NotNull private final List<ProjectElementHelper> components;
+
     //~ Constructors .........................................................................................
 
-    public ProjectHelper(@NotNull Project project, @NotNull Environment env)
+    ProjectHelper(@NotNull Project project, @NotNull Environment env)
     {
         super(project, env);
-        components = project.components();
+        components = new ArrayList<ProjectElementHelper>();
+
+        for (ProjectElement module : project.components()) {
+            components.add(env.getHelper(module));
+        }
     }
 
     //~ Methods ..............................................................................................
@@ -47,14 +57,8 @@ public class ProjectHelper
         return (Project) getElement();
     }
 
-    protected List<ProjectElementHelper> addChildren()
+    protected Iterable<? extends ProjectElementHelper> getChildren()
     {
-        List<ProjectElementHelper> result = new ArrayList<ProjectElementHelper>();
-
-        for (ProjectElement module : components) {
-            result.add(env.getHelper(module));
-        }
-
-        return result;
+        return components;
     }
 }

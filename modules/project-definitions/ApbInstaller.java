@@ -23,6 +23,7 @@ public final class ApbInstaller
     //~ Instance initializers ................................................................................
 
     {
+	dependencies(new Apb(), new ApbAnt());
         description = "APB Installer";
 
         resources.dir = "../";

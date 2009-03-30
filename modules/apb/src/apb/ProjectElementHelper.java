@@ -56,12 +56,13 @@ public abstract class ProjectElementHelper
 
     //~ Constructors .........................................................................................
 
-    public ProjectElementHelper(ProjectElement element, Environment environment)
+    protected ProjectElementHelper(@NotNull ProjectElement element, @NotNull Environment environment)
     {
         proto = element;
         env = environment;
         allElements = new ArrayList<ProjectElementHelper>();
         executedCommands = new HashSet<String>();
+        env.addHelper(this);
     }
 
     //~ Methods ..............................................................................................
@@ -177,13 +178,12 @@ public abstract class ProjectElementHelper
         return getBuilder().listCommands();
     }
 
-
     public Command findCommand(String commandName)
     {
         return getBuilder().commands().get(commandName);
     }
 
-    protected abstract List<? extends ProjectElementHelper> addChildren();
+    protected abstract Iterable<? extends ProjectElementHelper> getChildren();
 
     void activate(@NotNull ProjectElement activatedElement)
     {
@@ -193,24 +193,24 @@ public abstract class ProjectElementHelper
     void initDependencyGraph()
     {
         // Topological Sort elements
-        tsort(allElements, addChildren(), new IdentitySet<ProjectElementHelper>());
+        tsort(allElements, new IdentitySet<ProjectElementHelper>());
+
+        if (env.isVerbose()) {
+            env.logVerbose("Dependencies for: %s = %s\n", getName(), allElements.toString());
+        }
     }
 
     /**
      * Topological sort dependent modules using a Depth First Search
      * @param elements All descendant elements
-     * @param children First level
      * @param visited  Already visited elements
      */
-    private void tsort(List<ProjectElementHelper> elements, List<? extends ProjectElementHelper> children,
-                       IdentitySet<ProjectElementHelper> visited)
+    private void tsort(List<ProjectElementHelper> elements, IdentitySet<ProjectElementHelper> visited)
     {
-        for (int i = children.size() - 1; i >= 0; i--) {
-            ProjectElementHelper dependency = children.get(i);
-
+        for (ProjectElementHelper dependency : getChildren()) {
             if (!visited.contains(dependency)) {
                 visited.add(dependency);
-                dependency.tsort(elements, children, visited);
+                dependency.tsort(elements, visited);
             }
         }
 

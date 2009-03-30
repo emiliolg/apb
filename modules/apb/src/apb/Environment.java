@@ -290,12 +290,10 @@ public abstract class Environment
     @NotNull public ProjectElementHelper getHelper(@NotNull ProjectElement element)
     {
         synchronized (helpersByElement) {
-            final String         className = element.getClass().getName();
-            ProjectElementHelper result = helpersByElement.get(className);
+            ProjectElementHelper result = helpersByElement.get(element.getName());
 
             if (result == null) {
                 result = ProjectElementHelper.create(element, this);
-                helpersByElement.put(className, result);
             }
 
             return result;
@@ -305,7 +303,13 @@ public abstract class Environment
     public void removeHelper(ProjectElement element)
     {
         synchronized (helpersByElement) {
-            helpersByElement.remove(element.getClass().getName());
+            helpersByElement.remove(element.getName());
+        }
+    }
+    void addHelper(@NotNull ProjectElementHelper helper)
+    {
+        synchronized (helpersByElement) {
+            helpersByElement.put(helper.getName(), helper);
         }
     }
 

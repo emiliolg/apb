@@ -49,7 +49,7 @@ public class TestModuleHelper
 
     //~ Constructors .........................................................................................
 
-    public TestModuleHelper(TestModule module, Environment env)
+    TestModuleHelper(@NotNull TestModule module, @NotNull Environment env)
     {
         super(module, env);
     }

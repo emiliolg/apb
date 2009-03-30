@@ -50,20 +50,32 @@ public class ModuleHelper
 {
     //~ Instance fields ......................................................................................
 
-    private List<Dependency>   dependencies;
-    private List<ModuleHelper> directDependencies;
-    private File               generatedSource;
-    private File               moduledir;
-    private File               output;
-    private File               packageDir;
-    private File               source;
+    @NotNull private final List<ModuleHelper> directDependencies;
+    private File                              generatedSource;
+    @NotNull private final List<LocalLibrary> localLibraries;
+    private File                              moduledir;
+    private File                              output;
+    private File                              packageDir;
+    private File                              source;
 
     //~ Constructors .........................................................................................
 
     ModuleHelper(Module module, Environment env)
     {
         super(module, env);
-        dependencies = module.dependencies();
+
+        // Add Direct Dependencies & local libraries
+        directDependencies = new ArrayList<ModuleHelper>();
+        localLibraries = new ArrayList<LocalLibrary>();
+
+        for (Dependency dependency : module.dependencies()) {
+            if (dependency instanceof Module) {
+                directDependencies.add((ModuleHelper) env.getHelper((Module) dependency));
+            }
+            else if (dependency instanceof LocalLibrary) {
+                localLibraries.add((LocalLibrary) dependency);
+            }
+        }
     }
 
     //~ Methods ..............................................................................................
@@ -81,7 +93,7 @@ public class ModuleHelper
     @NotNull public File getOutput()
     {
         if (output == null) {
-            throw new IllegalStateException("Module not initialized");
+            throw new IllegalStateException("Module:'" + getName() + "' not initialized");
         }
 
         return output;
@@ -132,17 +144,9 @@ public class ModuleHelper
         return result;
     }
 
-    public List<LocalLibrary> getLocalLibraries()
+    @NotNull public Iterable<LocalLibrary> getLocalLibraries()
     {
-        List<LocalLibrary> result = new ArrayList<LocalLibrary>();
-
-        for (Dependency dependency : dependencies) {
-            if (dependency instanceof LocalLibrary) {
-                result.add((LocalLibrary) dependency);
-            }
-        }
-
-        return result;
+        return localLibraries;
     }
 
     public ResourcesInfo getResourcesInfo()
@@ -150,7 +154,7 @@ public class ModuleHelper
         return getModule().resources;
     }
 
-    public Iterable<ModuleHelper> getDirectDependencies()
+    @NotNull public Iterable<ModuleHelper> getDirectDependencies()
     {
         return directDependencies;
     }
@@ -232,16 +236,8 @@ public class ModuleHelper
         return trimDashes(getModule().pkg.name);
     }
 
-    protected List<ModuleHelper> addChildren()
+    protected Iterable<? extends ProjectElementHelper> getChildren()
     {
-        directDependencies = new ArrayList<ModuleHelper>();
-
-        for (Dependency dependency : dependencies) {
-            if (dependency instanceof Module) {
-                directDependencies.add((ModuleHelper) env.getHelper((Module) dependency));
-            }
-        }
-
         return directDependencies;
     }
 
