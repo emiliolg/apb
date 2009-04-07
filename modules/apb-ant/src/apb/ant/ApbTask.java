@@ -38,12 +38,14 @@ public class ApbTask
 
     private AntEnvironment env;
     private String         module;
+    private boolean recurse;
 
     //~ Constructors .........................................................................................
 
     public ApbTask()
     {
         env = new AntEnvironment(this);
+        recurse = true;
     }
 
     //~ Methods ..............................................................................................
@@ -56,6 +58,8 @@ public class ApbTask
         if (defdir != null) {
             env.initDefinitionDir(defdir);
         }
+        if (!recurse)
+            env.setNonRecursive();
 
         if (module == null) {
             throw new BuildException("You must specify a module name");
@@ -79,6 +83,11 @@ public class ApbTask
         this.defdir = defdir;
     }
 
+    public void setRecurse(boolean v)
+    {
+        recurse = v;
+    }
+
     public void setCommand(@NotNull String command)
     {
         this.command = command;
@@ -86,7 +95,7 @@ public class ApbTask
 
     public String getTaskName()
     {
-        return super.getTaskName() + " " + module + "." + command;
+        return super.getTaskName() + " " + env.getCurrentName() + "." + env.getCurrentCommand().getQName();
     }
 
     public String getDefdir()
