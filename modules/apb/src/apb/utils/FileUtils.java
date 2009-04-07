@@ -296,6 +296,13 @@ public class FileUtils
         return lastDot == -1 ? "" : nm.substring(lastDot + 1);
     }
 
+    public static String removeExtension(File name)
+    {
+        String nm = name.getName();
+        int    lastDot = nm.lastIndexOf('.');
+        return lastDot == -1 ? nm : nm.substring(0, lastDot);
+    }
+
     public static void copyFileFiltering(@NotNull File from, @NotNull File to, @NotNull String encoding,
                                          @NotNull List<Filter> filters)
         throws IOException

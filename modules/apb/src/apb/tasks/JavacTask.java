@@ -40,6 +40,7 @@ import apb.utils.FileUtils;
 import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 //
 // User: emilio
@@ -54,10 +55,10 @@ public class JavacTask
 
     private Map<String, String>       annnotationOptions;
     @NotNull private final List<File> classPath;
-    @NotNull private final List<File> extraLibraries;
     private boolean                   debug;
     private boolean                   deprecated;
     private List<String>              excludes;
+    @NotNull private final List<File> extraLibraries;
     private boolean                   failOnWarning;
     private List<String>              includes;
     private boolean                   lint;
@@ -81,7 +82,7 @@ public class JavacTask
         extraLibraries = new ArrayList<File>();
         includes = Collections.singletonList("**/*.java");
         excludes = Collections.emptyList();
-        reporter = new DiagnosticReporter(env);
+        reporter = new DiagnosticReporter(this);
     }
 
     //~ Methods ..............................................................................................
@@ -187,7 +188,7 @@ public class JavacTask
                 options.add("-nowarn");
             }
 
-            if (reporter == null && failOnWarning) {
+            if (failOnWarning && reporter == null) {
                 options.add("-Werror");
             }
 
@@ -206,10 +207,11 @@ public class JavacTask
             }
 
             final boolean status =
-                jc.compile(files, sourceDirs, targetDir, classPath, extraLibraries, options, trackUnusedDependencies);
+                jc.compile(files, sourceDirs, targetDir, classPath, extraLibraries, options,
+                           trackUnusedDependencies);
 
             if (reporter != null) {
-                reporter.reportSumary(failOnWarning);
+                reporter.reportSumary();
             }
 
             if (!status) {
@@ -224,6 +226,49 @@ public class JavacTask
                 }
             }
         }
+    }
+
+    public boolean failOnWarning()
+    {
+        return failOnWarning;
+    }
+
+    /**
+     * Mark this source file as failed
+     * In the case that fail on Warning is true this causes the deletion of the class file
+     * so compilation is retried
+     * @param file The offending file
+     */
+    public void markAsFail(String file)
+    {
+        // If fail on warning delete the class file to ensure that compilation is retried
+        if (failOnWarning && file != null) {
+            // Look for the target class file
+            file = removeSourceDir(file);
+
+            if (file != null) {
+                File classFile =
+                    new File(targetDir, FileUtils.changeExtension(file, ".class"));
+
+                if (classFile.exists()) {
+                    env.logVerbose("Removing class: %s\n", classFile);
+                    classFile.delete();
+                }
+            }
+        }
+    }
+
+    @Nullable public String removeSourceDir(@NotNull String file)
+    {
+        for (File dir : sourceDirs) {
+            final String d = dir.getPath();
+
+            if (file.startsWith(d)) {
+                return file.substring(d.length()+1);
+            }
+        }
+
+        return null;
     }
 
     private static void validateDirectories(Environment env, List<File> sourceDirs, File targetDir)
@@ -292,6 +337,10 @@ public class JavacTask
 
                 if (!classFile.exists() || (classFile.lastModified() < sourceFile.lastModified())) {
                     result.add(sourceFile);
+                }
+                else if (trackUnusedDependencies) {
+                    env.logVerbose("Not tracking dependencies because some files will not be compiled\n");
+                    trackUnusedDependencies = false;
                 }
             }
         }

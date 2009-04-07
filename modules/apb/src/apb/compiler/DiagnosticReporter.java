@@ -28,7 +28,8 @@ import javax.tools.JavaFileObject;
 
 import apb.Environment;
 
-import apb.utils.FileUtils;
+import apb.tasks.JavacTask;
+
 import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -47,6 +48,7 @@ public class DiagnosticReporter
     @NotNull private final List<Diagnostic<? extends JavaFileObject>> ds;
     @NotNull private final Environment                                env;
     @NotNull private List<String>                                     excludes;
+    private JavacTask                                                 javacTask;
     @Nullable private String                                          lastFile;
     private int                                                       warns, errors;
 
@@ -54,11 +56,12 @@ public class DiagnosticReporter
 
     /**
      * Cosntruct a DiagnosticReporter
-     * @param environment The apb Environment
+     * @param javacTask The original JavaTask
      */
-    public DiagnosticReporter(@NotNull Environment environment)
+    public DiagnosticReporter(JavacTask javacTask)
     {
-        env = environment;
+        this.javacTask = javacTask;
+        env = javacTask.getEnv();
         lastFile = null;
         ds = new LinkedList<Diagnostic<? extends JavaFileObject>>();
         excludes = Collections.emptyList();
@@ -105,15 +108,14 @@ public class DiagnosticReporter
     /**
      * Check if compilation must failed.
      * Report the count of errors and warnings if so.
-     * @param failOnWarning Wheter to fail if there are only warnings
      */
-    public void reportSumary(boolean failOnWarning)
+    public void reportSumary()
     {
         // Ensure the last messages are output
         doReport();
 
         // Report failure with summary information
-        if (errors > 0 || failOnWarning && warns > 0) {
+        if (errors > 0 || javacTask.failOnWarning() && warns > 0) {
             StringBuilder msg = new StringBuilder();
             msg.append("Compilation failed: ");
 
@@ -165,6 +167,7 @@ public class DiagnosticReporter
             }
 
             ds.clear();
+            javacTask.markAsFail(lastFile);
         }
     }
 
@@ -176,11 +179,12 @@ public class DiagnosticReporter
     private boolean isExcluded(@NotNull JavaFileObject fileObject)
     {
         if (!excludes.isEmpty()) {
-            String name = FileUtils.makeRelative(env.getBaseDir(), fileObject.toString());
-
-            for (String exclude : excludes) {
-                if (StringUtils.matchPath(exclude, name, true)) {
-                    return true;
+            String name = javacTask.removeSourceDir(fileObject.toString());
+            if (name != null) {
+                for (String exclude : excludes) {
+                    if (StringUtils.matchPath(exclude, name, true)) {
+                        return true;
+                    }
                 }
             }
         }

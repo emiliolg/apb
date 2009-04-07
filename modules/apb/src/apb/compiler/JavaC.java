@@ -73,7 +73,7 @@ public class JavaC
      *@param additionalOptions Additional Options for the compiler.
      * @param trackUnusedPathElements Wheter to track unused path elements or not.   @return true if the compilation was succesful, false otherwise
      */
-    public boolean compile(@NotNull List<File> files, @NotNull List<File> sourceDirs, @NotNull File targetDir,
+    public boolean  compile(@NotNull List<File> files, @NotNull List<File> sourceDirs, @NotNull File targetDir,
                            @NotNull List<File> classPath, List<File> extraLibraries,
                            @NotNull List<String> additionalOptions, boolean trackUnusedPathElements)
     {
