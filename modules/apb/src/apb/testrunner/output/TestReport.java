@@ -32,7 +32,7 @@ public interface TestReport
     //~ Instance fields ......................................................................................
 
     TestReport SIMPLE = new SimpleReport(false, true);
-    TestReport SIMPLE_TO_FILE = new SimpleReport(true, "test-output");
+    TestReport SIMPLE_TO_FILE = new SimpleReport(true, false, "test-output");
 
     TestReport SUMMARY = new SimpleReport(false, false);
     TestReport XML_JUNIT = new XmlTestReport(true, "test-");

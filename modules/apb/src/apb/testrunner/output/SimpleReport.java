@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.testrunner.output;
 
@@ -44,21 +47,13 @@ public class SimpleReport
 
     public SimpleReport(boolean showOutput, boolean showDetail)
     {
-        super(showOutput, "");
-        output = new PrintWriter(System.out, true);
-        this.showDetail = showDetail;
+        this(showOutput, showDetail, "");
     }
 
-    public SimpleReport(boolean showOutput, @NotNull String fileName)
+    public SimpleReport(boolean showOutput, boolean showDetail, @NotNull String fileName)
     {
         super(showOutput, fileName);
-
-        try {
-            output = new PrintWriter(reportFile("", ".txt"));
-        }
-        catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        this.showDetail = showDetail;
     }
 
     //~ Methods ..............................................................................................
@@ -121,10 +116,8 @@ public class SimpleReport
 
     @NotNull public SimpleReport init(@NotNull File dir)
     {
-        SimpleReport result =
-            fileName.isEmpty() ? new SimpleReport(showOutput, showDetail)
-                               : new SimpleReport(showOutput, fileName);
-        result.reportsDir = dir;
+        SimpleReport result = new SimpleReport(showOutput, false, fileName);
+        result.initOutput(dir);
         return result;
     }
 
@@ -134,6 +127,22 @@ public class SimpleReport
             printTitle(title.equals(SYSTEM_ERR) ? "Standard Error" : "Standard Output");
             output.print(content);
             printSeparator();
+        }
+    }
+
+    private void initOutput(File dir)
+    {
+        reportsDir = dir;
+        if (fileName.isEmpty()) {
+            output = new PrintWriter(System.out, true);
+        }
+        else {
+            try {
+                output = new PrintWriter(reportFile("", ".txt"));
+            }
+            catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
