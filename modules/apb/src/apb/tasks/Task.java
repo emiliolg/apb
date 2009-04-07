@@ -34,6 +34,11 @@ public abstract class Task
 
     @NotNull protected File currentDirectory;
 
+    @NotNull
+    public Environment getEnv() {
+        return env;
+    }
+
     @NotNull protected Environment env;
 
     //~ Constructors .........................................................................................

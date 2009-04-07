@@ -36,29 +36,11 @@ public class Main
         Main.execute(env, arguments);
     }
 
-    public static boolean execute(Environment env, String element, String command)
-        throws Throwable
-    {
-
-        try {
-            ProjectElementHelper projectElement = env.constructProjectElement(element);
-            projectElement.setTopLevel(true);
-            projectElement.build(command);
-            return true;
-        }
-        catch (DefinitionException e) {
-            env.logSevere("%s\n", e.getMessage());
-        }
-        catch (BuildException b) {
-            Throwable e = b.getCause() == null ? b : b.getCause();
-            env.logSevere("%s\n", b.getMessage());
-
-            if (env.showStackTrace()) {
-                throw e;
-            }
-        }
-
-        return false;
+    public static boolean execute(Environment env, String element, String command) throws DefinitionException {
+        ProjectElementHelper projectElement = env.constructProjectElement(element);
+        projectElement.setTopLevel(true);
+        projectElement.build(command);
+        return true;
     }
 
     private static void execute(Environment env, List<String> arguments)
@@ -71,8 +53,23 @@ public class Main
         for (String argument : arguments) {
             final String[] argParts = splitParts(argument);
 
-            if (!execute(env, argParts[0], argParts[1])) {
+            try {
+                if (!execute(env, argParts[0], argParts[1])) {
+                    ok = false;
+                }
+            }
+            catch (DefinitionException e) {
+                env.logSevere("%s\n", e.getMessage());
                 ok = false;
+            }
+            catch (BuildException b) {
+                ok = false;
+                Throwable e = b.getCause() == null ? b : b.getCause();
+                env.logSevere("%s\n", b.getMessage());
+
+                if (env.showStackTrace()) {
+                    throw e;
+                }
             }
         }
 

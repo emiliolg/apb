@@ -47,6 +47,7 @@ class ApbOptions
     private Option<Boolean> quiet;
     private Option<Boolean> showStackTrace;
     private Option<Boolean> verbose;
+    private Option<Boolean> nonRecursive;
 
     //~ Constructors .........................................................................................
 
@@ -58,6 +59,7 @@ class ApbOptions
         verbose = addBooleanOption('v', "verbose", VERBOSE);
         noFailOnError = addBooleanOption('c', "continue", CONTINUE_AFTER_ERROR);
         forceBuild = addBooleanOption('f', "force-build", FORCE_BUILD);
+        nonRecursive = addBooleanOption('n', "non-recursive", NON_RECURSIVE);
         defineProperty = addOption('D', "define", DEFINE_PROPERTY, "<name>=<value>");
         defineProperty.setCanRepeat(true);
     }
@@ -97,6 +99,9 @@ class ApbOptions
 
         if (showStackTrace.getValue()) {
             environment.setShowStackTrace();
+        }
+        if (nonRecursive.getValue()) {
+            environment.setNonRecursive();
         }
 
         environment.setFailOnError(!noFailOnError.getValue());

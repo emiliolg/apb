@@ -82,6 +82,7 @@ public abstract class Environment
     private boolean             quiet;
     private boolean             showStackTrace;
     private boolean             verbose;
+    private boolean nonRecursive;
 
     //~ Constructors .........................................................................................
 
@@ -607,5 +608,13 @@ public abstract class Environment
     public String getBaseProperty(String propertyName) {
         return baseProperties.get(propertyName);
 
+    }
+
+    public void setNonRecursive() {
+        nonRecursive = true;
+    }
+
+    public boolean isNonRecursive() {
+        return nonRecursive;
     }
 }

@@ -160,10 +160,16 @@ public abstract class ProjectElementHelper
     public void build(String commandName)
     {
         for (ProjectElementHelper h : getAllElements()) {
-            env.logVerbose("About to execute %s.%s\n", h.getName(), commandName);
+            final boolean self = h == this;
+            if (env.isNonRecursive() && !self) {
+                h.activate();
+            }
+            else {
+                final boolean ok = h.execute(commandName);
 
-            if (!h.execute(commandName) && h == this) {
-                env.handle("Invalid command: " + commandName);
+                if (!ok && self) {
+                    env.handle("Invalid command: " + commandName);
+                }
             }
         }
     }
