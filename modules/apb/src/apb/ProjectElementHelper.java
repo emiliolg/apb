@@ -228,13 +228,16 @@ public abstract class ProjectElementHelper
         boolean result = true;
 
         if (notExecuted(commandName)) {
+
+            env.logVerbose("About to execute %s.%s\n", getName(), commandName);
+
             Command command = findCommand(commandName);
 
             if (command == null) {
                 result = false;
             }
             else {
-                ProjectElement projectElement = env.activate(proto);
+                ProjectElement projectElement = activate();
 
                 for (Command cmd : command.getDependencies()) {
                     if (notExecuted(cmd.getQName())) {
@@ -250,6 +253,10 @@ public abstract class ProjectElementHelper
         }
 
         return result;
+    }
+
+    private ProjectElement activate() {
+        return env.activate(proto);
     }
 
     @NotNull private CommandBuilder getBuilder()
