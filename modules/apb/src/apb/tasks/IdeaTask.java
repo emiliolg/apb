@@ -643,7 +643,7 @@ public class IdeaTask
          * Make name absolute
          * @return
          */
-        @NotNull @Override public String getName()
+        @Override public String getName()
         {
             return getClass().getSimpleName();
         }

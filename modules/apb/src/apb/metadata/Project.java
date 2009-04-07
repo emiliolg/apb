@@ -40,7 +40,7 @@ public class Project
         return components;
     }
 
-    public void components(Module... ms)
+    public void components(ProjectElement... ms)
     {
         components.addAll(asList(ms));
     }

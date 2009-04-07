@@ -66,6 +66,26 @@ public class NameUtils
         return result.toString();
     }
 
+    public static String javaIdFromId(String name)
+    {
+        final StringBuilder result = new StringBuilder();
+
+        boolean up = true;
+        for (int i = 0; i < name.length(); i++) {
+            final char chr = name.charAt(i);
+
+            if (chr == '-' || chr == '.') {
+                up = true;
+            }
+            else {
+                result.append(up ? toUpperCase(chr) : toLowerCase(chr));
+                up = false;
+            }
+        }
+
+        return result.toString();
+    }
+
     @NotNull public static String name(@NotNull Class clazz)
     {
         final String result;

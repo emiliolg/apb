@@ -97,7 +97,7 @@ public class SimpleFormatter
         if (env.getCurrent() != null) {
             int n = result.length();
             result.append("[");
-            result.append(env.getCurrent().getName());
+            result.append(env.getCurrentName());
 
             if (env.getCurrentCommand() != null) {
                 result.append(".");
