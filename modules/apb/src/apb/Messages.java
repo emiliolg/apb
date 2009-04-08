@@ -80,6 +80,10 @@ public class Messages
         return "\nBUILD COMPLETED in " + ts + " milliseconds.\n";
     }
 
+    public static String MANIFEST_OVERRIDE(final File file) {
+        return "Module's manifest is overriden by " + file.getAbsolutePath()  + "\n";
+    }
+
     //~ Static fields/initializers ...........................................................................
 
     public static final String BUILD_FAILED = "\nBUILD FAILED !!\n";

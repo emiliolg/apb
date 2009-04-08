@@ -18,12 +18,7 @@
 
 package apb.tasks;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,10 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.jar.Attributes;
-import java.util.jar.JarEntry;
-import java.util.jar.JarOutputStream;
-import java.util.jar.Manifest;
+import java.util.jar.*;
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -44,6 +36,7 @@ import java.util.zip.ZipOutputStream;
 import apb.BuildException;
 import apb.Environment;
 import apb.ModuleHelper;
+import apb.Messages;
 
 import apb.metadata.Dependency;
 import apb.metadata.Module;
@@ -228,17 +221,28 @@ public class JarTask
                 Set<String> addedDirs = new HashSet<String>();
                 writeMetaInfEntries(jarOutputStream, addedDirs);
 
+                boolean writeManifest = true;
                 for (File dir : files.keySet()) {
                     for (String fileName : files.get(dir)) {
                         final File file = new File(dir, fileName);
 
                         if (file.length() != 0 && !file.isDirectory()) {
-                            writeToJar(jarOutputStream, fileName.replace(File.separatorChar, '/'),
+                            String normalizedName = fileName.replace(File.separatorChar, '/');
+
+                            if(JarFile.MANIFEST_NAME.equalsIgnoreCase(normalizedName)) {
+                                env.logWarning(Messages.MANIFEST_OVERRIDE(file));
+                                writeManifest = false;
+                            }
+
+                            writeToJar(jarOutputStream, normalizedName,
                                        new FileInputStream(file), addedDirs);
                         }
                     }
                 }
 
+                if(writeManifest) {
+                    writeManifest(jarOutputStream);
+                }
                 jarOutputStream.setComment(comment);
                 success = true;
             }
@@ -258,7 +262,7 @@ public class JarTask
         FileUtils.validateDirectory(jarFile.getParentFile());
 
         final FileOutputStream os = new FileOutputStream(jarFile);
-        final JarOutputStream  jarOutputStream = new JarOutputStream(os, manifest);
+        final JarOutputStream  jarOutputStream = new JarOutputStream(os);
         jarOutputStream.setMethod(doCompress ? ZipOutputStream.DEFLATED : ZipOutputStream.STORED);
         jarOutputStream.setLevel(level);
         return jarOutputStream;
@@ -322,6 +326,15 @@ public class JarTask
 
         is.close();
         jarOut.flush();
+    }
+
+    private void writeManifest(JarOutputStream jarOut)
+            throws IOException
+    {
+        ZipEntry e = new ZipEntry(JarFile.MANIFEST_NAME);
+        jarOut.putNextEntry(e);
+        manifest.write(new BufferedOutputStream(jarOut));
+        jarOut.closeEntry();
     }
 
     private void writeMetaInfEntries(JarOutputStream jarOut, Set<String> addedDirs)
