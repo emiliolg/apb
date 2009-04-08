@@ -15,12 +15,11 @@
 
 package apb.ant;
 
-import apb.Main;
 import apb.Command;
-
+import apb.Main;
+import static apb.utils.StringUtils.isEmpty;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
-
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -36,7 +35,7 @@ public class ApbTask
     @NotNull private String command = Command.DEFAULT_COMMAND;
     private String          defdir;
 
-    private AntEnvironment env;
+    private final @NotNull AntEnvironment env;
     private String         module;
     private boolean recurse;
 
@@ -95,7 +94,15 @@ public class ApbTask
 
     public String getTaskName()
     {
-        return super.getTaskName() + " " + env.getCurrentName() + "." + env.getCurrentCommand().getQName();
+        StringBuilder result = new StringBuilder();
+        result.append(super.getTaskName());
+        final String currentModule = env.getCurrentName();
+        result.append(' ').append(isEmpty(currentModule) ? this.module : currentModule);
+        final Command cmd = env.getCurrentCommand();
+        if (cmd != null) {
+            result.append('.').append(cmd.getQName());
+        }
+        return result.toString();
     }
 
     public String getDefdir()
