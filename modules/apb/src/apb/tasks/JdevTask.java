@@ -162,7 +162,9 @@ public class JdevTask
         XmlUtils.removeAllChildren(deps);
 
         for (LocalLibrary lib : module.getLocalLibraries()) {
-            XmlUtils.addValuedElement(doc, deps, "classpath", lib.path);
+            final String runtimePath = lib.runtimePath;
+            final String path  = runtimePath != null ? runtimePath :lib.path;
+            XmlUtils.addValuedElement(doc, deps, "classpath", path);
         }
     }
 
