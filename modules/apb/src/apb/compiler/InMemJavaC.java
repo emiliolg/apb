@@ -275,7 +275,7 @@ public class InMemJavaC
                 path = path.substring(0, lastDot);
             }
 
-            path = path.replace('/', '.');
+            path = path.replace(File.separatorChar, '.');
 
             for (String className : classMap.keySet()) {
                 if (path.endsWith(className)) {
@@ -283,7 +283,7 @@ public class InMemJavaC
                 }
             }
 
-            throw new ClassNotFoundException();
+            throw new ClassNotFoundException(source.getPath());
         }
 
         void addClass(final String name, ByteArrayOutputStream outputStream, final long lastModified)

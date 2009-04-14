@@ -157,7 +157,7 @@ public class ExecTask
             String         line;
 
             while ((line = out.readLine()) != null) {
-                output.add(new String(line));
+                output.add(line);
             }
         }
     }
@@ -178,6 +178,7 @@ public class ExecTask
                     env.logVerbose("            %s='%s'\n", entry.getKey(), entry.getValue());
                 }
             }
+            env.logVerbose("Current directory: %s\n", currentDirectory);
         }
     }
 }

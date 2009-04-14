@@ -68,7 +68,7 @@ public abstract class Environment
     private ProjectElementHelper              currentElement;
     private boolean                           failOnError;
     private boolean                           forceBuild;
-    private Map<String, ProjectElementHelper> helpersByElement;
+    private final Map<String, ProjectElementHelper> helpersByElement;
     private InMemJavaC                        javac;
     private Os                                os;
 
@@ -515,7 +515,7 @@ public abstract class Environment
     {
         // Strip JAVA_EXT
         if (projectElement.endsWith(JAVA_EXT)) {
-            projectElement.substring(0, projectElement.length() - JAVA_EXT.length());
+            projectElement = projectElement.substring(0, projectElement.length() - JAVA_EXT.length());
         }
 
         File f = new File(projectElement);
