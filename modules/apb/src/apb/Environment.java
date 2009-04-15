@@ -340,10 +340,15 @@ public abstract class Environment
         return basedir;
     }
 
-    public File fileFromBase(String name)
+    @NotNull public File fileFromBase(@NotNull String name)
     {
         final File child = new File(expand(name));
         return child.isAbsolute() ? child : new File(basedir, child.getPath());
+    }
+    @NotNull public File fileFromSource(@NotNull String name)
+    {
+        final File child = new File(expand(name));
+        return child.isAbsolute() ? child : new File(getModuleHelper().getSource(), child.getPath());
     }
 
     @NotNull public ProjectElement activate(@NotNull ProjectElement element)
