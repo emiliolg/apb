@@ -40,8 +40,12 @@ public class LocalLibrary
     {
         this(path, false);
     }
+    protected LocalLibrary(String path, String runtimePath)
+    {
+        this(path, runtimePath, false);
+    }
 
-    protected LocalLibrary(String path, boolean optional, String runtimePath)
+    protected LocalLibrary(String path, String runtimePath, boolean optional)
     {
         this.path = path;
         this.optional = optional;
@@ -49,7 +53,7 @@ public class LocalLibrary
     }
 
     protected LocalLibrary(String path, boolean optional) {
-        this(path, optional, null);
+        this(path, null, optional);
     }
 
     //~ Methods ..............................................................................................
