@@ -47,7 +47,7 @@ public class JavaTask
     //~ Instance fields ......................................................................................
 
     @NotNull private String                    classpath = "";
-    private List<String>                       cmd;
+    @NotNull private final List<String>                       cmd;
     @NotNull private final Map<String, String> environment;
     private boolean                            executeJar;
     private int                                exitValue;
@@ -71,7 +71,7 @@ public class JavaTask
                     @NotNull List<String> arguments)
     {
         super(env);
-        cmd = arguments;
+        cmd = new ArrayList<String>(arguments);
         this.executeJar = executeJar;
         this.jarOrClass = jarOrClass;
         environment = new HashMap<String, String>();
@@ -125,6 +125,10 @@ public class JavaTask
         classpath = helper.getClassPath();
     }
 
+    public void addArguments(String... args)
+    {
+        cmd.addAll(Arrays.asList(args));
+    }
     public void execute()
     {
         List<String> args = new ArrayList<String>();
