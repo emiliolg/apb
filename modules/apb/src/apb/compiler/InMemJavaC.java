@@ -283,7 +283,7 @@ public class InMemJavaC
                 }
             }
 
-            throw new ClassNotFoundException();
+            throw new ClassNotFoundException(source.getPath());
         }
 
         void addClass(final String name, ByteArrayOutputStream outputStream, final long lastModified)

@@ -96,7 +96,7 @@ public class CompileInfo
     /**
      * The list of files to exclude from compilation.
      */
-    private final List<String> excludes = new ArrayList<String>();
+    private final List<String> excludes = new ArrayList<String>(asList("**/package-info.java"));
 
     /**
      * Extra classpath jars

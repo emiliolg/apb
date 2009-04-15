@@ -1,4 +1,3 @@
-
 # ============================================================================
 # Unix startup script for apb (A Project Builder)
 # ============================================================================
@@ -22,5 +21,6 @@ fi
 
 DIRLIB=$(dirname $(type -p $0))/../lib
 
-
-java -Xmx256m -jar $(ospath "$DIRLIB/apb.jar") $*
+echo "Running APB in Remote debug mode"
+DEBUG="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"
+java $DEBUG -Xmx256m -jar $(ospath "$DIRLIB/apb.jar") $*

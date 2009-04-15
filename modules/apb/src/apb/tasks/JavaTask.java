@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.tasks;
 
@@ -23,6 +26,7 @@ import java.util.Map;
 
 import apb.Environment;
 import apb.ModuleHelper;
+import apb.ProjectElementHelper;
 
 import apb.metadata.Dependency;
 import apb.metadata.LocalLibrary;
@@ -42,7 +46,7 @@ public class JavaTask
 {
     //~ Instance fields ......................................................................................
 
-    private String                             classpath;
+    @NotNull private String                    classpath = "";
     private List<String>                       cmd;
     @NotNull private final Map<String, String> environment;
     private boolean                            executeJar;
@@ -53,7 +57,7 @@ public class JavaTask
     /**
      * Max memory in megabytes used by the Java command
      */
-    private int                                memory;
+    private int                                memory = 256;
     @NotNull private final Map<String, String> properties;
 
     //~ Constructors .........................................................................................
@@ -73,6 +77,14 @@ public class JavaTask
         environment = new HashMap<String, String>();
         properties = new HashMap<String, String>();
         javaArgs = new ArrayList<String>();
+        memory = 256;
+
+        // By default use the classpath of the current module if it is active
+        ProjectElementHelper mod = env.getCurrent();
+
+        if (mod != null && mod instanceof ModuleHelper) {
+            classpath = ((ModuleHelper) mod).getClassPath();
+        }
     }
 
     //~ Methods ..............................................................................................
@@ -93,12 +105,12 @@ public class JavaTask
         j.execute();
     }
 
-    public void setClasspath(List<Dependency> dependencies)
+    public void setClasspath(@NotNull List<Dependency> dependencies)
     {
         classpath = FileUtils.makePath(LocalLibrary.fileList(env, dependencies));
     }
 
-    public void setClasspath(String classpath)
+    public void setClasspath(@NotNull String classpath)
     {
         this.classpath = classpath;
     }
@@ -132,7 +144,7 @@ public class JavaTask
         args.addAll(javaArgs);
 
         // add classpath
-        if (classpath != null && !classpath.isEmpty()) {
+        if (!classpath.isEmpty()) {
             args.add("-classpath");
             args.add(classpath);
         }

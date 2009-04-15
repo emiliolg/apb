@@ -231,14 +231,13 @@ public abstract class ProjectElementHelper
 
             env.logVerbose("About to execute %s.%s\n", getName(), commandName);
 
+            ProjectElement projectElement = activate();
             Command command = findCommand(commandName);
 
             if (command == null) {
                 result = false;
             }
             else {
-                ProjectElement projectElement = activate();
-
                 for (Command cmd : command.getDependencies()) {
                     if (notExecuted(cmd.getQName())) {
                         env.setCurrentCommand(cmd);
@@ -248,8 +247,8 @@ public abstract class ProjectElementHelper
                 }
 
                 env.setCurrentCommand(null);
-                env.deactivate();
             }
+            env.deactivate();
         }
 
         return result;

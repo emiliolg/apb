@@ -60,6 +60,8 @@ public class Main
             }
             catch (DefinitionException e) {
                 env.logSevere("%s\n", e.getMessage());
+                if (env.showStackTrace())
+                    throw e.getCause();
                 ok = false;
             }
             catch (BuildException b) {
