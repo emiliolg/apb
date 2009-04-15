@@ -30,6 +30,7 @@ public class LocalLibrary
     //~ Instance fields ......................................................................................
 
     public String   path;
+    public String runtimePath;
     private boolean optional;
     private String  sourcesPath;
 
@@ -40,10 +41,15 @@ public class LocalLibrary
         this(path, false);
     }
 
-    protected LocalLibrary(String path, boolean optional)
+    protected LocalLibrary(String path, boolean optional, String runtimePath)
     {
         this.path = path;
         this.optional = optional;
+        this.runtimePath = runtimePath;
+    }
+
+    protected LocalLibrary(String path, boolean optional) {
+        this(path, optional, null);
     }
 
     //~ Methods ..............................................................................................
