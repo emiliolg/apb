@@ -110,7 +110,7 @@ public class Module
     /**
      * The list of modules & libraries this module depends from
      */
-    private final List<Dependency> dependencies = new ArrayList<Dependency>();
+    protected final List<Dependency> dependencies = new ArrayList<Dependency>();
 
     /*
      * The list of test modules
@@ -185,7 +185,7 @@ public class Module
     protected final void tests(TestModule... testList)
     {
         for (TestModule test : testList) {
-            test.dependencies(this);
+            test.setOriginalModule(this);
             tests.add(test);
         }
     }

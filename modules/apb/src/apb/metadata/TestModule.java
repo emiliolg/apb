@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.metadata;
 
@@ -235,6 +238,17 @@ public class TestModule
     {
         super.clean(env);
         TestTask.cleanReports(env);
+    }
+
+    /**
+     * Define the module this test is testing
+     * Update the dependencies
+     * @param module The original module
+     */
+    void setOriginalModule(Module module)
+    {
+        dependencies.add(module);
+        dependencies.addAll(module.dependencies());
     }
 
     //~ Static fields/initializers ...........................................................................
