@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.Attributes;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -72,7 +73,10 @@ public class PackageInfo
      * @see java.util.ServiceLoader
      */
     private final Map<String, Set<String>> services = new HashMap<String, Set<String>>();
-    private final Map<String, String> attributes = new HashMap<String, String>();
+    /**
+     * Additional attribute for the package manifest
+     */
+    private final Map<Attributes.Name, String> attributes = new HashMap<Attributes.Name, String>();
 
 
     //~ Methods ..............................................................................................
@@ -95,9 +99,10 @@ public class PackageInfo
     {
         return services;
     }
-    public Map<String, String> attributes()
+
+    public Map<Attributes.Name, String> attributes()
     {
-        return services;
+        return attributes;
     }
 
     /**
@@ -117,7 +122,25 @@ public class PackageInfo
         ps.addAll(Arrays.asList(providers));
         services.put(service, ps);
     }
+    /**
+     * Add an attribute to the manifest
+     * @param attName attribute name
+     * @param attValue attribute value
+     */
+    public void addAttribute(@NotNull Attributes.Name attName, @NotNull String attValue)
+    {
+        attributes.put(attName, attValue);
+    }
 
+    /**
+     * Add an attribute to the manifest
+     * @param attName attribute name
+     * @param attValue attribute value
+     */
+    public void addAttribute(@NotNull String attName, @NotNull String attValue)
+    {
+        attributes.put(new Attributes.Name(attName), attValue);
+    }
     /**
      * Method used to set dependencies to be added to the package
      * @param dependencyList The list of dependencies to be added to the package

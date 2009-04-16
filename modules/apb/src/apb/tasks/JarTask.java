@@ -1,24 +1,22 @@
 
-
-// Copyright 2008-2009 Emilio Lopez-Gabeiras
+// ...........................................................................................................
+// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
+// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
+// The copyright notice above does not evidence any actual or intended
+// publication of such source code.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License
-//
-
+// Last changed on 2009-04-16 10:43:06 (-0300), by: emilio. $Revision$
+// ...........................................................................................................
 
 package apb.tasks;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,7 +25,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.jar.*;
+import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarOutputStream;
+import java.util.jar.Manifest;
 import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
@@ -35,8 +37,8 @@ import java.util.zip.ZipOutputStream;
 
 import apb.BuildException;
 import apb.Environment;
-import apb.ModuleHelper;
 import apb.Messages;
+import apb.ModuleHelper;
 
 import apb.metadata.Dependency;
 import apb.metadata.Module;
@@ -63,10 +65,10 @@ public class JarTask
     private List<String> excludes, includes;
     private File         jarFile;
 
-    private int                      level = Deflater.DEFAULT_COMPRESSION;
-    @NotNull private Manifest        manifest;
+    private int                               level = Deflater.DEFAULT_COMPRESSION;
+    @NotNull private Manifest                 manifest;
     @NotNull private Map<String, Set<String>> services;
-    private List<File>               sourceDir;
+    private List<File>                        sourceDir;
 
     //~ Constructors .........................................................................................
 
@@ -102,7 +104,11 @@ public class JarTask
             if (packageInfo.addClassPath) {
                 jarTask.setManifestAttribute(Attributes.Name.CLASS_PATH, helper.classFileForManifest());
             }
+
             jarTask.setManifestAttribute(Attributes.Name.IMPLEMENTATION_VERSION, helper.getModule().version);
+
+            jarTask.addManifestAttributes(packageInfo.attributes());
+
             if (!packageInfo.includeDependencies().isEmpty()) {
                 for (Dependency d : packageInfo.includeDependencies()) {
                     if (d instanceof Module) {
@@ -176,6 +182,13 @@ public class JarTask
         includes = patterns;
     }
 
+    public void addManifestAttributes(Map<Attributes.Name, String> attributes)
+    {
+        for (Map.Entry<Attributes.Name, String> atts : attributes.entrySet()) {
+            setManifestAttribute(atts.getKey(), atts.getValue());
+        }
+    }
+
     private void setServices(@NotNull Map<String, Set<String>> services)
     {
         this.services = services;
@@ -222,6 +235,7 @@ public class JarTask
                 writeMetaInfEntries(jarOutputStream, addedDirs);
 
                 boolean writeManifest = true;
+
                 for (File dir : files.keySet()) {
                     for (String fileName : files.get(dir)) {
                         final File file = new File(dir, fileName);
@@ -229,20 +243,20 @@ public class JarTask
                         if (file.length() != 0 && !file.isDirectory()) {
                             String normalizedName = fileName.replace(File.separatorChar, '/');
 
-                            if(JarFile.MANIFEST_NAME.equalsIgnoreCase(normalizedName)) {
+                            if (JarFile.MANIFEST_NAME.equalsIgnoreCase(normalizedName)) {
                                 env.logWarning(Messages.MANIFEST_OVERRIDE(file));
                                 writeManifest = false;
                             }
 
-                            writeToJar(jarOutputStream, normalizedName,
-                                       new FileInputStream(file), addedDirs);
+                            writeToJar(jarOutputStream, normalizedName, new FileInputStream(file), addedDirs);
                         }
                     }
                 }
 
-                if(writeManifest) {
+                if (writeManifest) {
                     writeManifest(jarOutputStream);
                 }
+
                 jarOutputStream.setComment(comment);
                 success = true;
             }
@@ -329,7 +343,7 @@ public class JarTask
     }
 
     private void writeManifest(JarOutputStream jarOut)
-            throws IOException
+        throws IOException
     {
         ZipEntry e = new ZipEntry(JarFile.MANIFEST_NAME);
         jarOut.putNextEntry(e);
