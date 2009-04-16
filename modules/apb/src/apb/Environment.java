@@ -350,6 +350,11 @@ public abstract class Environment
         final File child = new File(expand(name));
         return child.isAbsolute() ? child : new File(getModuleHelper().getSource(), child.getPath());
     }
+    @NotNull public File fileFromGeneratedSource(@NotNull String name)
+    {
+        final File child = new File(expand(name));
+        return child.isAbsolute() ? child : new File(getModuleHelper().getGeneratedSource(), child.getPath());
+    }
 
     @NotNull public ProjectElement activate(@NotNull ProjectElement element)
     {

@@ -72,6 +72,8 @@ public class PackageInfo
      * @see java.util.ServiceLoader
      */
     private final Map<String, Set<String>> services = new HashMap<String, Set<String>>();
+    private final Map<String, String> attributes = new HashMap<String, String>();
+
 
     //~ Methods ..............................................................................................
 
@@ -90,6 +92,10 @@ public class PackageInfo
     }
 
     public Map<String, Set<String>> services()
+    {
+        return services;
+    }
+    public Map<String, String> attributes()
     {
         return services;
     }

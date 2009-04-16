@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
 
 import apb.Environment;
 
@@ -53,6 +54,10 @@ public class ExecTask
         this.cmd = cmd;
         output = null;
         environment = new HashMap<String, String>();
+    }
+    public ExecTask(@NotNull Environment env, @NotNull String... args)
+    {
+        this(env, Arrays.asList(args));
     }
 
     public ExecTask(@NotNull Environment env, @NotNull List<String> output, @NotNull List<String> cmd)
