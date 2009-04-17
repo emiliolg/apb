@@ -196,7 +196,7 @@ public class JavaTask
             }
             else if (dependency instanceof Module){
                 final ModuleHelper module = (ModuleHelper) env.getHelper((Module) dependency);
-                result.addAll(module.deepClassPath(false));
+                result.addAll(module.deepClassPath(false, true));
             }
         }
 

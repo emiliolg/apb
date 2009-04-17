@@ -181,14 +181,15 @@ public class ModuleHelper
         return result;
     }
 
-    public Collection<File> deepClassPath(boolean useJars)
+    public Collection<File> deepClassPath(boolean useJars, boolean addModuleOutput)
     {
         Set<File> result = new HashSet<File>();
+        if (addModuleOutput)
+            result.add(useJars ? getPackageFile() : getOutput());
 
         // First classpath for module dependencies
         for (ModuleHelper dependency : getDirectDependencies()) {
-            result.add(useJars ? dependency.getPackageFile() : dependency.getOutput());
-            result.addAll(dependency.deepClassPath(useJars));
+            result.addAll(dependency.deepClassPath(useJars, true));
         }
 
         // The classpath for libraries
