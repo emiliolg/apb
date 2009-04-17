@@ -1,20 +1,12 @@
 
-
-// Copyright 2008-2009 Emilio Lopez-Gabeiras
+// ...........................................................................................................
+// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
+// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
+// The copyright notice above does not evidence any actual or intended
+// publication of such source code.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License
-//
-
+// Last changed on 2009-04-17 12:35:49 (-0300), by: emilio. $Revision$
+// ...........................................................................................................
 
 package apb.tasks;
 
@@ -22,6 +14,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -44,6 +37,7 @@ import apb.metadata.ProjectElement;
 import apb.metadata.TestModule;
 
 import apb.utils.FileUtils;
+import apb.utils.NameUtils;
 import apb.utils.XmlUtils;
 
 import org.jetbrains.annotations.NonNls;
@@ -117,6 +111,22 @@ public class IdeaTask
         }
     }
 
+    private static String moduleGroup(@NotNull ProjectElementHelper e, @NotNull Set<String> groups)
+    {
+        String s = NameUtils.idFromJavaId(e.getName()).replace('.', '/');
+
+        String result;
+
+        if (groups.contains(s)) {
+            result = s;
+        }
+        else {
+            int slash = s.lastIndexOf('/');
+            result = slash == -1 ? "" : s.substring(0, slash);
+        }
+        return result;
+    }
+
     private void rewriteModule(ModuleHelper module)
     {
         final File ideaFile = ideaFile(module, ".iml");
@@ -142,11 +152,25 @@ public class IdeaTask
                 addSourceFolder(content, module.getSource());
 
                 removeOldElements(content, EXCLUDE_FOLDER);
+                addExcludeFolders(module, content);
 
                 rewriteDependencies(module, component);
 
                 writeDocument(ideaFile, document);
             }
+        }
+    }
+
+    /**
+     * Add exclude folders.
+     * For the time being it only excludes the directory with the project files
+     * from the ProjectDefinitions Module
+     */
+    private void addExcludeFolders(ModuleHelper module, Element content)
+    {
+        if (module.getModule() instanceof ProjectDefinitions) {
+            Element excludeFolder = createElement(content, EXCLUDE_FOLDER);
+            excludeFolder.setAttribute(URL_ATTRIBUTE, "file://$MODULE_DIR$/");
         }
     }
 
@@ -187,13 +211,27 @@ public class IdeaTask
 
             removeOldElements(modulesElement, "module");
 
+            // Get the set of moduleGroups
+            Set<String> groups = calculateGroups();
+
             for (ModuleHelper mod : helper.listAllModules()) {
-                addModuleToProject(modulesElement, mod);
+                addModuleToProject(modulesElement, mod, groups);
             }
 
             generateProjectDefinitionsModule(modulesElement);
             writeDocument(ideaFile, document);
         }
+    }
+
+    private Set<String> calculateGroups()
+    {
+        Set<String> groups = new HashSet<String>();
+
+        for (ModuleHelper mod : helper.listAllModules()) {
+            groups.add(moduleGroup(mod, EMPTY_STRING_SET));
+        }
+
+        return groups;
     }
 
     private Element findComponent(Element module, String name)
@@ -291,7 +329,7 @@ public class IdeaTask
             final IdeaTask task = new IdeaTask(env);
             task.overwrite = true;
             task.execute();
-            addModuleToProject(modulesElement, env.getModuleHelper());
+            addModuleToProject(modulesElement, env.getModuleHelper(), EMPTY_STRING_SET);
             env.deactivate();
             env.removeHelper(mod);
             env.activate(prev);
@@ -301,13 +339,18 @@ public class IdeaTask
         }
     }
 
-    private void addModuleToProject(Element modulesElement, ModuleHelper module)
+    private void addModuleToProject(Element modulesElement, ModuleHelper module, Set<String> groups)
     {
         final Element moduleElement = createElement(modulesElement, "module");
 
         String filePath = makeRelative(modulesHome, ideaFile(module, ".iml")).getPath();
 
         moduleElement.setAttribute("filepath", "$PROJECT_DIR$/" + filePath);
+        String group = moduleGroup(module, groups);
+
+        if (!group.isEmpty()) {
+            moduleElement.setAttribute("group", group);
+        }
     }
 
     private void setWildcardResourcePatterns(@NotNull Element content,
@@ -534,7 +577,7 @@ public class IdeaTask
     private void addLibrary(LocalLibrary library, Element component, Map<String, Element> modulesByUrl,
                             Set<Element> unusedModules)
     {
-        for (File libraryFile : library.getFiles(env))  {
+        for (File libraryFile : library.getFiles(env)) {
             addLibrary(libraryFile, component, unusedModules, modulesByUrl, library.getSourcesFile(env));
         }
     }
@@ -586,6 +629,8 @@ public class IdeaTask
     }
 
     //~ Static fields/initializers ...........................................................................
+
+    private static final Set<String> EMPTY_STRING_SET = Collections.emptySet();
 
     @NonNls private static final String WILDCARD_RESOURCE_PATTERNS = "wildcardResourcePatterns";
 
