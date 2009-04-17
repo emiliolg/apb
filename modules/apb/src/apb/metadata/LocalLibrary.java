@@ -16,11 +16,13 @@
 package apb.metadata;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 
 import apb.Environment;
-import apb.ModuleHelper;
+import apb.utils.CollectionUtils;
+import static apb.utils.CollectionUtils.optionalSingleton;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A class representing a Library that will be stored in the file system.
@@ -30,52 +32,53 @@ public class LocalLibrary
 {
     //~ Instance fields ......................................................................................
 
-    public String   path;
-    public String runtimePath;
+    @NotNull public final String   path;
+    @Nullable public final String runtimePath;
     private boolean optional;
-    private String  sourcesPath;
+    @Nullable private String  sourcesPath;
 
     //~ Constructors .........................................................................................
 
-    protected LocalLibrary(String path)
+    protected LocalLibrary(@NotNull String path)
     {
         this(path, false);
     }
-    protected LocalLibrary(String path, String runtimePath)
+    protected LocalLibrary(@NotNull String path, String runtimePath)
     {
         this(path, runtimePath, false);
     }
 
-    protected LocalLibrary(String path, String runtimePath, boolean optional)
+    protected LocalLibrary(@NotNull String path, String runtimePath, boolean optional)
     {
         this.path = path;
         this.optional = optional;
         this.runtimePath = runtimePath;
     }
 
-    protected LocalLibrary(String path, boolean optional) {
+    protected LocalLibrary(@NotNull String path, boolean optional) {
         this(path, null, optional);
     }
 
     //~ Methods ..............................................................................................
 
 
-    public File getFile(final Environment env)
+    @NotNull public Collection<File> getFiles(@NotNull final Environment env)
     {
-        return fileFromBase(env, path);
+        return optionalSingleton(fileFromBase(env, path));
     }
 
-    public File getSourcesFile(final Environment env)
+    @Nullable public File getSourcesFile(@NotNull final Environment env)
     {
         return sourcesPath == null ? null : fileFromBase(env, sourcesPath);
     }
 
-    public void setSources(String sources)
+    public void setSources(@NotNull String sources)
     {
         sourcesPath = sources;
     }
 
-    private File fileFromBase(Environment env, String p)
+    @Nullable
+    private File fileFromBase(@NotNull Environment env, @NotNull String p)
     {
         final File result;
 

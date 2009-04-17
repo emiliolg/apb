@@ -302,7 +302,7 @@ public class JavacTask
     private void addExtraLibraries(List<LocalLibrary> libraries)
     {
         for (LocalLibrary library : libraries) {
-            extraLibraries.add(library.getFile(env));
+            extraLibraries.addAll(library.getFiles(env));
         }
     }
 

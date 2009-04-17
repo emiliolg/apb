@@ -534,9 +534,7 @@ public class IdeaTask
     private void addLibrary(LocalLibrary library, Element component, Map<String, Element> modulesByUrl,
                             Set<Element> unusedModules)
     {
-        File libraryFile = library.getFile(env);
-
-        if (libraryFile != null) {
+        for (File libraryFile : library.getFiles(env))  {
             addLibrary(libraryFile, component, unusedModules, modulesByUrl, library.getSourcesFile(env));
         }
     }

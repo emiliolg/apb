@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collection;
 import java.io.File;
 
 import apb.Environment;
@@ -191,19 +192,11 @@ public class JavaTask
 
         for (Dependency dependency : dependencies) {
             if (dependency instanceof LocalLibrary) {
-                final File libPath = ((LocalLibrary) dependency).getFile(env);
-
-                if (libPath != null) {
-                    result.add(libPath);
-                }
+                result.addAll(((LocalLibrary) dependency).getFiles(env));
             }
             else if (dependency instanceof Module){
-
-                final Module module = (Module) dependency;
-                final ModuleHelper moduleHelper = (ModuleHelper) env.getHelper(module);
-                final List<File> files = moduleHelper.classPath(false, true);
-                result.addAll(files);
-
+                final ModuleHelper module = (ModuleHelper) env.getHelper((Module) dependency);
+                result.addAll(module.deepClassPath(false));
             }
         }
 

@@ -175,11 +175,7 @@ public class ModuleHelper
 
         // The classpath for libraries
         for (LocalLibrary library : getLocalLibraries()) {
-            final File f = library.getFile(env);
-
-            if (f != null) {
-                result.add(f);
-            }
+            result.addAll(library.getFiles(env));
         }
 
         return result;
@@ -197,11 +193,7 @@ public class ModuleHelper
 
         // The classpath for libraries
         for (LocalLibrary library : getLocalLibraries()) {
-            final File f = library.getFile(env);
-
-            if (f != null) {
-                result.add(f);
-            }
+            result.addAll(library.getFiles(env));
         }
 
         return result;
