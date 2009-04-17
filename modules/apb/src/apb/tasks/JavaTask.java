@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.io.File;
 
 import apb.Environment;
 import apb.ModuleHelper;
@@ -30,6 +31,7 @@ import apb.ProjectElementHelper;
 
 import apb.metadata.Dependency;
 import apb.metadata.LocalLibrary;
+import apb.metadata.Module;
 
 import apb.utils.FileUtils;
 
@@ -107,7 +109,7 @@ public class JavaTask
 
     public void setClasspath(@NotNull List<Dependency> dependencies)
     {
-        classpath = FileUtils.makePath(LocalLibrary.fileList(env, dependencies));
+        classpath = FileUtils.makePath(JavaTask.fileList(env, dependencies));
     }
 
     public void setClasspath(@NotNull String classpath)
@@ -181,6 +183,31 @@ public class JavaTask
         if (environmentVariables != null) {
             environment.putAll(environmentVariables);
         }
+    }
+
+    public static List<File> fileList(Environment env, List<Dependency> dependencies)
+    {
+        List<File> result = new ArrayList<File>();
+
+        for (Dependency dependency : dependencies) {
+            if (dependency instanceof LocalLibrary) {
+                final File libPath = ((LocalLibrary) dependency).getFile(env);
+
+                if (libPath != null) {
+                    result.add(libPath);
+                }
+            }
+            else if (dependency instanceof Module){
+
+                final Module module = (Module) dependency;
+                final ModuleHelper moduleHelper = (ModuleHelper) env.getHelper(module);
+                final List<File> files = moduleHelper.classPath(false, true);
+                result.addAll(files);
+
+            }
+        }
+
+        return result;
     }
 
     /**

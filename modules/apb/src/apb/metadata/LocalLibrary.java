@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apb.Environment;
+import apb.ModuleHelper;
 
 /**
  * A class representing a Library that will be stored in the file system.
@@ -58,22 +59,6 @@ public class LocalLibrary
 
     //~ Methods ..............................................................................................
 
-    public static List<File> fileList(Environment env, List<Dependency> dependencies)
-    {
-        List<File> result = new ArrayList<File>();
-
-        for (Dependency dependency : dependencies) {
-            if (dependency instanceof LocalLibrary) {
-                final File libPath = ((LocalLibrary) dependency).getFile(env);
-
-                if (libPath != null) {
-                    result.add(libPath);
-                }
-            }
-        }
-
-        return result;
-    }
 
     public File getFile(final Environment env)
     {
