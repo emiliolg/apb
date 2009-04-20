@@ -34,6 +34,10 @@ public class Library
         version = v;
         return this;
     }
+    private Library()
+    {
+        ObjectRegistry.intern(this);
+    }
 
     static Library create(String group, String id, String version)
     {

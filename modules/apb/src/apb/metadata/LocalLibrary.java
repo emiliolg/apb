@@ -19,7 +19,6 @@ import java.io.File;
 import java.util.Collection;
 
 import apb.Environment;
-import apb.utils.CollectionUtils;
 import static apb.utils.CollectionUtils.optionalSingleton;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -53,6 +52,7 @@ public class LocalLibrary
         this.path = path;
         this.optional = optional;
         this.runtimePath = runtimePath;
+        ObjectRegistry.intern(this);
     }
 
     protected LocalLibrary(@NotNull String path, boolean optional) {
