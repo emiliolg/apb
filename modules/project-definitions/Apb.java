@@ -16,6 +16,7 @@
 
 import libraries.IdeaAnnotations;
 import libraries.Junit3;
+import apb.metadata.Module;
 
 public final class Apb
     extends DefaultModule
@@ -35,4 +36,6 @@ public final class Apb
         javadoc.deprecatedList = false;
         javadoc.links("http://java.sun.com/javase/6/docs/api");
     }
+
+    public static final Module MODULE = new Apb();
 }

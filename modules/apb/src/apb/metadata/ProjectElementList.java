@@ -13,20 +13,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-import libraries.Ant;
-import libraries.IdeaAnnotations;
+package apb.metadata;
 
-public final class ApbAnt
-    extends DefaultModule
-{
-    //~ Instance initializers ................................................................................
+import java.util.ArrayList;
+//
+// User: emilio
+// Date: Sep 3, 2008
+// Time: 12:29:57 PM
 
-    {
-        description = "APB Ant Tasks";
-        dependencies(Apb.MODULE, IdeaAnnotations.LIB, Ant.LIB);
+//
+public class ProjectElementList extends ArrayList<ProjectElement> {
+    private static final long serialVersionUID = -3277940314952780349L;
 
-        pkg.name = "ant-apb";
-        pkg.addClassPath = true;
-        pkg.dir = "../antlib";
+
+    @Override
+    public boolean add(ProjectElement o) {
+        return super.add(ObjectRegistry.intern(o));
     }
+
+    public void addAll(ProjectElement[] elements) {
+        for (ProjectElement e : elements) {
+            add(e);
+        }
+
+    }
+
 }

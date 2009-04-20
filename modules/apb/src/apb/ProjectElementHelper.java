@@ -48,11 +48,13 @@ public abstract class ProjectElementHelper
 
     private final List<ProjectElementHelper> allElements;
     private CommandBuilder                   builder;
-    @Nullable private ProjectElement         element;
+    @Nullable
+    ProjectElement         element;
     private Set<String>                      executedCommands;
 
     @NotNull private final ProjectElement proto;
     private boolean                       topLevel;
+    private static final long MB = (1024*1024);
 
     //~ Constructors .........................................................................................
 
@@ -228,10 +230,8 @@ public abstract class ProjectElementHelper
         boolean result = true;
 
         if (notExecuted(commandName)) {
-
-            env.logVerbose("About to execute %s.%s\n", getName(), commandName);
-
             ProjectElement projectElement = activate();
+            long ms = startExecution(commandName);
             Command command = findCommand(commandName);
 
             if (command == null) {
@@ -248,9 +248,29 @@ public abstract class ProjectElementHelper
 
                 env.setCurrentCommand(null);
             }
+            endExecution(commandName, ms);
             env.deactivate();
         }
 
+        return result;
+    }
+
+    private void endExecution(String commandName, long ms) {
+        if (env.isVerbose()) {
+            ms = System.currentTimeMillis() - ms;
+            long free = Runtime.getRuntime().freeMemory() / MB;
+            long total = Runtime.getRuntime().totalMemory() / MB;
+            env.logVerbose("Execution of '%s'. Finished in %d milliseconds. Memory usage: %dM of %dM\n", commandName, ms, total-free, total);
+        }
+
+    }
+
+    private long startExecution(String commandName) {
+        long result = 0;
+        if (env.isVerbose()) {
+            env.logVerbose("About to execute '%s'\n", commandName);
+            result = System.currentTimeMillis();
+        }
         return result;
     }
 

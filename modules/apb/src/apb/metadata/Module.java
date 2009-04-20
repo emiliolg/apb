@@ -23,14 +23,11 @@ import java.util.List;
 
 import apb.Environment;
 import apb.ModuleHelper;
-
 import apb.tasks.CopyTask;
 import apb.tasks.JarTask;
 import apb.tasks.JavacTask;
 import apb.tasks.JavadocTask;
 import apb.tasks.RemoveTask;
-
-import static java.util.Arrays.asList;
 
 /**
  * This class defines a Module for the building system
@@ -110,7 +107,7 @@ public class Module
     /**
      * The list of modules & libraries this module depends from
      */
-    protected final List<Dependency> dependencies = new ArrayList<Dependency>();
+    protected final DependencyList dependencies = new DependencyList();
 
     /*
      * The list of test modules
@@ -119,7 +116,7 @@ public class Module
 
     //~ Methods ..............................................................................................
 
-    public List<Dependency> dependencies()
+    public DependencyList dependencies()
     {
         return dependencies;
     }
@@ -175,7 +172,7 @@ public class Module
      */
     protected final void dependencies(Dependency... dependencyList)
     {
-        dependencies.addAll(asList(dependencyList));
+        dependencies.addAll(dependencyList);
     }
 
     /**
@@ -186,7 +183,7 @@ public class Module
     {
         for (TestModule test : testList) {
             test.setOriginalModule(this);
-            tests.add(test);
+            tests.add(ObjectRegistry.intern(test));
         }
     }
 

@@ -18,24 +18,21 @@
 
 package apb.tasks;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Collection;
-import java.io.File;
 
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
-
 import apb.metadata.Dependency;
+import apb.metadata.DependencyList;
 import apb.metadata.LocalLibrary;
 import apb.metadata.Module;
-
 import apb.utils.FileUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -108,7 +105,7 @@ public class JavaTask
         j.execute();
     }
 
-    public void setClasspath(@NotNull List<Dependency> dependencies)
+    public void setClasspath(@NotNull DependencyList dependencies)
     {
         classpath = FileUtils.makePath(JavaTask.fileList(env, dependencies));
     }
@@ -120,7 +117,7 @@ public class JavaTask
 
     public void setClasspath(Dependency... dependencies)
     {
-        setClasspath(Arrays.asList(dependencies));
+        setClasspath(DependencyList.create(dependencies));
     }
 
     public void setClasspath(ModuleHelper helper)
@@ -186,7 +183,7 @@ public class JavaTask
         }
     }
 
-    public static List<File> fileList(Environment env, List<Dependency> dependencies)
+    public static List<File> fileList(Environment env, DependencyList dependencies)
     {
         List<File> result = new ArrayList<File>();
 

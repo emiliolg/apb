@@ -18,11 +18,9 @@
 
 package apb.metadata;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
@@ -66,7 +64,7 @@ public class PackageInfo
     /**
      * Package the following dependencies into the jar
      */
-    private final List<Dependency> includeDependencies = new ArrayList<Dependency>();
+    private final DependencyList includeDependencies = new DependencyList();
 
     /**
      * Services defined in the package
@@ -90,7 +88,7 @@ public class PackageInfo
         return name + type.getExt();
     }
 
-    public List<Dependency> includeDependencies()
+    public DependencyList includeDependencies()
     {
         return includeDependencies;
     }

@@ -360,7 +360,8 @@ public abstract class Environment
     {
         currentElement = getHelper(element);
 
-        ProjectElement result = new PropertyExpansor(this).expand(element);
+        final ProjectElement result = currentElement.element != null ? currentElement.element :
+            new PropertyExpansor(this).expand(element);
 
         basedir = new File(result.basedir);
         currentElement.activate(result);

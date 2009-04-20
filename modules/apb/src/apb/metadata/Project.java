@@ -15,12 +15,7 @@
 
 package apb.metadata;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import apb.Environment;
-
-import static java.util.Arrays.asList;
 
 /**
  * This class defines a Module for the building system
@@ -31,18 +26,18 @@ public class Project
 {
     //~ Instance fields ......................................................................................
 
-    private List<ProjectElement> components = new ArrayList<ProjectElement>();
+    private ProjectElementList components = new ProjectElementList();
 
     //~ Methods ..............................................................................................
 
-    public List<ProjectElement> components()
+    public ProjectElementList components()
     {
         return components;
     }
 
     public void components(ProjectElement... ms)
     {
-        components.addAll(asList(ms));
+        components.addAll(ms);
     }
 
     public void clean(Environment env) {}
