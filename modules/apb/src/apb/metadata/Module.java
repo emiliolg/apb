@@ -183,7 +183,7 @@ public class Module
     {
         for (TestModule test : testList) {
             test.setOriginalModule(this);
-            tests.add(ObjectRegistry.intern(test));
+            tests.add(NameRegistry.intern(test));
         }
     }
 

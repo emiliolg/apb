@@ -20,4 +20,4 @@ package apb.metadata;
 // Time: 12:29:57 PM
 
 //
-public interface Dependency {}
+public interface Dependency extends Named {}

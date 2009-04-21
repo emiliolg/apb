@@ -28,7 +28,7 @@ public class ProjectElementList extends ArrayList<ProjectElement> {
 
     @Override
     public boolean add(ProjectElement o) {
-        return super.add(ObjectRegistry.intern(o));
+        return super.add(NameRegistry.intern(o));
     }
 
     public void addAll(ProjectElement[] elements) {

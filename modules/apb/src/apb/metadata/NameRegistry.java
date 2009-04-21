@@ -20,18 +20,18 @@ import org.jetbrains.annotations.NotNull;
  * to avoid combinatorial explosion of Dependency objects to be created
  */
 
-class ObjectRegistry
+class NameRegistry
 {
     //~ Methods ..............................................................................................
 
     @SuppressWarnings("unchecked")
-    static<T> T intern(T dependency)
+    static<T extends Named> T intern(T dependency)
     {
-        final Class<?> cl = dependency.getClass();
-        T result = (T) registry.get(cl);
+        final String name = dependency.getName();
+        T result = (T) registry.get(name);
 
         if (result == null) {
-            registry.put(cl, dependency);
+            registry.put(name, dependency);
             result = dependency;
         }
 
@@ -41,5 +41,5 @@ class ObjectRegistry
     //~ Static fields/initializers ...........................................................................
 
     private static final @NotNull
-    Map<Class,Object> registry = new HashMap<Class, Object>();
+    Map<String, Named> registry = new HashMap<String, Named>();
 }

@@ -52,7 +52,7 @@ public class LocalLibrary
         this.path = path;
         this.optional = optional;
         this.runtimePath = runtimePath;
-        ObjectRegistry.intern(this);
+        NameRegistry.intern(this);
     }
 
     protected LocalLibrary(@NotNull String path, boolean optional) {
@@ -96,5 +96,9 @@ public class LocalLibrary
         }
 
         return result;
+    }
+
+    public String getName() {
+        return path; 
     }
 }

@@ -26,10 +26,11 @@ import apb.utils.NameUtils;
  */
 @DefaultTarget("package")
 public abstract class ProjectElement
+    implements Named
 {
     public ProjectElement()
     {
-        ObjectRegistry.intern(this);
+        NameRegistry.intern(this);
     }
 
     //~ Instance fields ......................................................................................

@@ -28,7 +28,7 @@ public class DependencyList extends ArrayList<Dependency> {
 
     @Override
     public boolean add(Dependency o) {
-        return super.add(ObjectRegistry.intern(o));
+        return super.add(NameRegistry.intern(o));
     }
 
     public void addAll(Dependency[] dependencies) {
