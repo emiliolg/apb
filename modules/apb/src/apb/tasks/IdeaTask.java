@@ -20,6 +20,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.List;
+import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -35,6 +37,7 @@ import apb.metadata.Module;
 import apb.metadata.PackageType;
 import apb.metadata.ProjectElement;
 import apb.metadata.TestModule;
+import apb.metadata.DependencyList;
 
 import apb.utils.FileUtils;
 import apb.utils.NameUtils;
@@ -281,9 +284,13 @@ public class IdeaTask
     private void removeOldElements(Element element, String name)
     {
         NodeList children = element.getElementsByTagName(name);
+        List<Node> toBeRemoved = new ArrayList<Node>();
 
         for (int i = 0; i < children.getLength(); i++) {
-            element.removeChild(children.item(i));
+            toBeRemoved.add(children.item(i));
+        }
+        for (Node node : toBeRemoved) {
+            element.removeChild(node);
         }
     }
 
