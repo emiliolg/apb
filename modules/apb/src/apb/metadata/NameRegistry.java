@@ -25,14 +25,14 @@ class NameRegistry
     //~ Methods ..............................................................................................
 
     @SuppressWarnings("unchecked")
-    static<T extends Named> T intern(T dependency)
+    static<T extends Named> T intern(T obj)
     {
-        final String name = dependency.getName();
+        final String name = obj.getName();
         T result = (T) registry.get(name);
 
-        if (result == null) {
-            registry.put(name, dependency);
-            result = dependency;
+        if (result == null || ! result.getClass().equals(obj.getClass())) {
+            registry.put(name, obj);
+            result = obj;
         }
 
         return result;

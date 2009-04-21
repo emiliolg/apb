@@ -97,7 +97,7 @@ public class ApbTask
         StringBuilder result = new StringBuilder();
         result.append(super.getTaskName());
         final String currentModule = env.getCurrentName();
-        result.append(' ').append(isEmpty(currentModule) ? this.module : currentModule);
+        result.append(' ').append(isEmpty(currentModule) ? module : currentModule);
         final Command cmd = env.getCurrentCommand();
         if (cmd != null) {
             result.append('.').append(cmd.getQName());
