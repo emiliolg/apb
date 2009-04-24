@@ -21,12 +21,10 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import apb.Messages;
-
 import apb.metadata.TestModule;
-
 import apb.utils.ClassUtils;
 import apb.utils.OptionParser;
-
+import static apb.utils.StringUtils.isEmpty;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 //
@@ -121,7 +119,7 @@ class TestRunnerOptions
         File   result = basedir;
         String out = output.getValue();
 
-        if (out != null) {
+        if (!isEmpty(out)) {
             File f = new File(out);
 
             if (f.exists() && f.isDirectory()) {
@@ -178,7 +176,7 @@ class TestRunnerOptions
     {
         String result = suite.getValue();
 
-        if (result != null && !result.endsWith(".class")) {
+        if (!isEmpty(result) && !result.endsWith(".class")) {
             result += ".class";
         }
 
@@ -206,7 +204,7 @@ class TestRunnerOptions
         final String      creatorClass = creator.getValue();
         TestSetCreator<?> result = null;
 
-        if (creatorClass != null) {
+        if (!isEmpty(creatorClass)) {
             try {
                 Object o = ClassUtils.newInstance(classloader, creatorClass);
 
@@ -234,7 +232,7 @@ class TestRunnerOptions
 
         final String value = option.getValue();
 
-        if (value != null && !value.isEmpty()) {
+        if (!isEmpty(value)) {
             StringTokenizer tok = new StringTokenizer(value, ":");
 
             while (tok.hasMoreTokens()) {

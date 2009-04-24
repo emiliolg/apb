@@ -34,7 +34,6 @@ class NameRegistry
             registry.put(name, obj);
             result = obj;
         }
-
         return result;
     }
 

@@ -40,21 +40,24 @@ public abstract class Command
 
     @NotNull private final String  name;
     @Nullable private final String nameSpace;
+    private boolean recursive;
 
     //~ Constructors .........................................................................................
 
-    protected Command(@NotNull String nameSpace, @NotNull String name, @NotNull String description)
+    protected Command(@NotNull String nameSpace, @NotNull String name, @NotNull String description, boolean recursive)
     {
         this.name = name;
         this.description = description;
         this.nameSpace = nameSpace;
+        this.recursive = recursive;
     }
 
-    Command(@NotNull String name, @NotNull String description)
+    Command(@NotNull String name, @NotNull String description, boolean recursive)
     {
         this.name = name;
         this.description = description;
         nameSpace = null;
+        this.recursive = recursive;
     }
 
     //~ Methods ..............................................................................................
@@ -85,6 +88,11 @@ public abstract class Command
     @NotNull public List<Command> getDirectDependencies()
     {
         return Collections.emptyList();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj || obj instanceof Command && getQName().equals(((Command) obj).getQName());
     }
 
     public final String toString()
@@ -131,4 +139,6 @@ public abstract class Command
     //~ Static fields/initializers ...........................................................................
 
     @NonNls public static final String DEFAULT_COMMAND = "default";
+
+    final public boolean isRecursive() { return recursive; }
 }

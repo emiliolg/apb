@@ -156,7 +156,7 @@ public class CommandBuilder
     {
         public HelpCommand()
         {
-            super("help", "List the available commands with a brief description");
+            super("help", "List the available commands with a brief description", false);
         }
 
         public void invoke(ProjectElement projectElement, Environment env)
@@ -210,9 +210,9 @@ public class CommandBuilder
 
         private final Method method;
 
-        protected InstanceCommand(String name, Method method, String description)
+        protected InstanceCommand(@NotNull String name, @NotNull Method method, @NotNull String description, boolean recursive)
         {
-            super(name, description);
+            super(name, description, recursive);
             this.method = method;
             directDependencies = new ArrayList<Command>();
         }
@@ -220,7 +220,7 @@ public class CommandBuilder
         InstanceCommand(Method method, BuildTarget annotation)
         {
             this(annotation.name().isEmpty() ? NameUtils.idFromMember(method) : annotation.name(), method,
-                 annotation.description());
+                 annotation.description(), annotation.recursive());
         }
 
         @NotNull @Override public List<Command> getDirectDependencies()

@@ -21,6 +21,6 @@ public class Samples
     //~ Instance initializers ................................................................................
 
     {
-        components(new HelloWorld(), new Math(), new PlayWithMath());
+        components(new HelloWorld(), new Math(), new PlayWithMath(), new CompilerTest());
     }
 }

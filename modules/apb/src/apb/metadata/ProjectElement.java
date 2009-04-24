@@ -78,14 +78,16 @@ public abstract class ProjectElement
 
     @BuildTarget(
                  depends = "compile",
-                 description = "Compile test classes."
+                 description = "Compile test classes.",
+                 recursive = false
                 )
     public abstract void compileTests(Environment env);
 
     @BuildTarget(
                  depends = "compile-tests",
                  description =
-                 "Test the compiled sources, generating reports and (optional) coverage information."
+                 "Test the compiled sources, generating reports and (optional) coverage information.",
+                 recursive = false 
                 )
     public abstract void runTests(Environment env);
 

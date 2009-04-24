@@ -12,7 +12,7 @@ import apb.metadata.ProjectElement;
 //
 public class Idea extends Command {
     public Idea() {
-        super("idegen", "idea", "Generate Idea project and module files.");
+        super("idegen", "idea", "Generate Idea project and module files.", true);
     }
 
     public void invoke(ProjectElement projectElement, Environment env) {

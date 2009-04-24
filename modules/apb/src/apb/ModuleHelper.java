@@ -1,20 +1,12 @@
 
-
-// Copyright 2008-2009 Emilio Lopez-Gabeiras
+// ...........................................................................................................
+// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
+// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
+// The copyright notice above does not evidence any actual or intended
+// publication of such source code.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License
-//
-
+// Last changed on 2009-04-24 11:36:53 (-0300), by: emilio. $Revision$
+// ...........................................................................................................
 
 package apb;
 
@@ -23,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -37,6 +30,7 @@ import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
 
 import apb.utils.FileUtils;
+import apb.utils.IdentitySet;
 
 import org.jetbrains.annotations.NotNull;
 //
@@ -50,7 +44,10 @@ public class ModuleHelper
 {
     //~ Instance fields ......................................................................................
 
+    private final List<ModuleHelper>          dependencies;
     @NotNull private final List<ModuleHelper> directDependencies;
+
+    @NotNull private final Set<Command>       executedCommands;
     private File                              generatedSource;
     @NotNull private final List<LocalLibrary> localLibraries;
     private File                              moduledir;
@@ -64,10 +61,14 @@ public class ModuleHelper
     {
         super(module, env);
 
-        // Add Direct Dependencies & local libraries
+        executedCommands = new HashSet<Command>();
+
+        dependencies = new ArrayList<ModuleHelper>();
+
         directDependencies = new ArrayList<ModuleHelper>();
         localLibraries = new ArrayList<LocalLibrary>();
 
+        // Add Direct Dependencies & local libraries
         for (Dependency dependency : module.dependencies()) {
             if (dependency instanceof Module) {
                 directDependencies.add((ModuleHelper) env.getHelper((Module) dependency));
@@ -184,8 +185,10 @@ public class ModuleHelper
     public Collection<File> deepClassPath(boolean useJars, boolean addModuleOutput)
     {
         Set<File> result = new HashSet<File>();
-        if (addModuleOutput)
+
+        if (addModuleOutput) {
             result.add(useJars ? getPackageFile() : getOutput());
+        }
 
         // First classpath for module dependencies
         for (ModuleHelper dependency : getDirectDependencies()) {
@@ -229,9 +232,39 @@ public class ModuleHelper
         return trimDashes(getModule().pkg.name);
     }
 
-    protected Iterable<? extends ProjectElementHelper> getChildren()
+    public Set<ModuleHelper> listAllModules()
     {
-        return directDependencies;
+        Set<ModuleHelper> result = new LinkedHashSet<ModuleHelper>();
+
+        for (ModuleHelper mod : dependencies) {
+            mod.addTo(result);
+        }
+
+        addTo(result);
+
+        return result;
+    }
+
+    protected void initDependencyGraph()
+    {
+        // Topological Sort elements
+        tsort(dependencies, new IdentitySet<ModuleHelper>());
+
+        if (env.isVerbose()) {
+            env.logVerbose("Dependencies for: %s = %s\n", getName(), dependencies.toString());
+        }
+    }
+
+    void build(String commandName)
+    {
+        Command command = findCommand(commandName);
+
+        if (command != null) {
+            build(command);
+        }
+        else {
+            env.handle("Invalid command: " + commandName);
+        }
     }
 
     void activate(@NotNull ProjectElement activatedModule)
@@ -263,7 +296,111 @@ public class ModuleHelper
         return s.substring(s.charAt(0) == '-' ? 1 : 0, s.charAt(l - 1) == '-' ? l - 1 : l);
     }
 
+    private void build(Command command)
+    {
+        final String commandName = command.getQName();
+
+        if (command.isRecursive() && !env.isNonRecursive()) {
+            for (ModuleHelper dep : dependencies) {
+                dep.execute(commandName);
+            }
+        }
+        else {
+            for (ModuleHelper dep : dependencies) {
+                dep.activate();
+            }
+
+            for (Command cmd : command.getDirectDependencies()) {
+                build(cmd);
+            }
+        }
+
+        execute(commandName);
+    }
+
+    private void execute(@NotNull String commandName)
+    {
+        Command command = findCommand(commandName);
+
+        if (command != null && notExecuted(command)) {
+            ProjectElement projectElement = activate();
+            long           ms = startExecution(command);
+
+            for (Command cmd : command.getDependencies()) {
+                if (notExecuted(cmd)) {
+                    env.setCurrentCommand(cmd);
+                    markExecuted(cmd);
+                    cmd.invoke(projectElement, env);
+                }
+            }
+
+            env.setCurrentCommand(null);
+            endExecution(command, ms);
+            env.deactivate();
+        }
+    }
+
+    private void addTo(Set<ModuleHelper> result)
+    {
+        result.add(this);
+
+        for (TestModule testModule : getModule().tests()) {
+            result.add((ModuleHelper) env.getHelper(testModule));
+        }
+    }
+
+    private void endExecution(Command command, long ms)
+    {
+        if (env.isVerbose()) {
+            ms = System.currentTimeMillis() - ms;
+            long free = Runtime.getRuntime().freeMemory() / MB;
+            long total = Runtime.getRuntime().totalMemory() / MB;
+            env.logVerbose("Execution of '%s'. Finished in %d milliseconds. Memory usage: %dM of %dM\n",
+                           command, ms, total - free, total);
+        }
+    }
+
+    private long startExecution(Command command)
+    {
+        long result = 0;
+
+        if (env.isVerbose()) {
+            env.logVerbose("About to execute '%s'\n", command);
+            result = System.currentTimeMillis();
+        }
+
+        return result;
+    }
+
+    /**
+     * Topological sort dependent modules using a Depth First Search
+     * @param elements All descendant elements
+     * @param visited  Already visited elements
+     */
+    private void tsort(List<ModuleHelper> elements, IdentitySet<ModuleHelper> visited)
+    {
+        for (ModuleHelper dependency : directDependencies) {
+            if (!visited.contains(dependency)) {
+                visited.add(dependency);
+                dependency.tsort(elements, visited);
+                elements.add(dependency);
+            }
+        }
+    }
+
+    private void markExecuted(Command cmd)
+    {
+        executedCommands.add(cmd);
+    }
+
+    private boolean notExecuted(Command cmd)
+    {
+        return !executedCommands.contains(cmd);
+    }
+
     //~ Static fields/initializers ...........................................................................
+
+    private static final long MB = (1024 * 1024);
 
     public static final String SRC_JAR = "-src.jar";
 }

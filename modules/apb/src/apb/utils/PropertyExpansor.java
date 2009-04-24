@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -134,13 +136,19 @@ public class PropertyExpansor
         final Class<? extends T> c = (Class<? extends T>) object.getClass();
 
         try {
-            return c.newInstance();
+            Constructor<? extends T> cons = c.getDeclaredConstructor();
+            cons.setAccessible(true);
+            return cons.newInstance();
         }
         catch (InstantiationException e) {
             env.handle(e);
         }
         catch (IllegalAccessException e) {
             env.handle(e);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
         }
 
         return object;

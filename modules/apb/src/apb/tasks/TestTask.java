@@ -346,7 +346,7 @@ public class TestTask
         // Create Java Command
         List<String> args = new ArrayList<String>();
 
-        JavaTask java = new JavaTask(env, false, coverageBuilder.runnerMainClass(), args);
+        JavaTask java = new JavaTask(env, false, coverageBuilder.runnerMainClass());
 
         java.setClasspath(runnerClassPath());
 
@@ -405,6 +405,7 @@ public class TestTask
         // Add the test directory
         args.add(moduleHelper.getOutput().getAbsolutePath());
 
+        java.addArguments(args);
         // Execute
         java.execute();
 

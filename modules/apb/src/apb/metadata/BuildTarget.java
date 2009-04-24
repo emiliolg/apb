@@ -47,4 +47,9 @@ public @interface BuildTarget
      * Specify a description from the BuildTarget, for help and documentation purpouses.
      */
     String description() default "";
+    /**
+     * Specify that the command must be applied recursively to the dependencies
+     */
+    boolean recursive() default true;
+
 }

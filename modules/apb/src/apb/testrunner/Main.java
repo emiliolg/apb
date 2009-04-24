@@ -28,9 +28,8 @@ import java.util.List;
 
 import apb.testrunner.output.SimpleReport;
 import apb.testrunner.output.TestReport;
-
 import apb.utils.FileUtils;
-
+import static apb.utils.StringUtils.isEmpty;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -71,7 +70,7 @@ public class Main
 
         int r;
 
-        if (suite == null) {
+        if (isEmpty(suite)) {
             r = runner.run(creator, report, classloader);
         }
         else {

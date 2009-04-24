@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collection;
 
 import apb.Environment;
 import apb.ModuleHelper;
@@ -64,14 +65,14 @@ public class JavaTask
 
     public JavaTask(@NotNull Environment env, @NotNull String className, String... arguments)
     {
-        this(env, false, className, Arrays.asList(arguments));
+        this(env, false, className);
+        addArguments(arguments);
     }
 
-    public JavaTask(@NotNull Environment env, boolean executeJar, @NotNull String jarOrClass,
-                    @NotNull List<String> arguments)
+    public JavaTask(@NotNull Environment env, boolean executeJar, @NotNull String jarOrClass)
     {
         super(env);
-        cmd = new ArrayList<String>(arguments);
+        cmd = new ArrayList<String>();
         this.executeJar = executeJar;
         this.jarOrClass = jarOrClass;
         environment = new HashMap<String, String>();
@@ -90,17 +91,19 @@ public class JavaTask
     //~ Methods ..............................................................................................
 
     public static void executeClass(@NotNull ModuleHelper helper, @NotNull String className,
-                                    @NotNull List<String> args)
+                                    @NotNull String... args)
     {
-        JavaTask j = new JavaTask(helper.getEnv(), false, className, args);
+        JavaTask j = new JavaTask(helper.getEnv(), false, className);
+        j.addArguments(args);
         j.setClasspath(helper);
         j.execute();
     }
 
     public static void executeJar(@NotNull ModuleHelper helper, @NotNull String jarName,
-                                  @NotNull List<String> args)
+                                  @NotNull String... args)
     {
-        JavaTask j = new JavaTask(helper.getEnv(), true, jarName, args);
+        JavaTask j = new JavaTask(helper.getEnv(), true, jarName);
+        j.addArguments(args);
         j.setClasspath(helper);
         j.execute();
     }
@@ -129,6 +132,12 @@ public class JavaTask
     {
         cmd.addAll(Arrays.asList(args));
     }
+
+    public void addArguments(Collection<String> args)
+    {
+        cmd.addAll(args);
+    }
+
     public void execute()
     {
         List<String> args = new ArrayList<String>();

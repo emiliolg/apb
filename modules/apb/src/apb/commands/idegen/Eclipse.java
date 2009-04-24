@@ -11,7 +11,7 @@ import apb.metadata.ProjectElement;
 //
 public class Eclipse extends Command {
     public Eclipse() {
-        super("idegen", "eclipse", "Generate Eclipse project files.");
+        super("idegen", "eclipse", "Generate Eclipse project files.", true);
     }
 
     public void invoke(ProjectElement projectElement, Environment env) {
