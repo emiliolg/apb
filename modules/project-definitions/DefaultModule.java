@@ -4,7 +4,7 @@ public class DefaultModule
         extends Module {
     {
 
-        version = "0.9.6";
+        version = "0.9.7";
 
         compiler.lint = true;
         compiler.failOnWarning = true;
