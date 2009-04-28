@@ -34,6 +34,7 @@ public class SimpleFormatter
 
     private Environment env;
     private boolean     eol = true;
+    private static final int HEADER_LENGTH = 30;
 
     //~ Constructors .........................................................................................
 
@@ -103,11 +104,13 @@ public class SimpleFormatter
                 result.append(".");
                 result.append(env.getCurrentCommand().getQName());
             }
+            if (result.length()-n > HEADER_LENGTH)
+                result.setLength(n+HEADER_LENGTH);
 
-            result.append("] ");
+            result.append("]");
             n = result.length() - n;
 
-            for (int i = 25 - n; i >= 0; i--) {
+            for (int i = HEADER_LENGTH+1 - n; i >= 0; i--) {
                 result.append(' ');
             }
         }

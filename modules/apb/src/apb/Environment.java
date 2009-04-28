@@ -215,11 +215,12 @@ public abstract class Environment
     /**
      * Return the value of the specified boolean property
      * @param id The property to search
+     * @param defaultValue The default value
      * @return The value of the property or false if the property is not set
      */
-    public boolean getBooleanProperty(@NotNull String id)
+    public boolean getBooleanProperty(@NotNull String id, boolean defaultValue)
     {
-        return Boolean.parseBoolean(getProperty(id, "false"));
+        return Boolean.parseBoolean(getProperty(id, Boolean.toString(defaultValue)));
     }
 
     public boolean isVerbose()

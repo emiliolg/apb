@@ -47,7 +47,6 @@ public class ModuleHelper
     private final List<ModuleHelper>          dependencies;
     @NotNull private final List<ModuleHelper> directDependencies;
 
-    @NotNull private final Set<Command>       executedCommands;
     private File                              generatedSource;
     @NotNull private final List<LocalLibrary> localLibraries;
     private File                              output;
@@ -60,7 +59,6 @@ public class ModuleHelper
     {
         super(module, env);
 
-        executedCommands = new HashSet<Command>();
 
         dependencies = new ArrayList<ModuleHelper>();
 
@@ -311,28 +309,6 @@ public class ModuleHelper
         execute(commandName);
     }
 
-    private void execute(@NotNull String commandName)
-    {
-        Command command = findCommand(commandName);
-
-        if (command != null && notExecuted(command)) {
-            ProjectElement projectElement = activate();
-            long           ms = startExecution(command);
-
-            for (Command cmd : command.getDependencies()) {
-                if (notExecuted(cmd)) {
-                    env.setCurrentCommand(cmd);
-                    markExecuted(cmd);
-                    cmd.invoke(projectElement, env);
-                }
-            }
-
-            env.setCurrentCommand(null);
-            endExecution(command, ms);
-            env.deactivate();
-        }
-    }
-
     private void addTo(Set<ModuleHelper> result)
     {
         result.add(this);
@@ -340,29 +316,6 @@ public class ModuleHelper
         for (TestModule testModule : getModule().tests()) {
             result.add((ModuleHelper) env.getHelper(testModule));
         }
-    }
-
-    private void endExecution(Command command, long ms)
-    {
-        if (env.isVerbose()) {
-            ms = System.currentTimeMillis() - ms;
-            long free = Runtime.getRuntime().freeMemory() / MB;
-            long total = Runtime.getRuntime().totalMemory() / MB;
-            env.logVerbose("Execution of '%s'. Finished in %d milliseconds. Memory usage: %dM of %dM\n",
-                           command, ms, total - free, total);
-        }
-    }
-
-    private long startExecution(Command command)
-    {
-        long result = 0;
-
-        if (env.isVerbose()) {
-            env.logVerbose("About to execute '%s'\n", command);
-            result = System.currentTimeMillis();
-        }
-
-        return result;
     }
 
     /**
@@ -381,19 +334,7 @@ public class ModuleHelper
         }
     }
 
-    private void markExecuted(Command cmd)
-    {
-        executedCommands.add(cmd);
-    }
-
-    private boolean notExecuted(Command cmd)
-    {
-        return !executedCommands.contains(cmd);
-    }
-
     //~ Static fields/initializers ...........................................................................
-
-    private static final long MB = (1024 * 1024);
 
     public static final String SRC_JAR = "-src.jar";
 }

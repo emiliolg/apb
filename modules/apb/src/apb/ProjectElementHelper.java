@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.HashSet;
 
 import apb.metadata.Module;
 import apb.metadata.Project;
@@ -38,6 +39,9 @@ public abstract class ProjectElementHelper
 
     @NotNull private final ProjectElement proto;
     private boolean                       topLevel;
+    @NotNull
+    protected final Set<Command>       executedCommands;
+    private static final long MB = (1024 * 1024);
 
     //~ Constructors .........................................................................................
 
@@ -46,6 +50,7 @@ public abstract class ProjectElementHelper
         proto = element;
         env = environment;
         env.addHelper(this);
+        executedCommands = new HashSet<Command>();
     }
 
     //~ Methods ..............................................................................................
@@ -180,5 +185,60 @@ public abstract class ProjectElementHelper
         }
 
         return builder;
+    }
+
+    protected void execute(@NotNull String commandName)
+    {
+        Command command = findCommand(commandName);
+
+        if (command != null && notExecuted(command)) {
+            ProjectElement projectElement = activate();
+            long           ms = startExecution(command);
+
+            for (Command cmd : command.getDependencies()) {
+                if (notExecuted(cmd)) {
+                    env.setCurrentCommand(cmd);
+                    markExecuted(cmd);
+                    cmd.invoke(projectElement, env);
+                }
+            }
+
+            env.setCurrentCommand(null);
+            endExecution(command, ms);
+            env.deactivate();
+        }
+    }
+
+    private void endExecution(Command command, long ms)
+    {
+        if (env.isVerbose()) {
+            ms = System.currentTimeMillis() - ms;
+            long free = Runtime.getRuntime().freeMemory() / MB;
+            long total = Runtime.getRuntime().totalMemory() / MB;
+            env.logVerbose("Execution of '%s'. Finished in %d milliseconds. Memory usage: %dM of %dM\n",
+                           command, ms, total - free, total);
+        }
+    }
+
+    private long startExecution(Command command)
+    {
+        long result = 0;
+
+        if (env.isVerbose()) {
+            env.logVerbose("About to execute '%s'\n", command);
+            result = System.currentTimeMillis();
+        }
+
+        return result;
+    }
+
+    private void markExecuted(Command cmd)
+    {
+        executedCommands.add(cmd);
+    }
+
+    private boolean notExecuted(Command cmd)
+    {
+        return !executedCommands.contains(cmd);
     }
 }

@@ -67,5 +67,6 @@ public class ProjectHelper
         for (ProjectElementHelper component : components) {
             component.build(commandName);
         }
+        execute(commandName);
     }
 }
