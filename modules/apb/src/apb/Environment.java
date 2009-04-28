@@ -1,20 +1,12 @@
 
-
-// Copyright 2008-2009 Emilio Lopez-Gabeiras
+// ...........................................................................................................
+// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
+// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
+// The copyright notice above does not evidence any actual or intended
+// publication of such source code.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License
-//
-
+// Last changed on 2009-04-28 13:49:28 (-0300), by: emilio. $Revision$
+// ...........................................................................................................
 
 package apb;
 
@@ -30,6 +22,8 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import apb.compiler.InMemJavaC;
+
+import apb.index.DefinitionsIndex;
 
 import apb.metadata.Module;
 import apb.metadata.ProjectElement;
@@ -54,6 +48,11 @@ public abstract class Environment
 {
     //~ Instance fields ......................................................................................
 
+    /**
+     * The apb home directory
+     */
+    @NotNull private final File apbDir;
+
     private File basedir;
 
     /**
@@ -65,12 +64,14 @@ public abstract class Environment
 
     private Command currentCommand;
 
-    private ProjectElementHelper              currentElement;
-    private boolean                           failOnError;
-    private boolean                           forceBuild;
+    private ProjectElementHelper                    currentElement;
+    private DefinitionsIndex                        definitionsIndex;
+    private boolean                                 failOnError;
+    private boolean                                 forceBuild;
     private final Map<String, ProjectElementHelper> helpersByElement;
-    private InMemJavaC                        javac;
-    private Os                                os;
+    private InMemJavaC                              javac;
+    private boolean                                 nonRecursive;
+    private Os                                      os;
 
     private Set<File> projectPath;
 
@@ -82,12 +83,12 @@ public abstract class Environment
     private boolean             quiet;
     private boolean             showStackTrace;
     private boolean             verbose;
-    private boolean nonRecursive;
 
     //~ Constructors .........................................................................................
 
     public Environment()
     {
+        apbDir = new File(System.getProperty("user.home"), APB_DIR);
         os = Os.getInstance();
         baseProperties = new TreeMap<String, String>();
         projectProperties = new TreeMap<String, String>();
@@ -307,12 +308,6 @@ public abstract class Environment
             helpersByElement.remove(element.getName());
         }
     }
-    void addHelper(@NotNull ProjectElementHelper helper)
-    {
-        synchronized (helpersByElement) {
-            helpersByElement.put(helper.getName(), helper);
-        }
-    }
 
     public File getProjectsHome()
     {
@@ -345,11 +340,13 @@ public abstract class Environment
         final File child = new File(expand(name));
         return child.isAbsolute() ? child : new File(basedir, child.getPath());
     }
+
     @NotNull public File fileFromSource(@NotNull String name)
     {
         final File child = new File(expand(name));
         return child.isAbsolute() ? child : new File(getModuleHelper().getSource(), child.getPath());
     }
+
     @NotNull public File fileFromGeneratedSource(@NotNull String name)
     {
         final File child = new File(expand(name));
@@ -360,8 +357,9 @@ public abstract class Environment
     {
         currentElement = getHelper(element);
 
-        final ProjectElement result = currentElement.element != null ? currentElement.element :
-            new PropertyExpansor(this).expand(element);
+        final ProjectElement result =
+            currentElement.element != null ? currentElement.element
+                                           : new PropertyExpansor(this).expand(element);
 
         basedir = new File(result.basedir);
         currentElement.activate(result);
@@ -480,6 +478,54 @@ public abstract class Environment
         System.out.println("values = " + values);
     }
 
+    public String getBaseProperty(String propertyName)
+    {
+        return baseProperties.get(propertyName);
+    }
+
+    public void setNonRecursive()
+    {
+        nonRecursive = true;
+    }
+
+    public boolean isNonRecursive()
+    {
+        return nonRecursive;
+    }
+
+    public void resetJavac()
+    {
+        javac = new InMemJavaC(this);
+    }
+
+    /**
+     * Construct a Helper for the file
+     * @param file The file containing the module definition
+     * @return A project helper asociated to the file
+     */
+    @NotNull public ProjectElementHelper constructProjectElement(File file)
+        throws Exception
+    {
+        final File pdir = projectDir(file);
+        setProjectsHome(pdir);
+
+        return getHelper(javac.loadClass(pdir, file).asSubclass(ProjectElement.class).newInstance());
+    }
+
+    @NotNull public File getApbDir()
+    {
+        return apbDir;
+    }
+
+    public synchronized @NotNull DefinitionsIndex getDefinitionsIndex()
+    {
+        if (definitionsIndex == null) {
+            definitionsIndex = new DefinitionsIndex(this);
+        }
+
+        return definitionsIndex;
+    }
+
     protected void loadProjectPath()
     {
         projectPath = new LinkedHashSet<File>();
@@ -504,6 +550,20 @@ public abstract class Environment
             }
 
             projectPath.add(dir);
+        }
+    }
+
+    protected void copyProperties(Map<?, ?> p)
+    {
+        for (Map.Entry<?, ?> entry : p.entrySet()) {
+            baseProperties.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+        }
+    }
+
+    void addHelper(@NotNull ProjectElementHelper helper)
+    {
+        synchronized (helpersByElement) {
+            helpersByElement.put(helper.getName(), helper);
         }
     }
 
@@ -568,28 +628,17 @@ public abstract class Environment
         throws DefinitionException
     {
         try {
-            File       source = projectElementFile(name);
-            final File pdir = projectDir(source);
-            setProjectsHome(pdir);
-
-            return getHelper(javac.loadClass(pdir, source).asSubclass(ProjectElement.class).newInstance());
+            File source = projectElementFile(name);
+            return constructProjectElement(source);
         }
         catch (Exception e) {
             throw new DefinitionException(name, e);
         }
     }
 
-    protected void copyProperties(Map<?, ?> p)
-    {
-        for (Map.Entry<?, ?> entry : p.entrySet()) {
-            baseProperties.put(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
-        }
-    }
-
     private void loadUserProperties()
     {
-        final String home = System.getProperty("user.home");
-        File         propFile = new File(new File(home, APB_DIR), APB_PROPERTIES);
+        File propFile = new File(apbDir, APB_PROPERTIES);
 
         if (propFile.exists()) {
             try {
@@ -615,17 +664,4 @@ public abstract class Environment
     static final String VERSION_PROP_KEY = "version";
     static final String PKG_PROP_KEY = "pkg";
     static final String PKG_DIR_KEY = PKG_PROP_KEY + ".dir";
-
-    public String getBaseProperty(String propertyName) {
-        return baseProperties.get(propertyName);
-
-    }
-
-    public void setNonRecursive() {
-        nonRecursive = true;
-    }
-
-    public boolean isNonRecursive() {
-        return nonRecursive;
-    }
 }

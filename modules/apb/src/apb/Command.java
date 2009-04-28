@@ -95,6 +95,11 @@ public abstract class Command
         return this == obj || obj instanceof Command && getQName().equals(((Command) obj).getQName());
     }
 
+    @Override
+    public int hashCode() {
+        return 31 * name.hashCode() + (nameSpace != null ? nameSpace.hashCode() : 0);
+    }
+
     public final String toString()
     {
         return getQName();

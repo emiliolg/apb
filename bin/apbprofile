@@ -1,0 +1,28 @@
+# ============================================================================
+# Unix startup script for apb (A Project Builder)
+# ============================================================================
+#
+linux=false
+cygwin=false
+darwin=false
+
+case "$OSTYPE" in
+  linux*)  linux=true ;;
+  cygwin*) cygwin=true ;;
+  darwin*) darwin=true ;;
+esac
+
+# Under Cygwin, JVM doesn't support unix paths. Must be translated to windows style paths.
+if $cygwin; then
+   ospath() { cygpath --windows "$1"; }
+else
+   ospath() { echo "$1"; }
+fi
+
+DIRLIB=$(dirname $(type -p $0))/../lib
+
+export DYLD_LIBRARY_PATH=/Applications/jprofiler5/bin/macos
+
+echo "Running APB in Remote profiler mode"
+DEBUG="-agentlib:jprofilerti=port=8849  -Xbootclasspath/a:/Applications/jprofiler5/bin/agent.jar"
+java $DEBUG -Xmx256m -jar $(ospath "$DIRLIB/apb.jar") $*

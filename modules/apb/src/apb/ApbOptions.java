@@ -1,20 +1,12 @@
 
-
-// Copyright 2008-2009 Emilio Lopez-Gabeiras
+// ...........................................................................................................
+// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
+// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
+// The copyright notice above does not evidence any actual or intended
+// publication of such source code.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License
-//
-
+// Last changed on 2009-04-27 15:06:13 (-0300), by: emilio. $Revision$
+// ...........................................................................................................
 
 package apb;
 
@@ -24,12 +16,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static apb.Messages.*;
 import apb.metadata.Module;
-
 import apb.utils.OptionParser;
 import apb.utils.StandaloneEnv;
-
-import static apb.Messages.*;
 //
 // User: emilio
 // Date: Sep 3, 2008
@@ -44,10 +34,10 @@ class ApbOptions
 
     private Option<Boolean> forceBuild;
     private Option<Boolean> noFailOnError;
+    private Option<Boolean> nonRecursive;
     private Option<Boolean> quiet;
     private Option<Boolean> showStackTrace;
     private Option<Boolean> verbose;
-    private Option<Boolean> nonRecursive;
 
     //~ Constructors .........................................................................................
 
@@ -79,13 +69,7 @@ class ApbOptions
     public List<String> parse()
     {
         doCompletion();
-        final List<String> result = super.parse();
-
-        if (result.isEmpty()) {
-            printHelp();
-        }
-
-        return result;
+        return super.parse();
     }
 
     public void initEnv(Environment environment)
@@ -100,6 +84,7 @@ class ApbOptions
         if (showStackTrace.getValue()) {
             environment.setShowStackTrace();
         }
+
         if (nonRecursive.getValue()) {
             environment.setNonRecursive();
         }
@@ -140,11 +125,11 @@ class ApbOptions
         ModuleHelper mock = new ModuleHelper(new Module(), new StandaloneEnv());
         Set<String>  nameSpaces = new TreeSet<String>();
 
-        for (Command cmd : mock.listCommands()) {
+        for (Command cmd : mock.listCommands().values()) {
             if (cmd.hasNameSpace()) {
                 nameSpaces.add(cmd.getNameSpace());
             }
-            else if (!cmd.isDefault()) {
+            else {
                 cmds.append(cmds.length() == 0 ? "[ " : " | ");
                 cmds.append(cmd.getName());
             }

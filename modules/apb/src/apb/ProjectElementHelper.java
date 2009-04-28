@@ -5,20 +5,20 @@
 // The copyright notice above does not evidence any actual or intended
 // publication of such source code.
 //
-// Last changed on 2009-04-23 18:07:22 (-0300), by: emilio. $Revision$
+// Last changed on 2009-04-27 17:25:53 (-0300), by: emilio. $Revision$
 // ...........................................................................................................
 
 package apb;
 
 import java.io.File;
-import java.util.Collection;
+import java.io.IOException;
 import java.util.Set;
+import java.util.SortedMap;
 
 import apb.metadata.Module;
 import apb.metadata.Project;
 import apb.metadata.ProjectElement;
 import apb.metadata.TestModule;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -70,22 +70,22 @@ public abstract class ProjectElementHelper
         return result;
     }
 
-    final public String toString()
+    public final String toString()
     {
         return getName();
     }
 
-    final @NotNull public String getName()
+    @NotNull public final String getName()
     {
         return proto.getName();
     }
 
-    final public String getId()
+    public final String getId()
     {
         return proto.getId();
     }
 
-    final public Environment getEnv()
+    public final Environment getEnv()
     {
         return env;
     }
@@ -99,42 +99,72 @@ public abstract class ProjectElementHelper
         return element;
     }
 
-    final public File getBasedir()
+    public final File getBasedir()
     {
         return env.getBaseDir();
     }
 
-    final public void setTopLevel(boolean b)
+    public final void setTopLevel(boolean b)
     {
         topLevel = b;
     }
 
-    final public boolean isTopLevel()
+    public final boolean isTopLevel()
     {
         return topLevel;
     }
 
-    final public String getJdkName()
+    public final String getJdkName()
     {
         return getElement().jdk;
     }
 
-    final public long lastModified()
+    public final long lastModified()
     {
         return env.sourceLastModified(getElement().getClass());
     }
 
-    final public Collection<Command> listCommands()
+    public final SortedMap<String,Command> listCommands()
     {
-        return getBuilder().listCommands();
+        return getBuilder().commands();
     }
 
-    protected void initDependencyGraph() {}
-
-    final protected ProjectElement activate()
+    public final ProjectElement activate()
     {
         return env.activate(proto);
     }
+
+    public Command findCommand(String commandName)
+    {
+        return getBuilder().commands().get(commandName);
+    }
+
+    /**
+     * Return the Absolute file for the content of the project/module
+     * This method works regardless of the Module being activated.
+     * @return The File for the content of the project/module
+     */
+    @NotNull public File getDirFile()
+    {
+        File result = new File(env.expand(proto.getDir()));
+
+        if (!result.isAbsolute()) {
+            File basedir = new File(env.expand(proto.basedir));
+
+            try {
+                basedir = basedir.getCanonicalFile();
+            }
+            catch (IOException ignore) {
+                // Keep non canonized version of basedir
+            }
+
+            result = new File(basedir, result.getPath());
+        }
+
+        return result;
+    }
+
+    protected void initDependencyGraph() {}
 
     abstract void build(String commandName);
 
@@ -143,17 +173,12 @@ public abstract class ProjectElementHelper
         element = activatedElement;
     }
 
-    final @NotNull private CommandBuilder getBuilder()
+    @NotNull private CommandBuilder getBuilder()
     {
         if (builder == null) {
             builder = new CommandBuilder(proto);
         }
 
         return builder;
-    }
-
-    public Command findCommand(String commandName)
-    {
-        return getBuilder().commands().get(commandName);
     }
 }

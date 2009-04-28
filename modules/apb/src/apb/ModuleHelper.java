@@ -50,7 +50,6 @@ public class ModuleHelper
     @NotNull private final Set<Command>       executedCommands;
     private File                              generatedSource;
     @NotNull private final List<LocalLibrary> localLibraries;
-    private File                              moduledir;
     private File                              output;
     private File                              packageDir;
     private File                              source;
@@ -80,11 +79,6 @@ public class ModuleHelper
     }
 
     //~ Methods ..............................................................................................
-
-    public File getModuledir()
-    {
-        return moduledir;
-    }
 
     public Module getModule()
     {
@@ -272,7 +266,6 @@ public class ModuleHelper
         super.activate(activatedModule);
 
         Module module = getModule();
-        moduledir = env.fileFromBase(module.getDir());
         output = env.fileFromBase(module.output);
         source = env.fileFromBase(module.source);
         generatedSource = env.fileFromBase(module.generatedSource);
