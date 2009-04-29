@@ -1,12 +1,20 @@
 
-// ...........................................................................................................
-// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
-// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
-// The copyright notice above does not evidence any actual or intended
-// publication of such source code.
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
-// Last changed on 2009-04-28 13:49:28 (-0300), by: emilio. $Revision$
-// ...........................................................................................................
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
 
 package apb;
 
@@ -14,6 +22,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -28,6 +37,7 @@ import apb.index.DefinitionsIndex;
 import apb.metadata.Module;
 import apb.metadata.ProjectElement;
 
+import apb.utils.FileUtils;
 import apb.utils.PropertyExpansor;
 
 import org.jetbrains.annotations.NotNull;
@@ -64,8 +74,13 @@ public abstract class Environment
 
     private Command currentCommand;
 
-    private ProjectElementHelper                    currentElement;
-    private DefinitionsIndex                        definitionsIndex;
+    private ProjectElementHelper currentElement;
+    private DefinitionsIndex     definitionsIndex;
+
+    /**
+     * The set of jars that comprise the extension class path
+     */
+    @NotNull final private Set<File>                      extClassPath;
     private boolean                                 failOnError;
     private boolean                                 forceBuild;
     private final Map<String, ProjectElementHelper> helpersByElement;
@@ -94,7 +109,6 @@ public abstract class Environment
         projectProperties = new TreeMap<String, String>();
 
         helpersByElement = new HashMap<String, ProjectElementHelper>();
-        javac = new InMemJavaC(this);
 
         // Read Environment
         //        for (Map.Entry<String,String> entry : System.getenv().entrySet()) {
@@ -104,6 +118,9 @@ public abstract class Environment
 
         // Read System Properties
         copyProperties(System.getProperties());
+
+        extClassPath = loadExtensionsPath(baseProperties);
+        resetJavac();
     }
 
     //~ Methods ..............................................................................................
@@ -115,6 +132,15 @@ public abstract class Environment
     public abstract void logSevere(String msg, Object... args);
 
     public abstract void logVerbose(String msg, Object... args);
+
+    /**
+     * Get the Extension Jars to be searched when we compile definitions
+     * @return the extension Jars to be searched when we compiled definitions
+     */
+    @NotNull public Collection<File> getExtClassPath()
+    {
+        return extClassPath;
+    }
 
     public long sourceLastModified(@NotNull Class clazz)
     {
@@ -518,7 +544,7 @@ public abstract class Environment
         return apbDir;
     }
 
-    public synchronized @NotNull DefinitionsIndex getDefinitionsIndex()
+    @NotNull public synchronized DefinitionsIndex getDefinitionsIndex()
     {
         if (definitionsIndex == null) {
             definitionsIndex = new DefinitionsIndex(this);
@@ -552,6 +578,23 @@ public abstract class Environment
 
             projectPath.add(dir);
         }
+    }
+
+    static private Set<File> loadExtensionsPath(Map<String, String> baseProperties)
+    {
+        String path = System.getenv("APB_EXT_PATH");
+
+        String path2 = baseProperties.get("ext.path");
+
+        if (path2 != null) {
+            path = path == null ? path2 : path + File.pathSeparator + path2;
+        }
+
+        Set<File> jars = new LinkedHashSet<File>();
+        for (String p : path.split(File.pathSeparator)) {
+            jars.addAll(FileUtils.listAllFilesWithExt(new File(p), ".jar"));
+        }
+        return jars;
     }
 
     protected void copyProperties(Map<?, ?> p)

@@ -1,12 +1,20 @@
 
-// ...........................................................................................................
-// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
-// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
-// The copyright notice above does not evidence any actual or intended
-// publication of such source code.
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
-// Last changed on 2009-04-17 12:35:49 (-0300), by: emilio. $Revision$
-// ...........................................................................................................
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
 
 package apb.tasks;
 
@@ -14,14 +22,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.List;
-import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,6 +40,7 @@ import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
 
+import apb.metadata.Library;
 import apb.metadata.LocalLibrary;
 import apb.metadata.Module;
 import apb.metadata.PackageType;
@@ -126,6 +135,7 @@ public class IdeaTask
             int slash = s.lastIndexOf('/');
             result = slash == -1 ? "" : s.substring(0, slash);
         }
+
         return result;
     }
 
@@ -282,12 +292,13 @@ public class IdeaTask
 
     private void removeOldElements(Element element, String name)
     {
-        NodeList children = element.getElementsByTagName(name);
+        NodeList   children = element.getElementsByTagName(name);
         List<Node> toBeRemoved = new ArrayList<Node>();
 
         for (int i = 0; i < children.getLength(); i++) {
             toBeRemoved.add(children.item(i));
         }
+
         for (Node node : toBeRemoved) {
             element.removeChild(node);
         }
@@ -564,7 +575,7 @@ public class IdeaTask
 
         // Now libraries
 
-        for (LocalLibrary l : module.getLocalLibraries()) {
+        for (Library l : module.getLocalLibraries()) {
             addLibrary(l, component, modulesByUrl, unusedModules);
         }
 
@@ -580,7 +591,7 @@ public class IdeaTask
         }
     }
 
-    private void addLibrary(LocalLibrary library, Element component, Map<String, Element> modulesByUrl,
+    private void addLibrary(Library library, Element component, Map<String, Element> modulesByUrl,
                             Set<Element> unusedModules)
     {
         for (File libraryFile : library.getFiles(env)) {
@@ -692,7 +703,7 @@ public class IdeaTask
          * Make name absolute
          * @return
          */
-        @Override public String getName()
+        @NotNull @Override public String getName()
         {
             return getClass().getSimpleName();
         }

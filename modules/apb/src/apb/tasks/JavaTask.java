@@ -21,18 +21,16 @@ package apb.tasks;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Collection;
 
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
 import apb.metadata.Dependency;
 import apb.metadata.DependencyList;
-import apb.metadata.LocalLibrary;
-import apb.metadata.Module;
 import apb.utils.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -84,7 +82,8 @@ public class JavaTask
         ProjectElementHelper mod = env.getCurrent();
 
         if (mod != null && mod instanceof ModuleHelper) {
-            classpath = ((ModuleHelper) mod).getClassPath();
+            final ModuleHelper m = (ModuleHelper) mod;
+            classpath = FileUtils.makePath(m.runtimePath());
         }
     }
 
@@ -125,7 +124,7 @@ public class JavaTask
 
     public void setClasspath(ModuleHelper helper)
     {
-        classpath = helper.getClassPath();
+        classpath = FileUtils.makePath(helper.runtimePath());
     }
 
     public void addArguments(String... args)
@@ -197,11 +196,11 @@ public class JavaTask
         List<File> result = new ArrayList<File>();
 
         for (Dependency dependency : dependencies) {
-            if (dependency instanceof LocalLibrary) {
-                result.addAll(((LocalLibrary) dependency).getFiles(env));
+            if (dependency.isLibrary()) {
+                result.addAll(dependency.asLibrary().getFiles(env));
             }
-            else if (dependency instanceof Module){
-                final ModuleHelper module = (ModuleHelper) env.getHelper((Module) dependency);
+            else if (dependency.isModule()){
+                final ModuleHelper module = (ModuleHelper) env.getHelper(dependency.asModule());
                 result.addAll(module.deepClassPath(false, true));
             }
         }

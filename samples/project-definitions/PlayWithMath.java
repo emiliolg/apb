@@ -33,4 +33,10 @@ public class PlayWithMath
         pkg.addClassPath = true;
        compiler.validateDependencies = false;
     }
+
+//    @BuildTarget
+//    void hi()
+//    {
+//        HiExtension.hi();
+//    }
 }

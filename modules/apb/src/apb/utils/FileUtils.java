@@ -1,12 +1,20 @@
 
-// ...........................................................................................................
-// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
-// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
-// The copyright notice above does not evidence any actual or intended
-// publication of such source code.
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
-// Last changed on 2009-04-27 11:49:36 (-0300), by: emilio. $Revision$
-// ...........................................................................................................
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
 
 package apb.utils;
 
@@ -301,8 +309,8 @@ public class FileUtils
         return lastDot == -1 ? nm : nm.substring(0, lastDot);
     }
 
-    public static void copyFileFiltering(@NotNull File from, @NotNull File to, boolean append, @NotNull String encoding,
-                                         @NotNull List<Filter> filters)
+    public static void copyFileFiltering(@NotNull File from, @NotNull File to, boolean append,
+                                         @NotNull String encoding, @NotNull List<Filter> filters)
         throws IOException
     {
         BufferedReader reader = null;
@@ -372,7 +380,7 @@ public class FileUtils
             file.getParentFile().mkdirs();
         }
 
-        return new FileOutputStream(file,append);
+        return new FileOutputStream(file, append);
     }
 
     /**
@@ -556,6 +564,11 @@ public class FileUtils
         return result;
     }
 
+    public static String getCurrentWorkingDirectory()
+    {
+        return System.getProperty("user.dir");
+    }
+
     static boolean isSymbolicLink(File file)
         throws IOException
     {
@@ -608,10 +621,6 @@ public class FileUtils
                     return true;
                 }
             });
-    }
-    public static String getCurrentWorkingDirectory()
-    {
-        return System.getProperty("user.dir");
     }
 
     private static void addDirsWithFiles(final Set<File> files, File dir, final String ext)

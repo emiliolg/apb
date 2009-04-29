@@ -28,6 +28,7 @@ import apb.tasks.JarTask;
 import apb.tasks.JavacTask;
 import apb.tasks.JavadocTask;
 import apb.tasks.RemoveTask;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This class defines a Module for the building system
@@ -192,19 +193,43 @@ public class Module
         return new LocalLibrary(path, false);
     }
 
+    protected Dependency compile(Dependency dep)
+    {
+        return DecoratedDependency.asCompileOnly(dep);         
+    }
+    protected Dependency runtime(Dependency dep)
+    {
+        return DecoratedDependency.asRuntimeOnly(dep);
+    }
+
     protected LocalLibrary optionalLibrary(String path)
     {
         return new LocalLibrary(path, true);
     }
 
-    protected Dependency library(String g, String id)
-    {
-        return library(g, id, "");
+    @NotNull
+    public Module asModule() {
+        return this;
     }
 
-    protected Dependency library(String g, String id, String vers)
-    {
-        return Library.create(g, id, vers);
+    public boolean isModule() {
+        return true;
     }
 
+    public boolean isCompileDependency() {
+        return true;
+    }
+
+    public boolean isRuntimeDependency() {
+        return true;
+    }
+
+    public boolean isLibrary() {
+        return false;
+    }
+
+    @NotNull
+    public Library asLibrary() {
+       throw new UnsupportedOperationException();
+    }
 }

@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
  * A class representing a Library that will be stored in the file system.
  */
 public class LocalLibrary
-    implements Dependency
+    extends Library
 {
     //~ Instance fields ......................................................................................
 
@@ -49,6 +49,7 @@ public class LocalLibrary
 
     protected LocalLibrary(@NotNull String path, String runtimePath, boolean optional)
     {
+        super(path);
         this.path = path;
         this.optional = optional;
         this.runtimePath = runtimePath;
@@ -98,6 +99,7 @@ public class LocalLibrary
         return result;
     }
 
+    @NotNull
     public String getName() {
         return path; 
     }

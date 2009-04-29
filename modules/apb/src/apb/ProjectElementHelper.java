@@ -1,25 +1,34 @@
 
-// ...........................................................................................................
-// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
-// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
-// The copyright notice above does not evidence any actual or intended
-// publication of such source code.
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
-// Last changed on 2009-04-27 17:25:53 (-0300), by: emilio. $Revision$
-// ...........................................................................................................
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
 
 package apb;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.HashSet;
 
 import apb.metadata.Module;
 import apb.metadata.Project;
 import apb.metadata.ProjectElement;
 import apb.metadata.TestModule;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -32,16 +41,14 @@ public abstract class ProjectElementHelper
 {
     //~ Instance fields ......................................................................................
 
-    public Environment       env;
-    @Nullable ProjectElement element;
+    public Environment                    env;
+    @NotNull protected final Set<Command> executedCommands;
+    @Nullable ProjectElement              element;
 
     private CommandBuilder builder;
 
     @NotNull private final ProjectElement proto;
     private boolean                       topLevel;
-    @NotNull
-    protected final Set<Command>       executedCommands;
-    private static final long MB = (1024 * 1024);
 
     //~ Constructors .........................................................................................
 
@@ -129,7 +136,7 @@ public abstract class ProjectElementHelper
         return env.sourceLastModified(getElement().getClass());
     }
 
-    public final SortedMap<String,Command> listCommands()
+    public final SortedMap<String, Command> listCommands()
     {
         return getBuilder().commands();
     }
@@ -171,22 +178,6 @@ public abstract class ProjectElementHelper
 
     protected void initDependencyGraph() {}
 
-    abstract void build(String commandName);
-
-    void activate(@NotNull ProjectElement activatedElement)
-    {
-        element = activatedElement;
-    }
-
-    @NotNull private CommandBuilder getBuilder()
-    {
-        if (builder == null) {
-            builder = new CommandBuilder(proto);
-        }
-
-        return builder;
-    }
-
     protected void execute(@NotNull String commandName)
     {
         Command command = findCommand(commandName);
@@ -207,6 +198,22 @@ public abstract class ProjectElementHelper
             endExecution(command, ms);
             env.deactivate();
         }
+    }
+
+    abstract void build(String commandName);
+
+    void activate(@NotNull ProjectElement activatedElement)
+    {
+        element = activatedElement;
+    }
+
+    @NotNull private CommandBuilder getBuilder()
+    {
+        if (builder == null) {
+            builder = new CommandBuilder(proto);
+        }
+
+        return builder;
     }
 
     private void endExecution(Command command, long ms)
@@ -241,4 +248,8 @@ public abstract class ProjectElementHelper
     {
         return !executedCommands.contains(cmd);
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final long MB = (1024 * 1024);
 }

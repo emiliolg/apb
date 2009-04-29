@@ -120,7 +120,7 @@ public class JavadocTask
         JavadocInfo  javadoc = module.getJavadocInfo();
 
         String sourcePath = module.getSource().getPath();
-        String classPath = module.getClassPath();
+        String classPath = FileUtils.makePath(module.compileClassPath());
 
         JavadocTask t = new JavadocTask(env, env.fileFromBase(javadoc.output), classPath, sourcePath);
 

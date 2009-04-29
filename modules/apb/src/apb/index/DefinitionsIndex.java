@@ -1,12 +1,20 @@
 
-// ...........................................................................................................
-// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
-// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
-// The copyright notice above does not evidence any actual or intended
-// publication of such source code.
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
-// Last changed on 2009-04-27 17:48:17 (-0300), by: emilio. $Revision$
-// ...........................................................................................................
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
 
 package apb.index;
 
@@ -26,7 +34,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import apb.Environment;
+
 import apb.utils.FileUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,9 +63,12 @@ public class DefinitionsIndex
         env = e;
         modules = new TreeSet<ModuleInfo>();
         mdir = new TreeMap<File, ModulesInfo>();
-        String excludes = env.getProperty("project.path.exclude",DEFAULT_EXCLUDES);
-        if (!excludes.equals(DEFAULT_EXCLUDES))
+        String excludes = env.getProperty("project.path.exclude", DEFAULT_EXCLUDES);
+
+        if (!excludes.equals(DEFAULT_EXCLUDES)) {
             excludes += "," + DEFAULT_EXCLUDES;
+        }
+
         excludeDirs = excludes.split(",");
         loadCache();
     }
@@ -88,6 +101,7 @@ public class DefinitionsIndex
     @NotNull public List<ModuleInfo> findAllByName(@NotNull String name)
     {
         List<ModuleInfo> result = new ArrayList<ModuleInfo>();
+
         for (ModuleInfo moduleInfo : env.getDefinitionsIndex()) {
             final String m = moduleInfo.getName();
             int          lastDot = m.lastIndexOf('.');
@@ -96,6 +110,7 @@ public class DefinitionsIndex
                 result.add(moduleInfo);
             }
         }
+
         return result;
     }
 
@@ -134,7 +149,7 @@ public class DefinitionsIndex
             ModulesInfo info = mdir.get(pdir);
             List<File>  files = new ArrayList<File>();
             listDefinitionFiles(pdir, files);
-            final long  lastModified = FileUtils.lastModified(files);
+            final long lastModified = FileUtils.lastModified(files);
 
             if (info == null || lastModified > info.getLastScanTime()) {
                 if (!mustStore) {
@@ -167,8 +182,9 @@ public class DefinitionsIndex
                 public boolean accept(File file)
                 {
                     if (file.isDirectory()) {
-                        if (isNotExcluded(file.getName()))
+                        if (isNotExcluded(file.getName())) {
                             listDefinitionFiles(file, files);
+                        }
                     }
                     else if (file.getName().endsWith(".java")) {
                         files.add(file);

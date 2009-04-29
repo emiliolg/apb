@@ -1,14 +1,29 @@
 
-// ...........................................................................................................
-// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
-// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
-// The copyright notice above does not evidence any actual or intended
-// publication of such source code.
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
-// Last changed on 2009-04-21 09:54:29 (-0300), by: emilio. $Revision$
-// ...........................................................................................................
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
 
 package apb.metadata;
+
+import java.io.File;
+import java.util.Collection;
+
+import apb.Environment;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A class representing a Library that will be fetched from a repository
@@ -24,20 +39,17 @@ public class Library
 
     //~ Constructors .........................................................................................
 
-    private Library()
+    protected Library(@NotNull String name)
     {
+        group = "";
+        version = "";
+        id = name;
         NameRegistry.intern(this);
     }
 
     //~ Methods ..............................................................................................
 
-    public Library version(String v)
-    {
-        version = v;
-        return this;
-    }
-
-    public String getName()
+    @NotNull public String getName()
     {
         return group + "." + version + "." + id;
     }
@@ -47,12 +59,43 @@ public class Library
         return getName();
     }
 
-    static Library create(String group, String id, String version)
+    public Collection<File> getFiles(@NotNull Environment env)
     {
-        Library result = new Library();
-        result.group = group;
-        result.id = id;
-        result.version = version;
-        return result;
+        throw new UnsupportedOperationException("getFiles");
+    }
+
+    @NotNull public final Module asModule()
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public final boolean isModule()
+    {
+        return false;
+    }
+
+    public final boolean isCompileDependency()
+    {
+        return true;
+    }
+
+    public boolean isRuntimeDependency()
+    {
+        return true;
+    }
+
+    public final boolean isLibrary()
+    {
+        return true;
+    }
+
+    @NotNull public final Library asLibrary()
+    {
+        return this;
+    }
+
+    public File getSourcesFile(Environment env)
+    {
+        throw new UnsupportedOperationException();
     }
 }

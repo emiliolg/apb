@@ -24,10 +24,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import static java.util.Collections.singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import javax.tools.FileObject;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -35,14 +36,9 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
 import apb.Environment;
-
 import apb.utils.StandaloneEnv;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
 
 /**
  * A class that allows invoking 'javac' and generating an 'in-memory' representation
@@ -123,9 +119,21 @@ public class InMemJavaC
         if (className != null)
             return memoryClassLoader.loadClass(className);
 
-        // Set the sourcepah option apropiately
-        List<String> options =
-            sourcePath == null ? null : asList("-sourcepath", sourcePath.getAbsolutePath());
+        List<String> options = new ArrayList<String>();
+        // Set the options apropiately
+        // Sourcepath
+        if (sourcePath != null) {
+            options.add("-sourcepath");
+            options.add(sourcePath.getAbsolutePath());
+        }
+//        String extClassPath = FileUtils.makePath(env.getExtClassPath());
+//        if (System.getenv("xx").equals("xx")) {
+//        if (!extClassPath.isEmpty()) {
+//            options.add("-classpath");
+//            options.add(extClassPath);
+//        }
+//        }
+
 
         // Get the compilation task and invoke it
         boolean result =

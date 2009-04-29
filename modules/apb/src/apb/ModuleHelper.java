@@ -1,12 +1,20 @@
 
-// ...........................................................................................................
-// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
-// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
-// The copyright notice above does not evidence any actual or intended
-// publication of such source code.
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
-// Last changed on 2009-04-24 11:36:53 (-0300), by: emilio. $Revision$
-// ...........................................................................................................
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
 
 package apb;
 
@@ -22,7 +30,7 @@ import java.util.Set;
 import apb.metadata.CompileInfo;
 import apb.metadata.Dependency;
 import apb.metadata.JavadocInfo;
-import apb.metadata.LocalLibrary;
+import apb.metadata.Library;
 import apb.metadata.Module;
 import apb.metadata.PackageInfo;
 import apb.metadata.ProjectElement;
@@ -47,11 +55,11 @@ public class ModuleHelper
     private final List<ModuleHelper>          dependencies;
     @NotNull private final List<ModuleHelper> directDependencies;
 
-    private File                              generatedSource;
-    @NotNull private final List<LocalLibrary> localLibraries;
-    private File                              output;
-    private File                              packageDir;
-    private File                              source;
+    private File                         generatedSource;
+    @NotNull private final List<Library> localLibraries;
+    private File                         output;
+    private File                         packageDir;
+    private File                         source;
 
     //~ Constructors .........................................................................................
 
@@ -59,19 +67,18 @@ public class ModuleHelper
     {
         super(module, env);
 
-
         dependencies = new ArrayList<ModuleHelper>();
 
         directDependencies = new ArrayList<ModuleHelper>();
-        localLibraries = new ArrayList<LocalLibrary>();
+        localLibraries = new ArrayList<Library>();
 
         // Add Direct Dependencies & local libraries
         for (Dependency dependency : module.dependencies()) {
-            if (dependency instanceof Module) {
-                directDependencies.add((ModuleHelper) env.getHelper((Module) dependency));
+            if (dependency.isModule()) {
+                directDependencies.add((ModuleHelper) env.getHelper(dependency.asModule()));
             }
-            else if (dependency instanceof LocalLibrary) {
-                localLibraries.add((LocalLibrary) dependency);
+            else if (dependency.isLibrary()) {
+                localLibraries.add(dependency.asLibrary());
             }
         }
     }
@@ -107,11 +114,6 @@ public class ModuleHelper
         return new File(packageDir, getPackageName() + SRC_JAR);
     }
 
-    public String getClassPath()
-    {
-        return FileUtils.makePath(classPath(false, true));
-    }
-
     public PackageInfo getPackageInfo()
     {
         return getModule().pkg;
@@ -124,7 +126,7 @@ public class ModuleHelper
         // Make the files relative to the jarfile
         File jarFileDir = getPackageFile().getParentFile();
 
-        for (File file : classPath(true, false)) {
+        for (File file : classPath(true, false, false)) {
             files.add(FileUtils.makeRelative(jarFileDir, file));
         }
 
@@ -137,7 +139,7 @@ public class ModuleHelper
         return result;
     }
 
-    @NotNull public Iterable<LocalLibrary> getLocalLibraries()
+    @NotNull public List<Library> getLocalLibraries()
     {
         return localLibraries;
     }
@@ -152,7 +154,12 @@ public class ModuleHelper
         return directDependencies;
     }
 
-    public List<File> classPath(boolean useJars, boolean addModuleOutput)
+    public List<File> compileClassPath()
+    {
+        return classPath(false, false, true);
+    }
+
+    private List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
     {
         List<File> result = new ArrayList<File>();
 
@@ -163,12 +170,16 @@ public class ModuleHelper
 
         // First classpath for module dependencies
         for (ModuleHelper dependency : getDirectDependencies()) {
-            result.add(useJars ? dependency.getPackageFile() : dependency.getOutput());
+            if (mustInclude(compile, dependency.getModule())) {
+                result.add(useJars ? dependency.getPackageFile() : dependency.getOutput());
+            }
         }
 
         // The classpath for libraries
-        for (LocalLibrary library : getLocalLibraries()) {
-            result.addAll(library.getFiles(env));
+        for (Library library : getLocalLibraries()) {
+            if (mustInclude(compile, library)) {
+                result.addAll(library.getFiles(env));
+            }
         }
 
         return result;
@@ -188,7 +199,7 @@ public class ModuleHelper
         }
 
         // The classpath for libraries
-        for (LocalLibrary library : getLocalLibraries()) {
+        for (Library library : getLocalLibraries()) {
             result.addAll(library.getFiles(env));
         }
 
@@ -237,6 +248,11 @@ public class ModuleHelper
         return result;
     }
 
+    public List<File> runtimePath()
+    {
+        return classPath(false, true, false);
+    }
+
     protected void initDependencyGraph()
     {
         // Topological Sort elements
@@ -279,6 +295,11 @@ public class ModuleHelper
             final TestModuleHelper helper = (TestModuleHelper) env.getHelper(testModule);
             helper.setModuleToTest(this);
         }
+    }
+
+    private static boolean mustInclude(boolean compile, Dependency library)
+    {
+        return compile && library.isRuntimeDependency() || !compile && library.isCompileDependency();
     }
 
     private static String trimDashes(String s)

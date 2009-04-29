@@ -98,7 +98,7 @@ public class JavacTask
         }
 
         final JavacTask javac = new JavacTask(env, sourceDirs, module.getOutput());
-        javac.classPathAddAll(module.classPath(false, false));
+        javac.classPathAddAll(module.compileClassPath());
 
         javac.addExtraLibraries(info.extraLibraries());
 

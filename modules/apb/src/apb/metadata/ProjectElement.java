@@ -20,6 +20,7 @@ package apb.metadata;
 
 import apb.Environment;
 import apb.utils.NameUtils;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * The base class for project elements
@@ -105,6 +106,7 @@ public abstract class ProjectElement
 //        IdeaTask.execute(env);
 //    }
 
+    @NotNull
     public String getName()
     {
         return NameUtils.name(getClass());
