@@ -1,16 +1,32 @@
 
-// ...........................................................................................................
-// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
-// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
-// The copyright notice above does not evidence any actual or intended
-// publication of such source code.
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
-// Last changed on 2009-04-15 16:51:29 (-0300), by: emilio. $Revision$
-// ...........................................................................................................
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
 
 package apb.tasks;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,10 +59,11 @@ public class XsltTask
     @NotNull private final TransformerFactory factory;
 
     private File                               inputFile;
-    private File outputFile;
-    private InputStream style;
+    private File                               outputFile;
     @NotNull private final Map<String, String> outputProperties;
     @NotNull private final Map<String, String> params;
+    private InputStream                        style;
+    private String styleName;
 
     //~ Constructors .........................................................................................
 
@@ -79,10 +96,10 @@ public class XsltTask
         execute();
     }
 
-    public void process(@NotNull String inputFileName, @NotNull InputStream style,
+    public void process(@NotNull String inputFileName, @NotNull InputStream stream,
                         @NotNull String outputFileName)
     {
-        setStyle(style);
+        setStyle(stream);
         setInputFile(inputFileName);
         setOutputFile(outputFileName);
         execute();
@@ -96,8 +113,9 @@ public class XsltTask
         if (inputFile == null || outputFile == null || style == null) {
             env.handle("Must set input, output & style files");
         }
+
         if (!inputFile.exists()) {
-                env.handle("input file " + inputFile.getPath() + " does not exist!");
+            env.handle("input file " + inputFile.getPath() + " does not exist!");
         }
 
         if (env.forceBuild() || inputFile.lastModified() > outputFile.lastModified()) {
@@ -111,7 +129,6 @@ public class XsltTask
                 transform(inputFile, outputFile);
             }
             catch (Exception e) {
-                e.printStackTrace();
                 env.handle(e);
             }
         }
@@ -165,9 +182,11 @@ public class XsltTask
      */
     public void setStyleFileName(@NotNull String styleFileName)
     {
+        styleName = styleFileName;
         try {
             style = new FileInputStream(env.fileFromSource(styleFileName));
-        } catch (FileNotFoundException e) {
+        }
+        catch (FileNotFoundException e) {
             env.handle(e);
         }
     }
@@ -186,7 +205,6 @@ public class XsltTask
     {
         final Transformer transformer = createTransformer();
 
-
         InputStream  fis = null;
         OutputStream fos = null;
 
@@ -201,7 +219,8 @@ public class XsltTask
             if (env.isVerbose()) {
                 env.logVerbose("Processing :'%s'\n", infile);
                 env.logVerbose("        to :'%s'\n", outfile);
-                env.logVerbose("using xslt :'%s'\n", style);
+                if (styleName != null)
+                    env.logVerbose("using xslt :'%s'\n", styleName);
             }
             else {
                 env.logInfo("Processing 1 file.\n");
