@@ -35,7 +35,7 @@ public interface TestReport
     TestReport SIMPLE_TO_FILE = new SimpleReport(true, false, "test-output");
 
     TestReport SUMMARY = new SimpleReport(false, false);
-    TestReport XML_JUNIT = new XmlTestReport(true, "test-");
+    TestReport JUNIT = new JUnitTestReport(true, "test-");
 
     //~ Methods ..............................................................................................
 

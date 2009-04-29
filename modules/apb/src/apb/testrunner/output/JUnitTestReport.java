@@ -42,7 +42,7 @@ import org.w3c.dom.Text;
 // Time: 5:08:03 PM
 
 //
-public class XmlTestReport
+public class JUnitTestReport
     extends BaseTestReport
 {
     //~ Instance fields ......................................................................................
@@ -89,7 +89,7 @@ public class XmlTestReport
 
     //~ Constructors .........................................................................................
 
-    public XmlTestReport(boolean showOutput, @NotNull String prefix)
+    public JUnitTestReport(boolean showOutput, @NotNull String prefix)
     {
         super(showOutput, prefix);
     }
@@ -231,9 +231,9 @@ public class XmlTestReport
         formatError(FAILURE, getCurrentTest(), t);
     }
 
-    @NotNull public XmlTestReport init(@NotNull File dir)
+    @NotNull public JUnitTestReport init(@NotNull File dir)
     {
-        XmlTestReport result = new XmlTestReport(showOutput, fileName);
+        JUnitTestReport result = new JUnitTestReport(showOutput, fileName);
         result.reportsDir = dir;
         return result;
     }
