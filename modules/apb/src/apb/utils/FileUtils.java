@@ -1,17 +1,12 @@
 
-// Copyright 2008-2009 Emilio Lopez-Gabeiras
+// ...........................................................................................................
+// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
+// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
+// The copyright notice above does not evidence any actual or intended
+// publication of such source code.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License
+// Last changed on 2009-04-27 11:49:36 (-0300), by: emilio. $Revision$
+// ...........................................................................................................
 
 package apb.utils;
 
@@ -64,6 +59,7 @@ public class FileUtils
         if (dir.exists()) {
             addDirsWithFiles(result, dir, ext);
         }
+
         return result;
     }
 
@@ -249,19 +245,21 @@ public class FileUtils
         return result;
     }
 
-    public static List<String> getAbsoluteParts(File file) {
+    public static List<String> getAbsoluteParts(File file)
+    {
         final List<String> parts = getParts(file.getAbsoluteFile());
         final List<String> result = new ArrayList<String>();
 
         for (String s : parts) {
             if ("..".equals(s)) {
                 // remove last
-                result.remove(result.size()-1);
+                result.remove(result.size() - 1);
             }
             else {
                 result.add(s);
             }
         }
+
         return result;
     }
 
@@ -434,43 +432,23 @@ public class FileUtils
     public static List<File> listJavaSources(Collection<File> sourceDirs)
     {
         List<File> result = new ArrayList<File>();
-        Set<File>         files = new HashSet<File>();
+        Set<File>  files = new HashSet<File>();
 
         for (File dir : sourceDirs) {
             if (dir != null && dir.exists()) {
                 List<File> abs = new ArrayList<File>();
                 addAll(abs, dir, JAVA_EXT);
+
                 for (File ab : abs) {
-                    if (!alreadyProcesses(ab, files))
+                    if (!alreadyProcesses(ab, files)) {
                         result.add(makeRelative(dir, ab));
+                    }
                 }
             }
         }
 
         return result;
     }
-
-    private static boolean alreadyProcesses(File f, Set<File> files)
-    {
-        boolean result;
-
-        try {
-            File canonical = f.getCanonicalFile();
-
-            result = files.contains(canonical);
-
-            if (!result) {
-                files.add(canonical);
-            }
-        }
-        catch (IOException e) {
-            result = true;
-        }
-
-        return result;
-    }
-
-
 
     public static void close(Closeable closeable)
     {
@@ -562,10 +540,46 @@ public class FileUtils
         return result;
     }
 
+    /**
+     * Return the last modification time from a set of files
+     * @param files The files to be analyzed
+     * @return The latest modification time from the set
+     */
+    public static long lastModified(Iterable<File> files)
+    {
+        long result = Long.MIN_VALUE;
+
+        for (File file : files) {
+            result = Math.max(result, file.lastModified());
+        }
+
+        return result;
+    }
+
     static boolean isSymbolicLink(File file)
         throws IOException
     {
         return !file.getAbsolutePath().equals(file.getCanonicalPath());
+    }
+
+    private static boolean alreadyProcesses(File f, Set<File> files)
+    {
+        boolean result;
+
+        try {
+            File canonical = f.getCanonicalFile();
+
+            result = files.contains(canonical);
+
+            if (!result) {
+                files.add(canonical);
+            }
+        }
+        catch (IOException e) {
+            result = true;
+        }
+
+        return result;
     }
 
     private static List<String> absolutePaths(List<File> sourceDirs)
@@ -594,6 +608,10 @@ public class FileUtils
                     return true;
                 }
             });
+    }
+    public static String getCurrentWorkingDirectory()
+    {
+        return System.getProperty("user.dir");
     }
 
     private static void addDirsWithFiles(final Set<File> files, File dir, final String ext)

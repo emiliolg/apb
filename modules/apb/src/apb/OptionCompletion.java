@@ -1,34 +1,22 @@
 
-
-// Copyright 2008-2009 Emilio Lopez-Gabeiras
+// ...........................................................................................................
+// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
+// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
+// The copyright notice above does not evidence any actual or intended
+// publication of such source code.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License
-//
-
+// Last changed on 2009-04-28 15:48:08 (-0300), by: emilio. $Revision$
+// ...........................................................................................................
 
 package apb;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.Map;
-import java.util.TreeMap;
 
-import apb.utils.FileUtils;
+import apb.index.ModuleInfo;
+import apb.index.DefinitionsIndex;
+
 import apb.utils.OptionParser;
 import apb.utils.StandaloneEnv;
 //
@@ -42,7 +30,6 @@ public class OptionCompletion
     //~ Instance fields ......................................................................................
 
     private Environment env;
-    private String[]    excludeDirs;
 
     private List<OptionParser.Option> options;
 
@@ -52,7 +39,6 @@ public class OptionCompletion
     {
         env = new StandaloneEnv();
         this.options = options;
-        excludeDirs = env.getProperty("project.path.exclude", DEFAULT_EXCLUDES).split(",");
     }
 
     //~ Methods ..............................................................................................
@@ -71,6 +57,16 @@ public class OptionCompletion
         }
         else if (last.startsWith("-")) {
             print(findShortOptions(last.charAt(1)));
+        }
+        else if (last.isEmpty()) {
+            final ModuleInfo info = env.getDefinitionsIndex().searchCurrentDirectory();
+
+            if (info == null) {
+                printCompletions("");
+            }
+            else {
+                printCommands(info, "");
+            }
         }
         else {
             printCompletions(last);
@@ -114,79 +110,40 @@ public class OptionCompletion
 
     private void printCompletions(String last)
     {
-        int dot = last.lastIndexOf(".");
+        int    dot = last.lastIndexOf(".");
+        String moduleName = dot == -1 ? last : last.substring(0, dot);
 
-        if (dot == -1) {
-            print(listModules(last));
+        final DefinitionsIndex index = env.getDefinitionsIndex();
+
+        List<ModuleInfo> modules = index.findAllByName(moduleName);
+
+        // If the String before the dot does not match a single module
+        // Try to see if the whole string results in a better match
+        if (modules.size() != 1 && dot != -1) {
+            List<ModuleInfo> m2 = index.findAllByName(last);
+
+            if (!m2.isEmpty() && modules.isEmpty() || m2.size() < modules.size()) {
+                modules = m2;
+                dot = -1;
+            }
+        }
+
+        if (modules.size() == 1) {
+            printCommands(modules.get(0), dot == -1 ? "" : last.substring(dot + 1));
         }
         else {
-            try {
-                print(listCommands(last.substring(0, dot), last.substring(dot + 1)));
-            }
-            catch (DefinitionException e) {
-                // The dot was not a marker for a command but a package Name !
-                print(listModules(last));
+            for (ModuleInfo module : modules) {
+                System.out.print(module.getName() + " ");
             }
         }
     }
 
-    private Collection<String> listModules(String last)
+    private void printCommands(ModuleInfo module, String cmdStart)
     {
-        SortedSet<String> result = new TreeSet<String>();
-
-        for (File f : FileUtils.listJavaSources(env.getProjectPath())) {
-            if (!isDirExcluded(f.getParent())) {
-                final String fileName = f.getPath().replace(File.separatorChar, '.');
-
-                if (fileName.startsWith(last) || f.getName().startsWith(last)) {
-                    result.add(fileName.substring(0,
-                                                  fileName.length() - apb.utils.FileUtils.JAVA_EXT.length()));
-                }
+        for (String cmdName : module.getCommands()) {
+            if (cmdName.startsWith(cmdStart)) {
+                System.out.print(module.getName() + "." + cmdName + " ");
             }
         }
-
-        if (result.size() == 1) {
-            try {
-                return listCommands(result.first(), "");
-            }
-            catch (DefinitionException ignore) {
-                // Ignore the Exception Just return the single element
-            }
-        }
-
-        return result;
     }
-
-    private boolean isDirExcluded(String dir)
-    {
-        if (dir != null) {
-            for (String excludeDir : excludeDirs) {
-                if (excludeDir.equals(dir)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    private Collection<String> listCommands(String module, String command)
-        throws DefinitionException
-    {
-        Set<String>          result = new TreeSet<String>();
-        ProjectElementHelper helper = env.constructProjectElement(module);
-
-        for (Command cmd : helper.listCommands()) {
-            String cmdName = cmd.getQName();
-            if (cmdName.startsWith(command)) {
-                result.add(module + "." + cmdName);
-            }
-        }
-
-        return result;
-    }
-
-    //~ Static fields/initializers ...........................................................................
-
-    private static final String DEFAULT_EXCLUDES = "default,libraries";
 }

@@ -37,7 +37,6 @@ import apb.metadata.Module;
 import apb.metadata.PackageType;
 import apb.metadata.ProjectElement;
 import apb.metadata.TestModule;
-import apb.metadata.DependencyList;
 
 import apb.utils.FileUtils;
 import apb.utils.NameUtils;
@@ -149,7 +148,7 @@ public class IdeaTask
 
                 Element content = findElement(component, "content");
 
-                content.setAttribute(URL_ATTRIBUTE, relativeUrl("file", module.getModuledir()));
+                content.setAttribute(URL_ATTRIBUTE, relativeUrl("file", module.getDirFile()));
 
                 removeOldElements(content, SOURCE_FOLDER);
                 addSourceFolder(content, module.getSource());

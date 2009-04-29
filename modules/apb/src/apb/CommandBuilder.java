@@ -163,10 +163,10 @@ public class CommandBuilder
         {
             System.err.println("Commands for '" + projectElement.getName() + "' : ");
 
-            final Collection<Command> cmds = env.getHelper(projectElement).listCommands();
+            final Collection<Command> cmds = env.getHelper(projectElement).listCommands().values();
 
             for (Command cmd : cmds) {
-                if (!cmd.isDefault() && !cmd.hasNameSpace()) {
+                if (!cmd.hasNameSpace()) {
                     printSpaces();
                     printCommand(cmd);
                 }

@@ -1,24 +1,19 @@
 
-
-// Copyright 2008-2009 Emilio Lopez-Gabeiras
+// ...........................................................................................................
+// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
+// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
+// The copyright notice above does not evidence any actual or intended
+// publication of such source code.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License
-//
-
+// Last changed on 2009-04-28 13:54:39 (-0300), by: emilio. $Revision$
+// ...........................................................................................................
 
 package apb;
 
+import java.util.Collections;
 import java.util.List;
+
+import apb.index.ModuleInfo;
 
 import apb.utils.StandaloneEnv;
 
@@ -33,14 +28,45 @@ public class Main
         List<String> arguments = options.parse();
         Environment  env = new StandaloneEnv(Main.class.getPackage().getName(), options.definedProperties());
         options.initEnv(env);
+
+        if (arguments.isEmpty()) {
+            arguments = searchDefault(env, options);
+        }
+
         Main.execute(env, arguments);
     }
 
-    public static boolean execute(Environment env, String element, String command) throws DefinitionException {
+    public static boolean execute(Environment env, String element, String command)
+        throws DefinitionException
+    {
         ProjectElementHelper projectElement = env.constructProjectElement(element);
         projectElement.setTopLevel(true);
         projectElement.build(command);
         return true;
+    }
+
+    /**
+     * Try to find a module definition whose 'module-dir" match the current directory or a parent
+     * of the current directory one.
+     * @param env
+     * @param options
+     * @result The definiton
+     */
+    private static List<String> searchDefault(Environment env, ApbOptions options)
+    {
+        final List<String> result;
+        final ModuleInfo   info = env.getDefinitionsIndex().searchCurrentDirectory();
+
+        if (info != null) {
+            env.logInfo("Executing: %s.%s\n", info.getName(), info.getDefaultCommand());
+            result = Collections.singletonList(info.getPath());
+        }
+        else {
+            options.printHelp();
+            result = Collections.emptyList();
+        }
+
+        return result;
     }
 
     private static void execute(Environment env, List<String> arguments)
@@ -60,8 +86,11 @@ public class Main
             }
             catch (DefinitionException e) {
                 env.logSevere("%s\n", e.getMessage());
-                if (env.showStackTrace())
+
+                if (env.showStackTrace()) {
                     throw e.getCause();
+                }
+
                 ok = false;
             }
             catch (BuildException b) {

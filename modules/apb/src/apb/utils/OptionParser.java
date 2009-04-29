@@ -136,7 +136,7 @@ public class OptionParser
         return new ArrayList<String>(arguments.subList(i, arguments.size()));
     }
 
-    protected void printHelp()
+    public void printHelp()
     {
         System.err.println(getAppName() + " " + Messages.OPT_IN_BRACKETS + " " + getArgShortDescription());
         System.err.println();

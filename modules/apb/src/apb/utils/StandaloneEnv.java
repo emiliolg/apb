@@ -110,7 +110,7 @@ public class StandaloneEnv
 
     private SimpleFormatter createFormatter()
     {
-        boolean useColor = getBooleanProperty("color") && System.console() != null;
+        boolean useColor = getBooleanProperty("color", true) && System.console() != null;
         return useColor ? new ColorFormatter(this) : new SimpleFormatter(this);
     }
 }

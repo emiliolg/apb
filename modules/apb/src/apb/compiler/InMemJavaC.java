@@ -119,6 +119,10 @@ public class InMemJavaC
     @NotNull public Class<?> compileToClass(@Nullable File sourcePath, @NotNull File source)
         throws ClassNotFoundException
     {
+        String className = memoryClassLoader.classNameFromSource(source);
+        if (className != null)
+            return memoryClassLoader.loadClass(className);
+
         // Set the sourcepah option apropiately
         List<String> options =
             sourcePath == null ? null : asList("-sourcepath", sourcePath.getAbsolutePath());
@@ -268,6 +272,20 @@ public class InMemJavaC
         @NotNull Class<?> getClassFromSource(@NotNull File source)
             throws ClassNotFoundException
         {
+            String className = classNameFromSource(source);
+            if (className == null)
+                throw new ClassNotFoundException(source.getPath());
+            return loadClass(className);
+        }
+        /**
+         * Return the class name that corresponds to a given source file
+         * @param source The source file
+         * @return The classname that corresponds to the source file or null if the class was not found
+         */
+        @Nullable
+        String classNameFromSource(@NotNull File source)
+            throws ClassNotFoundException
+        {
             String path = source.getPath();
             int    lastDot = path.lastIndexOf('.');
 
@@ -279,11 +297,11 @@ public class InMemJavaC
 
             for (String className : classMap.keySet()) {
                 if (path.endsWith(className)) {
-                    return findClass(className);
+                    return className;
                 }
             }
 
-            throw new ClassNotFoundException(source.getPath());
+            return null;
         }
 
         void addClass(final String name, ByteArrayOutputStream outputStream, final long lastModified)

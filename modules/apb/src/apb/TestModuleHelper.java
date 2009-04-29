@@ -1,17 +1,12 @@
 
-// Copyright 2008-2009 Emilio Lopez-Gabeiras
+// ...........................................................................................................
+// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
+// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
+// The copyright notice above does not evidence any actual or intended
+// publication of such source code.
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License
+// Last changed on 2009-04-24 17:02:14 (-0300), by: emilio. $Revision$
+// ...........................................................................................................
 
 package apb;
 
@@ -21,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 import apb.metadata.CoverageInfo;
-import apb.metadata.TestModule;
 import apb.metadata.ProjectElement;
+import apb.metadata.TestModule;
 
 import apb.testrunner.output.TestReport;
 
@@ -37,8 +32,6 @@ public class TestModuleHelper
     extends ModuleHelper
 {
     //~ Instance fields ......................................................................................
-
-    @NotNull private List<File> classesToTest;
 
     @NotNull private File coverageDir;
 
@@ -102,7 +95,12 @@ public class TestModuleHelper
 
     @NotNull public List<File> getClassesToTest()
     {
-        return classesToTest;
+        if (moduleToTest == null) {
+            return Collections.emptyList();
+        }
+        else {
+            return Collections.singletonList(moduleToTest.getOutput());
+        }
     }
 
     public boolean isCoverageEnabled()
@@ -138,6 +136,5 @@ public class TestModuleHelper
         workingDirectory = env.fileFromBase(m.workingDirectory);
         reportsDir = env.fileFromBase(m.reportsDir);
         coverageDir = env.fileFromBase(m.coverage.output);
-        classesToTest = Collections.singletonList(moduleToTest.getOutput());
     }
 }
