@@ -15,22 +15,21 @@
 
 package apb.testrunner.output;
 
-import java.io.File;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import apb.utils.StringUtils;
 import apb.utils.XmlUtils;
+import apb.utils.StandaloneEnv;
+import apb.utils.FileUtils;
+import apb.tasks.XsltTask;
+import apb.Environment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -52,6 +51,7 @@ public class XmlTestReport
     String ATTR_FAILURES = "failures";
     String ATTR_MESSAGE = "message";
     String ATTR_NAME = "name";
+    String ATTR_PKG = "package";
     String ATTR_TESTS = "tests";
     String ATTR_TIME = "time";
     String ATTR_TYPE = "type";
@@ -106,6 +106,7 @@ public class XmlTestReport
         doc.appendChild(rootElement);
 
         rootElement.setAttribute(ATTR_NAME, suiteName);
+        rootElement.setAttribute(ATTR_PKG, suiteName.substring(0, suiteName.lastIndexOf(".")));
 
         //add the timestamp
         final String timestamp = timestamp();
@@ -119,12 +120,71 @@ public class XmlTestReport
         rootElement.appendChild(propsElement);
     }
 
+    public void stopRun() {
+        super.stopRun();
+        XsltTask task = new XsltTask(getEnvironment());
+        final File reportFile = new File(reportsDir, "Test-Suites.xml");
+        reportFile.delete();
+        final File[] files = reportsDir.listFiles(new FileFilter(){
+            public boolean accept(File pathname) {
+                return pathname.isFile() && pathname.getName().endsWith(".xml");
+            }
+        });
+
+        try {
+
+            FileOutputStream fos = new FileOutputStream(reportFile);
+
+            fos.write("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n".getBytes());
+            fos.write("<testsuites>\n".getBytes());
+            fos.flush();
+            fos.close();
+
+            List<FileUtils.Filter> filters = new ArrayList<FileUtils.Filter>();
+            filters.add(new FileUtils.Filter(){
+                public String filter(String str) {
+                    if(str.startsWith("<?xml")){
+                    str = "";
+                    }
+                         return str+"\n";
+                }
+            });
+            
+            for (File file : files) {
+                FileUtils.copyFileFiltering(file, reportFile, true, "UTF-8", filters);
+            }
+
+            fos = new FileOutputStream(reportFile, true);
+            fos.write("</testsuites>\n".getBytes());
+
+
+            fos.flush();
+            fos.close();
+
+            final InputStream stylesheet = getClass().getResourceAsStream("/resources/junit-noframes.xsl");
+            task.process(reportFile.getAbsolutePath(), stylesheet, new File(reportsDir, "report.html").getAbsolutePath());
+
+
+        } catch (FileNotFoundException e) {
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+
+    }
+
+
+    private Environment getEnvironment() {
+        final StandaloneEnv standaloneEnv = new StandaloneEnv();
+        standaloneEnv.setVerbose();
+        return standaloneEnv;
+    }
+
     public void endSuite()
     {
         if (suiteOpen) {
             super.endSuite();
-            appendOutAndErr();
-
             rootElement.setAttribute(ATTR_TESTS, "" + getSuiteTestsRun());
             rootElement.setAttribute(ATTR_FAILURES, "" + getSuiteTestFailures());
             rootElement.setAttribute(ATTR_TIME, "" + (getSuiteTimeEllapsed() / ONE_SECOND));
@@ -167,6 +227,7 @@ public class XmlTestReport
 
     public void failure(@NotNull Throwable t)
     {
+        super.failure(t);
         formatError(FAILURE, getCurrentTest(), t);
     }
 

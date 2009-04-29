@@ -162,12 +162,12 @@ public class CopyTask
                 if (filtering && !doNotFilter.contains(FileUtils.extension(source).toLowerCase())) {
                     env.logVerbose("Filtering %s\n", source);
                     env.logVerbose("       to %s\n", to);
-                    FileUtils.copyFileFiltering(source, to, encoding, filters);
+                    FileUtils.copyFileFiltering(source, to, false, encoding, filters);
                 }
                 else {
                     env.logVerbose("Copy %s\n", source);
                     env.logVerbose("  to %s\n", to);
-                    FileUtils.copyFile(source, to);
+                    FileUtils.copyFile(source, to, false);
                 }
             }
             catch (IOException e) {

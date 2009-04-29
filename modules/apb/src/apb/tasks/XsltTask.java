@@ -10,14 +10,7 @@
 
 package apb.tasks;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,7 +42,9 @@ public class XsltTask
 
     @NotNull private final TransformerFactory factory;
 
-    private File                               inputFile, outputFile, styleFile;
+    private File                               inputFile;
+    private File outputFile;
+    private InputStream style;
     @NotNull private final Map<String, String> outputProperties;
     @NotNull private final Map<String, String> params;
 
@@ -78,7 +73,16 @@ public class XsltTask
     public void process(@NotNull String inputFileName, @NotNull String styleFileName,
                         @NotNull String outputFileName)
     {
-        setStyleFile(styleFileName);
+        setStyleFileName(styleFileName);
+        setInputFile(inputFileName);
+        setOutputFile(outputFileName);
+        execute();
+    }
+
+    public void process(@NotNull String inputFileName, @NotNull InputStream style,
+                        @NotNull String outputFileName)
+    {
+        setStyle(style);
         setInputFile(inputFileName);
         setOutputFile(outputFileName);
         execute();
@@ -89,7 +93,7 @@ public class XsltTask
      */
     public void execute()
     {
-        if (inputFile == null || outputFile == null || styleFile == null) {
+        if (inputFile == null || outputFile == null || style == null) {
             env.handle("Must set input, output & style files");
         }
         if (!inputFile.exists()) {
@@ -107,6 +111,7 @@ public class XsltTask
                 transform(inputFile, outputFile);
             }
             catch (Exception e) {
+                e.printStackTrace();
                 env.handle(e);
             }
         }
@@ -158,15 +163,29 @@ public class XsltTask
      * Given either relative to the project's source dir or as an absolute path.
      * @param styleFileName The name of the stylesheet to use.
      */
-    public void setStyleFile(@NotNull String styleFileName)
+    public void setStyleFileName(@NotNull String styleFileName)
     {
-        styleFile = env.fileFromSource(styleFileName);
+        try {
+            style = new FileInputStream(env.fileFromSource(styleFileName));
+        } catch (FileNotFoundException e) {
+            env.handle(e);
+        }
+    }
+
+    /**
+     * The InputStream of the stylesheet to use.
+     * @param style The InputStream of the stylesheet to use.
+     */
+    public void setStyle(@NotNull InputStream style)
+    {
+        this.style = style;
     }
 
     private void transform(File infile, File outfile)
         throws Exception
     {
         final Transformer transformer = createTransformer();
+
 
         InputStream  fis = null;
         OutputStream fos = null;
@@ -182,7 +201,7 @@ public class XsltTask
             if (env.isVerbose()) {
                 env.logVerbose("Processing :'%s'\n", infile);
                 env.logVerbose("        to :'%s'\n", outfile);
-                env.logVerbose("using xslt :'%s'\n", styleFile);
+                env.logVerbose("using xslt :'%s'\n", style);
             }
             else {
                 env.logInfo("Processing 1 file.\n");
@@ -229,7 +248,7 @@ public class XsltTask
         InputStream xslStream = null;
 
         try {
-            xslStream = new BufferedInputStream(new FileInputStream(styleFile));
+            xslStream = new BufferedInputStream(style);
             Source src = new StreamSource(xslStream);
             return factory.newTemplates(src);
         }

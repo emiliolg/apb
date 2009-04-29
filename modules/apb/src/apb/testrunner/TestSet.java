@@ -65,7 +65,7 @@ public abstract class TestSet<T>
             }
         }
         catch (Exception t) {
-            t.printStackTrace(System.err);
+             t.printStackTrace(System.err);
+            }
         }
-    }
 }

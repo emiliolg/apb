@@ -102,6 +102,7 @@ public abstract class DefaultTestReport
         return suitesFailed;
     }
 
+
     public int getSuitesRun()
     {
         return suitesRun;
@@ -162,6 +163,7 @@ public abstract class DefaultTestReport
         suiteTestsRun++;
         totalTestsRun++;
     }
+
 
     public void failure(@NotNull Throwable t)
     {

@@ -155,7 +155,8 @@ public class TestTask
 
         if (testModule.includes().isEmpty()) {
             includes = TestModule.DEFAULT_INCLUDES;
-            excludes = TestModule.DEFAULT_EXCLUDES;
+            testModule.excludes().addAll(TestModule.DEFAULT_EXCLUDES);
+            excludes = testModule.excludes(); 
         }
         else {
             includes = testModule.includes();

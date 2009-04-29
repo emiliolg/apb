@@ -303,7 +303,7 @@ public class FileUtils
         return lastDot == -1 ? nm : nm.substring(0, lastDot);
     }
 
-    public static void copyFileFiltering(@NotNull File from, @NotNull File to, @NotNull String encoding,
+    public static void copyFileFiltering(@NotNull File from, @NotNull File to, boolean append, @NotNull String encoding,
                                          @NotNull List<Filter> filters)
         throws IOException
     {
@@ -312,7 +312,7 @@ public class FileUtils
 
         try {
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(from), encoding));
-            writer = new OutputStreamWriter(createOutputStream(to), encoding);
+            writer = new OutputStreamWriter(createOutputStream(to, append), encoding);
 
             String line;
 
@@ -330,14 +330,14 @@ public class FileUtils
         }
     }
 
-    public static void copyFile(@NotNull File from, @NotNull File to)
+    public static void copyFile(@NotNull File from, @NotNull File to, boolean append)
         throws IOException
     {
         FileInputStream  in = null;
         FileOutputStream out = null;
 
         try {
-            out = createOutputStream(to);
+            out = createOutputStream(to, append);
 
             in = new FileInputStream(from);
 
@@ -363,17 +363,18 @@ public class FileUtils
     /**
      * Create a FileOutputStream, creates the intermediate directories if necessary
      * @param file The file to open
+     * @param append append to the output file
      * @return A FileOutputStream
      * @throws FileNotFoundException
      */
-    public static FileOutputStream createOutputStream(File file)
+    public static FileOutputStream createOutputStream(File file, boolean append)
         throws FileNotFoundException
     {
         if (!file.getParentFile().exists()) {
             file.getParentFile().mkdirs();
         }
 
-        return new FileOutputStream(file);
+        return new FileOutputStream(file,append);
     }
 
     /**
@@ -398,7 +399,7 @@ public class FileUtils
         FileOutputStream writer = null;
 
         try {
-            writer = createOutputStream(to);
+            writer = createOutputStream(to, false);
 
             byte[] buffer = new byte[4092];
 
