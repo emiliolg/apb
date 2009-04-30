@@ -95,10 +95,9 @@ public abstract class ProjectElement
     @BuildTarget(
                  depends = "compile-tests",
                  description =
-                 "Run test with the annotation @Test(group="minimal") generating reports and (optional) coverage information.",
+                 "Run test with the annotation @Test(group=\"minimal\") generating reports and (optional) coverage information.",
                  recursive = false 
                 )
-
     public abstract void runMinimalTests(Environment env);
 
     @BuildTarget(

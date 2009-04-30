@@ -158,7 +158,7 @@ public class Module
 
     public void runMinimalTests(Environment env)
     {
-        env.forward("runMinimal", tests);
+        env.forward("run-minimal", tests);
     }
 
     public void packageit(Environment env)

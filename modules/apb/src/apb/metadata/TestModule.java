@@ -252,8 +252,6 @@ public class TestModule
     @BuildTarget(depends = "compile")
     public void run(Environment env)
     {
-        groups.clear();
-        groups.add("minimal");
         TestTask.execute(env);
     }
 
@@ -264,6 +262,9 @@ public class TestModule
     @BuildTarget(depends = "compile")
     public void runMinimal(Environment env)
     {
+        groups.clear();
+        groups.add("minimal");
+
         TestTask.execute(env);
     }
 
