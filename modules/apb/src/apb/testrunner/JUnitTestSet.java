@@ -92,7 +92,7 @@ public final class JUnitTestSet
             Method[] methods = superClass.getDeclaredMethods();
 
             for (Method method : methods) {
-                addTestMethod(suite, method, names, theClass, testGroups);
+                addTestMethod(suite, method, names, superClass, testGroups);
             }
 
             superClass = superClass.getSuperclass();
