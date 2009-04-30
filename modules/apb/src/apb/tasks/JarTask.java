@@ -144,12 +144,12 @@ public class JarTask
 
     public void setManifestAttribute(String name, String value)
     {
-        manifest.getMainAttributes().putValue(name, value);
+        setManifestAttribute(new Attributes.Name(name), value);
     }
 
     public void setManifestAttribute(Attributes.Name name, String value)
     {
-        env.logInfo("Set attribute %s=%s\n", name, value);
+        env.logVerbose("Set manifest attribute %s=%s\n", name, value);
         manifest.getMainAttributes().put(name, value);
     }
 

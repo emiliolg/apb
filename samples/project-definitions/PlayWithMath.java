@@ -18,6 +18,8 @@
 
 
 import apb.metadata.Module;
+import apb.metadata.BuildTarget;
+import apb.Environment;
 
 public class PlayWithMath
     extends Module
@@ -34,9 +36,9 @@ public class PlayWithMath
        compiler.validateDependencies = false;
     }
 
-//    @BuildTarget
-//    void hi()
-//    {
-//        HiExtension.hi();
-//    }
+    @BuildTarget
+    public void hi(Environment e)
+    {
+        //HiExtension.hi();
+    }
 }
