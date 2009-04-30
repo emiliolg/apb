@@ -27,15 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import apb.metadata.CompileInfo;
-import apb.metadata.Dependency;
-import apb.metadata.JavadocInfo;
-import apb.metadata.Library;
-import apb.metadata.Module;
-import apb.metadata.PackageInfo;
-import apb.metadata.ProjectElement;
-import apb.metadata.ResourcesInfo;
-import apb.metadata.TestModule;
+import apb.metadata.*;
 
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
@@ -188,7 +180,7 @@ public class ModuleHelper
         Set<File> result = new HashSet<File>();
 
         if (addModuleOutput) {
-            result.add(useJars ? getPackageFile() : getOutput());
+            result.add(useJars && getPackageInfo().type != PackageType.NONE ?  getPackageFile() : getOutput());
         }
 
         // First classpath for module dependencies
