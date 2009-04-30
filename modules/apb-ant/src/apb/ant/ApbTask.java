@@ -17,7 +17,6 @@ package apb.ant;
 
 import apb.Command;
 import apb.Main;
-import static apb.utils.StringUtils.isEmpty;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 import org.jetbrains.annotations.NotNull;
@@ -90,19 +89,6 @@ public class ApbTask
     public void setCommand(@NotNull String command)
     {
         this.command = command;
-    }
-
-    public String getTaskName()
-    {
-        StringBuilder result = new StringBuilder();
-        result.append("apb");
-        final String currentModule = env.getCurrentName();
-        result.append(' ').append(isEmpty(currentModule) ? module : currentModule);
-        final Command cmd = env.getCurrentCommand();
-        if (cmd != null) {
-            result.append('.').append(cmd.getQName());
-        }
-        return result.toString();
     }
 
     public String getDefdir()

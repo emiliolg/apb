@@ -43,6 +43,7 @@ import apb.utils.PropertyExpansor;
 import org.jetbrains.annotations.NotNull;
 
 import static java.lang.Character.isJavaIdentifierPart;
+import java.net.MalformedURLException;
 
 import static apb.utils.FileUtils.JAVA_EXT;
 
@@ -522,7 +523,11 @@ public abstract class Environment
 
     public void resetJavac()
     {
-        javac = new InMemJavaC(this);
+        try {
+            javac = new InMemJavaC(this);
+        } catch (MalformedURLException e) {
+            handle(e);
+        }
     }
 
     /**

@@ -649,6 +649,15 @@ public class FileUtils
 
     private static final int MB = 1024 * 1024;
 
+    public static URL[] toUrl(Collection<File> cp) throws MalformedURLException {
+        URL[] urls = new URL[cp.size()];
+        int i = 0;
+        for (File file : cp) {
+                urls[i++] = file.toURI().toURL();
+        }
+        return urls;
+    }
+
     //~ Inner Interfaces .....................................................................................
 
     public static interface Filter
