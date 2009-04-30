@@ -149,8 +149,7 @@ public final class JUnitTestSet
         }
 
         if (!isPublicTestMethod(m)) {
-            if (!isTestMethod(m))
-            if (isTestMethod(m)) {
+            if (!isTestMethod(m)){
                 return;
             }
         }
