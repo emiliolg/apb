@@ -27,9 +27,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-<<<<<<< HEAD:modules/apb/src/apb/ModuleHelper.java
-import apb.metadata.*;
-=======
 import apb.metadata.CompileInfo;
 import apb.metadata.Dependency;
 import apb.metadata.JavadocInfo;
@@ -40,7 +37,6 @@ import apb.metadata.PackageType;
 import apb.metadata.ProjectElement;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
->>>>>>> 5dc5cf7a3b55f26f081e5b410fbeaef6e43846e6:modules/apb/src/apb/ModuleHelper.java
 
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
