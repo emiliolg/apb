@@ -120,7 +120,8 @@ public class JarTask
                 for (Dependency d : packageInfo.includeDependencies()) {
                     if (d.isModule()) {
                         ModuleHelper m = (ModuleHelper) env.getHelper(d.asModule());
-                        jarTask.addDir(m.getOutput());
+                        if (m.hasPackage())
+                            jarTask.addDir(m.getPackageFile());
                     }
                     else if (d.isLibrary()) {
                         for (File file : d.asLibrary().getFiles(env)) {

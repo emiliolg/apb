@@ -302,9 +302,9 @@ public class ModuleHelper
         return result;
     }
 
-    private boolean hasPackage()
+    public boolean hasPackage()
     {
-        return getPackageInfo().type == PackageType.NONE;
+        return getPackageInfo().type != PackageType.NONE;
     }
 
     private void build(Command command)
