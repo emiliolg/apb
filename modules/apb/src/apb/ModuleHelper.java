@@ -168,17 +168,15 @@ public class ModuleHelper
             result.add(getOutput());
         }
 
-        // First classpath for module dependencies
-        for (ModuleHelper dependency : getDirectDependencies()) {
-            if (mustInclude(compile, dependency.getModule())) {
-                result.add(useJars ? dependency.getPackageFile() : dependency.getOutput());
-            }
-        }
-
-        // The classpath for libraries
-        for (Library library : getLocalLibraries()) {
-            if (mustInclude(compile, library)) {
-                result.addAll(library.getFiles(env));
+        for (Dependency dependency : getModule().dependencies()) {
+            if (dependency.mustInclude(compile)) {
+                if (dependency.isModule()) {
+                    ModuleHelper hlp = (ModuleHelper) env.getHelper(dependency.asModule());
+                    result.add(useJars ? hlp.getPackageFile() : hlp.getOutput());
+                }
+                else if (dependency.isLibrary()) {
+                    result.addAll(dependency.asLibrary().getFiles(env));
+                }
             }
         }
 
@@ -295,11 +293,6 @@ public class ModuleHelper
             final TestModuleHelper helper = (TestModuleHelper) env.getHelper(testModule);
             helper.setModuleToTest(this);
         }
-    }
-
-    private static boolean mustInclude(boolean compile, Dependency library)
-    {
-        return compile && library.isRuntimeDependency() || !compile && library.isCompileDependency();
     }
 
     private static String trimDashes(String s)

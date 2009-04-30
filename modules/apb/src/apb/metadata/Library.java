@@ -74,16 +74,6 @@ public class Library
         return false;
     }
 
-    public final boolean isCompileDependency()
-    {
-        return true;
-    }
-
-    public boolean isRuntimeDependency()
-    {
-        return true;
-    }
-
     public final boolean isLibrary()
     {
         return true;
@@ -97,5 +87,10 @@ public class Library
     public File getSourcesFile(Environment env)
     {
         throw new UnsupportedOperationException();
+    }
+
+    public boolean mustInclude(boolean compile)
+    {
+        return true;
     }
 }

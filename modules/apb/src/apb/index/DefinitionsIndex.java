@@ -103,8 +103,9 @@ public class DefinitionsIndex
         List<ModuleInfo> result = new ArrayList<ModuleInfo>();
 
         for (ModuleInfo moduleInfo : env.getDefinitionsIndex()) {
-            final String m = moduleInfo.getName();
+            String m = moduleInfo.getName();
             int          lastDot = m.lastIndexOf('.');
+            m += ".";
 
             if (m.startsWith(name) || lastDot != -1 && m.substring(lastDot + 1).startsWith(name)) {
                 result.add(moduleInfo);

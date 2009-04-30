@@ -119,7 +119,7 @@ public class OptionCompletion
     private void printCompletions(String last)
     {
         int    dot = last.lastIndexOf(".");
-        String moduleName = dot == -1 ? last : last.substring(0, dot);
+        String moduleName = dot == -1 ? last : last.substring(0, dot+1);
 
         final DefinitionsIndex index = env.getDefinitionsIndex();
 
