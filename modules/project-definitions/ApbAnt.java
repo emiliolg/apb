@@ -23,7 +23,7 @@ public final class ApbAnt
 
     {
         description = "APB Ant Tasks";
-        dependencies(Apb.MODULE, IdeaAnnotations.LIB, Ant.LIB);
+        dependencies(Apb.MODULE, ApbTest.MODULE, IdeaAnnotations.LIB, Ant.LIB);
 
         pkg.name = "ant-apb";
         pkg.addClassPath = true;

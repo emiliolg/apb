@@ -27,7 +27,20 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+<<<<<<< HEAD:modules/apb/src/apb/ModuleHelper.java
 import apb.metadata.*;
+=======
+import apb.metadata.CompileInfo;
+import apb.metadata.Dependency;
+import apb.metadata.JavadocInfo;
+import apb.metadata.Library;
+import apb.metadata.Module;
+import apb.metadata.PackageInfo;
+import apb.metadata.PackageType;
+import apb.metadata.ProjectElement;
+import apb.metadata.ResourcesInfo;
+import apb.metadata.TestModule;
+>>>>>>> 5dc5cf7a3b55f26f081e5b410fbeaef6e43846e6:modules/apb/src/apb/ModuleHelper.java
 
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
@@ -151,30 +164,6 @@ public class ModuleHelper
         return classPath(false, false, true);
     }
 
-    private List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
-    {
-        List<File> result = new ArrayList<File>();
-
-        // Add output dir
-        if (addModuleOutput) {
-            result.add(getOutput());
-        }
-
-        for (Dependency dependency : getModule().dependencies()) {
-            if (dependency.mustInclude(compile)) {
-                if (dependency.isModule()) {
-                    ModuleHelper hlp = (ModuleHelper) env.getHelper(dependency.asModule());
-                    result.add(useJars ? hlp.getPackageFile() : hlp.getOutput());
-                }
-                else if (dependency.isLibrary()) {
-                    result.addAll(dependency.asLibrary().getFiles(env));
-                }
-            }
-        }
-
-        return result;
-    }
-
     public Collection<File> deepClassPath(boolean useJars, boolean addModuleOutput)
     {
         Set<File> result = new HashSet<File>();
@@ -291,6 +280,35 @@ public class ModuleHelper
     {
         int l = s.length();
         return s.substring(s.charAt(0) == '-' ? 1 : 0, s.charAt(l - 1) == '-' ? l - 1 : l);
+    }
+
+    private List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
+    {
+        List<File> result = new ArrayList<File>();
+
+        // Add output dir
+        if (addModuleOutput) {
+            result.add(getOutput());
+        }
+
+        for (Dependency dependency : getModule().dependencies()) {
+            if (dependency.mustInclude(compile)) {
+                if (dependency.isModule()) {
+                    ModuleHelper hlp = (ModuleHelper) env.getHelper(dependency.asModule());
+                    result.add(useJars && hlp.hasPackage() ? hlp.getPackageFile() : hlp.getOutput());
+                }
+                else if (dependency.isLibrary()) {
+                    result.addAll(dependency.asLibrary().getFiles(env));
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public boolean hasPackage()
+    {
+        return getPackageInfo().type != PackageType.NONE;
     }
 
     private void build(Command command)

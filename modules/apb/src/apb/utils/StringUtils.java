@@ -362,6 +362,37 @@ public class StringUtils
         return result.toString();
     }
 
+    public static List<String> tokenize(String s, String token)
+    {
+        List<String>    ret = new ArrayList<String>();
+        StringTokenizer st = new StringTokenizer(s, token);
+
+        while (st.hasMoreTokens()) {
+            ret.add(st.nextToken());
+        }
+
+        return ret;
+    }
+
+    /**
+     * Create a string with the elements separated by the indicated character
+     * @param list
+     * @param sep
+     * @return A String with the elements of the list separated by the specified separator
+     */
+    @NotNull public static String makeString(@NotNull List<String> list, final char sep)
+    {
+        StringBuilder buffer = new StringBuilder();
+
+        for (String testGroup : list) {
+            if (buffer.length() > 0)
+                buffer.append(sep);
+            buffer.append(testGroup);
+        }
+
+        return buffer.toString();
+    }
+
     private static boolean matchPathStart(List<String> patterns, List<String> paths, boolean caseSensitive)
     {
         int patternStart = 0;
@@ -544,17 +575,6 @@ strLoop:
     private static List<String> tokenizePath(String path)
     {
         return tokenize(path, File.separator);
-    }
-    public static List<String> tokenize(String s, String token)
-    {
-        List<String>    ret = new ArrayList<String>();
-        StringTokenizer st = new StringTokenizer(s, token);
-
-        while (st.hasMoreTokens()) {
-            ret.add(st.nextToken());
-        }
-
-        return ret;
     }
 
     //~ Static fields/initializers ...........................................................................

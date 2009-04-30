@@ -385,9 +385,9 @@ public abstract class Environment
     {
         currentElement = getHelper(element);
 
-        final ProjectElement result =
-            currentElement.element != null ? currentElement.element
-                                           : new PropertyExpansor(this).expand(element);
+        // @todo this can be optimize if currentElement.element != null
+        // but I'll need to reset the properties in env
+        final ProjectElement result = new PropertyExpansor(this).expand(element);
 
         basedir = new File(result.basedir);
         currentElement.activate(result);
