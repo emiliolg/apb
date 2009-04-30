@@ -136,7 +136,7 @@ public final class JUnitTestSet
         if (names.contains(name))
             return;
         if (!isPublicTestMethod(m)) {
-            if (isTestMethod(m))
+            if (!isTestMethod(m))
                 return;
         }
 
