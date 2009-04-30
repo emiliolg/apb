@@ -50,5 +50,7 @@ public class Project
 
     public void runTests(Environment env) {}
 
+    public void runMinimalTests(Environment env) {}
+
     public void packageit(Environment env) {}
 }

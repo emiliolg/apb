@@ -25,7 +25,7 @@ public final class Apb
 
     {
         description = "APB Project Builder";
-        dependencies(IdeaAnnotations.LIB, Junit3.LIB);
+        dependencies(IdeaAnnotations.LIB, Junit3.LIB, ApbTest.MODULE);
 
         pkg.mainClass = "apb.Main";
         pkg.name = "apb";
@@ -35,6 +35,8 @@ public final class Apb
 
         javadoc.deprecatedList = false;
         javadoc.links("http://java.sun.com/javase/6/docs/api");
+
+        compiler.warnExcludes("apb/testrunner/TestRunner.java");
     }
 
     public static final Module MODULE = new Apb();

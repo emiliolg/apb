@@ -50,7 +50,7 @@ public class Main
 
         TestRunner runner =
             new TestRunner(options.getBaseDir(), options.getOutputDir(), options.getIncludes(),
-                           options.getExcludes());
+                           options.getExcludes(), options.getTestGroups());
         runner.setVerbose(options.isVerbose());
         runner.setFailEmpty(options.getFailEmpty());
 

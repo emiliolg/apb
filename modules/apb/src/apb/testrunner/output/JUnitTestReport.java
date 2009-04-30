@@ -189,7 +189,9 @@ public class JUnitTestReport
             rootElement.setAttribute(ATTR_FAILURES, "" + getSuiteTestFailures());
             rootElement.setAttribute(ATTR_TIME, "" + (getSuiteTimeEllapsed() / ONE_SECOND));
 
-            writeDocument(doc);
+            if(getSuiteTestsRun() > 0){
+             writeDocument(doc);
+            }
         }
     }
 

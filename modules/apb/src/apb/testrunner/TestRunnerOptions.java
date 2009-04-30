@@ -51,6 +51,7 @@ class TestRunnerOptions
     private final Option<String>            suite;
     private final Option<String>            type;
     private final Option<Boolean>           verbose;
+    private Option<String> testGroups;
 
     //~ Constructors .........................................................................................
 
@@ -68,6 +69,7 @@ class TestRunnerOptions
         includes.setValue(asString(TestModule.DEFAULT_INCLUDES));
         excludes = addOption('e', "excludes", Messages.SET_TO_EXCLUDE, Messages.COLON_SEPARATED_PATTERNS);
         excludes.setValue(asString(TestModule.DEFAULT_EXCLUDES));
+        testGroups = addOption ('g', "testGroups", Messages.TEST_GROUPS, Messages.COLON_SEPARATED_PATTERNS);
         type = addOption('t', "type", "The test type", "<type>");
         type.setValue("junit");
         classpath = addOption('c', "classpath", "The classpath used to load the test classes", "<classpath>");
@@ -183,6 +185,11 @@ class TestRunnerOptions
         return result;
     }
 
+
+    public List<String> getTestGroups()
+    {
+        return asStringList(testGroups);
+    }
     public List<String> getReports()
     {
         return asStringList(reports);

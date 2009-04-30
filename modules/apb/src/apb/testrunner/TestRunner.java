@@ -47,16 +47,18 @@ public class TestRunner
     @NotNull private List<String> includes;
     @NotNull private File         outputDir;
     private boolean               verbose;
+    private List<String> testGroup;
 
     //~ Constructors .........................................................................................
 
     public TestRunner(@NotNull File basedir, File outputDir, @NotNull List<String> includes,
-                      @NotNull List<String> excludes)
+                      @NotNull List<String> excludes, @NotNull List<String> testGroup)
     {
         this.basedir = basedir;
         this.includes = includes;
         this.excludes = excludes;
         this.outputDir = outputDir;
+        this.testGroup = testGroup;
     }
 
     //~ Methods ..............................................................................................
@@ -90,7 +92,7 @@ public class TestRunner
         report.startRun(tests.size());
 
         for (TestSet testSet : tests) {
-            testSet.run(testsClassLoader, report);
+            testSet.run(testsClassLoader, report, testGroup);
         }
 
         report.stopRun();
@@ -106,7 +108,7 @@ public class TestRunner
         TestSet testSet = loadTest(testsClassLoader, creator, suite);
 
         if (testSet != null) {
-            testSet.run(testsClassLoader, report);
+            testSet.run(testsClassLoader, report, testGroup);
         }
 
         return exitValue(report);

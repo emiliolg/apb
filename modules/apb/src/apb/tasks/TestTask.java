@@ -117,6 +117,11 @@ public class TestTask
     @NotNull private List<String> includes;
 
     /**
+     * The list of test groups to execute
+     */
+    @Nullable private List<String> testGroups;
+
+    /**
      * The test module helper
      */
     private TestModuleHelper moduleHelper;
@@ -163,9 +168,12 @@ public class TestTask
             excludes = testModule.excludes();
         }
 
+        testGroups = testModule.groups();
+
         properties = testModule.properties();
         enableAssertions = testModule.enableAssertions;
 
+//        testGroups = "minimal";
         enableDebugger = testModule.enableDebugger;
 
         if (forkPerSuite || enableDebugger || coverage.enable) {
@@ -306,7 +314,7 @@ public class TestTask
             coverageBuilder = new CoverageBuilder(env, moduleHelper);
 
             return forkPerSuite ? executeEachSuite(reportSpecsFile, coverageBuilder)
-                                : invokeRunner(testCreator(), reportSpecsFile, coverageBuilder, null);
+                                : invokeRunner(testCreator(), reportSpecsFile, coverageBuilder, null, makeStringList(testGroups));
         }
         catch (Exception e) {
             throw new BuildException(e);
@@ -322,6 +330,15 @@ public class TestTask
         }
     }
 
+    private String makeStringList(List<String> testGroups) {
+
+        StringBuffer buffer = new StringBuffer();
+        for (String testGroup : testGroups) {
+            buffer.append(testGroup).append(',');
+        }
+        return buffer.substring(0,buffer.length() -1);
+    }
+
     private int executeEachSuite(@NotNull File reportSpecsFile, @NotNull CoverageBuilder coverageBuilder)
         throws Exception
     {
@@ -334,7 +351,7 @@ public class TestTask
         int result = TestRunner.OK;
 
         for (String testSet : tests) {
-            result = worseResult(result, invokeRunner(creator, reportSpecsFile, coverageBuilder, testSet));
+            result = worseResult(result, invokeRunner(creator, reportSpecsFile, coverageBuilder, testSet, makeStringList(testGroups)));
         }
 
         report.stopRun();
@@ -342,7 +359,7 @@ public class TestTask
     }
 
     private int invokeRunner(@NotNull Invocation creator, @NotNull File reportSpecsFile,
-                             @NotNull CoverageBuilder coverageBuilder, @Nullable String suite)
+                             @NotNull CoverageBuilder coverageBuilder, @Nullable String suite, @Nullable String testGroups)
     {
         // Create Java Command
         List<String> args = new ArrayList<String>();
@@ -397,6 +414,11 @@ public class TestTask
             args.add(suite.replace('.', '/'));
         }
 
+
+        if(testGroups != null){
+            args.add("-g");
+            args.add(testGroups);
+        }
         args.add("--creator");
         args.add(creator.toString());
 
@@ -448,7 +470,7 @@ public class TestTask
     {
         try {
             TestRunner        runner =
-                new TestRunner(moduleHelper.getOutput(), reportDir, includes, excludes);
+                new TestRunner(moduleHelper.getOutput(), reportDir, includes, excludes, testGroups);
             final ClassLoader loader = createClassLoader(classPath);
             runner.run(testCreator(), report, loader);
         }

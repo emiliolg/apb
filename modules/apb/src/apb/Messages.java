@@ -101,6 +101,8 @@ public class Messages
         "Set of test files to include.";
     @NonNls public static final String SET_TO_EXCLUDE =
         "Set of test files to exclude.";
+    @NonNls public static final String TEST_GROUPS =
+        "Set of test groups to execute.";
     @NonNls public static final String REPORT_SPEC_FILE =
         "Specify a serialized object with the report specification";
     @NonNls public static final String OUTPUT_FOR_REPORTS =

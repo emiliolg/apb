@@ -18,6 +18,8 @@ package apb.testrunner;
 import apb.testrunner.output.TestReport;
 
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 //
 // User: emilio
 // Date: Nov 7, 2008
@@ -39,7 +41,7 @@ public abstract class TestSet<T>
 
     //~ Methods ..............................................................................................
 
-    public abstract void execute(TestReport report, ClassLoader classLoader)
+    public abstract void execute(TestReport report, ClassLoader classLoader, List<String> testGroup)
         throws TestSetFailedException;
 
     public String getName()
@@ -52,13 +54,13 @@ public abstract class TestSet<T>
         return testClass;
     }
 
-    public void run(ClassLoader testsClassLoader, TestReport report)
+    public void run(ClassLoader testsClassLoader, TestReport report, List<String> testGroup)
         throws TestSetFailedException
     {
         try {
             try {
                 report.startSuite(getName());
-                execute(report, testsClassLoader);
+                execute(report, testsClassLoader, testGroup);
             }
             finally {
                 report.endSuite();

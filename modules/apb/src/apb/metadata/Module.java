@@ -156,6 +156,11 @@ public class Module
         env.forward("run", tests);
     }
 
+    public void runMinimalTests(Environment env)
+    {
+        env.forward("runMinimal", tests);
+    }
+
     public void packageit(Environment env)
     {
         JarTask.execute(env);

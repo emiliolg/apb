@@ -141,6 +141,13 @@ public class TestModule
     private final List<String> includes = new ArrayList<String>();
 
     /**
+     * The list of tests groups to include.
+     */
+    private final List<String> groups = new ArrayList<String>();
+
+
+
+    /**
      * Properties to be set when running the tests
      */
     private final Map<String, String> properties = new HashMap<String, String>();
@@ -160,6 +167,10 @@ public class TestModule
     public List<String> excludes()
     {
         return excludes;
+    }
+
+    public List<String> groups() {
+        return groups;
     }
 
     public List<TestReport> reports()
@@ -204,6 +215,16 @@ public class TestModule
         excludes.addAll(Arrays.asList(patterns));
     }
 
+
+    /**
+     * Method used to define the list of test group to be run
+     * @param patterns The list of test groups to be included
+     */
+    public void groups(String... patterns)
+    {
+        groups.addAll(Arrays.asList(patterns));
+    }
+
     /**
      * Add or Set a variable to the environment used when running the tests
      * @param var Environment variable name
@@ -230,6 +251,18 @@ public class TestModule
      */
     @BuildTarget(depends = "compile")
     public void run(Environment env)
+    {
+        groups.clear();
+        groups.add("minimal");
+        TestTask.execute(env);
+    }
+
+    /**
+     * Run the minimal tests
+     * @param env
+     */
+    @BuildTarget(depends = "compile")
+    public void runMinimal(Environment env)
     {
         TestTask.execute(env);
     }
@@ -264,4 +297,5 @@ public class TestModule
          */
         pkg.type = PackageType.NONE;
     }
+
 }
