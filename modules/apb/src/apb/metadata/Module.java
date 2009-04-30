@@ -171,7 +171,7 @@ public class Module
      * Method used to set dependencies when defining a module
      * @param dependencyList The list of dependencies to be set
      */
-    protected final void dependencies(DepOrDepList... dependencyList)
+    protected final void dependencies(Dependencies... dependencyList)
     {
         dependencies.addAll(dependencyList);
     }
@@ -193,11 +193,11 @@ public class Module
         return new LocalLibrary(path, false);
     }
 
-    protected DepOrDepList compile(Dependency... dep)
+    protected Dependencies compile(Dependency... dep)
     {
         return DecoratedDependency.asCompileOnly(dep);         
     }
-    protected DepOrDepList runtime(Dependency... dep)
+    protected Dependencies runtime(Dependency... dep)
     {
         return DecoratedDependency.asRuntimeOnly(dep);
     }

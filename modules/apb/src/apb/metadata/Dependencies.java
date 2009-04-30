@@ -10,5 +10,5 @@ package apb.metadata;
  * A tag class that is implemented both for Dependency and DependencyList
  * so you can easily add any of them to a DependencyList
  */
-public interface DepOrDepList {
+public interface Dependencies {
 }

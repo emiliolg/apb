@@ -22,7 +22,7 @@ import java.util.ArrayList;
 // Time: 12:29:57 PM
 
 //
-public class DependencyList extends ArrayList<Dependency> implements DepOrDepList {
+public class DependencyList extends ArrayList<Dependency> implements Dependencies {
 
     private static final long serialVersionUID = -8296818109856223135L;
 
@@ -31,14 +31,14 @@ public class DependencyList extends ArrayList<Dependency> implements DepOrDepLis
         return super.add(NameRegistry.intern(o));
     }
 
-    public void addAll(DepOrDepList... dependencies) {
-        for (DepOrDepList dep : dependencies) {
+    public void addAll(Dependencies... dependencies) {
+        for (Dependencies dep : dependencies) {
             add(dep);
         }
 
     }
 
-    public void add(DepOrDepList dep) {
+    public void add(Dependencies dep) {
         if (dep instanceof Dependency)
             add((Dependency) dep);
         else {
@@ -48,7 +48,7 @@ public class DependencyList extends ArrayList<Dependency> implements DepOrDepLis
         }
     }
 
-    public static DependencyList create(DepOrDepList... deps) {
+    public static DependencyList create(Dependencies... deps) {
         DependencyList result = new DependencyList();
         result.addAll(deps);
         return result;

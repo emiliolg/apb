@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 
 //
 public interface Dependency
-    extends Named, DepOrDepList
+    extends Named, Dependencies
 {
     //~ Methods ..............................................................................................
 

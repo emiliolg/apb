@@ -58,12 +58,12 @@ public class DecoratedDependency
 
     //~ Methods ..............................................................................................
 
-    public static DepOrDepList asCompileOnly(Dependency... dep)
+    public static Dependencies asCompileOnly(Dependency... dep)
     {
         return decorate(true, dep);
     }
 
-    private static DepOrDepList decorate(boolean compile, Dependency... dep) {
+    private static Dependencies decorate(boolean compile, Dependency... dep) {
         if (dep.length == 1) {
             return decorate(dep[0], compile);
         }
@@ -76,7 +76,7 @@ public class DecoratedDependency
         }
     }
 
-    public static DepOrDepList asRuntimeOnly(Dependency... dep)
+    public static Dependencies asRuntimeOnly(Dependency... dep)
     {
         return decorate(false, dep);
     }
