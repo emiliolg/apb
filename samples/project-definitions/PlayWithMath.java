@@ -39,6 +39,6 @@ public class PlayWithMath
     @BuildTarget
     public void hi(Environment e)
     {
-        //HiExtension.hi();
+        HiExtension.hi();
     }
 }

@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.ant;
 
@@ -19,12 +22,16 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Set;
 
+import apb.Command;
 import apb.Environment;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 
 import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.StringUtils.isEmpty;
+import apb.utils.StringUtils;
 //
 // User: emilio
 // Date: Dec 10, 2008
@@ -39,6 +46,7 @@ public class AntEnvironment
     private Set<File> definitionDir;
 
     private ApbTask task;
+    private static final int HEADER_LENGTH = 30;
 
     //~ Constructors .........................................................................................
 
@@ -90,6 +98,26 @@ public class AntEnvironment
 
     private void log(int level, String msg, Object... args)
     {
+        StringBuilder result = new StringBuilder();
+        final String  currentModule = getCurrentName();
+
+        if (!isEmpty(currentModule)) {
+            result.append("[");
+            result.append(currentModule);
+            final Command cmd = getCurrentCommand();
+
+            if (cmd != null) {
+                result.append('.').append(cmd.getQName());
+            }
+            if (result.length() >= HEADER_LENGTH -1) {
+                result.setLength(HEADER_LENGTH -1);
+            }
+            result.append("]");
+            result.append(StringUtils.nChars(HEADER_LENGTH - result.length(), ' '));
+        }
+
+        msg = StringUtils.appendIndenting(result.toString() + " ", msg.substring(0, msg.length()-1)) + "\n";
+
         task.log(args.length == 0 ? msg : String.format(msg, args), level);
     }
 }
