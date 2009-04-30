@@ -41,7 +41,7 @@ public abstract class TestSet<T>
 
     //~ Methods ..............................................................................................
 
-    public abstract void execute(TestReport report, ClassLoader classLoader, List<String> testGroup)
+    public abstract void execute(TestReport report, ClassLoader classLoader, List<String> testGroups)
         throws TestSetFailedException;
 
     public String getName()
@@ -54,13 +54,13 @@ public abstract class TestSet<T>
         return testClass;
     }
 
-    public void run(ClassLoader testsClassLoader, TestReport report, List<String> testGroup)
+    public void run(ClassLoader testsClassLoader, TestReport report, List<String> testGroups)
         throws TestSetFailedException
     {
         try {
             try {
                 report.startSuite(getName());
-                execute(report, testsClassLoader, testGroup);
+                execute(report, testsClassLoader, testGroups);
             }
             finally {
                 report.endSuite();

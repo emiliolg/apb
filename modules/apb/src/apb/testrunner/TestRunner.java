@@ -47,18 +47,18 @@ public class TestRunner
     @NotNull private List<String> includes;
     @NotNull private File         outputDir;
     private boolean               verbose;
-    private List<String> testGroup;
+    private List<String> testGroups;
 
     //~ Constructors .........................................................................................
 
     public TestRunner(@NotNull File basedir, File outputDir, @NotNull List<String> includes,
-                      @NotNull List<String> excludes, @NotNull List<String> testGroup)
+                      @NotNull List<String> excludes, @NotNull List<String> testGroups)
     {
         this.basedir = basedir;
         this.includes = includes;
         this.excludes = excludes;
         this.outputDir = outputDir;
-        this.testGroup = testGroup;
+        this.testGroups = testGroups;
     }
 
     //~ Methods ..............................................................................................
@@ -91,8 +91,8 @@ public class TestRunner
         report = report.init(outputDir);
         report.startRun(tests.size());
 
-        for (TestSet testSet : tests) {
-            testSet.run(testsClassLoader, report, testGroup);
+        for (TestSet<?> testSet : tests) {
+            testSet.run(testsClassLoader, report, testGroups);
         }
 
         report.stopRun();
@@ -105,10 +105,10 @@ public class TestRunner
         throws TestSetFailedException
     {
         report = report.init(outputDir);
-        TestSet testSet = loadTest(testsClassLoader, creator, suite);
+        TestSet<?> testSet = loadTest(testsClassLoader, creator, suite);
 
         if (testSet != null) {
-            testSet.run(testsClassLoader, report, testGroup);
+            testSet.run(testsClassLoader, report, testGroups);
         }
 
         return exitValue(report);

@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import apb.Environment;
+import apb.utils.StringUtils;
 
 import apb.tasks.TestTask;
 
@@ -262,8 +263,7 @@ public class TestModule
     @BuildTarget(depends = "compile")
     public void runMinimal(Environment env)
     {
-        groups.clear();
-        groups.add("minimal");
+        env.putProperty("tests.groups", "minimal");
 
         TestTask.execute(env);
     }

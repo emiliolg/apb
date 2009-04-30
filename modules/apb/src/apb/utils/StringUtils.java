@@ -543,8 +543,12 @@ strLoop:
 
     private static List<String> tokenizePath(String path)
     {
+        return tokenize(path, File.separator);
+    }
+    public static List<String> tokenize(String s, String token)
+    {
         List<String>    ret = new ArrayList<String>();
-        StringTokenizer st = new StringTokenizer(path, File.separator);
+        StringTokenizer st = new StringTokenizer(s, token);
 
         while (st.hasMoreTokens()) {
             ret.add(st.nextToken());

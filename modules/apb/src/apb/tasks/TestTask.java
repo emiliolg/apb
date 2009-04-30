@@ -168,12 +168,16 @@ public class TestTask
             excludes = testModule.excludes();
         }
 
-        testGroups = testModule.groups();
+        final String groups = env.getProperty("tests.groups", "");
+        if(!"".equals(groups)){
+            testGroups = Arrays.asList(groups.split(","));
+        }
+        else
+            testGroups = testModule.groups();
 
         properties = testModule.properties();
         enableAssertions = testModule.enableAssertions;
 
-//        testGroups = "minimal";
         enableDebugger = testModule.enableDebugger;
 
         if (forkPerSuite || enableDebugger || coverage.enable) {
@@ -186,6 +190,7 @@ public class TestTask
     public static void execute(Environment env)
     {
         TestTask task = new TestTask(env);
+
         task.execute();
     }
 
@@ -334,9 +339,9 @@ public class TestTask
 
         StringBuffer buffer = new StringBuffer();
         for (String testGroup : testGroups) {
-            buffer.append(testGroup).append(',');
+            buffer.append(testGroup).append(':');
         }
-        return buffer.substring(0,buffer.length() -1);
+        return buffer.substring(0,buffer.length());
     }
 
     private int executeEachSuite(@NotNull File reportSpecsFile, @NotNull CoverageBuilder coverageBuilder)

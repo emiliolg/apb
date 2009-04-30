@@ -36,7 +36,7 @@ public final class Apb
         javadoc.deprecatedList = false;
         javadoc.links("http://java.sun.com/javase/6/docs/api");
 
-        compiler.warnExcludes("apb/testrunner/TestRunner.java");
+        //compiler.warnExcludes("apb/testrunner/TestRunner.java");
     }
 
     public static final Module MODULE = new Apb();
