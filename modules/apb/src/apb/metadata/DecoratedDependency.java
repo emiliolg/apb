@@ -22,6 +22,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
+
+/**
+ * A decorator for a dependency
+ * It is used to mark a dependency as Runtime or Compile-time only
+ */
+
 //
 // User: emilio
 // Date: Apr 29, 2009
@@ -32,32 +38,52 @@ public class DecoratedDependency
 {
     //~ Instance fields ......................................................................................
 
-    private Decoration decoration;
-    private Dependency dependency;
+    /**
+     * Wheter the dependency is only for compilation or runtime
+     */
+    private final boolean compileTime;
+
+    /**
+     * The original Dependency
+     */
+    @NotNull private final Dependency dependency;
 
     //~ Constructors .........................................................................................
 
-    public DecoratedDependency(Dependency dep, Decoration dec)
+    private DecoratedDependency(Dependency dep, boolean compile)
     {
         dependency = dep;
-        decoration = dec;
+        compileTime = compile;
     }
 
     //~ Methods ..............................................................................................
 
-    public static Dependency asCompileOnly(Dependency dep)
+    public static DepOrDepList asCompileOnly(Dependency... dep)
     {
-        return decorate(dep, Decoration.COMPILE);
+        return decorate(true, dep);
     }
 
-    public static Dependency asRuntimeOnly(Dependency dep)
+    private static DepOrDepList decorate(boolean compile, Dependency... dep) {
+        if (dep.length == 1) {
+            return decorate(dep[0], compile);
+        }
+        else {
+            DependencyList result = new DependencyList();
+            for (Dependency d : dep) {
+                result.add(decorate(d, compile));
+            }
+            return result;
+        }
+    }
+
+    public static DepOrDepList asRuntimeOnly(Dependency... dep)
     {
-        return decorate(dep, Decoration.COMPILE);
+        return decorate(false, dep);
     }
 
     @NotNull public String getName()
     {
-        return dependency.getName();
+        return decoratedName(dependency, compileTime);
     }
 
     @NotNull public Module asModule()
@@ -70,16 +96,6 @@ public class DecoratedDependency
         return dependency.isModule();
     }
 
-    public boolean isCompileDependency()
-    {
-        return decoration == Decoration.COMPILE;
-    }
-
-    public boolean isRuntimeDependency()
-    {
-        return decoration == Decoration.RUNTIME;
-    }
-
     public boolean isLibrary()
     {
         return dependency.isLibrary();
@@ -90,29 +106,36 @@ public class DecoratedDependency
         return dependency.asLibrary();
     }
 
-    private static Dependency decorate(Dependency dep, Decoration decoration)
+    public boolean mustInclude(boolean compile)
     {
-        String     key = decoration + ":" + dep.getName();
+        return compile == compileTime;
+    }
+
+    @Override public String toString()
+    {
+        return getName();
+    }
+
+    private static Dependency decorate(Dependency dep, boolean compile)
+    {
+        String     key = decoratedName(dep, compile);
         Dependency result = decoratedDependencies.get(key);
 
         if (result == null) {
-            result = new DecoratedDependency(dep, decoration);
+            result = new DecoratedDependency(dep, compile);
             decoratedDependencies.put(key, result);
         }
 
-        return dep;
+        return result;
+    }
+
+    private static String decoratedName(Dependency dep, boolean compile)
+    {
+        return dep.getName() + (compile ? ":C" : ":R");
     }
 
     //~ Static fields/initializers ...........................................................................
 
     @NotNull private static final Map<String, Dependency> decoratedDependencies =
         new HashMap<String, Dependency>();
-
-    //~ Enums ................................................................................................
-
-    private enum Decoration
-    {
-        COMPILE,
-        RUNTIME
-    }
 }

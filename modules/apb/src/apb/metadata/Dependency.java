@@ -26,19 +26,25 @@ import org.jetbrains.annotations.NotNull;
 
 //
 public interface Dependency
-    extends Named
+    extends Named, DepOrDepList
 {
     //~ Methods ..............................................................................................
 
     @NotNull Module asModule();
 
+    @NotNull Library asLibrary();
+
     boolean isModule();
-
-    boolean isCompileDependency();
-
-    boolean isRuntimeDependency();
 
     boolean isLibrary();
 
-    @NotNull Library asLibrary();
+    /**
+     * Wheter a dependency must be included when compiling or in runtime
+     * Pure dependencies will be included always
+     * Compile-Only dependencies will be included only if the parameter is true
+     * Runtime-Only dependencies will be included only if the parameter is false
+     * @param compile true for compilation, false for runtime
+     * @return if this dependency must be included or not
+     */
+    boolean mustInclude(boolean compile);
 }

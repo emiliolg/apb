@@ -118,9 +118,14 @@ public class JarTask
 
             if (!packageInfo.includeDependencies().isEmpty()) {
                 for (Dependency d : packageInfo.includeDependencies()) {
-                    if (d.isModule() && d.isRuntimeDependency()) {
+                    if (d.isModule()) {
                         ModuleHelper m = (ModuleHelper) env.getHelper(d.asModule());
                         jarTask.addDir(m.getOutput());
+                    }
+                    else if (d.isLibrary()) {
+                        for (File file : d.asLibrary().getFiles(env)) {
+                            jarTask.addDir(file);
+                        }
                     }
                 }
             }
@@ -144,6 +149,7 @@ public class JarTask
 
     public void setManifestAttribute(Attributes.Name name, String value)
     {
+        env.logInfo("Set attribute %s=%s\n", name, value);
         manifest.getMainAttributes().put(name, value);
     }
 

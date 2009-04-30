@@ -171,7 +171,7 @@ public class Module
      * Method used to set dependencies when defining a module
      * @param dependencyList The list of dependencies to be set
      */
-    protected final void dependencies(Dependency... dependencyList)
+    protected final void dependencies(DepOrDepList... dependencyList)
     {
         dependencies.addAll(dependencyList);
     }
@@ -193,11 +193,11 @@ public class Module
         return new LocalLibrary(path, false);
     }
 
-    protected Dependency compile(Dependency dep)
+    protected DepOrDepList compile(Dependency... dep)
     {
         return DecoratedDependency.asCompileOnly(dep);         
     }
-    protected Dependency runtime(Dependency dep)
+    protected DepOrDepList runtime(Dependency... dep)
     {
         return DecoratedDependency.asRuntimeOnly(dep);
     }
@@ -216,14 +216,6 @@ public class Module
         return true;
     }
 
-    public boolean isCompileDependency() {
-        return true;
-    }
-
-    public boolean isRuntimeDependency() {
-        return true;
-    }
-
     public boolean isLibrary() {
         return false;
     }
@@ -231,5 +223,10 @@ public class Module
     @NotNull
     public Library asLibrary() {
        throw new UnsupportedOperationException();
+    }
+
+    public boolean mustInclude(boolean compile)
+    {
+        return true;
     }
 }
