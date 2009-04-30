@@ -591,8 +591,10 @@ public abstract class Environment
         }
 
         Set<File> jars = new LinkedHashSet<File>();
-        for (String p : path.split(File.pathSeparator)) {
-            jars.addAll(FileUtils.listAllFilesWithExt(new File(p), ".jar"));
+        if(path != null){
+            for (String p : path.split(File.pathSeparator)) {
+                jars.addAll(FileUtils.listAllFilesWithExt(new File(p), ".jar"));
+            }
         }
         return jars;
     }
