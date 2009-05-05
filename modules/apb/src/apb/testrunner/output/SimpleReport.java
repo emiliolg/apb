@@ -81,7 +81,7 @@ public class SimpleReport
         super.stopRun();
 
         if (!showDetail) {
-            output.printf("%d suites and %d tests run in %.3f seconds.", getSuitesRun(), getTotalTestsRun(),
+            output.printf("%d suites and %d tests run (%d skipped) in %.3f seconds.", getSuitesRun(), getTotalTestsRun(), getTotalSkipped(),
                           getTimeEllapsed() / ONE_SECOND);
             printFailures(getTotalFailures());
         }

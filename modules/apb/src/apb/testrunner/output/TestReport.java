@@ -63,6 +63,8 @@ public interface TestReport
 
     void failure(@NotNull Throwable t);
 
+    void skip();
+
     /**
      * Returns the current test under execution or null if not current one
      * @return The current test under execution
