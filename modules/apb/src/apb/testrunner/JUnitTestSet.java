@@ -120,62 +120,63 @@ public final class JUnitTestSet
                  Test test = (Test) suiteMethod.invoke(null);
 
                 if(test instanceof TestSuite) {
-                      return wrapSuite(testGroups, (TestSuite)test);
+                    apb.annotation.Test annotation = suiteMethod.getAnnotation(apb.annotation.Test.class);
+
+
+                    if(testGroups != null && !testGroups.isEmpty()){
+                        if(annotation != null){
+                            if(annotation.skip()){
+                                return null;
+                            }
+                            for (String testGroup : testGroups) {
+                                if(testGroup.equals(annotation.group())){
+                                    return wrapSuite(null, (TestSuite)test);
+                                }
+                            }
+                        }
+                        else
+                            return null;
+                    }
+                    if(annotation != null && annotation.skip()){
+                        return null;
+                    }
+                    return wrapSuite(testGroups, (TestSuite)test);                    
+
                 }
                 else{
                     return createSuite(clazz, testGroups);
                 }
-//                if (testGroups != null && !testGroups.isEmpty()) {
-//                    for (String groupName : testGroups) {
-//
-//                        if (annotation != null){
-//                            if(annotation.group().equals(groupName)){
-//
-//                                if(annotation.skip()) {
-//                                    return new SkippedTest((Test) suiteMethod.invoke(null));
-//                                }
-//                                else{
-//                                    return wrapSuite(testGroups, suiteMethod);
-//                                }
-//                            }
-//                        }
-//                    }
-//
-//                }
-//                else {
-//
-//                if(annotation != null && annotation.skip()){
-//                    return new SkippedTest((Test) suiteMethod.invoke(null));
-//                }
-//                else{
-//                    return wrapSuite(testGroups, suiteMethod);
-//                }
-//                }
             }
 
         }
         catch (Exception e) {
-            // No suite method
+           e.printStackTrace(); // No suite method
         }
 
         return createSuite(clazz, testGroups);
     }
 
     private Test wrapSuite(List<String> testGroups, TestSuite suite) throws IllegalAccessException, InvocationTargetException {
-        Method suiteMethod;
+        Method suiteMethod = null;
         try {
             suiteMethod = suite.getClass().getMethod(SUITE_METHOD);
         } catch (NoSuchMethodException e) {
             try {
-                return createSuite(getTestClass().getClassLoader().loadClass(suite.getName()), testGroups);
+                String suiteName = suite.getName();
+                if(suiteName != null){
+
+                return createSuite(getTestClass().getClassLoader().loadClass(suiteName), testGroups);
+                }
+
             } catch (ClassNotFoundException e1) {
                 return null;
             }
         }
-        final apb.annotation.Test annotation =
-                suiteMethod.getAnnotation(apb.annotation.Test.class);
+        final apb.annotation.Test annotation = suiteMethod != null ?
+                suiteMethod.getAnnotation(apb.annotation.Test.class) : null;
 
         if (testGroups != null && !testGroups.isEmpty()) {
+            boolean hasAnyGroup = false;
             for (String groupName : testGroups) {
 
                 if (annotation != null){
@@ -184,13 +185,19 @@ public final class JUnitTestSet
                         if(annotation.skip()) {
                             return new SkippedTest(suite);
                         }
+                        else{
+                            testGroups = null; //empty testGroups so every test in the suite is included
+                        }
+                        hasAnyGroup = true;
                         break;
                     }
                 }
             }
+            if(!hasAnyGroup){
+                return null;
+            }
         }
-
-        if(annotation != null && annotation.skip()){
+        else if(annotation != null && annotation.skip()){
             return new SkippedTest(suite);
         }
 
@@ -198,7 +205,7 @@ public final class JUnitTestSet
         testSuite.setName(suite.getName());
         TestSuite wrapper = new TestSuite(suite.getName());
         for (Enumeration e = suite.tests(); e.hasMoreElements();){
-            testSuite.addTest(wrapTest((Test)e.nextElement(), testGroups));
+            wrapper.addTest(wrapTest((Test)e.nextElement(), testGroups));
         }
         return wrapper;
     }
