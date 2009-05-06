@@ -270,6 +270,15 @@ public class ModuleHelper
             final TestModuleHelper helper = (TestModuleHelper) env.getHelper(testModule);
             helper.setModuleToTest(this);
         }
+
+        //@todo diegor: This is a workaround to fix test module compilation 
+        if(activatedModule instanceof TestModule){
+            for (ModuleHelper dependency : dependencies) {
+                  ((Module)activatedModule).dependencies().add(dependency.getModule());
+                  ((Module)activatedModule).dependencies().add(dependency.getModule().dependencies());
+            }
+        }
+
     }
 
     private static String trimDashes(String s)
