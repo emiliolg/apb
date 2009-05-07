@@ -273,10 +273,14 @@ public class ModuleHelper
 
         //@todo diegor: This is a workaround to fix test module compilation 
         if(activatedModule instanceof TestModule){
-            for (ModuleHelper dependency : dependencies) {
+         try{   for (ModuleHelper dependency : dependencies) {
                   ((Module)activatedModule).dependencies().add(dependency.getModule());
                   ((Module)activatedModule).dependencies().add(dependency.getModule().dependencies());
             }
+         }catch (IllegalStateException e){
+             //ignore
+         }
+
         }
 
     }
