@@ -49,6 +49,7 @@ public class JUnitTestReport
 
     String ATTR_CLASSNAME = "classname";
     String ATTR_FAILURES = "failures";
+    String ATTR_SKIPPED = "skipped";
     String ATTR_MESSAGE = "message";
     String ATTR_NAME = "name";
     String ATTR_PKG = "package";
@@ -187,6 +188,7 @@ public class JUnitTestReport
             super.endSuite();
             rootElement.setAttribute(ATTR_TESTS, "" + getSuiteTestsRun());
             rootElement.setAttribute(ATTR_FAILURES, "" + getSuiteTestFailures());
+            rootElement.setAttribute(ATTR_SKIPPED, "" + getSuiteTestSkipped());
             rootElement.setAttribute(ATTR_TIME, "" + (getSuiteTimeEllapsed() / ONE_SECOND));
 
             if(getSuiteTestsRun() > 0){

@@ -165,7 +165,7 @@ public class ModuleHelper
         Set<File> result = new HashSet<File>();
 
         if (addModuleOutput) {
-            result.add(useJars ? getPackageFile() : getOutput());
+            result.add(useJars && getPackageInfo().type != PackageType.NONE ?  getPackageFile() : getOutput());
         }
 
         // First classpath for module dependencies
@@ -270,6 +270,19 @@ public class ModuleHelper
             final TestModuleHelper helper = (TestModuleHelper) env.getHelper(testModule);
             helper.setModuleToTest(this);
         }
+
+        //@todo diegor: This is a workaround to fix test module compilation 
+        if(activatedModule instanceof TestModule){
+         try{   for (ModuleHelper dependency : dependencies) {
+                  ((Module)activatedModule).dependencies().add(dependency.getModule());
+                  ((Module)activatedModule).dependencies().add(dependency.getModule().dependencies());
+            }
+         }catch (IllegalStateException e){
+             //ignore
+         }
+
+        }
+
     }
 
     private static String trimDashes(String s)

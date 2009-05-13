@@ -46,10 +46,12 @@ public abstract class DefaultTestReport
     // Counters for the current suite
 
     private int suiteTestFailures;
+    private int suiteTestSkipped;
     private int suiteTestsRun;
 
     // Cumulative Counters
     private int totalFailures;
+    private int totalSkipped;
     private int totalSuites;
     private int totalTestsRun;
 
@@ -61,6 +63,8 @@ public abstract class DefaultTestReport
         totalTestsRun = 0;
         suiteTestFailures = 0;
         totalFailures = 0;
+        totalSkipped = 0;
+        suiteTestSkipped =0;
         suitesFailed = 0;
         suitesRun = 0;
     }
@@ -87,6 +91,9 @@ public abstract class DefaultTestReport
         return suiteTestsRun;
     }
 
+    public int getSuiteTestSkipped() {
+        return suiteTestSkipped;
+    }
     public long getSuiteTimeEllapsed()
     {
         return System.currentTimeMillis() - suiteStartTime;
@@ -118,6 +125,10 @@ public abstract class DefaultTestReport
         return totalFailures;
     }
 
+    public int getTotalSkipped()
+    {
+        return totalSkipped;
+    }
     public int getTotalTestsRun()
     {
         return totalTestsRun;
@@ -171,7 +182,12 @@ public abstract class DefaultTestReport
         totalFailures++;
     }
 
+    public void skip(){
+        suiteTestSkipped++;
+        totalSkipped++;
+    }
+
     //~ Static fields/initializers ...........................................................................
 
-    private static final long serialVersionUID = 2748763729187869688L;
+    private static final long serialVersionUID = 2748763729187869689L;
 }

@@ -17,5 +17,6 @@ import static java.lang.annotation.ElementType.METHOD;
 public @interface Test {
     /** Specifies test group */
     String group() default "slow";
+    boolean skip() default false;
 
 }

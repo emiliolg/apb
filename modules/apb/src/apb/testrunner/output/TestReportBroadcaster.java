@@ -107,6 +107,15 @@ public class TestReportBroadcaster
         }
     }
 
+    @Override
+    public void skip() {
+        super.skip();    
+        for (TestReport report : reports) {
+            report.skip();
+        }
+
+    }
+
     public void failure(@NotNull Throwable t)
     {
         super.failure(t);
