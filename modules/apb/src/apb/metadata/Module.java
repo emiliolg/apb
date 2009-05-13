@@ -113,7 +113,7 @@ public class Module
     /*
      * The list of test modules
      */
-    private final List<TestModule> tests = new ArrayList<TestModule>();
+    final List<TestModule> tests = new ArrayList<TestModule>();
 
     //~ Methods ..............................................................................................
 
@@ -188,7 +188,7 @@ public class Module
     protected final void tests(TestModule... testList)
     {
         for (TestModule test : testList) {
-            test.setOriginalModule(this);
+            test.setModule(this);
             tests.add(NameRegistry.intern(test));
         }
     }

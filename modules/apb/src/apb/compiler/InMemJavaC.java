@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import static java.io.File.pathSeparator;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -134,7 +135,7 @@ public class InMemJavaC
         String extClassPath = FileUtils.makePath(env.getExtClassPath());
         if (!extClassPath.isEmpty()) {
             options.add("-classpath");
-            options.add(System.getProperty("java.class.path") + File.pathSeparator + extClassPath);
+            options.add(System.getProperty("java.class.path") + pathSeparator + extClassPath);
         }
 
 

@@ -204,7 +204,6 @@ public class FileUtils
             if (result.length() != 0) {
                 result.append(pathSeparator);
             }
-
             result.append(file.getPath());
         }
 
@@ -569,6 +568,19 @@ public class FileUtils
         return System.getProperty("user.dir");
     }
 
+    public static URL[] toUrl(Collection<File> cp)
+        throws MalformedURLException
+    {
+        URL[] urls = new URL[cp.size()];
+        int   i = 0;
+
+        for (File file : cp) {
+            urls[i++] = file.toURI().toURL();
+        }
+
+        return urls;
+    }
+
     static boolean isSymbolicLink(File file)
         throws IOException
     {
@@ -648,15 +660,6 @@ public class FileUtils
     public static final String JAVA_EXT = ".java";
 
     private static final int MB = 1024 * 1024;
-
-    public static URL[] toUrl(Collection<File> cp) throws MalformedURLException {
-        URL[] urls = new URL[cp.size()];
-        int i = 0;
-        for (File file : cp) {
-                urls[i++] = file.toURI().toURL();
-        }
-        return urls;
-    }
 
     //~ Inner Interfaces .....................................................................................
 

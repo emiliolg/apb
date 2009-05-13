@@ -20,6 +20,7 @@ package apb.compiler;
 
 import java.io.File;
 import java.io.IOException;
+import static java.io.File.pathSeparator;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -85,7 +86,7 @@ public class JavaC
         options.add("-d");
         options.add(targetDir.getPath());
         options.add("-classpath");
-        options.add(targetDir + File.pathSeparator + makePath(classPath) + File.pathSeparator +
+        options.add(targetDir + pathSeparator + makePath(classPath) + pathSeparator +
                     makePath(extraLibraries));
         options.add("-sourcepath");
         options.add(makePath(sourceDirs));

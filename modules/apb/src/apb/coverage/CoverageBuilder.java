@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.coverage;
 
@@ -29,13 +32,9 @@ import java.util.Map;
 import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;
-
 import apb.metadata.CoverageInfo;
-
 import apb.utils.FileUtils;
-import static apb.utils.FileUtils.makeRelative;
-import static apb.utils.FileUtils.listDirsWithFiles;
-
+import static apb.utils.FileUtils.*;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -74,12 +73,7 @@ public class CoverageBuilder
         List<File>   cs = helper.getClassesToTest();
 
         if (coverage.enable) {
-            if (env.isVerbose()) {
-                args.add("-verbose");
-            }
-            else {
-                args.add("-quiet");
-            }
+            args.add(env.isVerbose() ? "-verbose" : "-quiet");
 
             for (CoverageReport report : processReports()) {
                 args.add("-r");
@@ -97,9 +91,9 @@ public class CoverageBuilder
             args.add("-ix");
             args.add("@" + exclusionFileForTests());
             args.add("-sp");
-            args.add(FileUtils.makePath(helper.getSourcesToTest()));
+            args.add(makePath(helper.getSourcesToTest()));
             args.add("-cp");
-            args.add(makePath(env, helper.getOutput(), cs));
+            args.add(makePath(env.applicationJarFile(), helper.getOutput()) + File.pathSeparator + makePath(cs));
             args.add(TESTRUNNER_MAIN);
         }
 
@@ -134,15 +128,6 @@ public class CoverageBuilder
     @NotNull public String runnerMainClass()
     {
         return coverage.enable ? EMMARUN : TESTRUNNER_MAIN;
-    }
-
-    @NotNull private static String makePath(Environment env, File testsDir, List<File> classesToTest)
-    {
-        List<File> cp = new ArrayList<File>();
-        cp.add(env.applicationJarFile());
-        cp.add(testsDir);
-        cp.addAll(classesToTest);
-        return FileUtils.makePath(cp);
     }
 
     private String formatLine(EnumMap<CoverageReport.Column, Integer> coverageInfo)
@@ -254,8 +239,7 @@ public class CoverageBuilder
 
             for (File dir : listDirsWithFiles(testsDir, ".class")) {
                 ps.printf("-%s.*Test\n",
-                          makeRelative(testsDir, dir).getPath().replace(File.separatorChar,
-                                                                                            '.'));
+                          makeRelative(testsDir, dir).getPath().replace(File.separatorChar, '.'));
             }
 
             ps.close();

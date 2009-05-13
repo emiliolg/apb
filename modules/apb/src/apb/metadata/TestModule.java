@@ -25,10 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import apb.Environment;
-import apb.utils.StringUtils;
-
 import apb.tasks.TestTask;
-
 import apb.testrunner.output.TestReport;
 
 /**
@@ -158,6 +155,11 @@ public class TestModule
      */
     private final List<TestReport> reports = new ArrayList<TestReport>();
 
+    /**
+     * The module being tested
+     */
+    private Module module;
+
     //~ Methods ..............................................................................................
 
     public List<String> includes()
@@ -277,12 +279,15 @@ public class TestModule
     /**
      * Define the module this test is testing
      * Update the dependencies
-     * @param module The original module
+     * @param m The original module
      */
-    void setOriginalModule(Module module)
+    void setModule(Module m)
     {
-        dependencies.add(module);
-        dependencies.addAll(module.dependencies());
+        if (module == null) {
+            dependencies.add(m);
+            dependencies.addAll(m.dependencies());
+            module = m;
+        }
     }
 
     //~ Static fields/initializers ...........................................................................

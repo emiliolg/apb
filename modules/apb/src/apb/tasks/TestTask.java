@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.tasks;
 
@@ -19,6 +22,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import static java.io.File.pathSeparator;
 import java.net.MalformedURLException;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -41,12 +45,11 @@ import apb.metadata.TestModule;
 
 import apb.testrunner.Invocation;
 import apb.testrunner.TestRunner;
+import apb.testrunner.output.SimpleReport;
 import apb.testrunner.output.TestReport;
 import apb.testrunner.output.TestReportBroadcaster;
-import apb.testrunner.output.SimpleReport;
 
 import apb.utils.FileUtils;
-import static apb.utils.StringUtils.makeString;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -54,7 +57,9 @@ import org.jetbrains.annotations.Nullable;
 import static apb.testrunner.TestRunner.listTests;
 import static apb.testrunner.TestRunner.worseResult;
 
+import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
+import static apb.utils.StringUtils.makeString;
 //
 // User: emilio
 // Date: Nov 5, 2008
@@ -118,11 +123,6 @@ public class TestTask
     @NotNull private List<String> includes;
 
     /**
-     * The list of test groups to execute
-     */
-    @NotNull final private List<String> testGroups;
-
-    /**
      * The test module helper
      */
     private TestModuleHelper moduleHelper;
@@ -133,6 +133,11 @@ public class TestTask
     @NotNull private Map<String, String> properties;
     @NotNull private TestReport          report;
     @Nullable private File               reportDir;
+
+    /**
+     * The list of test groups to execute
+     */
+    @NotNull private final List<String> testGroups;
 
     //~ Constructors .........................................................................................
 
@@ -148,8 +153,9 @@ public class TestTask
 
         coverage = moduleHelper.getCoverageInfo();
 
-        if (!moduleHelper.getReports().isEmpty())
+        if (!moduleHelper.getReports().isEmpty()) {
             reportDir = moduleHelper.getReportsDir();
+        }
 
         setReport(moduleHelper.getReports());
 
@@ -162,7 +168,7 @@ public class TestTask
         if (testModule.includes().isEmpty()) {
             includes = TestModule.DEFAULT_INCLUDES;
             testModule.excludes().addAll(TestModule.DEFAULT_EXCLUDES);
-            excludes = testModule.excludes(); 
+            excludes = testModule.excludes();
         }
         else {
             includes = testModule.includes();
@@ -177,7 +183,7 @@ public class TestTask
 
         enableDebugger = testModule.enableDebugger;
 
-        if (forkPerSuite || enableDebugger || coverage.enable) {
+        if (forkPerSuite || enableDebugger || isCoverageEnabled()) {
             fork = true;
         }
     }
@@ -187,7 +193,6 @@ public class TestTask
     public static void execute(Environment env)
     {
         TestTask task = new TestTask(env);
-
         task.execute();
     }
 
@@ -288,6 +293,11 @@ public class TestTask
         return original;
     }
 
+    private boolean isCoverageEnabled()
+    {
+        return coverage.enable;
+    }
+
     @NotNull private Invocation testCreator()
         throws Exception
     {
@@ -315,8 +325,10 @@ public class TestTask
             reportSpecsFile = reportSpecs();
             coverageBuilder = new CoverageBuilder(env, moduleHelper);
 
-            return forkPerSuite ? executeEachSuite(reportSpecsFile, coverageBuilder)
-                                : invokeRunner(testCreator(), reportSpecsFile, coverageBuilder, null, makeString(testGroups, ':'));
+            return forkPerSuite
+                   ? executeEachSuite(reportSpecsFile, coverageBuilder)
+                   : invokeRunner(testCreator(), reportSpecsFile, coverageBuilder, null,
+                                  makeString(testGroups, ':'));
         }
         catch (Exception e) {
             throw new BuildException(e);
@@ -344,7 +356,10 @@ public class TestTask
         int result = TestRunner.OK;
 
         for (String testSet : tests) {
-            result = worseResult(result, invokeRunner(creator, reportSpecsFile, coverageBuilder, testSet, makeString(testGroups, ':')));
+            result =
+                worseResult(result,
+                            invokeRunner(creator, reportSpecsFile, coverageBuilder, testSet,
+                                         makeString(testGroups, ':')));
         }
 
         report.stopRun();
@@ -352,7 +367,8 @@ public class TestTask
     }
 
     private int invokeRunner(@NotNull Invocation creator, @NotNull File reportSpecsFile,
-                             @NotNull CoverageBuilder coverageBuilder, @Nullable String suite, @NotNull String groups)
+                             @NotNull CoverageBuilder coverageBuilder, @Nullable String suite,
+                             @NotNull String groups)
     {
         // Create Java Command
         List<String> args = new ArrayList<String>();
@@ -389,11 +405,9 @@ public class TestTask
             args.add("-f");
         }
 
-        if (!coverage.enable) {
+        if (!isCoverageEnabled()) {
             args.add("-c");
-            final Collection<File> path = new ArrayList<File>(classPath);
-            path.addAll(classesToTest);
-            args.add(FileUtils.makePath(path));
+            args.add(makePath(classPath) + pathSeparator + makePath(classesToTest));
         }
 
         if (suite == null) {
@@ -407,11 +421,11 @@ public class TestTask
             args.add(suite.replace('.', '/'));
         }
 
-
-        if (!groups.isEmpty()){
+        if (!groups.isEmpty()) {
             args.add("-g");
             args.add(groups);
         }
+
         args.add("--creator");
         args.add(creator.toString());
 
@@ -422,6 +436,7 @@ public class TestTask
         args.add(moduleHelper.getOutput().getAbsolutePath());
 
         java.addArguments(args);
+
         // Execute
         java.execute();
 
@@ -434,7 +449,7 @@ public class TestTask
 
         List<File> path = new ArrayList<File>();
 
-        if (coverage.enable) {
+        if (isCoverageEnabled()) {
             path.add(new File(appJar.getParent(), "emma.jar"));
             path.addAll(classPath);
         }
@@ -442,7 +457,9 @@ public class TestTask
             path.add(appJar);
         }
 
-        return FileUtils.makePath(path);
+        path.addAll(env.getExtClassPath());
+
+        return makePath(path);
     }
 
     private File reportSpecs()

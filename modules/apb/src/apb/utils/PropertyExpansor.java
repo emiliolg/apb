@@ -20,10 +20,10 @@ package apb.utils;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -48,7 +48,7 @@ public class PropertyExpansor
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final Environment              env;
+    @NotNull private final Environment env;
 
     //~ Constructors .........................................................................................
 
@@ -83,19 +83,26 @@ public class PropertyExpansor
     {
         Set<FieldHelper> result = new TreeSet<FieldHelper>();
 
-        for (Field field : object.getClass().getFields()) {
-            if (!Modifier.isStatic(field.getModifiers())) {
-                result.add(new FieldHelper(parent, field));
-            }
+        Class<?> cl = object.getClass();
+
+        for (Field field : cl.getFields()) {
+            addToSet(result, parent, field);
         }
 
-        for (Field field : object.getClass().getDeclaredFields()) {
-            if (!Modifier.isStatic(field.getModifiers())) {
-                result.add(new FieldHelper(parent, field));
+        for (; cl != null; cl = cl.getSuperclass()) {
+            for (Field field : cl.getDeclaredFields()) {
+                addToSet(result, parent, field);
             }
         }
 
         return result;
+    }
+
+    private void addToSet(Set<FieldHelper> result, String parent, Field field)
+    {
+        if (!Modifier.isStatic(field.getModifiers())) {
+            result.add(new FieldHelper(parent, field));
+        }
     }
 
     /**
@@ -145,9 +152,11 @@ public class PropertyExpansor
         }
         catch (IllegalAccessException e) {
             env.handle(e);
-        } catch (NoSuchMethodException e) {
+        }
+        catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
+        }
+        catch (InvocationTargetException e) {
             throw new RuntimeException(e);
         }
 
