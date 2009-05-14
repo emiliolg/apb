@@ -20,10 +20,7 @@ package apb.testrunner;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Enumeration;
 
 import apb.testrunner.output.TestReport;
 
@@ -59,7 +56,7 @@ public final class JUnitTestSet
     public void execute(final TestReport report, ClassLoader loader, List<String> testGroups)
         throws TestSetFailedException
     {
-        Test test = constructTestObject(getTestClass(), testGroups);
+        Test test = constructTestObject(testGroups);
 
         if (test != null) {
             TestResultWrapper testResult = new TestResultWrapper();
@@ -70,232 +67,50 @@ public final class JUnitTestSet
         }
     }
 
-    public Test createSuite(final Class theClass, List<String> testGroups)
-    {
-        TestSuite suite = new TestSuite();
-        suite.setName(theClass.getName());
+   
 
-        try {
-            TestSuite.getTestConstructor(theClass);
-        }
-        catch (NoSuchMethodException e) {
-            return null;
-        }
-
-        if (!Modifier.isPublic(theClass.getModifiers())) {
-            return null;
-        }
-
-        Class        superClass = theClass;
-        List<String> names = new ArrayList<String>();
-
-        while (Test.class.isAssignableFrom(superClass)) {
-            Method[] methods = superClass.getDeclaredMethods();
-
-            for (Method method : methods) {
-                addTestMethod(suite, method, names, superClass, testGroups);
-            }
-
-            superClass = superClass.getSuperclass();
-        }
-
-        if (suite.countTestCases() == 0) {
-            return null;
-        }
-
-        return suite;
-    }
-
-    private Test constructTestObject(Class<?> clazz, List<String> testGroups)
+    private Test constructTestObject(List<String> testGroups)
     {
         // First try to see if there is a 'suite' method.
 
         try {
-            Method suiteMethod = clazz.getMethod(SUITE_METHOD);
+            Method suiteMethod = getTestClass().getMethod(SUITE_METHOD);
 
             final int m = suiteMethod.getModifiers();
 
             if (isPublic(m) && isStatic(m) && Test.class.isAssignableFrom(suiteMethod.getReturnType())) {
+                final apb.annotation.Test annotation =
+                                           suiteMethod.getAnnotation(apb.annotation.Test.class);
 
-                 Test test = (Test) suiteMethod.invoke(null);
+                if (testGroups != null && !testGroups.isEmpty()) {
+                    for (String groupName : testGroups) {
 
-                if(test instanceof TestSuite) {
-                    apb.annotation.Test annotation = suiteMethod.getAnnotation(apb.annotation.Test.class);
-
-
-                    if(testGroups != null && !testGroups.isEmpty()){
-                        if(annotation != null){
-                            if(annotation.skip()){
-                                return null;
-                            }
-                            for (String testGroup : testGroups) {
-                                if(testGroup.equals(annotation.group())){
-                                    return wrapSuite(null, (TestSuite)test);
-                                }
-                            }
+                        if (annotation != null && annotation.group().equals(groupName)) {
+                            return (Test) suiteMethod.invoke(null);
                         }
-                        else
-                            return null;
                     }
-                    if(annotation != null && annotation.skip()){
-                        return null;
-                    }
-                    return wrapSuite(testGroups, (TestSuite)test);                    
 
+                    return null;
+                }
+                else if (annotation != null && !annotation.skip()){
+                    return (Test) suiteMethod.invoke(null);
                 }
                 else{
-                    return createSuite(clazz, testGroups);
+                    return null;
                 }
             }
-
         }
         catch (Exception e) {
-           e.printStackTrace(); // No suite method
+            // No suite method
         }
 
-        return createSuite(clazz, testGroups);
-    }
 
-    private Test wrapSuite(List<String> testGroups, TestSuite suite) throws IllegalAccessException, InvocationTargetException {
-        Method suiteMethod = null;
-        try {
-            suiteMethod = suite.getClass().getMethod(SUITE_METHOD);
-        } catch (NoSuchMethodException e) {
-            try {
-                String suiteName = suite.getName();
-                if(suiteName != null){
 
-                return createSuite(getTestClass().getClassLoader().loadClass(suiteName), testGroups);
-                }
 
-            } catch (ClassNotFoundException e1) {
-                return null;
-            }
-        }
-        final apb.annotation.Test annotation = suiteMethod != null ?
-                suiteMethod.getAnnotation(apb.annotation.Test.class) : null;
-
-        if (testGroups != null && !testGroups.isEmpty()) {
-            boolean hasAnyGroup = false;
-            for (String groupName : testGroups) {
-
-                if (annotation != null){
-                    if(annotation.group().equals(groupName)){
-
-                        if(annotation.skip()) {
-                            return new SkippedTest(suite);
-                        }
-                        else{
-                            testGroups = null; //empty testGroups so every test in the suite is included
-                        }
-                        hasAnyGroup = true;
-                        break;
-                    }
-                }
-            }
-            if(!hasAnyGroup){
-                return null;
-            }
-        }
-        else if(annotation != null && annotation.skip()){
-            return new SkippedTest(suite);
+        return new TestSuite(getTestClass());
         }
 
-        TestSuite testSuite = new TestSuite();
-        testSuite.setName(suite.getName());
-        TestSuite wrapper = new TestSuite(suite.getName());
-        for (Enumeration e = suite.tests(); e.hasMoreElements();){
-            wrapper.addTest(wrapTest((Test)e.nextElement(), testGroups));
-        }
-        return wrapper;
-    }
 
-    private Test wrapTest(Test test, List<String> testGroups) throws InvocationTargetException, IllegalAccessException {
-        if(test instanceof TestSuite){
-            return wrapSuite(testGroups, (TestSuite) test);
-        }
-        else{
-            Method runMethod;
-            try {
-                runMethod = test.getClass().getMethod(((TestCase)test).getName());
-            } catch (NoSuchMethodException e) {
-                try {
-                    Method method = test.getClass().getMethod("getTestName");
-                    runMethod = test.getClass().getMethod((String)method.invoke(test));
-                } catch (NoSuchMethodException e1) {
-                    return test;
-                }
-            }
-            final apb.annotation.Test annotation =
-                    runMethod.getAnnotation(apb.annotation.Test.class);
-
-            if (testGroups != null && !testGroups.isEmpty()) {
-                for (String groupName : testGroups) {
-
-                    if (annotation != null){
-                        if(annotation.group().equals(groupName)){
-
-                            if(annotation.skip()) {
-                                return new SkippedTest(test);
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if(annotation != null && annotation.skip()){
-                return new SkippedTest(test);
-            }
-
-            return test;
-        }
-    }
-
-    private void addTestMethod(TestSuite suite, Method m, List<String> names, Class theClass,
-                               List<String> testGroups)
-    {
-        String name = m.getName();
-
-        if (names.contains(name)) {
-            return;
-        }
-
-        if (!isPublicTestMethod(m)) {
-            if (!isTestMethod(m)){
-                return;
-            }
-        }
-        final apb.annotation.Test annotation = m.getAnnotation(apb.annotation.Test.class);
-
-        if (testGroups != null && !testGroups.isEmpty()) {
-            for (String testGroup : testGroups) {
-
-                if (annotation != null){
-                    if(annotation.group().equals(testGroup)){
-                        names.add(name);
-                        if(annotation.skip()) {
-                            suite.addTest(new SkippedTest(TestSuite.createTest(theClass, name)));
-                        }
-                        else{
-                            suite.addTest(TestSuite.createTest(theClass, name));
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        else {
-            if(annotation != null && annotation.skip()){
-                suite.addTest(new SkippedTest(TestSuite.createTest(theClass, name)));
-            }
-            else{
-                suite.addTest(TestSuite.createTest(theClass, name));
-            }
-
-        }
-
-    }
 
     private boolean isPublicTestMethod(Method m)
     {
@@ -316,7 +131,7 @@ public final class JUnitTestSet
 
     //~ Inner Classes ........................................................................................
 
-    static class TestListenerAdaptor
+    public static class TestListenerAdaptor
         implements TestListener
     {
         private final TestReport report;
