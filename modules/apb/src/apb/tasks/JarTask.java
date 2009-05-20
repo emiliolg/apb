@@ -137,7 +137,7 @@ public class JarTask
             if (packageInfo.generateSourcesJar) {
                 jarTask = new JarTask(helper.getEnv(), helper.getSourcePackageFile());
                 jarTask.addDir(helper.getSource());
-                jarTask.setExcludes(DirectoryScanner.DEFAULT_EXCLUDES);
+                jarTask.setExcludes(FileUtils.DEFAULT_EXCLUDES);
                 jarTask.execute();
             }
         }

@@ -18,10 +18,7 @@
 
 package apb.tasks;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -161,10 +158,21 @@ public class IdeaTask
                 content.setAttribute(URL_ATTRIBUTE, relativeUrl("file", module.getDirFile()));
 
                 removeOldElements(content, SOURCE_FOLDER);
-                addSourceFolder(content, module.getSource());
 
                 removeOldElements(content, EXCLUDE_FOLDER);
+
                 addExcludeFolders(module, content);
+
+                List<File> sources = module.getSourceDirs();
+                for (File source : sources) {
+                    if(source.exists()){
+                        addSourceFolder(content, source);
+                        addExcluded(content, source);
+                    }
+                }
+
+
+
 
                 rewriteDependencies(module, component);
 
@@ -184,6 +192,26 @@ public class IdeaTask
             Element excludeFolder = createElement(content, EXCLUDE_FOLDER);
             excludeFolder.setAttribute(URL_ATTRIBUTE, "file://$MODULE_DIR$/");
         }
+
+
+    }
+
+    private void addExcluded(Element content, File dirFile) {
+        File[] files = dirFile.listFiles(new FileFilter(){
+            public boolean accept(File pathname) {
+                return pathname.isDirectory();
+            }
+        });
+        for (File file : files) {
+            if(FileUtils.DEFAULT_SRC_EXCLUDES.contains(file.getName())){
+                createElement(content, EXCLUDE_FOLDER).setAttribute(URL_ATTRIBUTE, "file://"+file.getAbsolutePath());
+            }
+            else {
+                addExcluded(content, file);
+            }
+        }
+
+
     }
 
     private void writeDocument(File ideaFile, Document document)
@@ -423,6 +451,7 @@ public class IdeaTask
     {
         findElement(component, OUTPUT_FOLDER).setAttribute(URL_ATTRIBUTE,
                                                            relativeUrl("file", module.getOutput()));
+        createElement(component, EXCLUDE_OUTPUT);
     }
 
     private void addSourceFolder(Element content, File directory)
@@ -659,6 +688,7 @@ public class IdeaTask
     @NonNls private static final String EXCLUDE_FOLDER = "excludeFolder";
 
     @NonNls private static final String OUTPUT_FOLDER = "output";
+    @NonNls private static final String EXCLUDE_OUTPUT = "exclude-output";
 
     @NonNls private static final String NAME_ATTRIBUTE = "name";
     @NonNls private static final String MODULE_NAME_ATTRIBUTE = "module-name";

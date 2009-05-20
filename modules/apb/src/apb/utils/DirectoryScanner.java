@@ -53,7 +53,7 @@ public class DirectoryScanner
         this.baseDir = baseDir;
         this.includes = StringUtils.normalizePaths(includes);
         this.excludes = StringUtils.normalizePaths(excludes);
-        this.excludes.addAll(StringUtils.normalizePaths(DEFAULT_EXCLUDES));
+        this.excludes.addAll(StringUtils.normalizePaths(FileUtils.DEFAULT_EXCLUDES));
 
         if (!baseDir.exists()) {
             throw new IllegalStateException("baseDir " + baseDir + " does not exist");
@@ -170,36 +170,4 @@ public class DirectoryScanner
 
     //~ Static fields/initializers ...........................................................................
 
-    public static final List<String> DEFAULT_EXCLUDES =
-        Arrays.asList(
-
-                      // Miscellaneous typical temporary files
-                      "**/*~", "**/#*#", "**/.#*", "**/%*%", "**/._*",
-
-                      // CVS
-                      "**/CVS", "**/CVS/**", "**/.cvsignore",
-
-                      // SCCS
-                      "**/SCCS", "**/SCCS/**",
-
-                      // Visual SourceSafe
-                      "**/vssver.scc",
-
-                      // Subversion
-                      "**/.svn", "**/.svn/**",
-
-                      // Oracle ADE
-                      "**/.ade_path", "**/.ade_path/**",
-
-                      // Arch
-                      "**/.arch-ids", "**/.arch-ids/**",
-
-                      //Bazaar
-                      "**/.bzr", "**/.bzr/**",
-
-                      //SurroundSCM
-                      "**/.MySCMServerInfo",
-
-                      // Mac
-                      "**/.DS_Store");
 }
