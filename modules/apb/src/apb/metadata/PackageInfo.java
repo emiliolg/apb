@@ -18,14 +18,17 @@
 
 package apb.metadata;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
 
 import org.jetbrains.annotations.NotNull;
+
+import static java.util.Arrays.asList;
 
 public class PackageInfo
 {
@@ -62,6 +65,16 @@ public class PackageInfo
     public PackageType type = PackageType.JAR;
 
     /**
+     * Additional attribute for the package manifest
+     */
+    private final Map<Attributes.Name, String> attributes = new HashMap<Attributes.Name, String>();
+
+    /**
+     * Extra entries to add to the manifest Class-Path
+     */
+    private final List<String> extraClassPathEntries = new ArrayList<String>();
+
+    /**
      * Package the following dependencies into the jar
      */
     private final DependencyList includeDependencies = new DependencyList();
@@ -71,11 +84,6 @@ public class PackageInfo
      * @see java.util.ServiceLoader
      */
     private final Map<String, Set<String>> services = new HashMap<String, Set<String>>();
-    /**
-     * Additional attribute for the package manifest
-     */
-    private final Map<Attributes.Name, String> attributes = new HashMap<Attributes.Name, String>();
-
 
     //~ Methods ..............................................................................................
 
@@ -91,6 +99,11 @@ public class PackageInfo
     public DependencyList includeDependencies()
     {
         return includeDependencies;
+    }
+
+    public List<String> extraClassPathEntries()
+    {
+        return extraClassPathEntries;
     }
 
     public Map<String, Set<String>> services()
@@ -117,9 +130,19 @@ public class PackageInfo
             ps = new HashSet<String>();
         }
 
-        ps.addAll(Arrays.asList(providers));
+        ps.addAll(asList(providers));
         services.put(service, ps);
     }
+
+    /**
+     * Add entries to the manifest Class-Path
+     * @param entries The entries to add
+     */
+    public void extraClassPathEntries(@NotNull String... entries)
+    {
+        extraClassPathEntries.addAll(asList(entries));
+    }
+
     /**
      * Add an attribute to the manifest
      * @param attName attribute name
@@ -139,6 +162,7 @@ public class PackageInfo
     {
         attributes.put(new Attributes.Name(attName), attValue);
     }
+
     /**
      * Method used to set dependencies to be added to the package
      * @param dependencyList The list of dependencies to be added to the package

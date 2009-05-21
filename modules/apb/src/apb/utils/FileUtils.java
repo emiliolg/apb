@@ -204,19 +204,25 @@ public class FileUtils
             if (result.length() != 0) {
                 result.append(pathSeparator);
             }
+
             result.append(file.getPath());
         }
 
         return result.toString();
     }
 
-    public static String makePathFromStrings(List<String> files)
+    public static String makePathFromStrings(Collection<String> files)
+    {
+        return makePathFromStrings(files, File.pathSeparator);
+    }
+
+    public static String makePathFromStrings(Collection<String> files, final String pathSeparator)
     {
         StringBuilder result = new StringBuilder();
 
         for (String file : files) {
             if (result.length() != 0) {
-                result.append(File.pathSeparator);
+                result.append(pathSeparator);
             }
 
             result.append(file);

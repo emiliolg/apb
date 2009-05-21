@@ -109,7 +109,7 @@ public class JarTask
             }
 
             if (packageInfo.addClassPath) {
-                jarTask.setManifestAttribute(Attributes.Name.CLASS_PATH, helper.classFileForManifest());
+                jarTask.setClassPath(helper.manifestClassPath());
             }
 
             jarTask.setManifestAttribute(Attributes.Name.IMPLEMENTATION_VERSION, helper.getModule().version);
@@ -120,8 +120,10 @@ public class JarTask
                 for (Dependency d : packageInfo.includeDependencies()) {
                     if (d.isModule()) {
                         ModuleHelper m = (ModuleHelper) env.getHelper(d.asModule());
-                        if (m.hasPackage())
+
+                        if (m.hasPackage()) {
                             jarTask.addDir(m.getPackageFile());
+                        }
                     }
                     else if (d.isLibrary()) {
                         for (File file : d.asLibrary().getFiles(env)) {
@@ -201,6 +203,17 @@ public class JarTask
         for (Map.Entry<Attributes.Name, String> atts : attributes.entrySet()) {
             setManifestAttribute(atts.getKey(), atts.getValue());
         }
+    }
+
+    public void setClassPath(final List<String> classPathEntries)
+    {
+        String result = FileUtils.makePathFromStrings(classPathEntries, " ");
+
+        if (File.separatorChar != '/') {
+            result = result.replace(File.separatorChar, '/');
+        }
+
+        setManifestAttribute(Attributes.Name.CLASS_PATH, result);
     }
 
     private void setServices(@NotNull Map<String, Set<String>> services)

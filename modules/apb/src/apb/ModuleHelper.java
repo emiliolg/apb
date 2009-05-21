@@ -120,26 +120,6 @@ public class ModuleHelper
         return getModule().pkg;
     }
 
-    public String classFileForManifest()
-    {
-        List<File> files = new ArrayList<File>();
-
-        // Make the files relative to the jarfile
-        File jarFileDir = getPackageFile().getParentFile();
-
-        for (File file : classPath(true, false, false)) {
-            files.add(FileUtils.makeRelative(jarFileDir, file));
-        }
-
-        String result = FileUtils.makePath(files, " ");
-
-        if (File.separatorChar != '/') {
-            result = result.replace(File.separatorChar, '/');
-        }
-
-        return result;
-    }
-
     @NotNull public List<Library> getLocalLibraries()
     {
         return localLibraries;
@@ -165,7 +145,7 @@ public class ModuleHelper
         Set<File> result = new HashSet<File>();
 
         if (addModuleOutput) {
-            result.add(useJars && getPackageInfo().type != PackageType.NONE ?  getPackageFile() : getOutput());
+            result.add(useJars && hasPackage() ? getPackageFile() : getOutput());
         }
 
         // First classpath for module dependencies
@@ -228,6 +208,26 @@ public class ModuleHelper
         return classPath(false, true, false);
     }
 
+    public boolean hasPackage()
+    {
+        return getPackageInfo().type != PackageType.NONE;
+    }
+
+    public List<String> manifestClassPath()
+    {
+        List<String> files = new ArrayList<String>();
+
+        // Make the files relative to the jarfile
+        File jarFileDir = getPackageFile().getParentFile();
+
+        for (File file : classPath(true, false, false)) {
+            files.add(FileUtils.makeRelative(jarFileDir, file).getPath());
+        }
+
+        files.addAll(getPackageInfo().extraClassPathEntries());
+        return files;
+    }
+
     protected void initDependencyGraph()
     {
         // Topological Sort elements
@@ -270,19 +270,6 @@ public class ModuleHelper
             final TestModuleHelper helper = (TestModuleHelper) env.getHelper(testModule);
             helper.setModuleToTest(this);
         }
-
-        //@todo diegor: This is a workaround to fix test module compilation 
-        if(activatedModule instanceof TestModule){
-         try{   for (ModuleHelper dependency : dependencies) {
-                  ((Module)activatedModule).dependencies().add(dependency.getModule());
-                  ((Module)activatedModule).dependencies().add(dependency.getModule().dependencies());
-            }
-         }catch (IllegalStateException e){
-             //ignore
-         }
-
-        }
-
     }
 
     private static String trimDashes(String s)
@@ -313,11 +300,6 @@ public class ModuleHelper
         }
 
         return result;
-    }
-
-    public boolean hasPackage()
-    {
-        return getPackageInfo().type != PackageType.NONE;
     }
 
     private void build(Command command)
