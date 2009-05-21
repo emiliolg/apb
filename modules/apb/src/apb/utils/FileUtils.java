@@ -667,6 +667,44 @@ public class FileUtils
 
     private static final int MB = 1024 * 1024;
 
+    public static final List<String> DEFAULT_SRC_EXCLUDES =
+            Arrays.asList(
+                          //Oracle ADE
+                          ".ade_path");
+
+    public static final List<String> DEFAULT_EXCLUDES =
+        Arrays.asList(
+
+                      // Miscellaneous typical temporary files
+                      "**/*~", "**/#*#", "**/.#*", "**/%*%", "**/._*",
+
+                      // CVS
+                      "**/CVS", "**/CVS/**", "**/.cvsignore",
+
+                      // SCCS
+                      "**/SCCS", "**/SCCS/**",
+
+                      // Visual SourceSafe
+                      "**/vssver.scc",
+
+                      // Subversion
+                      "**/.svn", "**/.svn/**",
+
+                      // Oracle ADE
+                      "**/.ade_path", "**/.ade_path/**",
+
+                      // Arch
+                      "**/.arch-ids", "**/.arch-ids/**",
+
+                      //Bazaar
+                      "**/.bzr", "**/.bzr/**",
+
+                      //SurroundSCM
+                      "**/.MySCMServerInfo",
+
+                      // Mac
+                      "**/.DS_Store");
+
     //~ Inner Interfaces .....................................................................................
 
     public static interface Filter
