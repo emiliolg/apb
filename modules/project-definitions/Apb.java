@@ -32,6 +32,7 @@ public final class Apb
         pkg.addClassPath = true;
         pkg.generateSourcesJar = true;
         pkg.services("apb.Command", "apb.commands.idegen.Idea", "apb.commands.idegen.Eclipse");
+        pkg.services("apb.testrunner.TestSetCreator", "apb.testrunner.JunitTestSetCreator");
 
         javadoc.deprecatedList = false;
         javadoc.links("http://java.sun.com/javase/6/docs/api");

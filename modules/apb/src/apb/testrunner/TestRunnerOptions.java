@@ -59,7 +59,6 @@ class TestRunnerOptions
     {
         super(ops, "testrunner", "0.1");
         factory = new TestSetCreator.Factory();
-        factory.register(new JunitTestSetCreator());
 
         quiet = addBooleanOption('q', "quiet", Messages.QUIET_OUTPUT);
         verbose = addBooleanOption('v', "verbose", Messages.VERBOSE);
@@ -79,6 +78,7 @@ class TestRunnerOptions
         creator = addOption("creator", "A class defining a creator for a test type.", "<class>");
 
         for (String testType : factory.names()) {
+            System.out.println("testType = " + testType);
             type.addValidValue(testType);
         }
     }

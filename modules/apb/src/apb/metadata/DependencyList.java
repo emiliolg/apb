@@ -41,6 +41,9 @@ public class DependencyList extends ArrayList<Dependency> implements Dependencie
     public void add(Dependencies dep) {
         if (dep instanceof Dependency)
             add((Dependency) dep);
+        else if (dep == null) {
+            System.out.println("Null dependency !");
+        }
         else {
             for (Dependency d : (DependencyList)dep) {
                 add(d);

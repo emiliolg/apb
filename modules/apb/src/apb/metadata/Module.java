@@ -133,7 +133,7 @@ public class Module
         RemoveTask.remove(env, helper.getOutput());
         RemoveTask.remove(env, helper.getPackageFile());
         RemoveTask.remove(env, helper.getGeneratedSource());
-        env.forward("clean", tests);
+        env.forward("clean", tests());
     }
 
     public void resources(Environment env)
@@ -148,17 +148,17 @@ public class Module
 
     public void compileTests(Environment env)
     {
-        env.forward("compile", tests);
+        env.forward("compile", tests());
     }
 
     public void runTests(Environment env)
     {
-        env.forward("run", tests);
+        env.forward("run", tests());
     }
 
     public void runMinimalTests(Environment env)
     {
-        env.forward("run-minimal", tests);
+        env.forward("run-minimal", tests());
     }
 
     public void packageit(Environment env)

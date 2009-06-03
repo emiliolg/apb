@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +13,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.testrunner;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
@@ -42,7 +46,7 @@ public interface TestSetCreator<T>
 
     static class Factory
     {
-        private Map<String, TestSetCreator> registry = new HashMap<String, TestSetCreator>();
+        @NotNull private final Map<String, TestSetCreator> registry;
 
         @NotNull TestSetCreator<?> fromName(String name)
         {
@@ -63,6 +67,14 @@ public interface TestSetCreator<T>
         void register(@NotNull TestSetCreator t)
         {
             registry.put(t.getName(), t);
+        }
+
+        {
+            registry = new HashMap<String, TestSetCreator>();
+
+            for (TestSetCreator c : ServiceLoader.load(TestSetCreator.class)) {
+                registry.put(c.getName(), c);
+            }
         }
     }
 }
