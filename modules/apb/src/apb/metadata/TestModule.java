@@ -252,7 +252,7 @@ public class TestModule
      * Run the tests
      * @param env
      */
-    @BuildTarget(depends = "compile")
+    @BuildTarget(depends = "compile", recursive=false)
     public void run(Environment env)
     {
         TestTask.execute(env);
@@ -262,7 +262,7 @@ public class TestModule
      * Run the minimal tests
      * @param env
      */
-    @BuildTarget(depends = "compile")
+    @BuildTarget(depends = "compile", recursive=false)
     public void runMinimal(Environment env)
     {
         env.putProperty("tests.groups", "minimal");
