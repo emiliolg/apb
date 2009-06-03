@@ -236,10 +236,6 @@ public class JarTask
                 throw new BuildException(jarFile + " is not a file.");
             }
 
-            if (!jarFile.canWrite()) {
-                throw new BuildException(jarFile + " is read-only.");
-            }
-
             result = jarFile.lastModified();
         }
 
@@ -250,6 +246,7 @@ public class JarTask
     {
         try {
             env.logInfo("Building: %s\n", jarFile.getCanonicalPath());
+
 
             JarOutputStream jarOutputStream = null;
 
@@ -301,6 +298,9 @@ public class JarTask
         throws IOException
     {
         FileUtils.validateDirectory(jarFile.getParentFile());
+        if (jarFile.exists() && !jarFile.canWrite() && !jarFile.delete()) {
+            throw new BuildException("Can not recreate: '" + jarFile + "'.");
+        }
 
         final FileOutputStream os = new FileOutputStream(jarFile);
         final JarOutputStream  jarOutputStream = new JarOutputStream(os);
