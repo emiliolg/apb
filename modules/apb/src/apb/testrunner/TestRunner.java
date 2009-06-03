@@ -30,6 +30,7 @@ import apb.testrunner.output.TestReport;
 import apb.utils.DirectoryScanner;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Nov 6, 2008
@@ -47,7 +48,7 @@ public class TestRunner
     @NotNull private List<String> includes;
     @NotNull private File         outputDir;
     private boolean               verbose;
-    private List<String> testGroups;
+    @NotNull private final List<String> testGroups;
 
     //~ Constructors .........................................................................................
 
@@ -140,6 +141,7 @@ public class TestRunner
         for (String file : collectTests(basedir, excludes, includes)) {
             TestSet<T> testSet = loadTest(testsClassLoader, creator, file);
 
+
             if (testSet != null) {
                 if (testSets.containsKey(testSet.getName())) {
                     throw new TestSetFailedException("Duplicate test '" + testSet.getName() + "'");
@@ -152,6 +154,7 @@ public class TestRunner
         return testSets;
     }
 
+    @Nullable
     private static <T> TestSet<T> loadTest(ClassLoader testsClassLoader, TestSetCreator<T> creator,
                                            String suite)
         throws TestSetFailedException

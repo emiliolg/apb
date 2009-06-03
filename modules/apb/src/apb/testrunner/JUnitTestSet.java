@@ -19,7 +19,6 @@
 package apb.testrunner;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.List;
 
 import apb.testrunner.output.TestReport;
@@ -31,6 +30,7 @@ import junit.framework.TestListener;
 import junit.framework.TestSuite;
 
 import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
 
 import static java.lang.reflect.Modifier.isPublic;
 import static java.lang.reflect.Modifier.isStatic;
@@ -53,7 +53,8 @@ public final class JUnitTestSet
 
     //~ Methods ..............................................................................................
 
-    public void execute(final TestReport report, ClassLoader loader, List<String> testGroups)
+    public void execute(@NotNull final TestReport report, @NotNull ClassLoader loader,
+                        @NotNull List<String> testGroups)
         throws TestSetFailedException
     {
         Test test = constructTestObject(testGroups);
@@ -67,62 +68,75 @@ public final class JUnitTestSet
         }
     }
 
-   
-
-    private Test constructTestObject(List<String> testGroups)
+    private Test constructTestObject(@NotNull List<String> testGroups)
+        throws TestSetFailedException
     {
         // First try to see if there is a 'suite' method.
+        Method suiteMethod = hasSuiteMethod();
+
+        // No suite build one
+        if (suiteMethod == null) {
+            return new TestSuite(getTestClass());
+        }
+
+        // Check if I've to run it and run it
+
+        if (mustRun(suiteMethod, testGroups)) {
+            try {
+                return (Test) suiteMethod.invoke(null);
+            }
+            catch (Exception e) {
+                throw new TestSetFailedException(e);
+            }
+        }
+
+        // Skip otherwise
+        return null;
+    }
+
+    private boolean mustRun(Method suiteMethod, @NotNull List<String> testGroups)
+    {
+        final apb.annotation.Test annotation = suiteMethod.getAnnotation(apb.annotation.Test.class);
+        // Check skip
+        if (annotation != null && annotation.skip())
+            return false;
+
+        // Has groups ?
+        if (testGroups.isEmpty())
+            return true;
+
+        // Has groups and no annotation -> skip
+        if (annotation == null)
+            return false;
+
+        // Run for all groups ?
+        if (apb.annotation.Test.ALL.equals(annotation.groups()[0]))
+            return true;
+        // Check if belongs to any of the groups
+        for (String gr : annotation.groups()) {
+            if (testGroups.contains(gr))
+                return true;
+        }
+        return false;
+    }
+
+    private Method hasSuiteMethod()
+    {
+        Method result = null;
 
         try {
-            Method suiteMethod = getTestClass().getMethod(SUITE_METHOD);
-
+            Method    suiteMethod = getTestClass().getMethod(SUITE_METHOD);
             final int m = suiteMethod.getModifiers();
 
             if (isPublic(m) && isStatic(m) && Test.class.isAssignableFrom(suiteMethod.getReturnType())) {
-                final apb.annotation.Test annotation =
-                                           suiteMethod.getAnnotation(apb.annotation.Test.class);
-
-                if (testGroups != null && !testGroups.isEmpty()) {
-                    for (String groupName : testGroups) {
-
-                        if (annotation != null && annotation.group().equals(groupName)) {
-                            return (Test) suiteMethod.invoke(null);
-                        }
-                    }
-
-                    return null;
-                }
-                else if (annotation != null && !annotation.skip()){
-                    return (Test) suiteMethod.invoke(null);
-                }
-                else{
-                    return null;
-                }
+                result = suiteMethod;
             }
         }
         catch (Exception e) {
             // No suite method
         }
 
-
-
-
-        return new TestSuite(getTestClass());
-        }
-
-
-
-    private boolean isPublicTestMethod(Method m)
-    {
-        return isTestMethod(m) && Modifier.isPublic(m.getModifiers());
-    }
-
-    private boolean isTestMethod(Method m)
-    {
-        String  name = m.getName();
-        Class[] parameters = m.getParameterTypes();
-        Class   returnType = m.getReturnType();
-        return parameters.length == 0 && name.startsWith("test") && returnType.equals(Void.TYPE);
+        return result;
     }
 
     //~ Static fields/initializers ...........................................................................
@@ -147,7 +161,8 @@ public final class JUnitTestSet
             report.failure(t);
         }
 
-        public void addSkipped(){
+        public void addSkipped()
+        {
             report.skip();
         }
 

@@ -15,8 +15,10 @@ import static java.lang.annotation.ElementType.METHOD;
 @Target(METHOD)
 
 public @interface Test {
-    /** Specifies test group */
-    String group() default "slow";
+    /** Specifies test groups */
+    String[] groups() default ALL;
     boolean skip() default false;
+
+    static final String ALL = "*";
 
 }

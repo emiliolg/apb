@@ -186,11 +186,11 @@ class TestRunnerOptions
     }
 
 
-    public List<String> getTestGroups()
+    public @NotNull List<String> getTestGroups()
     {
         return asStringList(testGroups);
     }
-    public List<String> getReports()
+    public  @NotNull List<String> getReports()
     {
         return asStringList(reports);
     }

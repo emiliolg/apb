@@ -292,7 +292,7 @@ public class TestModule
 
     //~ Static fields/initializers ...........................................................................
 
-    public static final List<String> DEFAULT_INCLUDES = Arrays.asList("**/*Test.class", "**/*TestCase.class");
+    public static final List<String> DEFAULT_INCLUDES = Arrays.asList("**/*Test.class", "**/*TestCase.class", "**/*TestSuite.class");
     public static final List<String> DEFAULT_EXCLUDES = Arrays.asList("**/*$*");
 
     //~ Instance initializers ................................................................................

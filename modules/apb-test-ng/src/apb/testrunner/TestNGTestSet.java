@@ -26,6 +26,7 @@ import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 import org.testng.TestNG;
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: May 15, 2009
@@ -43,7 +44,7 @@ public class TestNGTestSet
            super(testClass);
        }
 
-    public void execute(TestReport report, ClassLoader classLoader, List<String> testGroups)
+    public void execute(@NotNull TestReport report, @NotNull ClassLoader classLoader, @NotNull List<String> testGroups)
         throws TestSetFailedException
     {
         TestNG tng = new TestNG(true);
