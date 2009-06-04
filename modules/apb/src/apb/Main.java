@@ -93,7 +93,7 @@ public class Main
                 }
             }
             catch (DefinitionException e) {
-                env.logSevere("%s\n", e.getMessage());
+                env.logSevere("%s\nCause: %s\n", e.getMessage(), e.getCause().getMessage());
 
                 if (env.showStackTrace()) {
                     throw e.getCause();

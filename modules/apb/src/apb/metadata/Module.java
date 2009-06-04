@@ -178,7 +178,7 @@ public class Module
      */
     protected final void dependencies(Dependencies... dependencyList)
     {
-        dependencies.addAll(dependencyList);
+            dependencies.addAll(dependencyList);
     }
 
     /**

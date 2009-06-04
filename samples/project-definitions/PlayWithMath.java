@@ -36,9 +36,9 @@ public class PlayWithMath
        compiler.validateDependencies = false;
     }
 
-    @BuildTarget
-    public void hi(Environment e)
-    {
-        HiExtension.hi();
-    }
+//    @BuildTarget
+//    public void hi(Environment e)
+//    {
+//        HiExtension.hi();
+//    }
 }

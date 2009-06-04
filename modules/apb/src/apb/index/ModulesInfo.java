@@ -96,7 +96,7 @@ class ModulesInfo
         try {
             return env.constructProjectElement(file);
         }
-        catch (Exception e) {
+        catch (Throwable e) {
             return null;
         }
     }
