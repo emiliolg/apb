@@ -66,6 +66,7 @@ public abstract class ProjectElementHelper
 
     @NotNull public static ProjectElementHelper create(ProjectElement element, Environment environment)
     {
+        element.init();
         ProjectElementHelper result;
 
         if (element instanceof TestModule) {

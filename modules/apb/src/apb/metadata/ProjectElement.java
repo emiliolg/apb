@@ -114,6 +114,15 @@ public abstract class ProjectElement
 //        IdeaTask.execute(env);
 //    }
 
+    /**
+     * Initialization hook.
+     * You can override this method to provide initializations AFTER
+     * the Object is constructed. This can be useful to avoid problem with cyclic references.
+     */
+    public void init()
+    {
+    }
+
     @NotNull
     public String getName()
     {

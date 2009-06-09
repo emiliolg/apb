@@ -36,6 +36,7 @@ import apb.index.DefinitionsIndex;
 
 import apb.metadata.Module;
 import apb.metadata.ProjectElement;
+import apb.metadata.DependencyList;
 
 import apb.utils.FileUtils;
 import apb.utils.PropertyExpansor;
@@ -535,13 +536,18 @@ public abstract class Environment
      * @param file The file containing the module definition
      * @return A project helper asociated to the file
      */
-    @NotNull public ProjectElementHelper constructProjectElement(File file)
-        throws Exception
+    @NotNull public ProjectElementHelper constructProjectElement(File file) throws Throwable
     {
         final File pdir = projectDir(file);
         setProjectsHome(pdir);
 
-        return getHelper(javac.loadClass(pdir, file).asSubclass(ProjectElement.class).newInstance());
+        final ProjectElement element;
+        try {
+            element = javac.loadClass(pdir, file).asSubclass(ProjectElement.class).newInstance();
+        } catch (ExceptionInInitializerError e) {
+            throw e.getException();
+        }
+        return getHelper(element);
     }
 
     @NotNull public File getApbDir()
@@ -682,7 +688,11 @@ public abstract class Environment
             File source = projectElementFile(name);
             return constructProjectElement(source);
         }
-        catch (Exception e) {
+        catch (DependencyList.NullDependencyException e) {
+            throw new DefinitionException(name, e);
+
+        }
+        catch (Throwable e) {
             throw new DefinitionException(name, e);
         }
     }

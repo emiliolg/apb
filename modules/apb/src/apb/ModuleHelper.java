@@ -340,9 +340,9 @@ public class ModuleHelper
      */
     private void tsort(List<ModuleHelper> elements, IdentitySet<ModuleHelper> visited)
     {
+        visited.add(this);
         for (ModuleHelper dependency : directDependencies) {
             if (!visited.contains(dependency)) {
-                visited.add(dependency);
                 dependency.tsort(elements, visited);
                 elements.add(dependency);
             }
