@@ -34,23 +34,23 @@ public class Messages
         return "Invalid option: " + option + " (use -h or --help to see a list of available options.)";
     }
 
-    public static final String NONBOOLNEG(char letter, String name)
+    public static String NONBOOLNEG(char letter, String name)
     {
         return "Can't negate option -" + letter + "(--" + name +
                " ), negation only applies to boolean options.";
     }
 
-    public static final String NOVAL(String arg1, String arg2)
+    public static String NOVAL(String arg1, String arg2)
     {
         return "Option -" + arg1 + " (--" + arg2 + ") contains no default and was specified no value.";
     }
 
-    public static final String SEPOPT(String arg1, String arg2)
+    public static String SEPOPT(String arg1, String arg2)
     {
         return "Option -" + arg1 + " (--" + arg2 + ")'s argument should be separated by white space";
     }
 
-    public static final String WRONGOPT(String option)
+    public static String WRONGOPT(String option)
     {
         return "Wrong option: \n" + option + "\n" + " ";
     }

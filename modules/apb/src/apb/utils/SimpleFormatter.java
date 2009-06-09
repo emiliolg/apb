@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 package apb.utils;
 
@@ -32,9 +30,8 @@ public class SimpleFormatter
 {
     //~ Instance fields ......................................................................................
 
-    private Environment env;
-    private boolean     eol = true;
-    private static final int HEADER_LENGTH = 30;
+    private final Environment env;
+    private final String      ls = System.getProperty("line.separator");
 
     //~ Constructors .........................................................................................
 
@@ -47,41 +44,49 @@ public class SimpleFormatter
 
     public String format(LogRecord record)
     {
-        StringBuilder result = new StringBuilder();
+        String str = formatMsg(record);
 
-        if (eol) {
+        StringBuilder result = new StringBuilder(str.length() + 3 * HEADER_LENGTH);
+
+        LineSplitter splitter = new LineSplitter(str);
+
+        while (splitter.nextLine()) {
             appendHeader(result);
-            eol = false;
-        }
-
-        String msg = formatMsg(record);
-
-        if (!msg.isEmpty()) {
-            int p;
-
-            while ((p = msg.indexOf('\n')) >= 0) {
-                result.append(msg.substring(0, ++p));
-                msg = msg.substring(p);
-                eol = !msg.isEmpty();
-
-                if (eol) {
-                    appendHeader(result);
-                    eol = false;
-                }
-            }
-
-            if (msg.isEmpty()) {
-                eol = true;
-            }
-            else {
-                result.append(msg);
-            }
+            splitter.appendLine(result);
+            result.append(ls);
         }
 
         return result.toString();
     }
 
-    private String formatMsg(LogRecord record)
+    protected void appendHeader(StringBuilder result)
+    {
+        if (env.getCurrent() != null) {
+            int n = result.length();
+            result.append('[');
+            result.append(env.getCurrentName());
+
+            if (env.getCurrentCommand() != null) {
+                result.append('.');
+                result.append(env.getCurrentCommand().getQName());
+            }
+
+            int maxLength = HEADER_LENGTH + n;
+
+            if (result.length() > maxLength) {
+                result.setLength(maxLength);
+            }
+
+            result.append(']');
+            n = result.length() - n;
+
+            for (int i = HEADER_LENGTH + 1 - n; i >= 0; i--) {
+                result.append(' ');
+            }
+        }
+    }
+
+    private static String formatMsg(LogRecord record)
     {
         String         msg = record.getMessage();
         final Object[] pars = record.getParameters();
@@ -93,26 +98,65 @@ public class SimpleFormatter
         return msg;
     }
 
-    protected void appendHeader(StringBuilder result)
+    //~ Static fields/initializers ...........................................................................
+
+    private static final int HEADER_LENGTH = 30;
+
+    //~ Inner Classes ........................................................................................
+
+    /**
+     * Splits a string by new-line characters
+     */
+    private static final class LineSplitter
     {
-        if (env.getCurrent() != null) {
-            int n = result.length();
-            result.append("[");
-            result.append(env.getCurrentName());
+        private int length;
+        private int nextChar;
 
-            if (env.getCurrentCommand() != null) {
-                result.append(".");
-                result.append(env.getCurrentCommand().getQName());
+        private int          start;
+        private final char[] str;
+
+        LineSplitter(String str)
+        {
+            int    length = str.length();
+            char[] chars = new char[length];
+            str.getChars(0, length, chars, 0);
+            this.str = chars;
+        }
+
+        void appendLine(StringBuilder sb)
+        {
+            sb.append(str, start, length);
+        }
+
+        boolean nextLine()
+        {
+            int    i = nextChar;
+            char[] chars = str;
+            int    len = chars.length;
+
+            if (i >= len) {
+                return false;
             }
-            if (result.length()-n > HEADER_LENGTH)
-                result.setLength(n+HEADER_LENGTH);
 
-            result.append("]");
-            n = result.length() - n;
+            int offset = i;
 
-            for (int i = HEADER_LENGTH+1 - n; i >= 0; i--) {
-                result.append(' ');
+            char c;
+
+            do {
+                c = chars[i];
+                i++;
             }
+            while (i < len && c != '\n' && (c != '\r' || chars[i] == '\n'));
+
+            nextChar = i;
+
+            // We do not want to include \r \n chars
+            int end = c == '\r' ? i - 1 : c != '\n' ? i : i >= 2 && chars[i - 2] == '\r' ? i - 2 : i - 1;
+
+            start = offset;
+            length = end - offset;
+
+            return true;
         }
     }
 }

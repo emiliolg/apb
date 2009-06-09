@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb.ant;
 
 import java.io.File;
@@ -25,13 +23,14 @@ import java.util.Set;
 import apb.Command;
 import apb.Environment;
 
+import apb.utils.StringUtils;
+
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 
 import org.jetbrains.annotations.NotNull;
 
 import static apb.utils.StringUtils.isEmpty;
-import apb.utils.StringUtils;
 //
 // User: emilio
 // Date: Dec 10, 2008
@@ -46,7 +45,6 @@ public class AntEnvironment
     private Set<File> definitionDir;
 
     private ApbTask task;
-    private static final int HEADER_LENGTH = 30;
 
     //~ Constructors .........................................................................................
 
@@ -89,7 +87,7 @@ public class AntEnvironment
         File f = new File(defdir);
 
         if (!f.isDirectory()) {
-            throw new BuildException("Non existent project definiton directory: '" + defdir + "'");
+            throw new BuildException("Non existent project definiton directory: '" + defdir + '\'');
         }
 
         logVerbose("Definition directory = '%s'", defdir);
@@ -102,22 +100,28 @@ public class AntEnvironment
         final String  currentModule = getCurrentName();
 
         if (!isEmpty(currentModule)) {
-            result.append("[");
+            result.append('[');
             result.append(currentModule);
             final Command cmd = getCurrentCommand();
 
             if (cmd != null) {
                 result.append('.').append(cmd.getQName());
             }
-            if (result.length() >= HEADER_LENGTH -1) {
-                result.setLength(HEADER_LENGTH -1);
+
+            if (result.length() >= HEADER_LENGTH - 1) {
+                result.setLength(HEADER_LENGTH - 1);
             }
-            result.append("]");
+
+            result.append(']');
             result.append(StringUtils.nChars(HEADER_LENGTH - result.length(), ' '));
         }
 
-        msg = StringUtils.appendIndenting(result.toString() + " ", msg.substring(0, msg.length()-1)) + "\n";
+        msg = StringUtils.appendIndenting(result.toString() + ' ', msg);
 
         task.log(args.length == 0 ? msg : String.format(msg, args), level);
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final int HEADER_LENGTH = 30;
 }

@@ -12,6 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
 
 package apb.tasks;
 
@@ -19,12 +20,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
 
 import apb.Environment;
 
@@ -55,6 +55,7 @@ public class ExecTask
         output = null;
         environment = new HashMap<String, String>();
     }
+
     public ExecTask(@NotNull Environment env, @NotNull String... args)
     {
         this(env, Arrays.asList(args));
@@ -145,12 +146,12 @@ public class ExecTask
     private void logStream(InputStream in)
         throws IOException
     {
-        Reader s = new InputStreamReader(in);
-        char[] buff = new char[256];
-        int    n;
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
-        while ((n = s.read(buff)) > -1) {
-            env.logInfo(new String(buff, 0, n));
+        String line;
+
+        while ((line = reader.readLine()) != null) {
+            env.logInfo(line);
         }
     }
 
@@ -183,6 +184,7 @@ public class ExecTask
                     env.logVerbose("            %s='%s'\n", entry.getKey(), entry.getValue());
                 }
             }
+
             env.logVerbose("Current directory: %s\n", currentDirectory);
         }
     }

@@ -37,7 +37,7 @@ public class StandaloneEnv
 {
     //~ Instance fields ......................................................................................
 
-    private Logger logger;
+    private final Logger logger;
 
     //~ Constructors .........................................................................................
 
@@ -48,7 +48,6 @@ public class StandaloneEnv
 
     public StandaloneEnv(final String name, Map<?,?> properties)
     {
-        super();
         copyProperties(properties);
         logger = createLogger(name);
         loadProjectPath();
