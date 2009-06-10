@@ -46,21 +46,28 @@ import org.jetbrains.annotations.NotNull;
  *
  *        +--- module1/
  *                    +-- src    --   <-- Sources here
- *                    +-- gsrc   --   <-- Generated Sources here
  *                    .
- *                    +-- output +-- classes --   <-- Compiled classes and resources here
- *                               +-- javadoc --   <-- javadoc here
  *        +--- module2/
  *        .
  *        .
  *        +--- moduleN/
  *        .
- *        +--- lib/
- *                +-- module1.jar
- *                +-- module2.jar
- *                .
- *                .
- *                +-- moduleN.jar
+ *        +-- output/
+ *                  .
+ *                  +--- lib/
+ *                          +-- module1.jar
+ *                          +-- module2.jar
+ *                          .
+ *                          .
+ *                          +-- moduleN.jar
+ *
+ *                  +-- module1/
+ *                             +-- classes --   <-- Compiled classes and resources here
+ *                             +-- gsrc    --   <-- Generated Sources here
+ *                             +-- javadoc --   <-- javadoc here
+ *                  .
+ *                  +--- module2/
+ *                  .
  * </pre>
  *
  */
@@ -78,7 +85,7 @@ public class Module
     /**
      * The directory where the generated source files for this module are placed
      */
-    @BuildProperty public String generatedSource = "$moduledir/gsrc";
+    @BuildProperty public String generatedSource = "output/$moduledir/gsrc";
 
     /**
      * All the info for Javadoc
@@ -88,7 +95,7 @@ public class Module
     /**
      * The directory for the output classes
      */
-    @BuildProperty public String output = "$moduledir/output/classes";
+    @BuildProperty public String output = "output/$moduledir/classes";
 
     /**
      * All the info for the package (Jar,War, etc)

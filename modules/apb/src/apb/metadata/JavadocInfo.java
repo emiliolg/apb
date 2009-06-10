@@ -85,7 +85,7 @@ public class JavadocInfo
     /**
      * The directory to generate the javadoc output
      */
-    public String output = "$moduledir/output/javadoc";
+    public String output = "output/$moduledir/javadoc";
 
     /**
      * Specifies that javadoc should retrieve the text for the overview documentation from the "source" file specified
