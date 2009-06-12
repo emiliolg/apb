@@ -18,6 +18,7 @@ package apb.tasks;
 import java.io.File;
 
 import apb.Environment;
+import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
 //
@@ -60,13 +61,16 @@ public class RemoveTask
             boolean ok = file.isDirectory() ? doRemoveDir(file) : file.delete();
 
             if (!ok) {
-                env.handle("Unable to delete " + type + " " + file.getAbsolutePath());
+                env.logWarning("Unable to delete " + type + " " + file.getAbsolutePath());
             }
         }
     }
 
     private boolean doRemoveDir(File d)
     {
+        if(FileUtils.DEFAULT_SRC_EXCLUDES.contains(d.getName())){
+            return true;
+        }
         String[] list = d.list();
 
         if (list == null) {
