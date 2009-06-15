@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -34,19 +35,20 @@ import apb.compiler.InMemJavaC;
 
 import apb.index.DefinitionsIndex;
 
+import apb.metadata.DependencyList;
 import apb.metadata.Module;
 import apb.metadata.ProjectElement;
-import apb.metadata.DependencyList;
 
 import apb.utils.FileUtils;
 import apb.utils.PropertyExpansor;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static java.lang.Character.isJavaIdentifierPart;
-import java.net.MalformedURLException;
 
 import static apb.utils.FileUtils.JAVA_EXT;
+import static apb.utils.StringUtils.isEmpty;
 
 /**
  * This class represents an Environment that includes common services like:
@@ -65,44 +67,78 @@ public abstract class Environment
      */
     @NotNull private final File apbDir;
 
-    private File basedir;
+    /**
+     * The base directory of the current project
+     */
+    @Nullable private File basedir;
 
     /**
      * Base properties are enviroment or argument properties
      * They take preference over the properties defined in project elements
      */
-    private Map<String, String> baseProperties;
-    private long                clock;
+    @NotNull private final Map<String, String> baseProperties;
 
-    private Command currentCommand;
+    /**
+     * The running time of the current build
+     */
+    private long clock;
 
-    private ProjectElementHelper currentElement;
-    private DefinitionsIndex     definitionsIndex;
+    /**
+     * The current command being run
+     */
+    @Nullable private Command currentCommand;
+
+    /**
+     * The current element being run
+     */
+    @Nullable private ProjectElementHelper currentElement;
+
+    /**
+     * The index of definitions
+     * It is initialized in a lazy way in the getter
+     */
+    @Nullable private DefinitionsIndex definitionsIndex;
 
     /**
      * The set of jars that comprise the extension class path
      */
-    @NotNull final private Set<File>                      extClassPath;
-    private boolean                                 failOnError;
-    private boolean                                 forceBuild;
+    @NotNull private final Set<File> extClassPath;
+    private boolean                  failOnError;
+    private boolean                  forceBuild;
+
+    /**
+     * A Map that contains all constructed Helpers
+     */
     private final Map<String, ProjectElementHelper> helpersByElement;
     private InMemJavaC                              javac;
-    private boolean                                 nonRecursive;
-    private Os                                      os;
 
-    private Set<File> projectPath;
+    /**
+     * An abstract representation of the Operating System
+     */
+    @NotNull private final Os os;
+
+    @NotNull private final Set<File> projectPath;
 
     /**
      * Project properties are the properties defined in project elements
      */
-    private Map<String, String> projectProperties;
-    private File                projectsHome;
-    private boolean             quiet;
-    private boolean             showStackTrace;
-    private boolean             verbose;
+    @NotNull private final Map<String, String> projectProperties;
+
+    /**
+     * The directory where the project definition files are stored
+     */
+    @Nullable private File projectsHome;
+
+    /**
+     * Processing and messaging options
+     */
+    private boolean quiet, showStackTrace, verbose, nonRecursive;
 
     //~ Constructors .........................................................................................
 
+    /**
+     * Crate an Environment
+     */
     public Environment()
     {
         apbDir = new File(System.getProperty("user.home"), APB_DIR);
@@ -123,16 +159,61 @@ public abstract class Environment
 
         extClassPath = loadExtensionsPath(baseProperties);
         resetJavac();
+        projectPath = new LinkedHashSet<File>();
     }
 
     //~ Methods ..............................................................................................
 
+    /**
+     * Log items with INFO Level using the specified format string and
+     * arguments.
+     *
+     * @param  msg
+     *         A <a href="../util/Formatter.html#syntax">format string</a>
+     *
+     * @param  args
+     *         Arguments referenced by the format specifiers in the format
+     *         string.  If there are more arguments than format specifiers, the
+     */
     public abstract void logInfo(String msg, Object... args);
 
+    /**
+     * Log items with WARNING Level using the specified format string and
+     * arguments.
+     *
+     * @param  msg
+     *         A <a href="../util/Formatter.html#syntax">format string</a>
+     *
+     * @param  args
+     *         Arguments referenced by the format specifiers in the format
+     *         string.  If there are more arguments than format specifiers, the
+     */
     public abstract void logWarning(String msg, Object... args);
 
+    /**
+     * Log items with SEVERE Level using the specified format string and
+     * arguments.
+     *
+     * @param  msg
+     *         A <a href="../util/Formatter.html#syntax">format string</a>
+     *
+     * @param  args
+     *         Arguments referenced by the format specifiers in the format
+     *         string.  If there are more arguments than format specifiers, the
+     */
     public abstract void logSevere(String msg, Object... args);
 
+    /**
+     * Log items with VERBOSE Level using the specified format string and
+     * arguments.
+     *
+     * @param  msg
+     *         A <a href="../util/Formatter.html#syntax">format string</a>
+     *
+     * @param  args
+     *         Arguments referenced by the format specifiers in the format
+     *         string.  If there are more arguments than format specifiers, the
+     */
     public abstract void logVerbose(String msg, Object... args);
 
     /**
@@ -144,32 +225,50 @@ public abstract class Environment
         return extClassPath;
     }
 
+    /**
+     * Returns the time that the source file correspondong to this class was
+     * last modified.
+     *
+     * @param clazz The class whose source file we want to check
+     *
+     * @return  A <code>long</code> value representing the time the file was
+     *          last modified, measured in milliseconds since the epoch, or <code>0L</code> if the
+     *          file does not exist or if an error occurs
+     */
     public long sourceLastModified(@NotNull Class clazz)
     {
-        return javac.sourceLastModified(clazz);
+        return javac == null ? 0 : javac.sourceLastModified(clazz);
     }
 
-    public void setCurrentCommand(Command currentCommand)
+    /**
+     * Set the current command being run (If command == null we are marking that no command is being ran
+     * @param command The command
+     */
+    public void setCurrentCommand(@Nullable Command command)
     {
-        this.currentCommand = currentCommand;
+        currentCommand = command;
+
+        if (command == null) {
+            currentElement = null;
+        }
     }
 
-    public void handle(String msg)
+    /**
+     * Handle an Error. It creates a build Exception with the specified msg.
+     * And delegates the handling to {@link #handle(Throwable t)}
+     * @param msg The message used to create the build exception
+     */
+    public void handle(@NotNull String msg)
     {
         handle(new BuildException(msg));
     }
 
-    public void setFailOnError(boolean b)
-    {
-        failOnError = b;
-    }
-
-    public void setForceBuild(boolean b)
-    {
-        forceBuild = b;
-    }
-
-    public void handle(Throwable e)
+    /**
+     * Handle an Error.
+     * Either raise the exception or log it depending on the value of the failOnError flag
+     * @param e The Exception causing the failure
+     */
+    public void handle(@NotNull Throwable e)
     {
         if (failOnError) {
             throw (e instanceof BuildException) ? (BuildException) e : new BuildException(e);
@@ -178,19 +277,165 @@ public abstract class Environment
         logSevere(e.getMessage());
     }
 
+    /**
+     * Abort the build, displaying a message.
+     * @param msg Message to be displayed when aborting.
+     */
+    public void abort(String msg)
+    {
+        logInfo(msg);
+        System.exit(1);
+    }
+
+    /**
+     * Sets the flags that marks wheter to fail when an exception is raised or try to continue the
+     * build
+     * @param b
+     */
+    public void setFailOnError(boolean b)
+    {
+        failOnError = b;
+    }
+
+    /**
+     * Returns true if we want the build to proceed unconditionally without checking file timestamps
+     * @return true if we want the build to proceed unconditionally without checking file timestamps
+     */
+    public boolean forceBuild()
+    {
+        return forceBuild;
+    }
+
+    /**
+     * Sets the flags that marks to ignore file timestamps and build everything
+     * @param b
+     */
+    public void setForceBuild(boolean b)
+    {
+        forceBuild = b;
+    }
+
+    /**
+     * Returns true if log level is verbose
+     * @return true if log level is verbose
+     */
+    public boolean isVerbose()
+    {
+        return verbose;
+    }
+
+    /**
+     * Log with level verbose (Log everything)
+     */
     public void setVerbose()
     {
         verbose = true;
     }
 
+    /**
+     * Returns true if log level is quiet
+     * @return true if log level is quiet
+     */
+    public boolean isQuiet()
+    {
+        return quiet;
+    }
+
+    /**
+     * Log with the lowest level
+     */
     public void setQuiet()
     {
         quiet = true;
     }
 
-    public boolean forceBuild()
+    /**
+     * Returns true if the stacktrace of the offending exception must be shown when aborting
+     */
+    public boolean showStackTrace()
     {
-        return forceBuild;
+        return showStackTrace;
+    }
+
+    /**
+     * Marks wheter to show or not the stacktrace of the offending exception when aborting
+     */
+    public void setShowStackTrace()
+    {
+        showStackTrace = true;
+    }
+
+    /**
+     * Get the name of the current module/project being processed
+     */
+    @NotNull public String getCurrentName()
+    {
+        return currentElement == null ? "" : currentElement.getName();
+    }
+
+    /**
+     * Returns true if the build must NOT proceed recursive to the module dependecies
+     */
+    public boolean isNonRecursive()
+    {
+        return nonRecursive;
+    }
+
+    /**
+     * Avoid APB to recursively invoke the target in each of the module dependencies
+     */
+    public void setNonRecursive()
+    {
+        nonRecursive = true;
+    }
+
+    /**
+     * Get the running time of the current build
+     */
+    public long getClock()
+    {
+        return clock;
+    }
+
+    /**
+     * Returns The directory where the project definition files are stored
+     */
+    @NotNull public File getProjectsHome()
+    {
+        if (projectsHome == null) {
+            throw new IllegalStateException("Projects Home variable not initialized");
+        }
+
+        return projectsHome;
+    }
+
+    /**
+     * Get the base directory of the current Module
+     * @return the base directory of the current Module
+     */
+    @NotNull public File getBaseDir()
+    {
+        if (basedir == null) {
+            throw new IllegalStateException("Not current Module");
+        }
+
+        return basedir;
+    }
+
+    /**
+     * Get the current command being run or null if no one
+     */
+    @Nullable public Command getCurrentCommand()
+    {
+        return currentCommand;
+    }
+
+    /**
+     * Returns a representation of the current Operating System
+     */
+    @NotNull public Os getOs()
+    {
+        return os;
     }
 
     /**
@@ -251,18 +496,23 @@ public abstract class Environment
         return Boolean.parseBoolean(getProperty(id, Boolean.toString(defaultValue)));
     }
 
-    public boolean isVerbose()
+    /**
+     * Process the string expanding property values.
+     * The `$' character introduces property expansion.
+     * The property  name  or  symbol  to  be expanded  may be enclosed in braces,
+     * which are optional but serve to protect the variable to be expanded from characters
+     * immediately following it which could be interpreted as part of the name.
+     * When braces are used, the matching ending brace is the first `}' not escaped by a backslash
+     *
+     * @param string The string to be expanded.
+     * @return An String with properties expanded.
+     */
+    @NotNull public String expand(@Nullable String string)
     {
-        return verbose;
-    }
+        if (isEmpty(string)) {
+            return "";
+        }
 
-    public boolean isQuiet()
-    {
-        return quiet;
-    }
-
-    public String expand(String string)
-    {
         StringBuilder result = new StringBuilder();
         StringBuilder id = new StringBuilder();
 
@@ -312,12 +562,12 @@ public abstract class Environment
         return result.toString();
     }
 
-    public void setProjectsHome(File file)
-    {
-        projectsHome = file;
-        putProperty(PROJECTS_HOME_PROP_KEY, file.getAbsolutePath());
-    }
-
+    /**
+     * Get (Constructing it if necessary) the helper for a given element
+     * A Helper is an Object that extends the functionality of a given ProjectElement
+     * @param element The Project Element to get the helper from
+     * @return The helper for the given element
+     */
     @NotNull public ProjectElementHelper getHelper(@NotNull ProjectElement element)
     {
         synchronized (helpersByElement) {
@@ -331,51 +581,33 @@ public abstract class Environment
         }
     }
 
-    public void removeHelper(ProjectElement element)
-    {
-        synchronized (helpersByElement) {
-            helpersByElement.remove(element.getName());
-        }
-    }
-
-    public File getProjectsHome()
-    {
-        return projectsHome;
-    }
-
-    public void abort(String msg)
-    {
-        logInfo(msg);
-        System.exit(1);
-    }
-
-    public void resetClock()
-    {
-        clock = System.currentTimeMillis();
-    }
-
-    public void completedMessage(boolean ok)
-    {
-        logInfo(ok ? Messages.BUILD_COMPLETED(System.currentTimeMillis() - clock) : Messages.BUILD_FAILED);
-    }
-
-    public File getBaseDir()
-    {
-        return basedir;
-    }
-
+    /**
+     * Returns a File object whose path is relative to the basedir of the current module
+     * @param name The (Usually relative to the basedir of the module) file name.
+     * @return A file whose path is relative to the basedir of the current module.
+     */
     @NotNull public File fileFromBase(@NotNull String name)
     {
         final File child = new File(expand(name));
         return child.isAbsolute() ? child : new File(basedir, child.getPath());
     }
 
+    /**
+     * Returns a File object whose path is relative to the source directory of the current module
+     * @param name The (Usually relative to the source directory of the module) file name.
+     * @return A file whose path is relative to the source directory of the current module.
+     */
     @NotNull public File fileFromSource(@NotNull String name)
     {
         final File child = new File(expand(name));
         return child.isAbsolute() ? child : new File(getModuleHelper().getSource(), child.getPath());
     }
 
+    /**
+     * Returns a File object whose path is relative to the generated source directory of the current module
+     * @param name The (Usually relative to the generated source directory of the module) file name.
+     * @return A file whose path is relative to the generated source directory of the current module.
+     */
     @NotNull public File fileFromGeneratedSource(@NotNull String name)
     {
         final File child = new File(expand(name));
@@ -384,25 +616,16 @@ public abstract class Environment
 
     @NotNull public ProjectElement activate(@NotNull ProjectElement element)
     {
-        currentElement = getHelper(element);
+        final ProjectElementHelper helper = getHelper(element);
+        currentElement = helper;
 
         // @todo this can be optimize if currentElement.element != null
         // but I'll need to reset the properties in env
         final ProjectElement result = new PropertyExpansor(this).expand(element);
 
         basedir = new File(result.basedir);
-        currentElement.activate(result);
+        helper.activate(result);
         return result;
-    }
-
-    public String getCurrentName()
-    {
-        return currentElement == null ? null : currentElement.getName();
-    }
-
-    public void deactivate()
-    {
-        currentElement = null;
     }
 
     /**
@@ -449,7 +672,7 @@ public abstract class Environment
         return currentElement;
     }
 
-    public Set<File> getProjectPath()
+    @NotNull public Set<File> getProjectPath()
     {
         return projectPath;
     }
@@ -473,26 +696,6 @@ public abstract class Environment
         return new File(url.substring(JAR_FILE_URL_PREFIX.length(), ind));
     }
 
-    public void setShowStackTrace()
-    {
-        showStackTrace = true;
-    }
-
-    public boolean showStackTrace()
-    {
-        return showStackTrace;
-    }
-
-    public Command getCurrentCommand()
-    {
-        return currentCommand;
-    }
-
-    public Os getOs()
-    {
-        return os;
-    }
-
     public void putProperty(String name, String value)
     {
         if (isVerbose()) {
@@ -512,49 +715,44 @@ public abstract class Environment
         return baseProperties.get(propertyName);
     }
 
-    public void setNonRecursive()
-    {
-        nonRecursive = true;
-    }
-
-    public boolean isNonRecursive()
-    {
-        return nonRecursive;
-    }
-
-    public void resetJavac()
-    {
-        try {
-            javac = new InMemJavaC(this);
-        } catch (MalformedURLException e) {
-            handle(e);
-        }
-    }
-
     /**
      * Construct a Helper for the file
      * @param file The file containing the module definition
      * @return A project helper asociated to the file
      */
-    @NotNull public ProjectElementHelper constructProjectElement(File file) throws Throwable
+    @NotNull public ProjectElementHelper constructProjectElement(File file)
+        throws Throwable
     {
         final File pdir = projectDir(file);
-        setProjectsHome(pdir);
+        projectsHome = pdir;
+        putProperty(PROJECTS_HOME_PROP_KEY, pdir.getAbsolutePath());
 
         final ProjectElement element;
+
         try {
             element = javac.loadClass(pdir, file).asSubclass(ProjectElement.class).newInstance();
-        } catch (ExceptionInInitializerError e) {
+        }
+        catch (ExceptionInInitializerError e) {
             throw e.getException();
         }
+
         return getHelper(element);
     }
 
+    /**
+     * Return the apb home directory
+     * @return the apb home directory
+     */
     @NotNull public File getApbDir()
     {
         return apbDir;
     }
 
+    /**
+     * Return (Initializing it if necessary) an instance of the DefinitionsIndex
+     * that contains informatio avoid the modules in th eproject path
+     * @return The DefinitionIndex
+     */
     @NotNull public synchronized DefinitionsIndex getDefinitionsIndex()
     {
         if (definitionsIndex == null) {
@@ -564,12 +762,28 @@ public abstract class Environment
         return definitionsIndex;
     }
 
+    /**
+     * Reset the state of the compiler.
+     * This should NOT be a public method
+     */
+    public void resetJavac()
+    {
+        try {
+            javac = new InMemJavaC(this);
+        }
+        catch (MalformedURLException e) {
+            handle(e);
+        }
+    }
+
+    /**
+     * Load the projectpath list.
+     * This method must be called after construction to ensure the properties are
+     * initialized
+     */
     protected void loadProjectPath()
     {
-        projectPath = new LinkedHashSet<File>();
-
         String path = System.getenv("APB_PROJECT_PATH");
-
         String path2 = baseProperties.get("project.path");
 
         if (path2 != null) {
@@ -591,25 +805,6 @@ public abstract class Environment
         }
     }
 
-    static private Set<File> loadExtensionsPath(Map<String, String> baseProperties)
-    {
-        String path = System.getenv("APB_EXT_PATH");
-
-        String path2 = baseProperties.get("ext.path");
-
-        if (path2 != null) {
-            path = path == null ? path2 : path + File.pathSeparator + path2;
-        }
-
-        Set<File> jars = new LinkedHashSet<File>();
-        if(path != null){
-            for (String p : path.split(File.pathSeparator)) {
-                jars.addAll(FileUtils.listAllFilesWithExt(new File(p), ".jar"));
-            }
-        }
-        return jars;
-    }
-
     protected void copyProperties(Map<?, ?> p)
     {
         for (Map.Entry<?, ?> entry : p.entrySet()) {
@@ -617,11 +812,9 @@ public abstract class Environment
         }
     }
 
-    void addHelper(@NotNull ProjectElementHelper helper)
+    void resetClock()
     {
-        synchronized (helpersByElement) {
-            helpersByElement.put(helper.getName(), helper);
-        }
+        clock = System.currentTimeMillis();
     }
 
     @NotNull File searchInProjectPath(String projectElement)
@@ -690,11 +883,40 @@ public abstract class Environment
         }
         catch (DependencyList.NullDependencyException e) {
             throw new DefinitionException(name, e);
-
         }
         catch (Throwable e) {
             throw new DefinitionException(name, e);
         }
+    }
+
+    /**
+     * Return the map of helpers by element.
+     * This is a package only method
+     */
+    Map<String, ProjectElementHelper> getHelpers()
+    {
+        return helpersByElement;
+    }
+
+    private static Set<File> loadExtensionsPath(Map<String, String> baseProperties)
+    {
+        String path = System.getenv("APB_EXT_PATH");
+
+        String path2 = baseProperties.get("ext.path");
+
+        if (path2 != null) {
+            path = path == null ? path2 : path + File.pathSeparator + path2;
+        }
+
+        Set<File> jars = new LinkedHashSet<File>();
+
+        if (path != null) {
+            for (String p : path.split(File.pathSeparator)) {
+                jars.addAll(FileUtils.listAllFilesWithExt(new File(p), ".jar"));
+            }
+        }
+
+        return jars;
     }
 
     private void loadUserProperties()

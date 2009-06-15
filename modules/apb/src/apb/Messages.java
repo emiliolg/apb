@@ -75,7 +75,7 @@ public class Messages
         return "command : one of " + cmds;
     }
 
-    static String BUILD_COMPLETED(long ts)
+    public static String BUILD_COMPLETED(long ts)
     {
         return "\nBUILD COMPLETED in " + ts + " milliseconds.\n";
     }

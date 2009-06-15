@@ -80,8 +80,6 @@ class ModulesInfo
                 modules.put(info.getName(), info);
             }
         }
-
-        env.resetJavac();
     }
 
     void establishPath()

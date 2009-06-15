@@ -20,6 +20,7 @@ import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
 import apb.Environment;
+import apb.Command;
 //
 // User: emilio
 // Date: Dec 4, 2008
@@ -61,14 +62,16 @@ public class SimpleFormatter
 
     protected void appendHeader(StringBuilder result)
     {
-        if (env.getCurrent() != null) {
+        final String current = env.getCurrentName();
+        if (!current.isEmpty()) {
             int n = result.length();
             result.append('[');
-            result.append(env.getCurrentName());
+            result.append(current);
 
-            if (env.getCurrentCommand() != null) {
+            final Command cmd = env.getCurrentCommand();
+            if (cmd != null) {
                 result.append('.');
-                result.append(env.getCurrentCommand().getQName());
+                result.append(cmd.getQName());
             }
 
             int maxLength = HEADER_LENGTH + n;
@@ -117,9 +120,9 @@ public class SimpleFormatter
 
         LineSplitter(String str)
         {
-            int    length = str.length();
-            char[] chars = new char[length];
-            str.getChars(0, length, chars, 0);
+            int    len = str.length();
+            char[] chars = new char[len];
+            str.getChars(0, len, chars, 0);
             this.str = chars;
         }
 

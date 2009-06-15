@@ -24,6 +24,8 @@ import java.util.List;
 import apb.index.ModuleInfo;
 
 import apb.utils.StandaloneEnv;
+import static apb.Messages.BUILD_COMPLETED;
+import static apb.Messages.BUILD_FAILED;
 
 public class Main
 {
@@ -112,7 +114,12 @@ public class Main
             }
         }
 
-        env.completedMessage(ok);
+        if (ok) {
+            env.logInfo(BUILD_COMPLETED(System.currentTimeMillis() - env.getClock()));
+        }
+        else {
+            env.logInfo(BUILD_FAILED);
+        }
     }
 
     private static String[] splitParts(String argument)

@@ -29,8 +29,8 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import static apb.utils.StringUtils.isEmpty;
 //
 // User: emilio
 // Date: Dec 10, 2008
@@ -42,6 +42,7 @@ public class AntEnvironment
 {
     //~ Instance fields ......................................................................................
 
+    @Nullable
     private Set<File> definitionDir;
 
     private ApbTask task;
@@ -57,6 +58,7 @@ public class AntEnvironment
 
     //~ Methods ..............................................................................................
 
+    @NotNull
     public Set<File> getProjectPath()
     {
         return definitionDir == null ? super.getProjectPath() : definitionDir;
@@ -99,7 +101,7 @@ public class AntEnvironment
         StringBuilder result = new StringBuilder();
         final String  currentModule = getCurrentName();
 
-        if (!isEmpty(currentModule)) {
+        if (!currentModule.isEmpty()) {
             result.append('[');
             result.append(currentModule);
             final Command cmd = getCurrentCommand();

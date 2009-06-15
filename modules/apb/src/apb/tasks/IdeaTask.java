@@ -108,7 +108,6 @@ public class IdeaTask
             for (TestModule testModule : mod.getModule().tests()) {
                 env.activate(testModule);
                 rewriteModule(env.getModuleHelper());
-                env.deactivate();
             }
 
             env.activate(mod.getModule());
@@ -374,9 +373,9 @@ public class IdeaTask
             final IdeaTask task = new IdeaTask(env);
             task.overwrite = true;
             task.execute();
-            addModuleToProject(modulesElement, env.getModuleHelper(), EMPTY_STRING_SET);
-            env.deactivate();
-            env.removeHelper(mod);
+            final ModuleHelper h = env.getModuleHelper();
+            addModuleToProject(modulesElement, h, EMPTY_STRING_SET);
+            h.remove();
             env.activate(prev);
         }
         catch (IOException e) {

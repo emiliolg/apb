@@ -15,6 +15,8 @@
 
 package apb;
 
+import org.jetbrains.annotations.NotNull;
+
 //
 // User: emilio
 // Date: Sep 8, 2008
@@ -26,7 +28,7 @@ public class BuildException
 {
     //~ Constructors .........................................................................................
 
-    public BuildException(String msg)
+    public BuildException(@NotNull String msg)
     {
         super(msg);
     }
