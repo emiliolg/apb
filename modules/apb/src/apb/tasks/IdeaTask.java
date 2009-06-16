@@ -166,7 +166,6 @@ public class IdeaTask
                 for (File source : sources) {
                     if(source.exists()){
                         addSourceFolder(content, source);
-                        addExcluded(content, source);
                     }
                 }
 
@@ -195,23 +194,6 @@ public class IdeaTask
 
     }
 
-    private void addExcluded(Element content, File dirFile) {
-        File[] files = dirFile.listFiles(new FileFilter(){
-            public boolean accept(File pathname) {
-                return pathname.isDirectory();
-            }
-        });
-        for (File file : files) {
-            if(FileUtils.DEFAULT_SRC_EXCLUDES.contains(file.getName())){
-                createElement(content, EXCLUDE_FOLDER).setAttribute(URL_ATTRIBUTE, "file://"+file.getAbsolutePath());
-            }
-            else {
-                addExcluded(content, file);
-            }
-        }
-
-
-    }
 
     private void writeDocument(File ideaFile, Document document)
     {
