@@ -152,9 +152,9 @@ public class IdeaTask
 
                 assignOutputFolder(module, component);
 
-                Element content = findElement(component, "content");
+                Element content = findElement(component, "content",URL_ATTRIBUTE, relativeUrl("file", module.getDirFile()));
 
-                content.setAttribute(URL_ATTRIBUTE, relativeUrl("file", module.getDirFile()));
+
 
                 removeOldElements(content, SOURCE_FOLDER);
 
@@ -165,11 +165,10 @@ public class IdeaTask
                 List<File> sources = module.getSourceDirs();
                 for (File source : sources) {
                     if(source.exists()){
-                        addSourceFolder(content, source);
+                        Element sourceContent = findElement(component, "content",URL_ATTRIBUTE, relativeUrl("file", source.getParentFile()));
+                        addSourceFolder(sourceContent, source);
                     }
                 }
-
-
 
 
                 rewriteDependencies(module, component);
@@ -193,7 +192,6 @@ public class IdeaTask
 
 
     }
-
 
     private void writeDocument(File ideaFile, Document document)
     {
@@ -287,6 +285,17 @@ public class IdeaTask
 
         if (element == null) {
             element = createElement(component, name);
+        }
+
+        return element;
+    }
+    private Element findElement(Element component, String name, String attribute, String value)
+    {
+        Element element = getElementByNameAndAttribute(component, name, attribute, value);
+
+        if (element == null) {
+            element = createElement(component, name);
+            element.setAttribute(attribute, value);
         }
 
         return element;
@@ -459,6 +468,25 @@ public class IdeaTask
             if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(name)) {
                 result = (Element) node;
                 break;
+            }
+        }
+
+        return result;
+    }
+    private Element getElementByNameAndAttribute(Element element, String name, String attribute, String value)
+    {
+        Element  result = null;
+        NodeList children = element.getElementsByTagName(name);
+
+        for (int i = 0; i < children.getLength(); i++) {
+            Node node = children.item(i);
+
+            if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(name)) {
+                Node node1 = node.getAttributes().getNamedItem(attribute);
+                if(node1 != null && value.equals(node1.getTextContent())){
+                result = (Element) node;
+                break;
+                }
             }
         }
 
