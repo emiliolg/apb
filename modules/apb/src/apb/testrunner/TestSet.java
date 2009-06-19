@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +13,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.testrunner;
+
+import java.util.List;
 
 import apb.testrunner.output.TestReport;
 
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 //
 // User: emilio
 // Date: Nov 7, 2008
@@ -41,7 +44,8 @@ public abstract class TestSet<T>
 
     //~ Methods ..............................................................................................
 
-    public abstract void execute(@NotNull TestReport report, @NotNull ClassLoader classLoader, @NotNull List<String> testGroups)
+    public abstract void execute(@NotNull TestReport report, @NotNull ClassLoader classLoader,
+                                 @NotNull List<String> testGroups)
         throws TestSetFailedException;
 
     public String getName()
@@ -54,7 +58,8 @@ public abstract class TestSet<T>
         return testClass;
     }
 
-    public void run(@NotNull ClassLoader testsClassLoader, @NotNull TestReport report, @NotNull List<String> testGroups)
+    public void run(@NotNull ClassLoader testsClassLoader, @NotNull TestReport report,
+                    @NotNull List<String> testGroups)
         throws TestSetFailedException
     {
         try {

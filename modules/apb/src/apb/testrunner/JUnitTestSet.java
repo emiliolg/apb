@@ -19,6 +19,7 @@
 package apb.testrunner;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import apb.testrunner.output.TestReport;
@@ -84,6 +85,9 @@ public final class JUnitTestSet
         if (mustRun(suiteMethod, testGroups)) {
             try {
                 return (Test) suiteMethod.invoke(null);
+            }
+            catch (InvocationTargetException e) {
+                throw new TestSetFailedException(e.getTargetException());
             }
             catch (Exception e) {
                 throw new TestSetFailedException(e);

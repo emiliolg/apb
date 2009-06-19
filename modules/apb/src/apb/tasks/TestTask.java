@@ -261,7 +261,8 @@ public class TestTask
 
             env.logWarning(FAILED_TESTS);
 
-            if (reportDir != null) {
+
+            if (reportDir != null && reportDir.exists()) {
                 env.logWarning("                 Check: %s\n", reportDir);
             }
         }

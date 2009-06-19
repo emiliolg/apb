@@ -97,6 +97,10 @@ public class SimpleReport
                               getSuiteTimeEllapsed() / ONE_SECOND);
                 printFailures(getSuiteTestFailures());
             }
+            if (showOutput) {
+                appendOutAndErr();
+                printSeparator();
+            }
         }
     }
 
@@ -116,7 +120,7 @@ public class SimpleReport
 
     @NotNull public SimpleReport init(@NotNull File dir)
     {
-        SimpleReport result = new SimpleReport(showOutput, false, fileName);
+        SimpleReport result = new SimpleReport(showOutput, showDetail, fileName);
         result.initOutput(dir);
         return result;
     }
@@ -153,7 +157,6 @@ public class SimpleReport
         }
 
         output.println();
-        appendOutAndErr();
 
         // print failures
         final List<Failure> fs = failures;
