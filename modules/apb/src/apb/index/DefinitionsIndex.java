@@ -52,7 +52,7 @@ public class DefinitionsIndex
     //~ Instance fields ......................................................................................
 
     @NotNull private final Environment            env;
-    private String[]                              excludeDirs;
+    @NotNull private final String[]               excludeDirs;
     @NotNull private final Map<File, ModulesInfo> mdir;
     @NotNull private final Collection<ModuleInfo> modules;
 
@@ -87,7 +87,7 @@ public class DefinitionsIndex
 
     @Nullable public ModuleInfo searchByDirectory(@NotNull String dir)
     {
-        for (ModuleInfo info : this) {
+        for (ModuleInfo info : modules) {
             String p = info.getContentDir().getPath();
 
             if (dir.startsWith(p)) {
@@ -102,7 +102,7 @@ public class DefinitionsIndex
     {
         List<ModuleInfo> result = new ArrayList<ModuleInfo>();
 
-        for (ModuleInfo moduleInfo : env.getDefinitionsIndex()) {
+        for (ModuleInfo moduleInfo : modules) {
             String m = moduleInfo.getName();
             int          lastDot = m.lastIndexOf('.');
             m += ".";
@@ -160,6 +160,7 @@ public class DefinitionsIndex
                 mustStore = true;
                 info = new ModulesInfo(pdir, lastModified);
                 info.loadModulesInfo(env, files);
+                env.resetJavac();
                 mdir.put(pdir, info);
             }
 

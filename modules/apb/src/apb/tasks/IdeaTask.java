@@ -108,7 +108,6 @@ public class IdeaTask
             for (TestModule testModule : mod.getModule().tests()) {
                 env.activate(testModule);
                 rewriteModule(env.getModuleHelper());
-                env.deactivate();
             }
 
             env.activate(mod.getModule());
@@ -153,9 +152,9 @@ public class IdeaTask
 
                 assignOutputFolder(module, component);
 
-                Element content = findElement(component, "content");
+                Element content = findElement(component, "content",URL_ATTRIBUTE, relativeUrl("file", module.getDirFile()));
 
-                content.setAttribute(URL_ATTRIBUTE, relativeUrl("file", module.getDirFile()));
+
 
                 removeOldElements(content, SOURCE_FOLDER);
 
@@ -166,12 +165,10 @@ public class IdeaTask
                 List<File> sources = module.getSourceDirs();
                 for (File source : sources) {
                     if(source.exists()){
-                        addSourceFolder(content, source);
-                        addExcluded(content, source);
+                        Element sourceContent = findElement(component, "content",URL_ATTRIBUTE, relativeUrl("file", source.getParentFile()));
+                        addSourceFolder(sourceContent, source);
                     }
                 }
-
-
 
 
                 rewriteDependencies(module, component);
@@ -191,24 +188,6 @@ public class IdeaTask
         if (module.getModule() instanceof ProjectDefinitions) {
             Element excludeFolder = createElement(content, EXCLUDE_FOLDER);
             excludeFolder.setAttribute(URL_ATTRIBUTE, "file://$MODULE_DIR$/");
-        }
-
-
-    }
-
-    private void addExcluded(Element content, File dirFile) {
-        File[] files = dirFile.listFiles(new FileFilter(){
-            public boolean accept(File pathname) {
-                return pathname.isDirectory();
-            }
-        });
-        for (File file : files) {
-            if(FileUtils.DEFAULT_SRC_EXCLUDES.contains(file.getName())){
-                createElement(content, EXCLUDE_FOLDER).setAttribute(URL_ATTRIBUTE, "file://"+file.getAbsolutePath());
-            }
-            else {
-                addExcluded(content, file);
-            }
         }
 
 
@@ -310,6 +289,17 @@ public class IdeaTask
 
         return element;
     }
+    private Element findElement(Element component, String name, String attribute, String value)
+    {
+        Element element = getElementByNameAndAttribute(component, name, attribute, value);
+
+        if (element == null) {
+            element = createElement(component, name);
+            element.setAttribute(attribute, value);
+        }
+
+        return element;
+    }
 
     private Element createElement(Element module, String name)
     {
@@ -374,9 +364,9 @@ public class IdeaTask
             final IdeaTask task = new IdeaTask(env);
             task.overwrite = true;
             task.execute();
-            addModuleToProject(modulesElement, env.getModuleHelper(), EMPTY_STRING_SET);
-            env.deactivate();
-            env.removeHelper(mod);
+            final ModuleHelper h = env.getModuleHelper();
+            addModuleToProject(modulesElement, h, EMPTY_STRING_SET);
+            h.remove();
             env.activate(prev);
         }
         catch (IOException e) {
@@ -478,6 +468,25 @@ public class IdeaTask
             if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(name)) {
                 result = (Element) node;
                 break;
+            }
+        }
+
+        return result;
+    }
+    private Element getElementByNameAndAttribute(Element element, String name, String attribute, String value)
+    {
+        Element  result = null;
+        NodeList children = element.getElementsByTagName(name);
+
+        for (int i = 0; i < children.getLength(); i++) {
+            Node node = children.item(i);
+
+            if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(name)) {
+                Node node1 = node.getAttributes().getNamedItem(attribute);
+                if(node1 != null && value.equals(node1.getTextContent())){
+                result = (Element) node;
+                break;
+                }
             }
         }
 

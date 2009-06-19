@@ -381,6 +381,9 @@ public class FileUtils
     public static FileOutputStream createOutputStream(File file, boolean append)
         throws FileNotFoundException
     {
+        if (!append && file.exists() && !file.canWrite() && !file.delete()){
+            throw new BuildException("Can not recreate: '"+file+"'.");
+        }
         if (!file.getParentFile().exists()) {
             file.getParentFile().mkdirs();
         }

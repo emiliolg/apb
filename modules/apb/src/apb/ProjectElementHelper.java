@@ -56,8 +56,11 @@ public abstract class ProjectElementHelper
     {
         proto = element;
         env = environment;
-        env.addHelper(this);
         executedCommands = new HashSet<Command>();
+
+        synchronized (env.getHelpers()) {
+            env.getHelpers().put(getName(), this);
+        }
     }
 
     //~ Methods ..............................................................................................
@@ -195,9 +198,7 @@ public abstract class ProjectElementHelper
                 }
             }
 
-            env.setCurrentCommand(null);
             endExecution(command, ms);
-            env.deactivate();
         }
     }
 
@@ -226,6 +227,7 @@ public abstract class ProjectElementHelper
             env.logVerbose("Execution of '%s'. Finished in %d milliseconds. Memory usage: %dM of %dM\n",
                            command, ms, total - free, total);
         }
+        env.setCurrentCommand(null);
     }
 
     private long startExecution(Command command)
@@ -253,4 +255,11 @@ public abstract class ProjectElementHelper
     //~ Static fields/initializers ...........................................................................
 
     private static final long MB = (1024 * 1024);
+
+    public void remove()
+    {
+        synchronized (env.getHelpers()) {
+            env.getHelpers().remove(getName());
+        }
+    }
 }
