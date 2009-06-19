@@ -19,14 +19,7 @@
 package apb.tasks;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -733,6 +726,11 @@ public class IdeaTask
 
             if (srcFile.exists()) {
                 library.setSources(makePath(project, srcFile));
+            }
+
+            Collection<File> fileCollection = project.getEnv().getExtClassPath();
+            for (File file : fileCollection) {
+                dependencies(localLibrary(makePath(project,file)));
             }
 
             dependencies(library);
