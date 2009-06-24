@@ -40,27 +40,14 @@ class OutputHandler
 
     private ByteArrayOutputStream errorByteStream, outputByteStream;
     private boolean               ignoreOutput;
+    private PrintStream           out, err;
     private PrintStream           prevOut, prevErr;
-    private PrintStream out, err;
 
     //~ Constructors .........................................................................................
 
     private OutputHandler() {}
 
     //~ Methods ..............................................................................................
-
-    //    public String consumeOutput()
-    //    {
-    //
-    //        if (printStream != null) {
-    //            printStream.close();
-    //            printStream = null;
-    //        }
-    //
-    //        String result = byteStream == null ? "" : byteStream.toString();
-    //        byteStream = null;
-    //        return result;
-    //    }
 
     public static synchronized OutputHandler getInstance()
     {
@@ -71,18 +58,26 @@ class OutputHandler
         return instance;
     }
 
+    public static void reset()
+    {
+        instance = null;
+    }
+
     public void restore()
     {
         if (--count <= 0) {
             count = 0;
+
             if (out != null) {
                 out.close();
                 out = null;
             }
+
             if (err != null) {
                 err.close();
                 err = null;
             }
+
             if (prevOut != null) {
                 System.setOut(prevOut);
                 prevOut = null;
@@ -92,7 +87,6 @@ class OutputHandler
                 System.setErr(prevErr);
                 prevErr = null;
             }
-
         }
     }
 
@@ -104,13 +98,24 @@ class OutputHandler
 
             if (showOutput) {
                 memoryOutput();
-            } else {
+            }
+            else {
                 nullOutput();
             }
         }
         else if (showOutput && ignoreOutput) {
             memoryOutput();
         }
+    }
+
+    public String getOutput()
+    {
+        return outputByteStream == null ? "" : outputByteStream.toString();
+    }
+
+    public String getError()
+    {
+        return errorByteStream == null ? "" : errorByteStream.toString();
     }
 
     private void memoryOutput()
@@ -134,15 +139,4 @@ class OutputHandler
     //~ Static fields/initializers ...........................................................................
 
     private static OutputHandler instance;
-
-    public String getOutput() {
-        return outputByteStream == null ? "" : outputByteStream.toString();
-    }
-    public String getError() {
-        return outputByteStream == null ? "" : outputByteStream.toString();
-    }
-
-    public static void reset() {
-        instance = null;
-    }
 }

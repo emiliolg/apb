@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
+import apb.utils.Constants;
+
 /**
  * Javadoc configuration information.
  */
@@ -236,7 +238,7 @@ public class JavadocInfo
 
     //~ Static fields/initializers ...........................................................................
 
-    public static final String DEFAULT_ENCODING = "UTF-8";
+    public static final String DEFAULT_ENCODING = Constants.UTF8;
 
     //~ Enums ................................................................................................
 

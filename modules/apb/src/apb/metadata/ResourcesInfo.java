@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,12 +13,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.metadata;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import apb.utils.Constants;
 //
 // User: emilio
 // Date: Oct 1, 2008
@@ -33,11 +38,6 @@ public class ResourcesInfo
      * The default is the source directory for the module.
      */
     @BuildProperty public String dir = "$source";
-    /**
-     * The target directory for the resources.
-     * The default is the output directory for the module.
-     */
-    @BuildProperty public String output = "$output";
 
     /**
      * The encoding used when filtering resources.
@@ -48,6 +48,12 @@ public class ResourcesInfo
      * Wheter to use filtering or not.
      */
     @BuildProperty public boolean filtering = false;
+
+    /**
+     * The target directory for the resources.
+     * The default is the output directory for the module.
+     */
+    @BuildProperty public String output = "$output";
 
     /**
      * File extensions to not apply filtering (The following extensions are always filtered: jpg, jpeg, gif, bmp, png)
@@ -114,5 +120,5 @@ public class ResourcesInfo
     public static final List<String> DEFAULT_DO_NOT_FILTER =
         Arrays.asList("jpg", "jpeg", "gif", "bmp", "png");
 
-    public static final String DEFAULT_ENCODING = "UTF-8";
+    public static final String DEFAULT_ENCODING = Constants.UTF8;
 }

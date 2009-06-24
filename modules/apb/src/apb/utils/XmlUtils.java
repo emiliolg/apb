@@ -30,6 +30,7 @@ import org.w3c.dom.Text;
 
 import static apb.utils.ClassUtils.invoke;
 import static apb.utils.ClassUtils.newInstance;
+import static apb.utils.Constants.UTF8;
 //
 // User: emilio
 // Date: Dec 19, 2008
@@ -53,7 +54,7 @@ public class XmlUtils
             //            final XMLSerializer serializer = new XMLSerializer(output, format);
             //            serializer.serialize(document);
             //
-            final Object format = newInstance(OUTPUT_FORMAT, document, "UTF-8", true);
+            final Object format = newInstance(OUTPUT_FORMAT, document, UTF8, true);
             final Object serializer = newInstance(XML_SERIALIZER, output, format);
             invoke(serializer, "serialize", document);
         }

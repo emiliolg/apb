@@ -52,6 +52,7 @@ public abstract class BaseTestReport
 
     public void startRun(int n)
     {
+        super.startRun(n);
         outputHandler = OutputHandler.getInstance();
     }
 
