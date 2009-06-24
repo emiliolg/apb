@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.tasks;
 
@@ -58,7 +60,7 @@ public class ExecTask
 
     public ExecTask(@NotNull Environment env, @NotNull String... args)
     {
-        this(env, Arrays.asList(args));
+        this(env, new ArrayList<String>(Arrays.asList(args)));
     }
 
     public ExecTask(@NotNull Environment env, @NotNull List<String> output, @NotNull List<String> cmd)
@@ -77,6 +79,18 @@ public class ExecTask
         ExecTask     task = new ExecTask(env, output, cmd);
         task.execute();
         return output;
+    }
+
+    /**
+     * Add one or more arguments to the command line to be executed
+     * @param arguments The arguments to be added
+     */
+    public void addArguments(@NotNull String... arguments)
+    {
+        for (String arg : arguments) {
+            if (arg != null)
+                cmd.add(arg);
+        }
     }
 
     public void execute()
