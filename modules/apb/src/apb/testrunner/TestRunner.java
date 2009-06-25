@@ -92,13 +92,16 @@ public class TestRunner
         report = report.init(outputDir);
         report.startRun(tests.size());
 
+        int exit = OK;
         for (TestSet<?> testSet : tests) {
-            testSet.run(testsClassLoader, report, testGroups);
+            boolean ok = testSet.run(testsClassLoader, report, testGroups);
+            if (!ok)
+                exit = ERROR;
         }
 
         report.stopRun();
 
-        return exitValue(report);
+        return exit == OK ? exitValue(report) : ERROR;
     }
 
     public int runOne(String suite, TestSetCreator<?> creator, ClassLoader testsClassLoader,

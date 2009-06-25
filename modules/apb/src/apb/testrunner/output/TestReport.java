@@ -31,7 +31,7 @@ public interface TestReport
 {
     //~ Instance fields ......................................................................................
 
-    TestReport SIMPLE = new SimpleReport(false, true);
+    TestReport SIMPLE = new SimpleReport(true, true);
     TestReport SIMPLE_TO_FILE = new SimpleReport(true, false, "test-output");
 
     TestReport SUMMARY = new SimpleReport(false, false);

@@ -50,6 +50,7 @@ import apb.testrunner.output.TestReport;
 import apb.testrunner.output.TestReportBroadcaster;
 
 import apb.utils.FileUtils;
+import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,6 +61,7 @@ import static apb.testrunner.TestRunner.worseResult;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
 import static apb.utils.StringUtils.makeString;
+import static apb.utils.StringUtils.isEmpty;
 //
 // User: emilio
 // Date: Nov 5, 2008
@@ -425,6 +427,11 @@ public class TestTask
         if (!groups.isEmpty()) {
             args.add("-g");
             args.add(groups);
+        }
+        File r = reportDir;
+        if (r != null) {
+            args.add("-o");
+            args.add(r.getPath());
         }
 
         args.add("--creator");

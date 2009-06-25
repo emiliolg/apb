@@ -58,7 +58,7 @@ public abstract class TestSet<T>
         return testClass;
     }
 
-    public void run(@NotNull ClassLoader testsClassLoader, @NotNull TestReport report,
+    public boolean run(@NotNull ClassLoader testsClassLoader, @NotNull TestReport report,
                     @NotNull List<String> testGroups)
         throws TestSetFailedException
     {
@@ -66,13 +66,15 @@ public abstract class TestSet<T>
             try {
                 report.startSuite(getName());
                 execute(report, testsClassLoader, testGroups);
+                return true;
             }
             finally {
                 report.endSuite();
             }
         }
         catch (Exception t) {
-             t.printStackTrace(System.err);
-            }
+            t.printStackTrace(System.err);
+            return false;
         }
+    }
 }

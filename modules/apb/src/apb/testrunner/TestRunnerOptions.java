@@ -78,7 +78,6 @@ class TestRunnerOptions
         creator = addOption("creator", "A class defining a creator for a test type.", "<class>");
 
         for (String testType : factory.names()) {
-            System.out.println("testType = " + testType);
             type.addValidValue(testType);
         }
     }
@@ -118,21 +117,8 @@ class TestRunnerOptions
 
     @NotNull public File getOutputDir()
     {
-        File   result = basedir;
         String out = output.getValue();
-
-        if (!isEmpty(out)) {
-            File f = new File(out);
-
-            if (f.exists() && f.isDirectory()) {
-                result = f;
-            }
-            else {
-                System.err.println("Invalid output directory: " + out);
-            }
-        }
-
-        return result;
+        return isEmpty(out) ? basedir : new File(out);
     }
 
     @NotNull public List<String> getIncludes()

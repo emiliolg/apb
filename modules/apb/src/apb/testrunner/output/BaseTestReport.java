@@ -85,6 +85,8 @@ public abstract class BaseTestReport
 
     protected File reportFile(@NotNull String suffix, @NotNull String ext)
     {
+        if (!reportsDir.exists())
+            reportsDir.mkdirs();
         return new File(reportsDir, fileName + suffix + ext);
     }
 

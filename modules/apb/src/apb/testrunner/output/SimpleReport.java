@@ -85,6 +85,9 @@ public class SimpleReport
                           getTimeEllapsed() / ONE_SECOND);
             printFailures(getTotalFailures());
         }
+        output.flush();
+        if (!fileName.isEmpty())
+            output.close();
     }
 
     public void endSuite()
@@ -99,7 +102,6 @@ public class SimpleReport
             }
             if (showOutput) {
                 appendOutAndErr();
-                printSeparator();
             }
         }
     }
@@ -128,6 +130,7 @@ public class SimpleReport
     protected void printOutput(String title, String content)
     {
         if (content != null && content.length() > 0) {
+            output.println();
             printTitle(title.equals(SYSTEM_ERR) ? "Standard Error" : "Standard Output");
             output.print(content);
             printSeparator();
@@ -192,7 +195,7 @@ public class SimpleReport
 
     private static final long serialVersionUID = 3848922421378433745L;
 
-    private static final int LINE_LENGTH = 80;
+    private static final int LINE_LENGTH = 120;
 
     //~ Inner Classes ........................................................................................
 
