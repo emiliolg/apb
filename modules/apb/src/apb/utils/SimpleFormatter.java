@@ -32,13 +32,14 @@ public class SimpleFormatter
     //~ Instance fields ......................................................................................
 
     private final Environment env;
-    private final String      ls = System.getProperty("line.separator");
+    private boolean beginOfLine;
 
     //~ Constructors .........................................................................................
 
     public SimpleFormatter(Environment env)
     {
         this.env = env;
+        beginOfLine = true;
     }
 
     //~ Methods ..............................................................................................
@@ -46,15 +47,15 @@ public class SimpleFormatter
     public String format(LogRecord record)
     {
         String str = formatMsg(record);
-
         StringBuilder result = new StringBuilder(str.length() + 3 * HEADER_LENGTH);
 
         LineSplitter splitter = new LineSplitter(str);
 
         while (splitter.nextLine()) {
-            appendHeader(result);
-            splitter.appendLine(result);
-            result.append(ls);
+            if (beginOfLine) {
+                appendHeader(result);
+            }
+            beginOfLine = splitter.appendLine(result);
         }
 
         return result.toString();
@@ -104,6 +105,7 @@ public class SimpleFormatter
     //~ Static fields/initializers ...........................................................................
 
     private static final int HEADER_LENGTH = 30;
+    private static final String      ls = System.getProperty("line.separator");
 
     //~ Inner Classes ........................................................................................
 
@@ -126,9 +128,14 @@ public class SimpleFormatter
             this.str = chars;
         }
 
-        void appendLine(StringBuilder sb)
+        boolean appendLine(StringBuilder sb)
         {
             sb.append(str, start, length);
+            // Append ls?
+            final boolean eol = nextChar > start + length;
+            if (eol)
+                sb.append(ls);
+            return eol;
         }
 
         boolean nextLine()
