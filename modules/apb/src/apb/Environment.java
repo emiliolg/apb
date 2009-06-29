@@ -777,32 +777,12 @@ public abstract class Environment
     }
 
     /**
-     * Load the projectpath list.
-     * This method must be called after construction to ensure the properties are
-     * initialized
+     * Do all initializations that needs properties already initialized
      */
-    protected void loadProjectPath()
+    protected void postInit()
     {
-        String path = System.getenv("APB_PROJECT_PATH");
-        String path2 = baseProperties.get("project.path");
-
-        if (path2 != null) {
-            path = path == null ? path2 : path + File.pathSeparator + path2;
-        }
-
-        if (path == null) {
-            path = "./project-definitions";
-        }
-
-        for (String p : path.split(File.pathSeparator)) {
-            File dir = new File(p);
-
-            if (dir.isAbsolute() && (!dir.exists() || !dir.isDirectory())) {
-                logWarning(Messages.INV_PROJECT_DIR(dir));
-            }
-
-            projectPath.add(dir);
-        }
+        loadProjectPath();
+        initProxies();
     }
 
     protected void copyProperties(Map<?, ?> p)
@@ -917,6 +897,52 @@ public abstract class Environment
         }
 
         return jars;
+    }
+
+    private void initProxies()
+    {
+        Proxy proxy = Proxy.getDefaultProxy(this);
+
+        if (proxy != null && !proxy.getHost().isEmpty()) {
+            System.setProperty("http.proxyHost", proxy.getHost());
+
+            if (proxy.getPort() > 0) {
+                System.setProperty("http.proxyPort", String.valueOf(proxy.getPort()));
+            }
+
+            if (!proxy.getNonProxyHosts().isEmpty()) {
+                System.setProperty("http.nonProxyHosts", proxy.getNonProxyHosts());
+            }
+        }
+    }
+
+    /**
+     * Load the projectpath list.
+     * This method must be called after construction to ensure the properties are
+     * initialized
+     */
+    private void loadProjectPath()
+    {
+        String path = System.getenv("APB_PROJECT_PATH");
+        String path2 = baseProperties.get("project.path");
+
+        if (path2 != null) {
+            path = path == null ? path2 : path + File.pathSeparator + path2;
+        }
+
+        if (path == null) {
+            path = "./project-definitions";
+        }
+
+        for (String p : path.split(File.pathSeparator)) {
+            File dir = new File(p);
+
+            if (dir.isAbsolute() && (!dir.exists() || !dir.isDirectory())) {
+                logWarning(Messages.INV_PROJECT_DIR(dir));
+            }
+
+            projectPath.add(dir);
+        }
     }
 
     private void loadUserProperties()

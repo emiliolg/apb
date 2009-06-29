@@ -19,6 +19,7 @@
 package apb.utils;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -67,19 +68,33 @@ public class ClassUtils
         Object   a = ClassUtils.newInstance(classLoader, "org.apache.commons.lang.BitField", 10);
         System.out.println("a.getClass() = " + a.getClass());
 
-        return findMethod(clazz, method, params).invoke(null, params);
+        return findMethod(false, clazz, method, params).invoke(null, params);
     }
 
     public static Object invoke(Object targetObject, String methodName, Object... params)
         throws NoSuchMethodException, InvocationTargetException, IllegalAccessException
     {
-        return findMethod(targetObject.getClass(), methodName, params).invoke(targetObject, params);
+        return findMethod(false, targetObject.getClass(), methodName, params).invoke(targetObject, params);
+    }
+
+    public static Object invokeNonPublic(Object targetObject, String methodName, Object... params)
+        throws NoSuchMethodException, InvocationTargetException, IllegalAccessException
+    {
+        return findMethod(true, targetObject.getClass(), methodName, params).invoke(targetObject, params);
+    }
+
+    public static Object fieldValue(Object targetObject, String fieldName)
+        throws NoSuchFieldException, IllegalAccessException
+    {
+        Field fld = targetObject.getClass().getDeclaredField(fieldName);
+        fld.setAccessible(true);
+        return fld.get(targetObject);
     }
 
     public static Object invokeStatic(Class clazz, String methodName, Object... params)
         throws NoSuchMethodException, InvocationTargetException, IllegalAccessException
     {
-        return findMethod(clazz, methodName, params).invoke(null, params);
+        return findMethod(false, clazz, methodName, params).invoke(null, params);
     }
 
     private static Constructor<?> findConstructor(Class<?> clazz, Object... params)
@@ -94,11 +109,15 @@ public class ClassUtils
         throw new NoSuchMethodException("new " + clazz.getName() + argumentTypesToString(params));
     }
 
-    private static Method findMethod(Class<?> clazz, String methodName, Object... params)
+    private static Method findMethod(boolean nonPublic, Class<?> clazz, String methodName, Object... params)
         throws NoSuchMethodException
     {
-        for (Method c : clazz.getMethods()) {
+        final Method[] methods = nonPublic ? clazz.getDeclaredMethods() : clazz.getMethods();
+        for (Method c : methods) {
             if (c.getName().equals(methodName) && match(c.getParameterTypes(), params)) {
+                if (nonPublic) {
+                    c.setAccessible(true);
+                }
                 return c;
             }
         }

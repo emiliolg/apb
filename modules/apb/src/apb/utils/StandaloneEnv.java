@@ -50,7 +50,7 @@ public class StandaloneEnv
     {
         copyProperties(properties);
         logger = createLogger(name);
-        loadProjectPath();
+        postInit();
     }
 
     //~ Methods ..............................................................................................

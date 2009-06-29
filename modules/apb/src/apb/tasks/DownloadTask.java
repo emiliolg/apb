@@ -27,12 +27,16 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 
 import apb.BuildException;
 import apb.Environment;
 
 import apb.metadata.UpdatePolicy;
 
+import apb.utils.ClassUtils;
 import apb.utils.FileUtils;
 import apb.utils.StandaloneEnv;
 import apb.utils.StringUtils;
@@ -58,6 +62,12 @@ public class DownloadTask
 
     //~ Constructors .........................................................................................
 
+    /**
+     * Construct a DownloadTask to download from a specified URL (from) to a specified local file (to)
+     * @param env The Environment
+     * @param from A URL to download from
+     * @param to The destination file to place the downloaded file
+     */
     public DownloadTask(@NotNull Environment env, @NotNull String from, @NotNull String to)
     {
         super(env);
@@ -68,28 +78,71 @@ public class DownloadTask
 
     //~ Methods ..............................................................................................
 
-    public static void main(String[] args)
-    {
-        Environment env = new StandaloneEnv();
-        env.setVerbose();
-        DownloadTask t = new DownloadTask(env, args[0], args[1]);
-        //t.execute();
-                //t = new DownloadTask(env, "ftp://mirrors.kernel.org/robots.txt", "robots.txt");
-        //t.execute();
-        t = new DownloadTask(env, "http://www.ibiblio.org/maven/ant/jars/ant-1.6.5.jar", "ant.jar");
-    t.execute();
-
-    }
-
     /**
-     * Define when
-     * @param updatePolicy
+     * Define the update policy that specified the frecuency used to check if the source has been updated
+     * <p>
+     * Examples:
+     * <table>
+     * <tr>
+     *      <td><code>UpdatePolicy.ALWAYS</code>
+     *      <td> Check every time the task is executed
+     * <tr>
+     *      <td><code>UpdatePolicy.NEVER</code>
+     *      <td> Only downloads the file if it does not exist
+     * <tr>
+     *      <td><code>UpdatePolicy.DAILY</code>
+     *      <td> Check the source if the local file is older than a day.
+     * <tr>
+     *      <td><code>UpdatePolicy.every(6)</code>
+     *      <td> Check the source every 6 hours
+     * <tr>
+     *      <td><code>UpdatePolicy.every(0.5)</code>
+     *      <td> Check the source every 30 minutes
+     * </table>
+     * </p>
+     * @param updatePolicy The update policy to be used.
      */
     public void setUpdatePolicy(@NotNull UpdatePolicy updatePolicy)
     {
         this.updatePolicy = updatePolicy;
     }
 
+    /**
+     * Set the source URL for the download
+     * @param from The URL to download the file form
+     */
+    public void setSource(@NotNull String from)
+    {
+        try {
+            source = new URL(from);
+        }
+        catch (MalformedURLException e) {
+            throw new BuildException(e);
+        }
+    }
+
+    /**
+     * Set the user when using http basic authentication
+     * @param user The username
+     */
+    public void setUser(@NotNull String user)
+    {
+        this.user = user;
+    }
+
+    /**
+     * Set the password when using http basic authentication
+     * @param password The password in cleartext.
+     */
+    public void setPassword(@NotNull String password)
+    {
+        this.password = password;
+    }
+
+    /**
+     * Set the destination file
+     * @param to The path of the destination file
+     */
     public void setDest(@NotNull String to)
     {
         dest = new File(to);
@@ -105,26 +158,9 @@ public class DownloadTask
         }
     }
 
-    public void setSource(@NotNull String from)
-    {
-        try {
-            source = new URL(from);
-        }
-        catch (MalformedURLException e) {
-            throw new BuildException(e);
-        }
-    }
-
-    public void setUser(@NotNull String user)
-    {
-        this.user = user;
-    }
-
-    public void setPassword(@NotNull String password)
-    {
-        this.password = password;
-    }
-
+    /**
+     * Execute the download task
+     */
     public void execute()
     {
         try {
@@ -141,10 +177,33 @@ public class DownloadTask
         }
         catch (UnknownHostException e) {
             env.handle("Unknown Host: " + e.getMessage());
-        }catch (IOException e) {
+        }
+        catch (IOException e) {
             env.logSevere("Error downloading '%s' to '%s'\n", source, dest);
             env.handle(e);
         }
+    }
+
+    private static long getMDTM(URLConnection connection, File file)
+        throws IOException
+    {
+        if ("FtpURLConnection".equals(connection.getClass().getSimpleName())) {
+            connection.connect();
+
+            try {
+                Object ftpClient = ClassUtils.fieldValue(connection, "ftp");
+                ClassUtils.invokeNonPublic(ftpClient, "issueCommandCheck", "MDTM " + file.getName());
+                String     result = (String) ClassUtils.invoke(ftpClient, "getResponseString");
+                DateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
+                df.setTimeZone(TimeZone.getTimeZone("GMT"));
+                return df.parse(result.substring(4, result.length() - 1)).getTime();
+            }
+            catch (Exception e) {
+                // Fallthrough and return 0
+            }
+        }
+
+        return 0;
     }
 
     private void establishAuthentication(URLConnection connection)
@@ -159,10 +218,10 @@ public class DownloadTask
     private void download(URLConnection connection)
         throws IOException
     {
-        //connect to the remote site (may take some time)
         connection.connect();
 
         //next test for a 304 result (HTTP only)
+        // See if it is an ftp connection
         if (connection instanceof HttpURLConnection) {
             // test for 401 result (HTTP only)
             if (((HttpURLConnection) connection).getResponseCode() == HTTP_UNAUTHORIZED) {
@@ -181,6 +240,7 @@ public class DownloadTask
     }
 
     private boolean uptodate(URLConnection connection)
+        throws IOException
     {
         if (env.forceBuild() || !dest.exists()) {
             return false;
@@ -202,10 +262,18 @@ public class DownloadTask
 
         //connection.setIfModifiedSince(destTime);
 
-        final long sourceTime = connection.getLastModified();
+        final long sourceTime = getSourceTime(connection);
 
         env.logVerbose("Remote file timestamp: %tc\n", sourceTime);
         return destTime >= sourceTime;
+    }
+
+    private long getSourceTime(URLConnection connection)
+        throws IOException
+    {
+        // Special hack for ftp
+        return "ftp".equalsIgnoreCase(source.getProtocol()) ? getMDTM(connection, new File(source.getFile()))
+                                                            : connection.getLastModified();
     }
 
     private void download(InputStream is, int size)
@@ -307,4 +375,14 @@ public class DownloadTask
             env.logInfo("]\n");
         }
     }
+//    public static void main(String[] args)
+//    {
+//        Environment env = new StandaloneEnv();
+//        env.setVerbose();
+//
+//        //        DownloadTask t = new DownloadTask(env, args[0], args[1]);
+//        DownloadTask        t = new DownloadTask(env, "http://www.ibiblio.org/maven/ant/jars/ant-1.6.5.jar", "ant.jar");
+//        t.execute();
+//    }
+
 }

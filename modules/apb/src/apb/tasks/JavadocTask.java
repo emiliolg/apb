@@ -407,28 +407,25 @@ public class JavadocTask
     {
         Proxy activeProxy = Proxy.getDefaultProxy(env);
 
-        if (activeProxy != null) {
+        if (activeProxy != null && !activeProxy.getHost().isEmpty()) {
             String protocol =
                     activeProxy.getProtocol().isEmpty() ? "" : activeProxy.getProtocol() + ".";
+            cmd.add("-J-D" + protocol + "proxySet=true");
+            cmd.add("-J-D" + protocol + "proxyHost=" + activeProxy.getHost());
 
-            if (!activeProxy.getHost().isEmpty()) {
-                cmd.add("-J-D" + protocol + "proxySet=true");
-                cmd.add("-J-D" + protocol + "proxyHost=" + activeProxy.getHost());
+            if (activeProxy.getPort() > 0) {
+                cmd.add("-J-D" + protocol + "proxyPort=" + activeProxy.getPort());
+            }
 
-                if (activeProxy.getPort() > 0) {
-                    cmd.add("-J-D" + protocol + "proxyPort=" + activeProxy.getPort());
-                }
+            if (!activeProxy.getNonProxyHosts().isEmpty()) {
+                cmd.add("-J-D" + protocol + "nonProxyHosts=\"" + activeProxy.getNonProxyHosts() + "\"");
+            }
 
-                if (!activeProxy.getNonProxyHosts().isEmpty()) {
-                    cmd.add("-J-D" + protocol + "nonProxyHosts=\"" + activeProxy.getNonProxyHosts() + "\"");
-                }
+            if (!activeProxy.getUsername().isEmpty()) {
+                cmd.add("-J-Dhttp.proxyUser=\"" + activeProxy.getUsername() + "\"");
 
-                if (!activeProxy.getUsername().isEmpty()) {
-                    cmd.add("-J-Dhttp.proxyUser=\"" + activeProxy.getUsername() + "\"");
-
-                    if (!activeProxy.getPassword().isEmpty()) {
-                        cmd.add("-J-Dhttp.proxyPassword=\"" + activeProxy.getPassword() + "\"");
-                    }
+                if (!activeProxy.getPassword().isEmpty()) {
+                    cmd.add("-J-Dhttp.proxyPassword=\"" + activeProxy.getPassword() + "\"");
                 }
             }
         }

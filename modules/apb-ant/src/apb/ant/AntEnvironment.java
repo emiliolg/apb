@@ -51,7 +51,7 @@ public class AntEnvironment
 
     public AntEnvironment(ApbTask task)
     {
-        loadProjectPath();
+        postInit();
         this.task = task;
         setFailOnError(true);
     }
