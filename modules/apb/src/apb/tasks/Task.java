@@ -35,8 +35,6 @@ public abstract class Task
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull protected File currentDirectory;
-
     @NotNull protected Environment env;
 
     //~ Constructors .........................................................................................
@@ -44,7 +42,6 @@ public abstract class Task
     public Task(@NotNull Environment env)
     {
         this.env = env;
-        currentDirectory = env.getBaseDir();
     }
 
     //~ Methods ..............................................................................................
@@ -147,13 +144,4 @@ public abstract class Task
         return null;
     }
 
-    public void setCurrentDirectory(@NotNull File dir)
-    {
-        currentDirectory = dir;
-    }
-
-    public void setCurrentDirectory(@NotNull String dir)
-    {
-        currentDirectory = env.fileFromBase(dir);
-    }
 }

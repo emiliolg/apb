@@ -29,9 +29,12 @@ import java.util.Map;
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
+
 import apb.metadata.Dependency;
 import apb.metadata.DependencyList;
+
 import apb.utils.FileUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -46,7 +49,8 @@ public class JavaTask
     //~ Instance fields ......................................................................................
 
     @NotNull private String                    classpath = "";
-    @NotNull private final List<String>                       cmd;
+    @NotNull private final List<String>        cmd;
+    @Nullable private File                     currentDirectory;
     @NotNull private final Map<String, String> environment;
     private boolean                            executeJar;
     private int                                exitValue;
@@ -105,6 +109,23 @@ public class JavaTask
         j.addArguments(args);
         j.setClasspath(helper);
         j.execute();
+    }
+
+    public static List<File> fileList(Environment env, DependencyList dependencies)
+    {
+        List<File> result = new ArrayList<File>();
+
+        for (Dependency dependency : dependencies) {
+            if (dependency.isLibrary()) {
+                result.addAll(dependency.asLibrary().getFiles(env));
+            }
+            else if (dependency.isModule()) {
+                final ModuleHelper module = (ModuleHelper) env.getHelper(dependency.asModule());
+                result.addAll(module.deepClassPath(false, true));
+            }
+        }
+
+        return result;
     }
 
     public void setClasspath(@NotNull DependencyList dependencies)
@@ -168,7 +189,11 @@ public class JavaTask
         args.add(jarOrClass);
         args.addAll(cmd);
         ExecTask task = new ExecTask(env, args);
-        task.setCurrentDirectory(currentDirectory);
+
+        if (currentDirectory != null) {
+            task.setCurrentDirectory(currentDirectory);
+        }
+
         task.putAll(environment);
         task.execute();
         exitValue = task.getExitValue();
@@ -189,23 +214,6 @@ public class JavaTask
         if (environmentVariables != null) {
             environment.putAll(environmentVariables);
         }
-    }
-
-    public static List<File> fileList(Environment env, DependencyList dependencies)
-    {
-        List<File> result = new ArrayList<File>();
-
-        for (Dependency dependency : dependencies) {
-            if (dependency.isLibrary()) {
-                result.addAll(dependency.asLibrary().getFiles(env));
-            }
-            else if (dependency.isModule()){
-                final ModuleHelper module = (ModuleHelper) env.getHelper(dependency.asModule());
-                result.addAll(module.deepClassPath(false, true));
-            }
-        }
-
-        return result;
     }
 
     /**
@@ -240,5 +248,10 @@ public class JavaTask
     public void setMemory(int memory)
     {
         this.memory = memory;
+    }
+
+    public void setCurrentDirectory(@NotNull File directory)
+    {
+        currentDirectory = directory;
     }
 }

@@ -43,7 +43,7 @@ public class StandaloneEnv
 
     public StandaloneEnv()
     {
-        this("", Collections.emptyMap());
+        this("default", Collections.emptyMap());
     }
 
     public StandaloneEnv(final String name, Map<?,?> properties)

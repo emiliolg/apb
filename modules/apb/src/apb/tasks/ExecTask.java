@@ -19,6 +19,7 @@
 package apb.tasks;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -43,7 +44,9 @@ public class ExecTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final List<String>        cmd;
+    @NotNull private final List<String> cmd;
+
+    @NotNull private File                      currentDirectory;
     @NotNull private final Map<String, String> environment;
     private int                                exitValue;
     @Nullable private final List<String>       output;
@@ -56,6 +59,7 @@ public class ExecTask
         this.cmd = cmd;
         output = null;
         environment = new HashMap<String, String>();
+        currentDirectory = env.getBaseDir();
     }
 
     public ExecTask(@NotNull Environment env, @NotNull String... args)
@@ -88,8 +92,9 @@ public class ExecTask
     public void addArguments(@NotNull String... arguments)
     {
         for (String arg : arguments) {
-            if (arg != null)
+            if (arg != null) {
                 cmd.add(arg);
+            }
         }
     }
 
@@ -136,6 +141,16 @@ public class ExecTask
     public int getExitValue()
     {
         return exitValue;
+    }
+
+    public void setCurrentDirectory(@NotNull File dir)
+    {
+        currentDirectory = dir;
+    }
+
+    public void setCurrentDirectory(@NotNull String dir)
+    {
+        currentDirectory = env.fileFromBase(dir);
     }
 
     private Process createProcess()
