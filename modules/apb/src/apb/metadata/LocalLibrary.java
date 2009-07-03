@@ -49,7 +49,7 @@ public class LocalLibrary
 
     protected LocalLibrary(@NotNull String path, String runtimePath, boolean optional)
     {
-        super(path);
+        super("", path, "");
         this.path = path;
         this.optional = optional;
         this.runtimePath = runtimePath;
@@ -97,10 +97,5 @@ public class LocalLibrary
         }
 
         return result;
-    }
-
-    @NotNull
-    public String getName() {
-        return path; 
     }
 }

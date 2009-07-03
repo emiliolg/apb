@@ -33,17 +33,18 @@ public class Library
 {
     //~ Instance fields ......................................................................................
 
-    protected String group;
-    protected String id;
-    protected String version;
+    protected @NotNull String group;
+    protected @NotNull String id;
+    protected @NotNull String version;
 
     //~ Constructors .........................................................................................
 
-    protected Library(@NotNull String name)
+    protected Library(@NotNull String group, @NotNull String id, @NotNull String version)
     {
-        group = "";
-        version = "";
-        id = name;
+        this.group = group;
+
+        this.version = version;
+        this.id = id;
         NameRegistry.intern(this);
     }
 
@@ -51,7 +52,7 @@ public class Library
 
     @NotNull public String getName()
     {
-        return group + "." + version + "." + id;
+        return group + ( group.isEmpty() ? "" :  ".") + version + ( version.isEmpty() ? "" :  ".") + id;
     }
 
     public String toString()

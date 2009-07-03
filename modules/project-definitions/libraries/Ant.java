@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,20 +13,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package libraries;
 
-import apb.metadata.LocalLibrary;
+import apb.metadata.RemoteLibrary;
 
 public class Ant
-    extends LocalLibrary
-{
+        extends RemoteLibrary {
+    //~ Instance fields ......................................................................................
+
     //~ Constructors .........................................................................................
 
     private Ant()
     {
-        super("../antlib/ant.jar");
+        super("org.apache.ant", "ant", "1.7.1");
+        setPath("../antlib/ant.jar");
     }
+
+    //~ Methods ..............................................................................................
 
     //~ Static fields/initializers ...........................................................................
 

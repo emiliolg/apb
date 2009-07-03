@@ -33,7 +33,7 @@ import apb.compiler.DiagnosticReporter;
 import apb.compiler.JavaC;
 
 import apb.metadata.CompileInfo;
-import apb.metadata.LocalLibrary;
+import apb.metadata.Library;
 
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
@@ -247,8 +247,7 @@ public class JavacTask
             file = removeSourceDir(file);
 
             if (file != null) {
-                File classFile =
-                    new File(targetDir, FileUtils.changeExtension(file, ".class"));
+                File classFile = new File(targetDir, FileUtils.changeExtension(file, ".class"));
 
                 if (classFile.exists()) {
                     env.logVerbose("Removing class: %s\n", classFile);
@@ -264,7 +263,7 @@ public class JavacTask
             final String d = dir.getPath();
 
             if (file.startsWith(d)) {
-                return file.substring(d.length()+1);
+                return file.substring(d.length() + 1);
             }
         }
 
@@ -299,9 +298,9 @@ public class JavacTask
         }
     }
 
-    private void addExtraLibraries(List<LocalLibrary> libraries)
+    private void addExtraLibraries(List<Library> libraries)
     {
-        for (LocalLibrary library : libraries) {
+        for (Library library : libraries) {
             extraLibraries.addAll(library.getFiles(env));
         }
     }

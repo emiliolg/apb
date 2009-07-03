@@ -612,7 +612,7 @@ public class IdeaTask
 
         // Extra Libraries
 
-        for (LocalLibrary l : module.getCompileInfo().extraLibraries()) {
+        for (Library l : module.getCompileInfo().extraLibraries()) {
             addLibrary(l, component, modulesByUrl, unusedModules);
         }
 
@@ -728,8 +728,7 @@ public class IdeaTask
                 library.setSources(makePath(project, srcFile));
             }
 
-            Collection<File> fileCollection = project.getEnv().getExtClassPath();
-            for (File file : fileCollection) {
+            for (File file : project.getEnv().getExtClassPath()) {
                 dependencies(localLibrary(makePath(project,file)));
             }
 
@@ -751,4 +750,5 @@ public class IdeaTask
             return makeRelative(project.getBasedir(), file).getPath();
         }
     }
+
 }

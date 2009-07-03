@@ -102,7 +102,7 @@ public class CompileInfo
      * Extra classpath jars
      * This is usually used for annotation processing, etc
      */
-    private final List<LocalLibrary> extraLibraries = new ArrayList<LocalLibrary>();
+    private final List<Library> extraLibraries = new ArrayList<Library>();
 
     /**
      * The list of files to compile.
@@ -132,7 +132,7 @@ public class CompileInfo
         return warnExcludes;
     }
 
-    public List<LocalLibrary> extraLibraries()
+    public List<Library> extraLibraries()
     {
         return extraLibraries;
     }
@@ -169,7 +169,7 @@ public class CompileInfo
      * This is usually used to add annotation libraries
      * @param libraries The list of libraries to add
      */
-    public void extraLibraries(LocalLibrary... libraries)
+    public void extraLibraries(Library... libraries)
     {
         extraLibraries.addAll(asList(libraries));
     }
