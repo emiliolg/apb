@@ -71,7 +71,7 @@ public class DownloadTask
     public DownloadTask(@NotNull Environment env, @NotNull String from, @NotNull String to)
     {
         super(env);
-        updatePolicy = UpdatePolicy.ALWAYS;
+        updatePolicy = UpdatePolicy.DAILY;
         setSource(from);
         setDest(to);
     }
@@ -171,7 +171,7 @@ public class DownloadTask
 
             if (!uptodate(connection)) {
                 env.logInfo("Downloading: %s\n", source);
-                env.logInfo("         to: %s\n", dest.getAbsolutePath());
+                env.logInfo("         to: %s\n", dest.getCanonicalPath());
                 download(connection);
             }
         }
