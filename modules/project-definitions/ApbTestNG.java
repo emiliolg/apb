@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-import libraries.IdeaAnnotations;
 import libraries.TestNG;
 
 public final class ApbTestNG
@@ -23,7 +22,7 @@ public final class ApbTestNG
 
     {
         description = "APB TestNG Report Executor";
-        dependencies(Apb.MODULE, IdeaAnnotations.LIB, TestNG.LIB);
+        dependencies(Apb.MODULE, TestNG.LIB);
         pkg.name = "apb-testng";
         pkg.services("apb.testrunner.TestSetCreator", "apb.testrunner.TestNGTestSetCreator");
 

@@ -40,6 +40,7 @@ import apb.metadata.TestModule;
 
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
+import static apb.utils.CollectionUtils.addIfNotNull;
 
 import org.jetbrains.annotations.NotNull;
 //
@@ -155,7 +156,7 @@ public class ModuleHelper
 
         // The classpath for libraries
         for (Library library : getLocalLibraries()) {
-            result.addAll(library.getFiles(env));
+            addIfNotNull(result, library.getArtifact(env, PackageType.JAR));
         }
 
         return result;
@@ -294,7 +295,7 @@ public class ModuleHelper
                     result.add(useJars && hlp.hasPackage() ? hlp.getPackageFile() : hlp.getOutput());
                 }
                 else if (dependency.isLibrary()) {
-                    result.addAll(dependency.asLibrary().getFiles(env));
+                    addIfNotNull(result, dependency.asLibrary().getArtifact(env, PackageType.JAR));
                 }
             }
         }

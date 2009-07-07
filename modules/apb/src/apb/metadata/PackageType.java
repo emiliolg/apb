@@ -23,7 +23,9 @@ public enum PackageType
     JAR,
     EAR,
     WAR,
-    NONE;
+    NONE,
+    SRC,
+    DOC;
 
     public String getExt()
     {

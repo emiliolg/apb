@@ -56,6 +56,7 @@ import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Sep 9, 2008
@@ -126,9 +127,7 @@ public class JarTask
                         }
                     }
                     else if (d.isLibrary()) {
-                        for (File file : d.asLibrary().getFiles(env)) {
-                            jarTask.addDir(file);
-                        }
+                        jarTask.addDir(d.asLibrary().getArtifact(env, PackageType.JAR));
                     }
                 }
             }
@@ -221,9 +220,10 @@ public class JarTask
         this.services = services;
     }
 
-    private void addDir(File file)
+    private void addDir(@Nullable File file)
     {
-        sourceDir.add(file);
+        if (file != null)
+            sourceDir.add(file);
     }
 
     private long checkJarFile()

@@ -38,7 +38,6 @@ import apb.metadata.UpdatePolicy;
 
 import apb.utils.ClassUtils;
 import apb.utils.FileUtils;
-import apb.utils.StandaloneEnv;
 import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -52,6 +51,8 @@ public class DownloadTask
     extends Task
 {
     //~ Instance fields ......................................................................................
+
+    @Nullable private URLConnection connection;
 
     @NotNull private File    dest;
     @Nullable private String password;
@@ -164,15 +165,10 @@ public class DownloadTask
     public void execute()
     {
         try {
-            //set up the URL connection
-            URLConnection connection = source.openConnection();
-
-            establishAuthentication(connection);
-
-            if (!uptodate(connection)) {
+            if (!uptodate() && createTargetDir()) {
                 env.logInfo("Downloading: %s\n", source);
                 env.logInfo("         to: %s\n", dest.getCanonicalPath());
-                download(connection);
+                download();
             }
         }
         catch (UnknownHostException e) {
@@ -184,14 +180,16 @@ public class DownloadTask
         }
     }
 
-    private static long getMDTM(URLConnection connection, File file)
+    private long getMDTM(@NotNull File file)
         throws IOException
     {
-        if ("FtpURLConnection".equals(connection.getClass().getSimpleName())) {
-            connection.connect();
+        URLConnection c = getConnection();
+
+        if ("FtpURLConnection".equals(c.getClass().getSimpleName())) {
+            c.connect();
 
             try {
-                Object ftpClient = ClassUtils.fieldValue(connection, "ftp");
+                Object ftpClient = ClassUtils.fieldValue(c, "ftp");
                 ClassUtils.invokeNonPublic(ftpClient, "issueCommandCheck", "MDTM " + file.getName());
                 String     result = (String) ClassUtils.invoke(ftpClient, "getResponseString");
                 DateFormat df = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -206,43 +204,50 @@ public class DownloadTask
         return 0;
     }
 
-    private void establishAuthentication(URLConnection connection)
-    {
-        // prepare Java 1.1 style credentials
-        if (user != null || password != null) {
-            String encoding = StringUtils.encodeBase64(user + ":" + password);
-            connection.setRequestProperty("Authorization", "Basic " + encoding);
-        }
-    }
-
-    private void download(URLConnection connection)
+    private void download()
         throws IOException
     {
-        connection.connect();
+        URLConnection c = getConnection();
+        c.connect();
 
         //next test for a 304 result (HTTP only)
         // See if it is an ftp connection
-        if (connection instanceof HttpURLConnection) {
+        if (c instanceof HttpURLConnection) {
             // test for 401 result (HTTP only)
-            if (((HttpURLConnection) connection).getResponseCode() == HTTP_UNAUTHORIZED) {
+            if (((HttpURLConnection) c).getResponseCode() == HTTP_UNAUTHORIZED) {
                 throw new BuildException("HTTP Authorization failure");
             }
         }
 
-        InputStream is = openInputStream(connection);
+        InputStream is = openInputStream(c);
 
         if (is == null) {
             env.handle("Can not download " + source + " to " + dest);
         }
         else {
-            download(is, connection.getContentLength());
+            download(is, c.getContentLength());
         }
     }
 
-    private boolean uptodate(URLConnection connection)
+    /** Ensure dest target directory exists
+     * @return true if it exists or it has been successfully created
+     */
+    private boolean createTargetDir()
+    {
+        File          dir = dest.getParentFile();
+        final boolean result = dir.exists() || dir.mkdirs();
+
+        if (!result) {
+            env.handle("Can not create: " + dir);
+        }
+
+        return result;
+    }
+
+    private boolean uptodate()
         throws IOException
     {
-        if (env.forceBuild() || !dest.exists()) {
+        if (!dest.exists() || updatePolicy.equals(UpdatePolicy.FORCE)) {
             return false;
         }
 
@@ -260,20 +265,18 @@ public class DownloadTask
             return true;
         }
 
-        //connection.setIfModifiedSince(destTime);
-
-        final long sourceTime = getSourceTime(connection);
-
-        env.logVerbose("Remote file timestamp: %tc\n", sourceTime);
-        return destTime >= sourceTime;
+        return destTime >= getSourceTime();
     }
 
-    private long getSourceTime(URLConnection connection)
+    private long getSourceTime()
         throws IOException
     {
         // Special hack for ftp
-        return "ftp".equalsIgnoreCase(source.getProtocol()) ? getMDTM(connection, new File(source.getFile()))
-                                                            : connection.getLastModified();
+        final long result =
+            "ftp".equalsIgnoreCase(source.getProtocol()) ? getMDTM(new File(source.getFile()))
+                                                         : getConnection().getLastModified();
+        env.logVerbose("Remote file timestamp: %tc\n", result);
+        return result;
     }
 
     private void download(InputStream is, int size)
@@ -311,11 +314,11 @@ public class DownloadTask
         progress.end();
     }
 
-    private InputStream openInputStream(URLConnection connection)
+    private InputStream openInputStream(URLConnection c)
     {
         for (int i = 0; i < NUMBER_RETRIES; i++) {
             try {
-                return connection.getInputStream();
+                return c.getInputStream();
             }
             catch (IOException ex) {
                 env.logWarning("Error opening connection: " + ex);
@@ -323,6 +326,27 @@ public class DownloadTask
         }
 
         return null;
+    }
+
+    @NotNull private URLConnection getConnection()
+        throws IOException
+    {
+        URLConnection c = connection;
+
+        if (c == null) {
+            //set up the URL connection
+            c = source.openConnection();
+
+            // prepare Java 1.1 style credentials
+            if (user != null || password != null) {
+                String encoding = StringUtils.encodeBase64(user + ":" + password);
+                c.setRequestProperty("Authorization", "Basic " + encoding);
+            }
+
+            connection = c;
+        }
+
+        return c;
     }
 
     //~ Static fields/initializers ...........................................................................
@@ -375,14 +399,13 @@ public class DownloadTask
             env.logInfo("]\n");
         }
     }
-//    public static void main(String[] args)
-//    {
-//        Environment env = new StandaloneEnv();
-//        env.setVerbose();
-//
-//        //        DownloadTask t = new DownloadTask(env, args[0], args[1]);
-//        DownloadTask        t = new DownloadTask(env, "http://www.ibiblio.org/maven/ant/jars/ant-1.6.5.jar", "ant.jar");
-//        t.execute();
-//    }
-
+    //    public static void main(String[] args)
+    //    {
+    //        Environment env = new StandaloneEnv();
+    //        env.setVerbose();
+    //
+    //        //        DownloadTask t = new DownloadTask(env, args[0], args[1]);
+    //        DownloadTask        t = new DownloadTask(env, "http://www.ibiblio.org/maven/ant/jars/ant-1.6.5.jar", "ant.jar");
+    //        t.execute();
+    //    }
 }

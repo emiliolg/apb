@@ -13,9 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 
-import libraries.Ant;
-import libraries.IdeaAnnotations;
-
 public final class ApbTest
     extends DefaultModule
 {
@@ -23,7 +20,6 @@ public final class ApbTest
 
     {
         description = "APB Tests extensions";
-        dependencies(IdeaAnnotations.LIB);
         pkg.name = "apb-test";
     }
 

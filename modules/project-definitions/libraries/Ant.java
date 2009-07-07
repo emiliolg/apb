@@ -29,7 +29,7 @@ public class Ant
     private Ant()
     {
         super("org.apache.ant", "ant", "1.7.1");
-        setPath("../antlib/ant.jar");
+        setTargetDir("../antlib");
     }
 
     //~ Methods ..............................................................................................

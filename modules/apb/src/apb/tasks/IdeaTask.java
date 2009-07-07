@@ -18,8 +18,18 @@
 
 package apb.tasks;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -145,9 +155,9 @@ public class IdeaTask
 
                 assignOutputFolder(module, component);
 
-                Element content = findElement(component, "content",URL_ATTRIBUTE, relativeUrl("file", module.getDirFile()));
-
-
+                Element content =
+                    findElement(component, "content", URL_ATTRIBUTE,
+                                relativeUrl("file", module.getDirFile()));
 
                 removeOldElements(content, SOURCE_FOLDER);
 
@@ -156,13 +166,15 @@ public class IdeaTask
                 addExcludeFolders(module, content);
 
                 List<File> sources = module.getSourceDirs();
+
                 for (File source : sources) {
-                    if(source.exists()){
-                        Element sourceContent = findElement(component, "content",URL_ATTRIBUTE, relativeUrl("file", source.getParentFile()));
+                    if (source.exists()) {
+                        Element sourceContent =
+                            findElement(component, "content", URL_ATTRIBUTE,
+                                        relativeUrl("file", source.getParentFile()));
                         addSourceFolder(sourceContent, source);
                     }
                 }
-
 
                 rewriteDependencies(module, component);
 
@@ -182,8 +194,6 @@ public class IdeaTask
             Element excludeFolder = createElement(content, EXCLUDE_FOLDER);
             excludeFolder.setAttribute(URL_ATTRIBUTE, "file://$MODULE_DIR$/");
         }
-
-
     }
 
     private void writeDocument(File ideaFile, Document document)
@@ -282,6 +292,7 @@ public class IdeaTask
 
         return element;
     }
+
     private Element findElement(Element component, String name, String attribute, String value)
     {
         Element element = getElementByNameAndAttribute(component, name, attribute, value);
@@ -466,6 +477,7 @@ public class IdeaTask
 
         return result;
     }
+
     private Element getElementByNameAndAttribute(Element element, String name, String attribute, String value)
     {
         Element  result = null;
@@ -476,9 +488,10 @@ public class IdeaTask
 
             if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(name)) {
                 Node node1 = node.getAttributes().getNamedItem(attribute);
-                if(node1 != null && value.equals(node1.getTextContent())){
-                result = (Element) node;
-                break;
+
+                if (node1 != null && value.equals(node1.getTextContent())) {
+                    result = (Element) node;
+                    break;
                 }
             }
         }
@@ -625,55 +638,47 @@ public class IdeaTask
     private void addLibrary(Library library, Element component, Map<String, Element> modulesByUrl,
                             Set<Element> unusedModules)
     {
-        for (File libraryFile : library.getFiles(env)) {
-            addLibrary(libraryFile, component, unusedModules, modulesByUrl, library.getSourcesFile(env));
+        File libraryFile = library.getArtifact(env, PackageType.JAR);
+
+        if (libraryFile != null) {
+            final String url = relativeUrl("jar", libraryFile) + "!/";
+
+            Element dep = modulesByUrl.get(url);
+
+            if (dep != null) {
+                unusedModules.remove(dep);
+            }
+            else {
+                dep = createElement(component, MODULE_ENTRY);
+            }
+
+            dep.setAttribute(TYPE_ATTRIBUTE, MODULE_LIBRARY_TYPE);
+
+            Element lib = getElementByName(dep, "library");
+
+            if (lib == null) {
+                lib = createElement(dep, "library");
+            }
+
+            // replace classes
+            removeOldElements(lib, LIBRARY_CLASSES_TAG);
+            Element classes = createElement(lib, LIBRARY_CLASSES_TAG);
+
+            createElement(classes, "root").setAttribute(URL_ATTRIBUTE, url);
+
+            addLibEntry(library, lib, PackageType.SRC, LIBRARY_SOURCES_TAG);
+            addLibEntry(library, lib, PackageType.DOC, LIBRARY_JAVADOC_TAG);
         }
     }
 
-    private void addLibrary(File libraryFile, Element component, Set<Element> unusedModules,
-                            Map<String, Element> modulesByUrl, final File sourceUrl)
-    {
-        final String url = relativeUrl("jar", libraryFile) + "!/";
+    private void addLibEntry(Library library, Element lib, PackageType type, String tag) {
+        final File url = library.getArtifact(env, type);
 
-        Element dep = modulesByUrl.get(url);
-
-        if (dep != null) {
-            unusedModules.remove(dep);
+        if (url != null) {
+            removeOldElements(lib, tag);
+            Element el = createElement(createElement(lib, tag), "root");
+            el.setAttribute(URL_ATTRIBUTE, relativeUrl("jar", url) + "!/");
         }
-        else {
-            dep = createElement(component, MODULE_ENTRY);
-        }
-
-        dep.setAttribute(TYPE_ATTRIBUTE, MODULE_LIBRARY_TYPE);
-
-        Element lib = getElementByName(dep, "library");
-
-        if (lib == null) {
-            lib = createElement(dep, "library");
-        }
-
-        // replace classes
-        removeOldElements(lib, LIBRARY_CLASSES_TAG);
-        Element classes = createElement(lib, LIBRARY_CLASSES_TAG);
-
-        createElement(classes, "root").setAttribute(URL_ATTRIBUTE, url);
-
-        if (sourceUrl != null) {
-            removeOldElements(lib, LIBRARY_SOURCES_TAG);
-            Element sourcesElement = createElement(lib, LIBRARY_SOURCES_TAG);
-
-            Element sourceEl = createElement(sourcesElement, "root");
-            sourceEl.setAttribute(URL_ATTRIBUTE, relativeUrl("jar", sourceUrl) + "!/");
-        }
-        //
-        //            String javaDocUrl = null;
-        //
-        //            if (javaDocUrl != null) {
-        //                removeOldElements(lib, LIBRARY_JAVADOC_TAG);
-        //                Element javadocsElement = createElement(lib, LIBRARY_JAVADOC_TAG);
-        //                Element sourceEl = createElement(javadocsElement, "root");
-        //                sourceEl.setAttribute(URL_ATTRIBUTE, javaDocUrl);
-        //            }
     }
 
     //~ Static fields/initializers ...........................................................................
@@ -703,7 +708,7 @@ public class IdeaTask
     @NonNls private static final String LIBRARY_CLASSES_TAG = "CLASSES";
     @NonNls private static final String LIBRARY_SOURCES_TAG = "SOURCES";
 
-    //    @NonNls private static final String LIBRARY_JAVADOC_TAG = "JAVADOC";
+    @NonNls private static final String LIBRARY_JAVADOC_TAG = "JAVADOC";
     @NonNls private static final String MODULE_ENTRY = "orderEntry";
     @NonNls private static final String SOURCE_FOLDER = "sourceFolder";
 
@@ -729,7 +734,7 @@ public class IdeaTask
             }
 
             for (File file : project.getEnv().getExtClassPath()) {
-                dependencies(localLibrary(makePath(project,file)));
+                dependencies(localLibrary(makePath(project, file)));
             }
 
             dependencies(library);
@@ -750,5 +755,4 @@ public class IdeaTask
             return makeRelative(project.getBasedir(), file).getPath();
         }
     }
-
 }

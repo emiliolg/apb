@@ -34,6 +34,7 @@ import java.util.TreeMap;
 import apb.compiler.InMemJavaC;
 
 import apb.index.DefinitionsIndex;
+import apb.index.ArtifactsCache;
 
 import apb.metadata.DependencyList;
 import apb.metadata.Module;
@@ -133,6 +134,7 @@ public abstract class Environment
      * Processing and messaging options
      */
     private boolean quiet, showStackTrace, verbose, nonRecursive;
+    private ArtifactsCache artifactsCache;
 
     //~ Constructors .........................................................................................
 
@@ -147,6 +149,7 @@ public abstract class Environment
         projectProperties = new TreeMap<String, String>();
 
         helpersByElement = new HashMap<String, ProjectElementHelper>();
+        artifactsCache = new ArtifactsCache(this);
 
         // Read Environment
         //        for (Map.Entry<String,String> entry : System.getenv().entrySet()) {
@@ -760,6 +763,15 @@ public abstract class Environment
         }
 
         return definitionsIndex;
+    }
+    /**
+     * Return an instance of the ArtifactsCache
+     * that contains information avoid library Artifacts.
+     * @return The ArtifactCache
+     */
+    @NotNull public ArtifactsCache getArtifactsCache()
+    {
+        return artifactsCache;
     }
 
     /**

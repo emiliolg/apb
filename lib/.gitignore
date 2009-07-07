@@ -1,2 +1,2 @@
-apb.jar
-apb-*.jar
+*.jar
+!emma.jar

@@ -19,16 +19,15 @@
 package apb.metadata;
 
 import java.io.File;
-import java.util.Collection;
 
 import apb.Environment;
-
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A class representing a Library that will be fetched from a repository
  */
-public class Library
+abstract public class Library
     implements Dependency
 {
     //~ Instance fields ......................................................................................
@@ -60,11 +59,6 @@ public class Library
         return getName();
     }
 
-    public Collection<File> getFiles(@NotNull Environment env)
-    {
-        throw new UnsupportedOperationException("getFiles");
-    }
-
     @NotNull public final Module asModule()
     {
         throw new UnsupportedOperationException();
@@ -85,10 +79,8 @@ public class Library
         return this;
     }
 
-    public File getSourcesFile(Environment env)
-    {
-        throw new UnsupportedOperationException();
-    }
+    @Nullable
+    abstract public File getArtifact(@NotNull Environment env, @NotNull PackageType type);
 
     public boolean mustInclude(boolean compile)
     {

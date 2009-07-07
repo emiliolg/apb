@@ -14,7 +14,6 @@
 // limitations under the License
 
 
-import libraries.IdeaAnnotations;
 import libraries.Junit3;
 import apb.metadata.Module;
 
@@ -25,7 +24,7 @@ public final class Apb
 
     {
         description = "APB Project Builder";
-        dependencies(IdeaAnnotations.LIB, Junit3.LIB, ApbTest.MODULE);
+        dependencies(Junit3.LIB, ApbTest.MODULE);
 
         pkg.mainClass = "apb.Main";
         pkg.name = "apb";

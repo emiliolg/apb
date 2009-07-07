@@ -19,13 +19,8 @@
 package apb.metadata;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.Collections;
 
 import apb.Environment;
-
-import apb.tasks.DownloadTask;
-import apb.tasks.Task;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,66 +35,43 @@ public class RemoteLibrary
 {
     //~ Instance fields ......................................................................................
 
-    @Nullable private File libraryFile;
-    @NotNull private String path;
+    @NotNull private String targetDir;
+    private String relativeUrl;
 
     //~ Constructors .........................................................................................
 
     protected RemoteLibrary(@NotNull String group, @NotNull String id, @NotNull String version)
     {
         super(group, id, version);
-        path =  "$libraries/" + id + ".jar";
-
-    }
-
-    public void setPath(@NotNull String path)
-    {
-        this.path = path;
+        targetDir = "$libraries";
+        relativeUrl = group.replace('.', '/') + '/' + id + '/' + version;
     }
 
     //~ Methods ..............................................................................................
 
-    public Collection<File> getFiles(@NotNull final Environment env)
+    public void setTargetDir(@NotNull String dir)
     {
-        return Collections.singleton(fileFromBase(env));
+        targetDir = dir;
     }
 
-    @Nullable public File getSourcesFile(@NotNull final Environment env)
+    @Nullable public File getArtifact(@NotNull Environment env, @NotNull PackageType type)
     {
-        return null;
-    }
+        String name = getArtifactName(type);
+        File   result = null;
 
-    @NotNull private File fileFromBase(@NotNull Environment env)
-    {
-        File target = libraryFile;
-
-        if (target == null) {
-            target = getTarget(env);
-            Task t = new DownloadTask(env, getSourceUrl(env), target.getPath());
-            t.execute();
-            libraryFile = target;
+        if (name != null) {
+            File target = env.fileFromBase(targetDir + File.separator + name);
+            result = env.getArtifactsCache().getArtifact(group, relativeUrl + "/" + name, target);
         }
 
-        return target;
+        return result;
     }
 
-    @NotNull private File getTarget(@NotNull Environment env)
+    protected String getArtifactName(PackageType type)
     {
-        return env.fileFromBase(path);
-    }
-
-    private String getSourceUrl(Environment env)
-    {
-        String repo = env.getProperty("repository." + group, "");
-
-        if (repo.isEmpty()) {
-            repo = env.getProperty("repository", DEFAULT_REPOSITORY);
-        }
-
-        return repo + '/' + group.replace('.', '/') + '/' + id + '/' + version + '/' + id + '-' + version + ".jar";
+        return type == PackageType.JAR ? id + '-' + version + ".jar" : null;
     }
 
     //~ Static fields/initializers ...........................................................................
 
-    private static String DEFAULT_REPOSITORY = "http://mirrors.ibiblio.org/pub/mirrors/maven2";
 }

@@ -29,12 +29,11 @@ import java.util.Map;
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
-
 import apb.metadata.Dependency;
 import apb.metadata.DependencyList;
-
+import apb.metadata.PackageType;
+import static apb.utils.CollectionUtils.addIfNotNull;
 import apb.utils.FileUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -117,7 +116,7 @@ public class JavaTask
 
         for (Dependency dependency : dependencies) {
             if (dependency.isLibrary()) {
-                result.addAll(dependency.asLibrary().getFiles(env));
+                addIfNotNull(result, dependency.asLibrary().getArtifact(env, PackageType.JAR));
             }
             else if (dependency.isModule()) {
                 final ModuleHelper module = (ModuleHelper) env.getHelper(dependency.asModule());

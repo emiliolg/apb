@@ -14,7 +14,6 @@
 // limitations under the License
 
 import libraries.Ant;
-import libraries.IdeaAnnotations;
 
 public final class ApbAnt
     extends DefaultModule
@@ -23,7 +22,7 @@ public final class ApbAnt
 
     {
         description = "APB Ant Tasks";
-        dependencies(Apb.MODULE, ApbTest.MODULE, IdeaAnnotations.LIB, Ant.LIB);
+        dependencies(Apb.MODULE, Ant.LIB);
 
         pkg.name = "ant-apb";
         pkg.addClassPath = true;

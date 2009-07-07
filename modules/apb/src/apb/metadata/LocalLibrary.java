@@ -16,10 +16,8 @@
 package apb.metadata;
 
 import java.io.File;
-import java.util.Collection;
 
 import apb.Environment;
-import static apb.utils.CollectionUtils.optionalSingleton;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -63,14 +61,8 @@ public class LocalLibrary
     //~ Methods ..............................................................................................
 
 
-    @NotNull public Collection<File> getFiles(@NotNull final Environment env)
-    {
-        return optionalSingleton(fileFromBase(env, path));
-    }
-
-    @Nullable public File getSourcesFile(@NotNull final Environment env)
-    {
-        return sourcesPath == null ? null : fileFromBase(env, sourcesPath);
+    @Nullable public File getArtifact(@NotNull Environment env, @NotNull PackageType type) {
+        return type == PackageType.SRC ? (sourcesPath == null ? null : fileFromBase(env, sourcesPath)) : fileFromBase(env, path);
     }
 
     public void setSources(@NotNull String sources)

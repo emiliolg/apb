@@ -99,4 +99,5 @@ public class UpdatePolicy
     public static UpdatePolicy HOURLY = every(1);
     public static UpdatePolicy ALWAYS = new UpdatePolicy(0);
     public static UpdatePolicy NEVER = new UpdatePolicy(-1);
+    public static UpdatePolicy FORCE = new UpdatePolicy(-2);
 }

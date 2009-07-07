@@ -15,19 +15,26 @@
 
 package libraries;
 
-import apb.metadata.LocalLibrary;
+import apb.metadata.RemoteLibrary;
+import apb.metadata.PackageType;
 
 public class TestNG
-    extends LocalLibrary
+    extends RemoteLibrary
 {
     //~ Constructors .........................................................................................
 
     private TestNG()
     {
-        super("../lib/testng-5.9-jdk15.jar");
+        super("org.testng", "testng", "5.9");
+        setTargetDir("../lib");
     }
 
-    //~ Static fields/initializers ...........................................................................
+    @Override
+    protected String getArtifactName(PackageType type) {
+        return type == PackageType.JAR ? id + '-' + version + "-jdk15.jar" : super.getArtifactName(type);
+
+    }
+//~ Static fields/initializers ...........................................................................
 
     public static final TestNG LIB = new TestNG();
 }

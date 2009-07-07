@@ -21,6 +21,6 @@ public class ApbAll
     //~ Instance initializers ................................................................................
 
     {
-        components(new Apb(), new ApbAnt(), new ApbInstaller() , new ApbTestNG(), new ApbTest());
+        components(new Apb(), new ApbAnt(), new ApbTestNG(), new ApbTest());
     }
 }

@@ -28,7 +28,7 @@ public class Junit3
     private Junit3()
     {
         super("junit", "junit", "3.8.2");
-        setPath("../lib/junit.jar");
+        setTargetDir("../lib");
     }
 
     //~ Static fields/initializers ...........................................................................

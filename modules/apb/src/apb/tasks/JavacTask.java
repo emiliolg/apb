@@ -28,17 +28,15 @@ import java.util.Map;
 
 import apb.Environment;
 import apb.ModuleHelper;
-
 import apb.compiler.DiagnosticReporter;
 import apb.compiler.JavaC;
-
 import apb.metadata.CompileInfo;
 import apb.metadata.Library;
-
+import apb.metadata.PackageType;
+import static apb.utils.CollectionUtils.addIfNotNull;
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
 import apb.utils.StringUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -301,7 +299,7 @@ public class JavacTask
     private void addExtraLibraries(List<Library> libraries)
     {
         for (Library library : libraries) {
-            extraLibraries.addAll(library.getFiles(env));
+            addIfNotNull(extraLibraries, library.getArtifact(env, PackageType.JAR));
         }
     }
 
