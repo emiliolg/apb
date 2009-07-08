@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 package apb.tasks;
 
@@ -222,8 +220,9 @@ public class JarTask
 
     private void addDir(@Nullable File file)
     {
-        if (file != null)
+        if (file != null) {
             sourceDir.add(file);
+        }
     }
 
     private long checkJarFile()
@@ -245,8 +244,7 @@ public class JarTask
     private void buildJar(Map<File, List<String>> files)
     {
         try {
-            env.logInfo("Building: %s\n", jarFile.getCanonicalPath());
-
+            env.logInfo("Building: %s\n", FileUtils.normalizePath(jarFile));
 
             JarOutputStream jarOutputStream = null;
 
@@ -298,6 +296,7 @@ public class JarTask
         throws IOException
     {
         FileUtils.validateDirectory(jarFile.getParentFile());
+
         if (jarFile.exists() && !jarFile.canWrite() && !jarFile.delete()) {
             throw new BuildException("Can not recreate: '" + jarFile + "'.");
         }

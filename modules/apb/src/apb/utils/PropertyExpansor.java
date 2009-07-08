@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +14,9 @@
 // limitations under the License
 //
 
-
 package apb.utils;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -300,12 +297,7 @@ public class PropertyExpansor
         private String canonize(String propertyName, String value)
         {
             // Special handling to canonize basedir
-            try {
-                return propertyName.equals(BASEDIR) ? new File(value).getCanonicalPath() : value;
-            }
-            catch (IOException e) {
-                throw new BuildException(e);
-            }
+            return propertyName.equals(BASEDIR) ? FileUtils.normalizePath(new File(value)) : value;
         }
     }
 }

@@ -12,12 +12,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
 
 package apb.metadata;
 
 import java.io.File;
 
 import apb.Environment;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -29,10 +31,10 @@ public class LocalLibrary
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull public final String   path;
+    @NotNull public final String  path;
     @Nullable public final String runtimePath;
-    private boolean optional;
-    @Nullable private String  sourcesPath;
+    private boolean               optional;
+    @Nullable private String      sourcesPath;
 
     //~ Constructors .........................................................................................
 
@@ -40,9 +42,15 @@ public class LocalLibrary
     {
         this(path, false);
     }
+
     protected LocalLibrary(@NotNull String path, String runtimePath)
     {
         this(path, runtimePath, false);
+    }
+
+    protected LocalLibrary(@NotNull String path, boolean optional)
+    {
+        this(path, null, optional);
     }
 
     protected LocalLibrary(@NotNull String path, String runtimePath, boolean optional)
@@ -54,15 +62,12 @@ public class LocalLibrary
         NameRegistry.intern(this);
     }
 
-    protected LocalLibrary(@NotNull String path, boolean optional) {
-        this(path, null, optional);
-    }
-
     //~ Methods ..............................................................................................
 
-
-    @Nullable public File getArtifact(@NotNull Environment env, @NotNull PackageType type) {
-        return type == PackageType.SRC ? (sourcesPath == null ? null : fileFromBase(env, sourcesPath)) : fileFromBase(env, path);
+    @Nullable public File getArtifact(@NotNull Environment env, @NotNull PackageType type)
+    {
+        return type == PackageType.SRC ? (sourcesPath == null ? null : fileFromBase(env, sourcesPath))
+                                       : fileFromBase(env, path);
     }
 
     public void setSources(@NotNull String sources)
@@ -70,21 +75,20 @@ public class LocalLibrary
         sourcesPath = sources;
     }
 
-    @Nullable
-    private File fileFromBase(@NotNull Environment env, @NotNull String p)
+    @Nullable private File fileFromBase(@NotNull Environment env, @NotNull String p)
     {
         final File result;
 
         final File lib = env.fileFromBase(p);
 
         if (lib.exists()) {
-            result = lib.getAbsoluteFile();
+            result = lib;
         }
         else {
             result = null;
 
             if (!optional) {
-                env.handle("Libray not found: " + lib);
+                env.handle("Library not found: " + lib);
             }
         }
 

@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb.compiler;
 
 import java.io.File;
@@ -28,6 +26,8 @@ import java.util.Set;
 import javax.tools.ForwardingJavaFileObject;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
+
+import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -50,8 +50,7 @@ public class TrackingJavaFileManager
     /**
      * The set of used path elements (jars & dirs)
      */
-    @NotNull
-    private final Set<File> usedPathElements;
+    @NotNull private final Set<File> usedPathElements;
 
     //~ Constructors .........................................................................................
 
@@ -103,7 +102,7 @@ public class TrackingJavaFileManager
         /**
          * The package name of the file object
          */
-        @NotNull final private String packageName;
+        @NotNull private final String packageName;
 
         /**
          * Creates a new instance of ForwardingJavaFileObject.
@@ -146,14 +145,7 @@ public class TrackingJavaFileManager
             String s = fileObject.toUri().getPath();
             s = s.substring(0, s.length() - fileObject.getName().length() - packageName.length() - 2);
 
-            try {
-                usedPathElements.add(new File(s).getCanonicalFile());
-            }
-            catch (IOException e) {
-                // This should not happen
-                throw new RuntimeException(e);
-            }
+            usedPathElements.add(FileUtils.normalizeFile(new File(s)));
         }
-
     }
 }

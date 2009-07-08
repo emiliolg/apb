@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +14,9 @@
 // limitations under the License
 //
 
-
 package apb.compiler;
 
 import java.io.File;
-import java.io.IOException;
 import static java.io.File.pathSeparator;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,9 +26,9 @@ import java.util.Set;
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
-import org.jetbrains.annotations.NotNull;
-
+import apb.utils.FileUtils;
 import static apb.utils.FileUtils.makePath;
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Sep 8, 2008
@@ -74,7 +71,7 @@ public class JavaC
      *@param additionalOptions Additional Options for the compiler.
      * @param trackUnusedPathElements Wheter to track unused path elements or not.   @return true if the compilation was succesful, false otherwise
      */
-    public boolean  compile(@NotNull List<File> files, @NotNull List<File> sourceDirs, @NotNull File targetDir,
+    public boolean compile(@NotNull List<File> files, @NotNull List<File> sourceDirs, @NotNull File targetDir,
                            @NotNull List<File> classPath, List<File> extraLibraries,
                            @NotNull List<String> additionalOptions, boolean trackUnusedPathElements)
     {
@@ -109,15 +106,10 @@ public class JavaC
         List<File> result = new ArrayList<File>();
 
         for (File file : classPath) {
-            try {
-                final File f = file.getCanonicalFile();
+            final File f = FileUtils.normalizeFile(file);
 
-                if (!usedPathElements.contains(f)) {
-                    result.add(f);
-                }
-            }
-            catch (IOException e) {
-                throw new RuntimeException(e);
+            if (!usedPathElements.contains(f)) {
+                result.add(f);
             }
         }
 

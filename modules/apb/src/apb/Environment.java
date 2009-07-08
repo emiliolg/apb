@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +14,13 @@
 // limitations under the License
 //
 
-
 package apb;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import static java.lang.Character.isJavaIdentifierPart;
 import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,24 +31,17 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import apb.compiler.InMemJavaC;
-
-import apb.index.DefinitionsIndex;
 import apb.index.ArtifactsCache;
-
+import apb.index.DefinitionsIndex;
 import apb.metadata.DependencyList;
 import apb.metadata.Module;
 import apb.metadata.ProjectElement;
-
 import apb.utils.FileUtils;
+import static apb.utils.FileUtils.JAVA_EXT;
 import apb.utils.PropertyExpansor;
-
+import static apb.utils.StringUtils.isEmpty;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static java.lang.Character.isJavaIdentifierPart;
-
-import static apb.utils.FileUtils.JAVA_EXT;
-import static apb.utils.StringUtils.isEmpty;
 
 /**
  * This class represents an Environment that includes common services like:
@@ -67,6 +59,7 @@ public abstract class Environment
      * The apb home directory
      */
     @NotNull private final File apbDir;
+    private ArtifactsCache      artifactsCache;
 
     /**
      * The base directory of the current project
@@ -134,7 +127,6 @@ public abstract class Environment
      * Processing and messaging options
      */
     private boolean quiet, showStackTrace, verbose, nonRecursive;
-    private ArtifactsCache artifactsCache;
 
     //~ Constructors .........................................................................................
 
@@ -313,14 +305,14 @@ public abstract class Environment
          * Return all properties. Project and base ones
          * @return all properties
          */
-         public Properties getProperties(){
-             Properties props = new Properties();
-             props.putAll(baseProperties);
-             props.putAll(projectProperties);
-             return props;
-         }
+    public Properties getProperties()
+    {
+        Properties props = new Properties();
+        props.putAll(baseProperties);
+        props.putAll(projectProperties);
+        return props;
+    }
 
-    
     /**
      * Sets the flags that marks to ignore file timestamps and build everything
      * @param b
@@ -604,7 +596,7 @@ public abstract class Environment
     @NotNull public File fileFromBase(@NotNull String name)
     {
         final File child = new File(expand(name));
-        return child.isAbsolute() ? child : new File(basedir, child.getPath());
+        return FileUtils.normalizeFile(child.isAbsolute() ? child : new File(basedir, child.getPath()));
     }
 
     /**
@@ -776,6 +768,7 @@ public abstract class Environment
 
         return definitionsIndex;
     }
+
     /**
      * Return an instance of the ArtifactsCache
      * that contains information avoid library Artifacts.

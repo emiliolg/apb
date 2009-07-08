@@ -1,3 +1,19 @@
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
 package apb.commands.idegen.idea;
 //
 // User: emilio
@@ -8,18 +24,19 @@ package apb.commands.idegen.idea;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import apb.utils.FileUtils;
+import apb.utils.NameUtils;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
-import apb.utils.NameUtils;
-import apb.utils.FileUtils;
 
 public class ModuleParser
     extends Parser
@@ -85,7 +102,7 @@ public class ModuleParser
                                       Parser parent)
         throws IOException, ParserConfigurationException, SAXException
     {
-        final String path = moduleFile.getCanonicalPath();
+        final String path = FileUtils.normalizePath(moduleFile);
         ModuleParser result = allModules.get(path);
 
         if (result == null) {
@@ -97,22 +114,28 @@ public class ModuleParser
         return result;
     }
 
-    public static void main(String[] args) throws IOException, SAXException, ParserConfigurationException {
-
+    public static void main(String[] args)
+        throws IOException, SAXException, ParserConfigurationException
+    {
         if (args.length < 1) {
             System.err.println("Must specify an \".iml\" file");
             System.exit(1);
         }
+
         File moduleFile = new File(args[0]);
+
         if (!moduleFile.exists()) {
             System.err.println("Invalid module file: " + moduleFile);
             System.exit(1);
         }
 
-        final ModuleParser parser = ModuleParser.create(moduleFile, new HashMap<String,ModuleParser>(), null);
+        final ModuleParser parser =
+            ModuleParser.create(moduleFile, new HashMap<String, ModuleParser>(), null);
+
         for (String mod : parser.getModuleNames()) {
             System.out.println("new " + NameUtils.javaIdFromId(mod) + "(),");
         }
+
         for (Library library : parser.getLibraries()) {
             for (File file : library.getPaths()) {
                 System.out.println(NameUtils.javaIdFromId(FileUtils.removeExtension(file)) + ".LIB,");
@@ -213,12 +236,7 @@ public class ModuleParser
     private void addTestOutput(File path)
     {
         if (path != null && path.exists()) {
-            try {
-                testOutputs.add(path.getCanonicalFile());
-            }
-            catch (IOException e) {
-                System.out.println(e);
-            }
+            testOutputs.add(FileUtils.normalizeFile(path));
         }
     }
 

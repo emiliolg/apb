@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb.tasks;
 
 import java.io.File;
@@ -23,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -33,19 +32,13 @@ import java.util.TimeZone;
 
 import apb.BuildException;
 import apb.Environment;
-
 import apb.metadata.UpdatePolicy;
-
 import apb.utils.ClassUtils;
 import apb.utils.FileUtils;
 import apb.utils.StringUtils;
-
+import static apb.utils.StringUtils.nChars;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
-
-import static apb.utils.StringUtils.nChars;
 
 public class DownloadTask
     extends Task
@@ -167,7 +160,7 @@ public class DownloadTask
         try {
             if (!uptodate() && createTargetDir()) {
                 env.logInfo("Downloading: %s\n", source);
-                env.logInfo("         to: %s\n", dest.getCanonicalPath());
+                env.logInfo("         to: %s\n", FileUtils.normalizePath(dest));
                 download();
             }
         }

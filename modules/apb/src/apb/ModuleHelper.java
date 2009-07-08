@@ -19,7 +19,6 @@
 package apb;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -37,11 +36,9 @@ import apb.metadata.PackageType;
 import apb.metadata.ProjectElement;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
-
+import static apb.utils.CollectionUtils.addIfNotNull;
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
-import static apb.utils.CollectionUtils.addIfNotNull;
-
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -260,12 +257,7 @@ public class ModuleHelper
         source = env.fileFromBase(module.source);
         generatedSource = env.fileFromBase(module.generatedSource);
 
-        try {
-            packageDir = env.fileFromBase(module.pkg.dir).getCanonicalFile();
-        }
-        catch (IOException e) {
-            throw new BuildException(e);
-        }
+        packageDir = FileUtils.normalizeFile(env.fileFromBase(module.pkg.dir));
 
         for (TestModule testModule : module.tests()) {
             final TestModuleHelper helper = (TestModuleHelper) env.getHelper(testModule);

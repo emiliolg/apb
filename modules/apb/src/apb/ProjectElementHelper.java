@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +14,9 @@
 // limitations under the License
 //
 
-
 package apb;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedMap;
@@ -28,6 +25,8 @@ import apb.metadata.Module;
 import apb.metadata.Project;
 import apb.metadata.ProjectElement;
 import apb.metadata.TestModule;
+
+import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -167,17 +166,19 @@ public abstract class ProjectElementHelper
         if (!result.isAbsolute()) {
             File basedir = new File(env.expand(proto.basedir));
 
-            try {
-                basedir = basedir.getCanonicalFile();
-            }
-            catch (IOException ignore) {
-                // Keep non canonized version of basedir
-            }
+            basedir = FileUtils.normalizeFile(basedir);
 
             result = new File(basedir, result.getPath());
         }
 
         return result;
+    }
+
+    public void remove()
+    {
+        synchronized (env.getHelpers()) {
+            env.getHelpers().remove(getName());
+        }
     }
 
     protected void initDependencyGraph() {}
@@ -227,6 +228,7 @@ public abstract class ProjectElementHelper
             env.logVerbose("Execution of '%s'. Finished in %d milliseconds. Memory usage: %dM of %dM\n",
                            command, ms, total - free, total);
         }
+
         env.setCurrentCommand(null);
     }
 
@@ -255,11 +257,4 @@ public abstract class ProjectElementHelper
     //~ Static fields/initializers ...........................................................................
 
     private static final long MB = (1024 * 1024);
-
-    public void remove()
-    {
-        synchronized (env.getHelpers()) {
-            env.getHelpers().remove(getName());
-        }
-    }
 }

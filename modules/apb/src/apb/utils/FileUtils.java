@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 package apb.utils;
 
@@ -381,9 +379,10 @@ public class FileUtils
     public static FileOutputStream createOutputStream(File file, boolean append)
         throws FileNotFoundException
     {
-        if (!append && file.exists() && !file.canWrite() && !file.delete()){
-            throw new BuildException("Can not recreate: '"+file+"'.");
+        if (!append && file.exists() && !file.canWrite() && !file.delete()) {
+            throw new BuildException("Can not recreate: '" + file + "'.");
         }
+
         if (!file.getParentFile().exists()) {
             file.getParentFile().mkdirs();
         }
@@ -590,6 +589,26 @@ public class FileUtils
         return urls;
     }
 
+    /**
+     * Makes file absolute and removes "." ".." segments
+     * @param file File to be normalized
+     * @return normalized file
+     */
+    public static String normalizePath(File file)
+    {
+        return normalizeFile(file).getPath();
+    }
+
+    /**
+     * Makes file absolute and removes "." ".." segments
+     * @param file File to be normalized
+     * @return normalized file
+     */
+    public static File normalizeFile(File file)
+    {
+        return new File(file.getAbsoluteFile().toURI().normalize());
+    }
+
     static boolean isSymbolicLink(File file)
         throws IOException
     {
@@ -598,19 +617,12 @@ public class FileUtils
 
     private static boolean alreadyProcesses(File f, Set<File> files)
     {
-        boolean result;
+        File canonical = normalizeFile(f);
 
-        try {
-            File canonical = f.getCanonicalFile();
+        boolean result = files.contains(canonical);
 
-            result = files.contains(canonical);
-
-            if (!result) {
-                files.add(canonical);
-            }
-        }
-        catch (IOException e) {
-            result = true;
+        if (!result) {
+            files.add(canonical);
         }
 
         return result;
@@ -670,10 +682,10 @@ public class FileUtils
 
     private static final int MB = 1024 * 1024;
 
-    public static final List<String> DEFAULT_SRC_EXCLUDES =
-            Arrays.asList(
-                          //Oracle ADE
-                          ".ade_path");
+    public static final List<String> DEFAULT_SRC_EXCLUDES = Arrays.asList(
+
+                                                                          //Oracle ADE
+                                                                          ".ade_path");
 
     public static final List<String> DEFAULT_EXCLUDES =
         Arrays.asList(
