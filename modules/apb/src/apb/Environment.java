@@ -310,6 +310,18 @@ public abstract class Environment
     }
 
     /**
+         * Return all properties. Project and base ones
+         * @return all properties
+         */
+         public Properties getProperties(){
+             Properties props = new Properties();
+             props.putAll(baseProperties);
+             props.putAll(projectProperties);
+             return props;
+         }
+
+    
+    /**
      * Sets the flags that marks to ignore file timestamps and build everything
      * @param b
      */
