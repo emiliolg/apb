@@ -645,7 +645,9 @@ public class FileUtils
                 public boolean accept(File file)
                 {
                     if (file.isDirectory()) {
-                        addAll(files, file, ext);
+                        if (file.getName().charAt(0) != '.' && !file.isHidden()) {
+                            addAll(files, file, ext);
+                        }
                     }
                     else if (ext == null || file.getName().endsWith(ext)) {
                         files.add(file);
