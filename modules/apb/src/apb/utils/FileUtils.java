@@ -606,7 +606,10 @@ public class FileUtils
      */
     public static File normalizeFile(File file)
     {
-        return new File(file.getAbsoluteFile().toURI().normalize());
+        final File normalized = new File(file.toURI().normalize());
+
+        // if already normalized, return original file;
+        return normalized.getPath().equals(file.getPath()) ? file : normalized;
     }
 
     static boolean isSymbolicLink(File file)
