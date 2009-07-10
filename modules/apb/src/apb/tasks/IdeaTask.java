@@ -677,7 +677,20 @@ public class IdeaTask
         if (url != null) {
             removeOldElements(lib, tag);
             Element el = createElement(createElement(lib, tag), "root");
-            el.setAttribute(URL_ATTRIBUTE, relativeUrl("jar", url) + "!/");
+
+	    final String protocol;
+	    final String endMarker;
+	    if (url.isDirectory()) {
+                protocol = "file";
+                endMarker = "";
+            }
+            else
+            {
+                protocol = "jar";
+                endMarker = "!/";
+            }
+
+            el.setAttribute(URL_ATTRIBUTE, relativeUrl(protocol, url) + endMarker);
         }
     }
 
