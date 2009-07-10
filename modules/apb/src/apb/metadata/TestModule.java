@@ -123,6 +123,11 @@ public class TestModule
     @BuildProperty public String workingDirectory = "$moduledir";
 
     /**
+     * Wheter the dependencies classpath is included in the system classoader.
+     */
+    public boolean classPathInSystemClassloader = false;
+
+    /**
      * Environment variables to be set when running the tests
      */
     private final Map<String, String> environment = new HashMap<String, String>();

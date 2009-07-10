@@ -140,6 +140,7 @@ public class TestTask
      * The list of test groups to execute
      */
     @NotNull private final List<String> testGroups;
+    private boolean classPathInSystemClassloader;
 
     //~ Constructors .........................................................................................
 
@@ -188,6 +189,7 @@ public class TestTask
         if (forkPerSuite || enableDebugger || isCoverageEnabled()) {
             fork = true;
         }
+	classPathInSystemClassloader = testModule.classPathInSystemClassloader;
     }
 
     //~ Methods ..............................................................................................
@@ -451,6 +453,11 @@ public class TestTask
         return java.getExitValue();
     }
 
+    public boolean isClassPathInSystemClassloader()
+    {
+        return classPathInSystemClassloader;
+    }
+
     private String runnerClassPath()
     {
         final File appJar = env.applicationJarFile();
@@ -459,6 +466,9 @@ public class TestTask
 
         if (isCoverageEnabled()) {
             path.add(new File(appJar.getParent(), "emma.jar"));
+            path.addAll(classPath);
+        }
+	else if (isClassPathInSystemClassloader()) {
             path.addAll(classPath);
         }
         else {
