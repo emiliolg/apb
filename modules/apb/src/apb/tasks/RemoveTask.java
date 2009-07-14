@@ -12,12 +12,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
 
 package apb.tasks;
 
 import java.io.File;
 
 import apb.Environment;
+
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -54,23 +56,26 @@ public class RemoveTask
 
     public void execute()
     {
-        if (file.exists()) {
-            String type = file.isDirectory() ? "directory" : "file";
+        final boolean isDirectory = file.isDirectory();
+
+        if (isDirectory || file.exists()) {
+            String type = isDirectory ? "directory" : "file";
             env.logInfo("Deleting %s %s\n", type, file.getAbsolutePath());
 
-            boolean ok = file.isDirectory() ? doRemoveDir(file) : file.delete();
+            boolean ok = isDirectory ? doRemoveDir(file) : file.delete();
 
             if (!ok) {
-                env.logWarning("Unable to delete " + type + " " + file.getAbsolutePath());
+                env.logWarning("Unable to delete " + type + ' ' + file.getAbsolutePath());
             }
         }
     }
 
     private boolean doRemoveDir(File d)
     {
-        if(FileUtils.DEFAULT_SRC_EXCLUDES.contains(d.getName())){
+        if (FileUtils.DEFAULT_SRC_EXCLUDES.contains(d.getName())) {
             return true;
         }
+
         String[] list = d.list();
 
         if (list == null) {

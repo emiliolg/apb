@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb.tasks;
 
 import java.io.File;
@@ -28,17 +26,22 @@ import java.util.Map;
 
 import apb.Environment;
 import apb.ModuleHelper;
+
 import apb.compiler.DiagnosticReporter;
 import apb.compiler.JavaC;
+
 import apb.metadata.CompileInfo;
 import apb.metadata.Library;
 import apb.metadata.PackageType;
-import static apb.utils.CollectionUtils.addIfNotNull;
+
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
 import apb.utils.StringUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.utils.CollectionUtils.addIfNotNull;
 
 //
 // User: emilio
@@ -332,7 +335,10 @@ public class JavacTask
             else {
                 File classFile = new File(targetDir, FileUtils.changeExtension(file, ".class"));
 
-                if (!classFile.exists() || (classFile.lastModified() < sourceFile.lastModified())) {
+                final long classLastModified;
+
+                if ((classLastModified = classFile.lastModified()) == 0 ||
+                        sourceFile.lastModified() > classLastModified) {
                     result.add(sourceFile);
                 }
                 else if (trackUnusedDependencies) {

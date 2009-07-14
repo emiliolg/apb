@@ -141,14 +141,12 @@ public class DownloadTask
     {
         dest = new File(to);
 
-        if (dest.exists()) {
-            if (dest.isDirectory()) {
-                throw new BuildException("The specified destination is a directory");
-            }
+        if (dest.isDirectory()) {
+            throw new BuildException("The specified destination is a directory");
+        }
 
-            if (!dest.canWrite()) {
-                throw new BuildException("Can't write to " + dest.getAbsolutePath());
-            }
+        if (!dest.canWrite() && dest.exists()) {
+            throw new BuildException("Can't write to " + dest.getAbsolutePath());
         }
     }
 

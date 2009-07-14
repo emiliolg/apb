@@ -48,7 +48,7 @@ public abstract class Parser
     protected final File sourceDir;
 
     protected final File sourceFile;
-    boolean              excludeJars = false;
+    boolean              excludeJars;
     private boolean      alreadyParsed;
     private boolean      includeSource;
     private String       name;
@@ -56,7 +56,7 @@ public abstract class Parser
 
     //~ Constructors .........................................................................................
 
-    public Parser(final File file, final Map<String, ModuleParser> allModules, Parser parent)
+    protected Parser(final File file, final Map<String, ModuleParser> allModules, Parser parent)
         throws IOException
     {
         this.parent = parent;

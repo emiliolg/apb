@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 package apb.utils;
 
@@ -55,11 +53,11 @@ public class DirectoryScanner
         this.excludes = StringUtils.normalizePaths(excludes);
         this.excludes.addAll(StringUtils.normalizePaths(FileUtils.DEFAULT_EXCLUDES));
 
-        if (!baseDir.exists()) {
-            throw new IllegalStateException("baseDir " + baseDir + " does not exist");
-        }
-
         if (!baseDir.isDirectory()) {
+            if (!baseDir.exists()) {
+                throw new IllegalStateException("baseDir " + baseDir + " does not exist");
+            }
+
             throw new IllegalStateException("baseDir " + baseDir + " is not a directory");
         }
     }
@@ -148,7 +146,7 @@ public class DirectoryScanner
         }
     }
 
-    private List<String> filterSymbolicLinks(File dir, String relativePath, final List<String> files)
+    private static List<String> filterSymbolicLinks(File dir, String relativePath, final List<String> files)
         throws IOException
     {
         List<String> result = new ArrayList<String>();
@@ -162,12 +160,9 @@ public class DirectoryScanner
         return result;
     }
 
-    private List<String> listFiles(File dir)
+    private static List<String> listFiles(File dir)
     {
         final String[] fs = dir.list();
         return fs == null ? Collections.<String>emptyList() : Arrays.asList(fs);
     }
-
-    //~ Static fields/initializers ...........................................................................
-
 }

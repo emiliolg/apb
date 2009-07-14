@@ -90,7 +90,7 @@ public class ModuleParser
 
         File mDir = new File(firstCandidate);
 
-        if (mDir.exists() && mDir.isDirectory()) {
+        if (mDir.isDirectory()) {
             File c2 = new File(mDir.getParent(), ALTERNATIVE_MODULES_DIR);
             candidates.add(c2.getPath() + File.separator);
         }
@@ -129,8 +129,7 @@ public class ModuleParser
             System.exit(1);
         }
 
-        final ModuleParser parser =
-            ModuleParser.create(moduleFile, new HashMap<String, ModuleParser>(), null);
+        final ModuleParser parser = create(moduleFile, new HashMap<String, ModuleParser>(), null);
 
         for (String mod : parser.getModuleNames()) {
             System.out.println("new " + NameUtils.javaIdFromId(mod) + "(),");
@@ -226,6 +225,23 @@ public class ModuleParser
         return true;
     }
 
+    private static File buildModuleFile(String moduleName, String moduleDir)
+    {
+        final String iml = moduleName + MODULE_EXT;
+
+        for (;;) {
+            File result = new File(moduleDir + moduleName, iml);
+            int  dot = moduleName.indexOf('.');
+
+            if (dot == -1 || result.exists()) {
+                return result;
+            }
+
+            moduleDir += moduleName.substring(0, dot) + File.separator;
+            moduleName = moduleName.substring(dot + 1);
+        }
+    }
+
     private void addOutput(File path)
     {
         if (path != null) {
@@ -254,23 +270,6 @@ public class ModuleParser
         }
 
         return result;
-    }
-
-    private File buildModuleFile(String moduleName, String moduleDir)
-    {
-        final String iml = moduleName + MODULE_EXT;
-
-        for (;;) {
-            File result = new File(moduleDir + moduleName, iml);
-            int  dot = moduleName.indexOf('.');
-
-            if (dot == -1 || result.exists()) {
-                return result;
-            }
-
-            moduleDir += moduleName.substring(0, dot) + File.separator;
-            moduleName = moduleName.substring(dot + 1);
-        }
     }
 
     private void checkEndLibraryTag(String localName)

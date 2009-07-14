@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb.tasks;
 
 import java.io.File;
@@ -23,9 +21,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apb.Environment;
-import static apb.utils.FileUtils.lastModified;
-import org.jetbrains.annotations.NotNull;
 
+import apb.utils.FileUtils;
+
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This task allow the invocation of the XML Binding Compiler (xjc)
@@ -89,10 +88,10 @@ public class XjcTask
     public void execute()
     {
         final File schemaFile = env.fileFromSource(schema);
+
         if (!schemaFile.exists()) {
             env.handle("Non existent schema: " + schemaFile);
         }
-
 
         final File targetDir = env.fileFromGeneratedSource(targetPackage.replace('.', '/'));
 
@@ -103,14 +102,10 @@ public class XjcTask
 
     private boolean mustBuild(@NotNull final File targetDir, @NotNull final File schemaFile)
     {
-        boolean result = env.forceBuild() || !targetDir.exists();
+        final long ts;
 
-        if (!result) {
-            final long ts = targetDir.lastModified();
-            result = schemaFile.lastModified() > ts || lastModified(externalBindings) > ts;
-        }
-
-        return result;
+        return env.forceBuild() || (ts = targetDir.lastModified()) == 0 || schemaFile.lastModified() > ts ||
+               FileUtils.uptodate(externalBindings, ts);
     }
 
     private void execute(@NotNull final File targetDir, @NotNull final File schemaFile)
@@ -124,9 +119,11 @@ public class XjcTask
         }
 
         env.logInfo("Processing: %s", schemaFile);
+
         if (!env.isVerbose()) {
             command.addArguments("-quiet");
         }
+
         command.addArguments("-d", env.getModuleHelper().getGeneratedSource().getPath());
 
         if (!targetPackage.isEmpty()) {

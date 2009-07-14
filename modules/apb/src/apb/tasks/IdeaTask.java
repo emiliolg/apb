@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 package apb.tasks;
 
@@ -204,7 +202,9 @@ public class IdeaTask
 
     private boolean mustBuild(ProjectElementHelper module, File ideaFile)
     {
-        return overwrite || !ideaFile.exists() || ideaFile.lastModified() < module.lastModified();
+        final long ideaLastMod;
+        return overwrite || (ideaLastMod = ideaFile.lastModified()) == 0 ||
+               module.lastModified() > ideaLastMod;
     }
 
     private void rewriteProject()
@@ -334,7 +334,7 @@ public class IdeaTask
             DocumentBuilder reader = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             InputStream     is;
 
-            if (ideaFile.exists() && !overwrite) {
+            if (!overwrite && ideaFile.exists()) {
                 is = new FileInputStream(ideaFile);
             }
             else if (templateDir != null && templateDir.exists()) {
@@ -671,21 +671,22 @@ public class IdeaTask
         }
     }
 
-    private void addLibEntry(Library library, Element lib, PackageType type, String tag) {
+    private void addLibEntry(Library library, Element lib, PackageType type, String tag)
+    {
         final File url = library.getArtifact(env, type);
 
         if (url != null) {
             removeOldElements(lib, tag);
             Element el = createElement(createElement(lib, tag), "root");
 
-	    final String protocol;
-	    final String endMarker;
-	    if (url.isDirectory()) {
+            final String protocol;
+            final String endMarker;
+
+            if (url.isDirectory()) {
                 protocol = "file";
                 endMarker = "";
             }
-            else
-            {
+            else {
                 protocol = "jar";
                 endMarker = "!/";
             }

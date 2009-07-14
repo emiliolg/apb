@@ -954,7 +954,7 @@ public abstract class Environment
         for (String p : path.split(File.pathSeparator)) {
             File dir = new File(p);
 
-            if (dir.isAbsolute() && (!dir.exists() || !dir.isDirectory())) {
+            if (dir.isAbsolute() && !dir.isDirectory()) {
                 logWarning(Messages.INV_PROJECT_DIR(dir));
             }
 
@@ -966,13 +966,13 @@ public abstract class Environment
     {
         File propFile = new File(apbDir, APB_PROPERTIES);
 
-        if (propFile.exists()) {
-            try {
-                Properties p = new Properties();
-                p.load(new FileReader(propFile));
-                copyProperties(p);
-            }
-            catch (IOException ignore) {}
+        try {
+            Properties p = new Properties();
+            p.load(new FileReader(propFile));
+            copyProperties(p);
+        }
+        catch (IOException ignore) {
+            // Ignore
         }
     }
 

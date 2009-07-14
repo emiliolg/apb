@@ -130,7 +130,9 @@ public class FileUtils
 
             File target = new File(targetPrefix + changeExtension(path.substring(prefixLen), targetExt));
 
-            if (!target.exists() || target.lastModified() < file.lastModified()) {
+            final long targetMod;
+
+            if ((targetMod = target.lastModified()) == 0 || file.lastModified() > targetMod) {
                 result.add(file);
             }
         }
@@ -383,8 +385,10 @@ public class FileUtils
             throw new BuildException("Can not recreate: '" + file + "'.");
         }
 
-        if (!file.getParentFile().exists()) {
-            file.getParentFile().mkdirs();
+        final File parentFile = file.getParentFile();
+
+        if (!parentFile.exists()) {
+            parentFile.mkdirs();
         }
 
         return new FileOutputStream(file, append);
@@ -399,8 +403,10 @@ public class FileUtils
     public static FileWriter createWriter(File file)
         throws IOException
     {
-        if (!file.getParentFile().exists()) {
-            file.getParentFile().mkdirs();
+        final File parentFile = file.getParentFile();
+
+        if (!parentFile.exists()) {
+            parentFile.mkdirs();
         }
 
         return new FileWriter(file);
@@ -429,12 +435,14 @@ public class FileUtils
 
     public static void validateDirectory(File dir)
     {
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new BuildException("Cannot create directory: " + dir);
-        }
-
         if (!dir.isDirectory()) {
-            throw new BuildException(dir + " is not a directory.");
+            if (dir.exists()) {
+                throw new BuildException(dir + " is not a directory.");
+            }
+
+            if (!dir.mkdirs()) {
+                throw new BuildException("Cannot create directory: " + dir);
+            }
         }
     }
 
@@ -541,18 +549,9 @@ public class FileUtils
 
     public static String findCmdInDir(@NotNull File dir, @NotNull String javaCmd)
     {
-        dir = new File(dir, "bin");
-        String result = null;
+        final File java = new File(new File(dir, "bin"), javaCmd);
 
-        if (dir.exists()) {
-            File java = new File(dir, javaCmd);
-
-            if (java.exists()) {
-                result = java.getPath();
-            }
-        }
-
-        return result;
+        return java.exists() ? java.getPath() : null;
     }
 
     /**
@@ -569,6 +568,23 @@ public class FileUtils
         }
 
         return result;
+    }
+
+    /**
+     * Returns true if any of the files is newer than <code>targetTime</code>
+     * @param files to iterate
+     * @param targetTime threshold modification time
+     * @return <code>true</code> is any file newer than <code>targetTime</code>, <code>false</code> otherwise
+     */
+    public static boolean uptodate(Iterable<File> files, long targetTime)
+    {
+        for (File file : files) {
+            if (file.lastModified() > targetTime) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static String getCurrentWorkingDirectory()
