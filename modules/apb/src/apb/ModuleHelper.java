@@ -36,10 +36,13 @@ import apb.metadata.PackageType;
 import apb.metadata.ProjectElement;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
-import static apb.utils.CollectionUtils.addIfNotNull;
+
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
+
 import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.CollectionUtils.addIfNotNull;
 //
 // User: emilio
 // Date: Sep 15, 2008
@@ -89,6 +92,11 @@ public class ModuleHelper
         return (Module) getElement();
     }
 
+    /**
+     * Get current module output directory
+     * @return current module output directory
+     * @throws IllegalStateException If there is no current module
+     */
     @NotNull public File getOutput()
     {
         if (output == null) {
@@ -334,6 +342,7 @@ public class ModuleHelper
     private void tsort(List<ModuleHelper> elements, IdentitySet<ModuleHelper> visited)
     {
         visited.add(this);
+
         for (ModuleHelper dependency : directDependencies) {
             if (!visited.contains(dependency)) {
                 dependency.tsort(elements, visited);

@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +15,13 @@
 // limitations under the License
 //
 
+
 package apb;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import static java.lang.Character.isJavaIdentifierPart;
 import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,17 +32,24 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import apb.compiler.InMemJavaC;
+
 import apb.index.ArtifactsCache;
 import apb.index.DefinitionsIndex;
+
 import apb.metadata.DependencyList;
 import apb.metadata.Module;
 import apb.metadata.ProjectElement;
+
 import apb.utils.FileUtils;
-import static apb.utils.FileUtils.JAVA_EXT;
 import apb.utils.PropertyExpansor;
-import static apb.utils.StringUtils.isEmpty;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static java.lang.Character.isJavaIdentifierPart;
+
+import static apb.utils.FileUtils.JAVA_EXT;
+import static apb.utils.StringUtils.isEmpty;
 
 /**
  * This class represents an Environment that includes common services like:
@@ -155,6 +163,9 @@ public abstract class Environment
         extClassPath = loadExtensionsPath(baseProperties);
         resetJavac();
         projectPath = new LinkedHashSet<File>();
+
+        // Assign the singleton
+        environment = this;
     }
 
     //~ Methods ..............................................................................................
@@ -212,6 +223,19 @@ public abstract class Environment
     public abstract void logVerbose(String msg, Object... args);
 
     /**
+     * Get an instance of the current Environment
+     * @return An instance of the current Environment
+     */
+    @NotNull public static Environment getInstance()
+    {
+        if (environment == null) {
+            throw new IllegalStateException("Environment not initialized");
+        }
+
+        return environment;
+    }
+
+    /**
      * Get the Extension Jars to be searched when we compile definitions
      * @return the extension Jars to be searched when we compiled definitions
      */
@@ -232,7 +256,21 @@ public abstract class Environment
      */
     public long sourceLastModified(@NotNull Class clazz)
     {
-        return javac == null ? 0 : javac.sourceLastModified(clazz);
+        File f = sourceFile(clazz);
+        return f == null ? 0 : f.lastModified();
+    }
+
+    /**
+     * Returns the source file correspondong to this class
+     *
+     * @param clazz The class whose source file we want
+     *
+     * @return  A <code>File</code>  corresponding to the source file of this class
+     *          or <code>null</code> if the file does not exist or if an error occurs
+     */
+    @Nullable public File sourceFile(@NotNull Class clazz)
+    {
+        return javac == null ? null : javac.sourceFile(clazz);
     }
 
     /**
@@ -419,6 +457,7 @@ public abstract class Environment
     /**
      * Get the base directory of the current Module
      * @return the base directory of the current Module
+     * @throws IllegalStateException If there is no current module
      */
     @NotNull public File getBaseDir()
     {
@@ -427,6 +466,16 @@ public abstract class Environment
         }
 
         return basedir;
+    }
+
+    /**
+     * Get current module output directory
+     * @return current module output directory
+     * @throws IllegalStateException If there is no current module
+     */
+    @NotNull public File getOutputDir()
+    {
+        return getModuleHelper().getOutput();
     }
 
     /**
@@ -977,6 +1026,12 @@ public abstract class Environment
     }
 
     //~ Static fields/initializers ...........................................................................
+
+    /**
+     * A singleton to simplify Task invocations from the Module files
+     * (May be in the future this should be a ThreadLocal...)
+     */
+    @Nullable private static Environment environment;
 
     private static final String JAR_FILE_URL_PREFIX = "jar:file:";
 

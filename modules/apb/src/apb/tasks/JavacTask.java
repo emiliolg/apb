@@ -26,19 +26,26 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import apb.BuildException;
 import apb.Environment;
 import apb.ModuleHelper;
+
 import apb.compiler.DiagnosticReporter;
 import apb.compiler.JavaC;
+
 import apb.metadata.CompileInfo;
 import apb.metadata.Library;
 import apb.metadata.PackageType;
-import static apb.utils.CollectionUtils.addIfNotNull;
+
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
-import apb.utils.StringUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.utils.CollectionUtils.addIfNotNull;
+import static apb.utils.FileUtils.makePath;
+import static apb.utils.StringUtils.appendIndenting;
 
 //
 // User: emilio
@@ -120,7 +127,13 @@ public class JavacTask
             javac.reporter.setExcludes(info.warnExcludes());
         }
 
-        javac.execute();
+        try {
+            javac.execute();
+        }
+        catch (UnusedLibrariesException e) {
+            e.setModule(module);
+            throw e;
+        }
     }
 
     public void execute()
@@ -219,8 +232,7 @@ public class JavacTask
                 final List<File> unused = jc.unusedPathElements(classPath);
 
                 if (!unused.isEmpty()) {
-                    env.handle(StringUtils.appendIndenting("Unused path elements: ",
-                                                           FileUtils.makePath(unused, "\n")));
+                    throw new UnusedLibrariesException(unused);
                 }
             }
         }
@@ -346,5 +358,38 @@ public class JavacTask
     private void classPathAddAll(List<File> files)
     {
         classPath.addAll(files);
+    }
+
+    //~ Inner Classes ........................................................................................
+
+    static class UnusedLibrariesException
+        extends BuildException
+    {
+        @NotNull private List<File> libraries;
+        @Nullable private String    moduleName;
+
+        public UnusedLibrariesException(@NotNull List<File> unused)
+        {
+            libraries = unused;
+        }
+
+        @Override public String getMessage()
+        {
+            String msgHeader = "Unused Dependencies";
+
+            if (moduleName != null) {
+                msgHeader += " (Module: " + moduleName + ")";
+            }
+
+            msgHeader += ": ";
+            return appendIndenting(msgHeader, makePath(libraries, "\n"));
+        }
+
+        public void setModule(ModuleHelper module)
+        {
+            moduleName = module.getName();
+        }
+
+        private static final long serialVersionUID = -8622820733815646515L;
     }
 }

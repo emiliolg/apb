@@ -1,26 +1,49 @@
-
 # ============================================================================
 # Unix startup script for apb (A Project Builder)
 # ============================================================================
 #
-linux=false
-cygwin=false
-darwin=false
+
+#
+# This function will find the real file following symbolic links if necessary
+#
+function followLinks()
+{
+	local result=$1
+	while [ -L "$result" ]
+	do
+	    # if it is a link follow it
+
+	    local tmp=$(expr "$(/bin/ls -l "$result")" : ".*$result -> \(.*\)")
+
+	    # Now check if it is an absolute reference. If not prepends the original directory
+	    if expr "$tmp" : / > /dev/null
+	    then
+		result="$tmp"
+	    else
+		result="$(dirname $result)/$tmp"
+	    fi
+	done
+	echo $result
+}
+
+# find the real home directory of APB so you can create symbolic links to it
+
+APB_HOME=$(dirname $(followLinks $(type -p $0)))/..
+APB_JAR=$APB_HOME/lib/apb.jar
+
+# fix path under cygnus
 
 case "$OSTYPE" in
-  linux*)  linux=true ;;
-  cygwin*) cygwin=true ;;
-  darwin*) darwin=true ;;
+  cygwin*) APB_JAR=$(cygpath --windows "$APB_JAR");;
 esac
 
-# Under Cygwin, JVM doesn't support unix paths. Must be translated to windows style paths.
-if $cygwin; then
-   ospath() { cygpath --windows "$1"; }
-else
-   ospath() { echo "$1"; }
+#
+# setup memory for java
+#
+if [ -z $APB_MEMORY ]
+then
+	APB_MEMORY="-Xmx256m"
 fi
+# launch APB
 
-DIRLIB=$(dirname $(type -p $0))/../lib
-
-
-java -Xmx256m -jar $(ospath "$DIRLIB/apb.jar") $*
+java $APB_MEMORY -jar $APB_JAR $*

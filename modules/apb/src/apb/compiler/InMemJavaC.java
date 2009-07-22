@@ -22,17 +22,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import static java.io.File.pathSeparator;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
-import static java.util.Collections.singleton;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.net.URLClassLoader;
-import java.net.URL;
-import java.net.MalformedURLException;
+
 import javax.tools.FileObject;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -40,10 +39,15 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
 import apb.Environment;
-import apb.utils.StandaloneEnv;
+
 import apb.utils.FileUtils;
+import apb.utils.StandaloneEnv;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static java.io.File.pathSeparator;
+import static java.util.Collections.singleton;
 
 /**
  * A class that allows invoking 'javac' and generating an 'in-memory' representation
@@ -67,11 +71,14 @@ public class InMemJavaC
      * Creates the Compiler
      * @param environment
      */
-    public InMemJavaC(@NotNull Environment environment) throws MalformedURLException {
+    public InMemJavaC(@NotNull Environment environment)
+        throws MalformedURLException
+    {
         env = environment;
         compiler = ToolProvider.getSystemJavaCompiler();
-        memoryClassLoader = new MemoryClassLoader(FileUtils.toUrl(environment.getExtClassPath()),
-                getClass().getClassLoader());
+        memoryClassLoader =
+            new MemoryClassLoader(FileUtils.toUrl(environment.getExtClassPath()),
+                                  getClass().getClassLoader());
 
         fileManager = new MemoryJavaFileManager(compiler, memoryClassLoader);
         classesByFile = new HashMap<File, Class>();
@@ -84,7 +91,8 @@ public class InMemJavaC
      * Mainly a test method.
      */
     public static void main(String[] args)
-            throws ClassNotFoundException, MalformedURLException {
+        throws ClassNotFoundException, MalformedURLException
+    {
         if (args.length < 1) {
             System.err.println("Usage: InMemJavac file arguments...");
             System.exit(0);
@@ -104,10 +112,10 @@ public class InMemJavaC
         invokeMain(javac.compileToClass(null, source), args);
     }
 
-    public long sourceLastModified(@NotNull Class clazz)
+    @Nullable public File sourceFile(@NotNull Class clazz)
     {
         return memoryClassLoader.equals(clazz.getClassLoader())
-               ? memoryClassLoader.sourceLastModified(clazz.getName()) : 0;
+               ? memoryClassLoader.sourceFile(clazz.getName()) : null;
     }
 
     /**
@@ -121,10 +129,13 @@ public class InMemJavaC
         throws ClassNotFoundException
     {
         String className = memoryClassLoader.classNameFromSource(source);
-        if (className != null)
+
+        if (className != null) {
             return memoryClassLoader.loadClass(className);
+        }
 
         List<String> options = new ArrayList<String>();
+
         // Set the options apropiately
         // Sourcepath
         if (sourcePath != null) {
@@ -133,11 +144,11 @@ public class InMemJavaC
         }
 
         String extClassPath = FileUtils.makePath(env.getExtClassPath());
+
         if (!extClassPath.isEmpty()) {
             options.add("-classpath");
             options.add(System.getProperty("java.class.path") + pathSeparator + extClassPath);
         }
-
 
         // Get the compilation task and invoke it
         boolean result =
@@ -219,11 +230,16 @@ public class InMemJavaC
             lastModified = fileObject.getLastModified();
         }
 
+        @Override public long getLastModified()
+        {
+            return lastModified;
+        }
+
         public OutputStream openOutputStream()
             throws IOException
         {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            memoryClassLoader.addClass(className, outputStream, lastModified);
+            memoryClassLoader.addClass(className, new ClassInfo(this, outputStream));
             return outputStream;
         }
     }
@@ -234,17 +250,27 @@ public class InMemJavaC
     private static class ClassInfo
     {
         private ByteArrayOutputStream bytes;
-        private long                  lastModified;
+        private MemoryJavaOutput      file;
 
-        public ClassInfo(ByteArrayOutputStream outputStream, long lastModified)
+        public ClassInfo(MemoryJavaOutput fileObject, ByteArrayOutputStream outputStream)
         {
             bytes = outputStream;
-            this.lastModified = lastModified;
+            file = fileObject;
         }
 
         public byte[] getBytes()
         {
             return bytes.toByteArray();
+        }
+
+        public String getPath()
+        {
+            return file.getName();
+        }
+
+        @Override public String toString()
+        {
+            return getPath();
         }
     }
 
@@ -262,13 +288,18 @@ public class InMemJavaC
             classMap = new HashMap<String, ClassInfo>();
         }
 
+        public void addClass(String name, ClassInfo classInfo)
+        {
+            classMap.put(name, classInfo);
+        }
+
         protected Class<?> findClass(String className)
             throws ClassNotFoundException
         {
             ClassInfo classInfo = classMap.get(className);
 
             if (classInfo == null) {
-                return  super.findClass(className);
+                return super.findClass(className);
             }
 
             final byte[] bytes = classInfo.getBytes();
@@ -285,46 +316,54 @@ public class InMemJavaC
             throws ClassNotFoundException
         {
             String className = classNameFromSource(source);
-            if (className == null)
+
+            if (className == null) {
                 throw new ClassNotFoundException(source.getPath());
+            }
+
             return loadClass(className);
         }
+
         /**
          * Return the class name that corresponds to a given source file
          * @param source The source file
          * @return The classname that corresponds to the source file or null if the class was not found
          */
-        @Nullable
-        String classNameFromSource(@NotNull File source)
+        @Nullable String classNameFromSource(@NotNull File source)
             throws ClassNotFoundException
         {
             String path = source.getPath();
-            int    lastDot = path.lastIndexOf('.');
 
-            if (lastDot != -1) {
-                path = path.substring(0, lastDot);
-            }
-
-            path = path.replace(File.separatorChar, '.');
-
-            for (String className : classMap.keySet()) {
-                if (path.endsWith(className)) {
-                    return className;
+            for (Map.Entry<String, ClassInfo> entry : classMap.entrySet()) {
+                if (path.equals(entry.getValue().getPath())) {
+                    return entry.getKey();
                 }
             }
 
             return null;
+                   //
+                   //TODO Check that further comparison is not necessary....
+
+            //            int    lastDot = path.lastIndexOf('.');
+            //
+            //            if (lastDot != -1) {
+            //                path = path.substring(0, lastDot);
+            //            }
+            //
+            //            path = path.replace(File.separatorChar, '.');
+            //
+            //            for (String className : classMap.keySet()) {
+            //                if (path.endsWith(className)) {
+            //                    return className;
+            //                }
+            //            }
+            //
         }
 
-        void addClass(final String name, ByteArrayOutputStream outputStream, final long lastModified)
-        {
-            classMap.put(name, new ClassInfo(outputStream, lastModified));
-        }
-
-        long sourceLastModified(String className)
+        @Nullable File sourceFile(String className)
         {
             ClassInfo classInfo = classMap.get(className);
-            return classInfo == null ? 0 : classInfo.lastModified;
+            return classInfo == null ? null : new File(classInfo.getPath());
         }
     }
 

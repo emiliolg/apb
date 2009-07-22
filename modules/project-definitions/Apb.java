@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,14 +13,21 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
 
+
+
+import apb.metadata.Module;
 
 import libraries.Junit3;
-import apb.metadata.Module;
 
 public final class Apb
     extends DefaultModule
 {
+    //~ Static fields/initializers ...........................................................................
+
+    public static final Module MODULE = new Apb();
+
     //~ Instance initializers ................................................................................
 
     {
@@ -31,13 +39,14 @@ public final class Apb
         pkg.addClassPath = true;
         pkg.generateSourcesJar = true;
         pkg.services("apb.Command", "apb.commands.idegen.Idea", "apb.commands.idegen.Eclipse");
+        pkg.services("apb.Command", "apb.commands.module.Clone");
         pkg.services("apb.testrunner.TestSetCreator", "apb.testrunner.JunitTestSetCreator");
 
         javadoc.deprecatedList = false;
         javadoc.links("http://java.sun.com/javase/6/docs/api");
 
         compiler.warnExcludes("apb/utils/StringUtils.java");
-    }
 
-    public static final Module MODULE = new Apb();
+        tests(TestTasks.MODULE);
+    }
 }
