@@ -77,7 +77,11 @@ public final class JUnitTestSet
 
         // No suite build one
         if (suiteMethod == null) {
-            return new TestSuite(getTestClass());
+            //but only if no annotatios because can only annotate suites.
+            if(testGroups.isEmpty()){
+             return new TestSuite(getTestClass());
+            }
+            else return null;
         }
 
         // Check if I've to run it and run it
