@@ -118,6 +118,12 @@ public class JUnitTestReport
             });
     }
 
+      @NotNull public JUnitTestReport init(@NotNull File dir)
+    {
+        JUnitTestReport result = new JUnitTestReport(showOutput, fileName);
+        result.reportsDir = dir;
+        return result;
+    }
     //~ Static fields/initializers ...........................................................................
 
     private static final String HTML_REPORT = "report.html";
