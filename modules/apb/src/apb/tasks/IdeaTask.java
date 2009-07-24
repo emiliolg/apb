@@ -170,7 +170,7 @@ public class IdeaTask
                         Element sourceContent =
                             findElement(component, "content", URL_ATTRIBUTE,
                                         relativeUrl("file", source.getParentFile()));
-                        addSourceFolder(sourceContent, source);
+                        addSourceFolder(sourceContent, source, module.isTestModule());
                     }
                 }
 
@@ -448,12 +448,12 @@ public class IdeaTask
         createElement(component, EXCLUDE_OUTPUT);
     }
 
-    private void addSourceFolder(Element content, File directory)
+    private void addSourceFolder(Element content, File directory, boolean testSource)
     {
         Element sourceFolder = createElement(content, SOURCE_FOLDER);
 
         sourceFolder.setAttribute(URL_ATTRIBUTE, relativeUrl("file", directory));
-        sourceFolder.setAttribute("isTestSource", "false");
+        sourceFolder.setAttribute("isTestSource", String.valueOf(testSource));
     }
 
     private String relativeUrl(@NotNull final String type, @NotNull File file)

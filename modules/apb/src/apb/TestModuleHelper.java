@@ -81,6 +81,11 @@ public class TestModuleHelper
         return moduleToTest;
     }
 
+    @Override
+    public boolean isTestModule() {
+        return true;
+    }
+
     @NotNull public File getWorkingDirectory()
     {
         return workingDirectory;
