@@ -57,6 +57,13 @@ public class JUnitTestReport
         generateHtml();
     }
 
+    @NotNull public JUnitTestReport init(@NotNull File dir)
+    {
+        JUnitTestReport result = new JUnitTestReport(showOutput, fileName);
+        result.reportsDir = dir;
+        return result;
+    }
+
     private static void copyFile(File file, PrintStream out)
         throws IOException
     {

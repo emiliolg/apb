@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.commands.idegen.idea;
 
@@ -48,7 +50,7 @@ public abstract class Parser
     protected final File sourceDir;
 
     protected final File sourceFile;
-    boolean              excludeJars = false;
+    boolean              excludeJars;
     private boolean      alreadyParsed;
     private boolean      includeSource;
     private String       name;
@@ -56,7 +58,7 @@ public abstract class Parser
 
     //~ Constructors .........................................................................................
 
-    public Parser(final File file, final Map<String, ModuleParser> allModules, Parser parent)
+    protected Parser(final File file, final Map<String, ModuleParser> allModules, Parser parent)
         throws IOException
     {
         this.parent = parent;

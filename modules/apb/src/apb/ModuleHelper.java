@@ -146,6 +146,11 @@ public class ModuleHelper
         return classPath(false, false, true);
     }
 
+    public boolean isTestModule()
+    {
+        return false;
+    }
+
     public Collection<File> deepClassPath(boolean useJars, boolean addModuleOutput)
     {
         Set<File> result = new HashSet<File>();

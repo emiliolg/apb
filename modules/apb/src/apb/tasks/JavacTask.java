@@ -344,7 +344,10 @@ public class JavacTask
             else {
                 File classFile = new File(targetDir, FileUtils.changeExtension(file, ".class"));
 
-                if (!classFile.exists() || (classFile.lastModified() < sourceFile.lastModified())) {
+                final long classLastModified;
+
+                if ((classLastModified = classFile.lastModified()) == 0 ||
+                        sourceFile.lastModified() > classLastModified) {
                     result.add(sourceFile);
                 }
                 else if (trackUnusedDependencies) {

@@ -18,8 +18,8 @@
 
 package apb.testrunner;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import apb.testrunner.output.TestReport;
@@ -77,7 +77,13 @@ public final class JUnitTestSet
 
         // No suite build one
         if (suiteMethod == null) {
-            return new TestSuite(getTestClass());
+            //but only if no annotatios because can only annotate suites.
+            if (testGroups.isEmpty()) {
+                return new TestSuite(getTestClass());
+            }
+            else {
+                return null;
+            }
         }
 
         // Check if I've to run it and run it
@@ -101,26 +107,34 @@ public final class JUnitTestSet
     private boolean mustRun(Method suiteMethod, @NotNull List<String> testGroups)
     {
         final apb.annotation.Test annotation = suiteMethod.getAnnotation(apb.annotation.Test.class);
+
         // Check skip
-        if (annotation != null && annotation.skip())
+        if (annotation != null && annotation.skip()) {
             return false;
+        }
 
         // Has groups ?
-        if (testGroups.isEmpty())
+        if (testGroups.isEmpty()) {
             return true;
+        }
 
         // Has groups and no annotation -> skip
-        if (annotation == null)
+        if (annotation == null) {
             return false;
+        }
 
         // Run for all groups ?
-        if (apb.annotation.Test.ALL.equals(annotation.groups()[0]))
+        if (apb.annotation.Test.ALL.equals(annotation.groups()[0])) {
             return true;
+        }
+
         // Check if belongs to any of the groups
         for (String gr : annotation.groups()) {
-            if (testGroups.contains(gr))
+            if (testGroups.contains(gr)) {
                 return true;
+            }
         }
+
         return false;
     }
 

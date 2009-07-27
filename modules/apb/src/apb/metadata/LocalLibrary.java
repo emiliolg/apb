@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.metadata;
 
@@ -66,8 +68,8 @@ public class LocalLibrary
 
     @Nullable public File getArtifact(@NotNull Environment env, @NotNull PackageType type)
     {
-        return type == PackageType.SRC ? (sourcesPath == null ? null : fileFromBase(env, sourcesPath))
-                                       : fileFromBase(env, path);
+        return type == PackageType.SRC ? (sourcesPath == null ? null : fileFromBase(env, sourcesPath, true))
+                                       : fileFromBase(env, path, false);
     }
 
     public void setSources(@NotNull String sources)
@@ -75,7 +77,7 @@ public class LocalLibrary
         sourcesPath = sources;
     }
 
-    @Nullable private File fileFromBase(@NotNull Environment env, @NotNull String p)
+    @Nullable private File fileFromBase(@NotNull Environment env, @NotNull String p, boolean ignore)
     {
         final File result;
 
@@ -87,7 +89,7 @@ public class LocalLibrary
         else {
             result = null;
 
-            if (!optional) {
+            if (!optional && !ignore) {
                 env.handle("Library not found: " + lib);
             }
         }

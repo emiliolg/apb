@@ -63,7 +63,7 @@ public class XsltTask
     @NotNull private final Map<String, String> outputProperties;
     @NotNull private final Map<String, String> params;
     private InputStream                        style;
-    private String styleName;
+    private String                             styleName;
 
     //~ Constructors .........................................................................................
 
@@ -114,11 +114,13 @@ public class XsltTask
             env.handle("Must set input, output & style files");
         }
 
-        if (!inputFile.exists()) {
+        final long inputMod = inputFile.lastModified();
+
+        if (inputMod == 0) {
             env.handle("input file " + inputFile.getPath() + " does not exist!");
         }
 
-        if (env.forceBuild() || inputFile.lastModified() > outputFile.lastModified()) {
+        if (env.forceBuild() || inputMod > outputFile.lastModified()) {
             final File outdir = outputFile.getParentFile();
 
             if (!outdir.exists() && !outdir.mkdirs()) {
@@ -183,6 +185,7 @@ public class XsltTask
     public void setStyleFileName(@NotNull String styleFileName)
     {
         styleName = styleFileName;
+
         try {
             style = new FileInputStream(env.fileFromSource(styleFileName));
         }
@@ -219,8 +222,10 @@ public class XsltTask
             if (env.isVerbose()) {
                 env.logVerbose("Processing :'%s'\n", infile);
                 env.logVerbose("        to :'%s'\n", outfile);
-                if (styleName != null)
+
+                if (styleName != null) {
                     env.logVerbose("using xslt :'%s'\n", styleName);
+                }
             }
             else {
                 env.logInfo("Processing 1 file.\n");

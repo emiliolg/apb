@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.tasks;
 
@@ -213,6 +215,29 @@ public class JarTask
         setManifestAttribute(Attributes.Name.CLASS_PATH, result);
     }
 
+    /**
+     * Check if the jar file is uptodate.
+     * (The timestamp for all files is lower than the jar one)
+     * @param jarTimeStamp The timestamp for the jar file
+     * @param files The set of files to add
+     * @return true if the jar is 'uptodate'
+     */
+    private static boolean uptodate(long jarTimeStamp, final Map<File, List<String>> files)
+    {
+        for (File dir : files.keySet()) {
+            for (String fileName : files.get(dir)) {
+                File file = new File(dir, fileName);
+
+                // Check timestamps
+                if (file.lastModified() > jarTimeStamp) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     private void setServices(@NotNull Map<String, Set<String>> services)
     {
         this.services = services;
@@ -227,15 +252,13 @@ public class JarTask
 
     private long checkJarFile()
     {
-        final boolean exists = jarFile.exists();
-        long          result = -1;
+        long result = jarFile.lastModified();
 
-        if (exists) {
-            if (!jarFile.isFile()) {
-                throw new BuildException(jarFile + " is not a file.");
-            }
-
-            result = jarFile.lastModified();
+        if (result == 0) {
+            result = -1;
+        }
+        else if (!jarFile.isFile()) {
+            throw new BuildException(jarFile + " is not a file.");
         }
 
         return result;
@@ -321,29 +344,6 @@ public class JarTask
                 }
             }
         }
-    }
-
-    /**
-     * Check if the jar file is uptodate.
-     * (The timestamp for all files is lower than the jar one)
-     * @param jarTimeStamp The timestamp for the jar file
-     * @param files The set of files to add
-     * @return true if the jar is 'uptodate'
-     */
-    private boolean uptodate(long jarTimeStamp, Map<File, List<String>> files)
-    {
-        for (File dir : files.keySet()) {
-            for (String fileName : files.get(dir)) {
-                File file = new File(dir, fileName);
-
-                // Check timestamps
-                if (file.lastModified() > jarTimeStamp) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
     }
 
     private void writeToJar(JarOutputStream jarOut, final String fileName, final InputStream is,

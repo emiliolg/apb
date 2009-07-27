@@ -77,15 +77,19 @@ public abstract class Task
                 for (String dependency : dependencies) {
                     File source = env.fileFromSource(dependency);
 
-                    if (!source.exists()) {
+                    long sourceMod = source.lastModified();
+
+                    if (sourceMod == 0) {
                         source = env.fileFromBase(dependency);
 
-                        if (!source.exists()) {
+                        sourceMod = source.lastModified();
+
+                        if (sourceMod == 0) {
                             env.logWarning("Not existent dependency '%s'.\n", dependency);
                         }
                     }
 
-                    if (source.lastModified() > targetMod) {
+                    if (sourceMod > targetMod) {
                         env.logVerbose("Executing because file '%s' is more recent than '%s'.\n", dependency,
                                        target);
                         exec = true;
@@ -113,7 +117,9 @@ public abstract class Task
             for (String f : sourceFiles) {
                 File targetFile = new File(targetDir, f.replace(replaceFrom, replaceTo));
 
-                if (!targetFile.exists()) {
+                final long targetMod = targetFile.lastModified();
+
+                if (targetMod == 0) {
                     env.logVerbose("File '%s' does not exist.\n", targetFile);
                     exec = true;
                     break;
@@ -121,7 +127,7 @@ public abstract class Task
 
                 File sourceFile = new File(sourceDir, f);
 
-                if (sourceFile.lastModified() > targetFile.lastModified()) {
+                if (sourceFile.lastModified() > targetMod) {
                     env.logVerbose("Executing because file '%s' is more recent than '%s'.\n",
                                    sourceFile.getPath(), targetFile.getPath());
                     exec = true;
@@ -143,5 +149,4 @@ public abstract class Task
         execute();
         return null;
     }
-
 }

@@ -216,7 +216,10 @@ public class CopyTask
             File from = new File(resourceDirectory, name);
             File to = new File(outputDirectory, name);
 
-            if (env.forceBuild() || !to.exists() || from.lastModified() > to.lastModified()) {
+            final long toLastModified;
+
+            if (env.forceBuild() || (toLastModified = to.lastModified()) == 0 ||
+                    from.lastModified() > toLastModified) {
                 files.put(from, to);
             }
         }

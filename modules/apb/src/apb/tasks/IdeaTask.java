@@ -172,7 +172,7 @@ public class IdeaTask
                         Element sourceContent =
                             findElement(component, "content", URL_ATTRIBUTE,
                                         relativeUrl("file", source.getParentFile()));
-                        addSourceFolder(sourceContent, source);
+                        addSourceFolder(sourceContent, source, module.isTestModule());
                     }
                 }
 
@@ -204,7 +204,9 @@ public class IdeaTask
 
     private boolean mustBuild(ProjectElementHelper module, File ideaFile)
     {
-        return overwrite || !ideaFile.exists() || ideaFile.lastModified() < module.lastModified();
+        final long ideaLastMod;
+        return overwrite || (ideaLastMod = ideaFile.lastModified()) == 0 ||
+               module.lastModified() > ideaLastMod;
     }
 
     private void rewriteProject()
@@ -334,7 +336,7 @@ public class IdeaTask
             DocumentBuilder reader = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             InputStream     is;
 
-            if (ideaFile.exists() && !overwrite) {
+            if (!overwrite && ideaFile.exists()) {
                 is = new FileInputStream(ideaFile);
             }
             else if (templateDir != null && templateDir.exists()) {
@@ -448,12 +450,12 @@ public class IdeaTask
         createElement(component, EXCLUDE_OUTPUT);
     }
 
-    private void addSourceFolder(Element content, File directory)
+    private void addSourceFolder(Element content, File directory, boolean testSource)
     {
         Element sourceFolder = createElement(content, SOURCE_FOLDER);
 
         sourceFolder.setAttribute(URL_ATTRIBUTE, relativeUrl("file", directory));
-        sourceFolder.setAttribute("isTestSource", "false");
+        sourceFolder.setAttribute("isTestSource", String.valueOf(testSource));
     }
 
     private String relativeUrl(@NotNull final String type, @NotNull File file)
@@ -671,21 +673,22 @@ public class IdeaTask
         }
     }
 
-    private void addLibEntry(Library library, Element lib, PackageType type, String tag) {
+    private void addLibEntry(Library library, Element lib, PackageType type, String tag)
+    {
         final File url = library.getArtifact(env, type);
 
         if (url != null) {
             removeOldElements(lib, tag);
             Element el = createElement(createElement(lib, tag), "root");
 
-	    final String protocol;
-	    final String endMarker;
-	    if (url.isDirectory()) {
+            final String protocol;
+            final String endMarker;
+
+            if (url.isDirectory()) {
                 protocol = "file";
                 endMarker = "";
             }
-            else
-            {
+            else {
                 protocol = "jar";
                 endMarker = "!/";
             }

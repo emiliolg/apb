@@ -104,7 +104,7 @@ public class DefinitionsIndex
 
         for (ModuleInfo moduleInfo : modules) {
             String m = moduleInfo.getName();
-            int          lastDot = m.lastIndexOf('.');
+            int    lastDot = m.lastIndexOf('.');
             m += ".";
 
             if (m.startsWith(name) || lastDot != -1 && m.substring(lastDot + 1).startsWith(name)) {
@@ -181,33 +181,33 @@ public class DefinitionsIndex
     private void listDefinitionFiles(File dir, final List<File> files)
     {
         dir.listFiles(new FileFilter() {
-                public boolean accept(File file)
+                public boolean accept(File pathname)
                 {
-                    if (file.isDirectory()) {
-                        if (isNotExcluded(file.getName())) {
-                            listDefinitionFiles(file, files);
+                    if (pathname.isDirectory()) {
+                        if (isNotExcluded(pathname.getName())) {
+                            listDefinitionFiles(pathname, files);
                         }
                     }
-                    else if (file.getName().endsWith(".java")) {
-                        files.add(file);
+                    else if (pathname.getName().endsWith(".java")) {
+                        files.add(pathname);
+                    }
+
+                    return true;
+                }
+
+                private boolean isNotExcluded(String dirName)
+                {
+                    if (dirName != null) {
+                        for (String excludeDir : excludeDirs) {
+                            if (excludeDir.equals(dirName)) {
+                                return false;
+                            }
+                        }
                     }
 
                     return true;
                 }
             });
-    }
-
-    private boolean isNotExcluded(String dir)
-    {
-        if (dir != null) {
-            for (String excludeDir : excludeDirs) {
-                if (excludeDir.equals(dir)) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
     }
 
     @NotNull private File getModulesDirFile()
@@ -219,25 +219,23 @@ public class DefinitionsIndex
     {
         File modulesDir = getModulesDirFile();
 
-        if (modulesDir.exists()) {
-            try {
-                ObjectInputStream ois = new ObjectInputStream(new FileInputStream(modulesDir));
-                int               size = ois.readInt();
+        try {
+            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(modulesDir));
+            int               size = ois.readInt();
 
-                for (int i = 0; i < size; i++) {
-                    Object item = ois.readObject();
+            for (int i = 0; i < size; i++) {
+                Object item = ois.readObject();
 
-                    if (item instanceof ModulesInfo) {
-                        ModulesInfo info = (ModulesInfo) item;
-                        mdir.put(info.getPath(), info);
-                    }
+                if (item instanceof ModulesInfo) {
+                    ModulesInfo info = (ModulesInfo) item;
+                    mdir.put(info.getPath(), info);
                 }
-
-                ois.close();
             }
-            catch (IOException ignore) {}
-            catch (ClassNotFoundException ignore) {}
+
+            ois.close();
         }
+        catch (IOException ignore) {}
+        catch (ClassNotFoundException ignore) {}
     }
 
     //~ Static fields/initializers ...........................................................................

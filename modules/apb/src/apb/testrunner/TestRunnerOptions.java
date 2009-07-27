@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.testrunner;
 
@@ -21,12 +24,16 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import apb.Messages;
+
 import apb.metadata.TestModule;
+
 import apb.utils.ClassUtils;
 import apb.utils.OptionParser;
-import static apb.utils.StringUtils.isEmpty;
+
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.StringUtils.isEmpty;
 //
 // User: emilio
 // Date: Sep 3, 2008
@@ -49,9 +56,9 @@ class TestRunnerOptions
     private Option<String>                  reports;
     private Option<String>                  reportSpecs;
     private final Option<String>            suite;
+    private Option<String>                  testGroups;
     private final Option<String>            type;
     private final Option<Boolean>           verbose;
-    private Option<String> testGroups;
 
     //~ Constructors .........................................................................................
 
@@ -68,7 +75,7 @@ class TestRunnerOptions
         includes.setValue(asString(TestModule.DEFAULT_INCLUDES));
         excludes = addOption('e', "excludes", Messages.SET_TO_EXCLUDE, Messages.COLON_SEPARATED_PATTERNS);
         excludes.setValue(asString(TestModule.DEFAULT_EXCLUDES));
-        testGroups = addOption ('g', "testGroups", Messages.TEST_GROUPS, Messages.COLON_SEPARATED_PATTERNS);
+        testGroups = addOption('g', "testGroups", Messages.TEST_GROUPS, Messages.COLON_SEPARATED_PATTERNS);
         type = addOption('t', "type", "The test type", "<type>");
         type.setValue("junit");
         classpath = addOption('c', "classpath", "The classpath used to load the test classes", "<classpath>");
@@ -107,7 +114,7 @@ class TestRunnerOptions
         // Use current working directory
         basedir = new File(result.get(0));
 
-        if (!basedir.exists() || !basedir.isDirectory()) {
+        if (!basedir.isDirectory()) {
             System.err.println("Invalid base directory: " + basedir);
             System.exit(TestRunner.ERROR);
         }
@@ -171,12 +178,12 @@ class TestRunnerOptions
         return result;
     }
 
-
-    public @NotNull List<String> getTestGroups()
+    @NotNull public List<String> getTestGroups()
     {
         return asStringList(testGroups);
     }
-    public  @NotNull List<String> getReports()
+
+    @NotNull public List<String> getReports()
     {
         return asStringList(reports);
     }

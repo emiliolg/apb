@@ -55,11 +55,11 @@ public class DirectoryScanner
         this.excludes = StringUtils.normalizePaths(excludes);
         this.excludes.addAll(StringUtils.normalizePaths(FileUtils.DEFAULT_EXCLUDES));
 
-        if (!baseDir.exists()) {
-            throw new IllegalStateException("baseDir " + baseDir + " does not exist");
-        }
-
         if (!baseDir.isDirectory()) {
+            if (!baseDir.exists()) {
+                throw new IllegalStateException("baseDir " + baseDir + " does not exist");
+            }
+
             throw new IllegalStateException("baseDir " + baseDir + " is not a directory");
         }
     }
@@ -117,6 +117,26 @@ public class DirectoryScanner
         return false;
     }
 
+    private static List<String> filterSymbolicLinks(File dir, String relativePath, final List<String> files)
+        throws IOException
+    {
+        List<String> result = new ArrayList<String>();
+
+        for (String file : files) {
+            if (!FileUtils.isSymbolicLink(new File(dir, relativePath + file))) {
+                result.add(file);
+            }
+        }
+
+        return result;
+    }
+
+    private static List<String> listFiles(File dir)
+    {
+        final String[] fs = dir.list();
+        return fs == null ? Collections.<String>emptyList() : Arrays.asList(fs);
+    }
+
     private void scandir(File dir, String relativePath)
         throws IOException
     {
@@ -147,27 +167,4 @@ public class DirectoryScanner
             }
         }
     }
-
-    private List<String> filterSymbolicLinks(File dir, String relativePath, final List<String> files)
-        throws IOException
-    {
-        List<String> result = new ArrayList<String>();
-
-        for (String file : files) {
-            if (!FileUtils.isSymbolicLink(new File(dir, relativePath + file))) {
-                result.add(file);
-            }
-        }
-
-        return result;
-    }
-
-    private List<String> listFiles(File dir)
-    {
-        final String[] fs = dir.list();
-        return fs == null ? Collections.<String>emptyList() : Arrays.asList(fs);
-    }
-
-    //~ Static fields/initializers ...........................................................................
-
 }
