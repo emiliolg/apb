@@ -45,7 +45,7 @@ public final class Apb
         javadoc.deprecatedList = false;
         javadoc.links("http://java.sun.com/javase/6/docs/api");
 
-        compiler.warnExcludes("apb/utils/StringUtils.java");
+        compiler.warnExcludes("apb/sunapi/*");
 
         tests(TestTasks.MODULE);
     }

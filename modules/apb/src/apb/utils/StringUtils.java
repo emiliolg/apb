@@ -27,14 +27,14 @@ import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
 
+import apb.sunapi.Base64;
+
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import static java.lang.Character.toLowerCase;
 import static java.lang.Character.toUpperCase;
 import static java.lang.Integer.toHexString;
-
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
 //
 // User: emilio
 // Date: Oct 1, 2008
@@ -387,12 +387,24 @@ public class StringUtils
         StringBuilder buffer = new StringBuilder();
 
         for (String testGroup : list) {
-            if (buffer.length() > 0)
+            if (buffer.length() > 0) {
                 buffer.append(sep);
+            }
+
             buffer.append(testGroup);
         }
 
         return buffer.toString();
+    }
+
+    /**
+     * Encode the given String bytes in a Base64 String
+     * @param str The string to encode
+     * @return A Base64 String
+     */
+    public static String encodeBase64(@NotNull String str)
+    {
+        return Base64.encode(str.getBytes());
     }
 
     private static boolean matchPathStart(List<String> patterns, List<String> paths, boolean caseSensitive)
@@ -583,13 +595,4 @@ strLoop:
 
     @NonNls private static final String MATCH_ANYTHING_PATTERN = "**";
     private static final String         specialSaveChars = "=: \t\r\n\f#!";
-
-    /**
-     * Encode the given String bytes in a Base64 String
-     * @param str The string to encode
-     * @return A Base64 String
-     */
-    public static String encodeBase64(@NotNull String str) {
-        return Base64.encode(str.getBytes());
-    }
 }
