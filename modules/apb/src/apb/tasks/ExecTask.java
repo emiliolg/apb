@@ -1,20 +1,12 @@
 
-
-// Copyright 2008-2009 Emilio Lopez-Gabeiras
+// ...........................................................................................................
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
+// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
+// The copyright notice above does not evidence any actual or intended
+// publication of such source code.
 //
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License
-//
-
+// ...........................................................................................................
 
 package apb.tasks;
 
@@ -25,6 +17,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,11 +33,9 @@ import org.jetbrains.annotations.Nullable;
 
 //
 public class ExecTask
-    extends Task
+    extends CommandTask
 {
     //~ Instance fields ......................................................................................
-
-    @NotNull private final List<String> cmd;
 
     @NotNull private File                      currentDirectory;
     @NotNull private final Map<String, String> environment;
@@ -55,8 +46,7 @@ public class ExecTask
 
     public ExecTask(@NotNull Environment env, @NotNull List<String> cmd)
     {
-        super(env);
-        this.cmd = cmd;
+        super(env, cmd);
         output = null;
         environment = new HashMap<String, String>();
         currentDirectory = env.getBaseDir();
@@ -69,8 +59,7 @@ public class ExecTask
 
     public ExecTask(@NotNull Environment env, @NotNull List<String> output, @NotNull List<String> cmd)
     {
-        super(env);
-        this.cmd = cmd;
+        super(env, cmd);
         this.output = output;
         environment = new HashMap<String, String>();
     }
@@ -83,19 +72,6 @@ public class ExecTask
         ExecTask     task = new ExecTask(env, output, cmd);
         task.execute();
         return output;
-    }
-
-    /**
-     * Add one or more arguments to the command line to be executed
-     * @param arguments The arguments to be added
-     */
-    public void addArguments(@NotNull String... arguments)
-    {
-        for (String arg : arguments) {
-            if (arg != null) {
-                cmd.add(arg);
-            }
-        }
     }
 
     public void execute()
@@ -180,7 +156,7 @@ public class ExecTask
         String line;
 
         while ((line = reader.readLine()) != null) {
-            env.logInfo(line);
+            env.logInfo("%s\n", line);
         }
     }
 

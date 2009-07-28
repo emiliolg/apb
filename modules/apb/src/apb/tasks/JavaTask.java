@@ -1,26 +1,17 @@
 
-
-// Copyright 2008-2009 Emilio Lopez-Gabeiras
+// ...........................................................................................................
 //
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
+// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
+// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
+// The copyright notice above does not evidence any actual or intended
+// publication of such source code.
 //
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License
-//
-
+// ...........................................................................................................
 
 package apb.tasks;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -29,13 +20,17 @@ import java.util.Map;
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
+
 import apb.metadata.Dependency;
 import apb.metadata.DependencyList;
 import apb.metadata.PackageType;
-import static apb.utils.CollectionUtils.addIfNotNull;
+
 import apb.utils.FileUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.utils.CollectionUtils.addIfNotNull;
 //
 // User: emilio
 // Date: Oct 22, 2008
@@ -43,12 +38,11 @@ import org.jetbrains.annotations.Nullable;
 
 //
 public class JavaTask
-    extends Task
+    extends CommandTask
 {
     //~ Instance fields ......................................................................................
 
     @NotNull private String                    classpath = "";
-    @NotNull private final List<String>        cmd;
     @Nullable private File                     currentDirectory;
     @NotNull private final Map<String, String> environment;
     private boolean                            executeJar;
@@ -72,8 +66,7 @@ public class JavaTask
 
     public JavaTask(@NotNull Environment env, boolean executeJar, @NotNull String jarOrClass)
     {
-        super(env);
-        cmd = new ArrayList<String>();
+        super(env, new ArrayList<String>());
         this.executeJar = executeJar;
         this.jarOrClass = jarOrClass;
         environment = new HashMap<String, String>();
@@ -145,16 +138,6 @@ public class JavaTask
     public void setClasspath(ModuleHelper helper)
     {
         classpath = FileUtils.makePath(helper.runtimePath());
-    }
-
-    public void addArguments(String... args)
-    {
-        cmd.addAll(Arrays.asList(args));
-    }
-
-    public void addArguments(Collection<String> args)
-    {
-        cmd.addAll(args);
     }
 
     public void execute()
