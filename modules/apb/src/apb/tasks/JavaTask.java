@@ -12,7 +12,6 @@ package apb.tasks;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,17 +19,12 @@ import java.util.Map;
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
-
 import apb.metadata.Dependency;
 import apb.metadata.DependencyList;
 import apb.metadata.PackageType;
-
-import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import static apb.utils.CollectionUtils.addIfNotNull;
+import apb.utils.FileUtils;
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Oct 22, 2008
@@ -43,8 +37,6 @@ public class JavaTask
     //~ Instance fields ......................................................................................
 
     @NotNull private String                    classpath = "";
-    @Nullable private File                     currentDirectory;
-    @NotNull private final Map<String, String> environment;
     private boolean                            executeJar;
     private int                                exitValue;
     private String                             jarOrClass;
@@ -69,7 +61,6 @@ public class JavaTask
         super(env, new ArrayList<String>());
         this.executeJar = executeJar;
         this.jarOrClass = jarOrClass;
-        environment = new HashMap<String, String>();
         properties = new HashMap<String, String>();
         javaArgs = new ArrayList<String>();
         memory = 256;
@@ -172,30 +163,16 @@ public class JavaTask
         args.addAll(cmd);
         ExecTask task = new ExecTask(env, args);
 
-        if (currentDirectory != null) {
-            task.setCurrentDirectory(currentDirectory);
-        }
+        task.setCurrentDirectory(getCurrentDirectory());
 
         task.putAll(environment);
         task.execute();
         exitValue = task.getExitValue();
     }
 
-    public void putEnv(String key, String value)
-    {
-        environment.put(key, value);
-    }
-
     public int getExitValue()
     {
         return exitValue;
-    }
-
-    public void putAll(@Nullable Map<String, String> environmentVariables)
-    {
-        if (environmentVariables != null) {
-            environment.putAll(environmentVariables);
-        }
     }
 
     /**
@@ -230,10 +207,5 @@ public class JavaTask
     public void setMemory(int memory)
     {
         this.memory = memory;
-    }
-
-    public void setCurrentDirectory(@NotNull File directory)
-    {
-        currentDirectory = directory;
     }
 }

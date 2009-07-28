@@ -17,8 +17,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,10 +35,8 @@ public class ExecTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private File                      currentDirectory;
-    @NotNull private final Map<String, String> environment;
-    private int                                exitValue;
-    @Nullable private final List<String>       output;
+    private int                          exitValue;
+    @Nullable private final List<String> output;
 
     //~ Constructors .........................................................................................
 
@@ -48,8 +44,6 @@ public class ExecTask
     {
         super(env, cmd);
         output = null;
-        environment = new HashMap<String, String>();
-        currentDirectory = env.getBaseDir();
     }
 
     public ExecTask(@NotNull Environment env, @NotNull String... args)
@@ -61,7 +55,6 @@ public class ExecTask
     {
         super(env, cmd);
         this.output = output;
-        environment = new HashMap<String, String>();
     }
 
     //~ Methods ..............................................................................................
@@ -102,31 +95,9 @@ public class ExecTask
         }
     }
 
-    public void putEnv(String key, String value)
-    {
-        environment.put(key, value);
-    }
-
-    public void putAll(@Nullable Map<String, String> environmentVariables)
-    {
-        if (environmentVariables != null) {
-            environment.putAll(environmentVariables);
-        }
-    }
-
     public int getExitValue()
     {
         return exitValue;
-    }
-
-    public void setCurrentDirectory(@NotNull File dir)
-    {
-        currentDirectory = dir;
-    }
-
-    public void setCurrentDirectory(@NotNull String dir)
-    {
-        currentDirectory = env.fileFromBase(dir);
     }
 
     private Process createProcess()
@@ -139,7 +110,7 @@ public class ExecTask
             e.put(entry.getKey(), entry.getValue());
         }
 
-        b.directory(currentDirectory);
+        b.directory(getCurrentDirectory());
 
         if (output == null) {
             b.redirectErrorStream(true);
@@ -190,7 +161,7 @@ public class ExecTask
                 }
             }
 
-            env.logVerbose("Current directory: %s\n", currentDirectory);
+            env.logVerbose("Current directory: %s\n", getCurrentDirectory());
         }
     }
 }

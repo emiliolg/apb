@@ -10,13 +10,17 @@
 
 package apb.tasks;
 
-import java.util.Collection;
+import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import apb.Environment;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Jul 28, 2009
@@ -26,7 +30,11 @@ import org.jetbrains.annotations.NotNull;
 public abstract class CommandTask
     extends Task
 {
-    @NotNull protected final List<String> cmd;
+    //~ Instance fields ......................................................................................
+
+    @NotNull protected final List<String>        cmd;
+    @NotNull private File                      currentDirectory;
+    @NotNull protected final Map<String, String> environment;
 
     //~ Constructors .........................................................................................
 
@@ -34,6 +42,8 @@ public abstract class CommandTask
     {
         super(env);
         this.cmd = cmd;
+        environment = new HashMap<String, String>();
+        currentDirectory = env.getBaseDir();
     }
 
     //~ Methods ..............................................................................................
@@ -47,7 +57,6 @@ public abstract class CommandTask
         addArguments(Arrays.asList(arguments));
     }
 
-
     /**
      * Add one or more arguments to the command line to be executed
      * @param arguments The arguments to be added
@@ -59,5 +68,32 @@ public abstract class CommandTask
                 cmd.add(arg);
             }
         }
+    }
+
+    public final void putEnv(String key, String value)
+    {
+        environment.put(key, value);
+    }
+
+    public final void putAll(@Nullable Map<String, String> environmentVariables)
+    {
+        if (environmentVariables != null) {
+            environment.putAll(environmentVariables);
+        }
+    }
+
+    public void setCurrentDirectory(@NotNull File dir)
+    {
+        currentDirectory = dir;
+    }
+
+    public void setCurrentDirectory(@NotNull String dir)
+    {
+        currentDirectory = env.fileFromBase(dir);
+    }
+
+    @NotNull public File getCurrentDirectory()
+    {
+        return currentDirectory;
     }
 }
