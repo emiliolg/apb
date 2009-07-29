@@ -27,12 +27,12 @@ import apb.Environment;
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * This task allow the invocation of the XML Binding Compiler (xjc)
  */
-public class
-        XjcTask
+public class XjcTask
     extends Task
 {
     //~ Instance fields ......................................................................................
@@ -41,7 +41,6 @@ public class
     private boolean                   packageAnnotations;
     @NotNull private final String     schema;
     @NotNull private String           targetPackage;
-    private static final String JAXB_XJC_JAR_FILENAME = "jaxb-xjc.jar";
 
     //~ Constructors .........................................................................................
 
@@ -115,21 +114,11 @@ public class
     private void execute(@NotNull final File targetDir, @NotNull final File schemaFile)
     {
         targetDir.mkdirs();
-        CommandTask command = null;
 
         //If there is a jaxb xjc jar in ext, use that
-        for (File file : env.getExtClassPath()) {
-            if (file.getName().equals(JAXB_XJC_JAR_FILENAME)) {
-                env.logInfo("Using external jaxb-xjc libraries from ext");
-                command = new JavaTask(env, true, file.getAbsolutePath());
-                break;
-            }
-        }
+        String jar = findJar();
 
-        //If not, use the binary command included in the JDK
-        if (command == null) {
-            command = new ExecTask(env, "xjc");
-        }
+        final CommandTask command = jar == null ? new ExecTask(env, "xjc") : new JavaTask(env, true, jar);
 
         command.addArguments("-extension");
 
@@ -137,7 +126,11 @@ public class
             command.addArguments("-npa");
         }
 
-        env.logInfo("Processing: %s", schemaFile);
+        env.logInfo("Processing: %s\n", schemaFile);
+
+        if (jar != null) {
+            env.logInfo("Using     : %s\n", jar);
+        }
 
         if (!env.isVerbose()) {
             command.addArguments("-quiet");
@@ -157,4 +150,19 @@ public class
 
         command.execute();
     }
+
+    @Nullable private String findJar()
+    {
+        for (File file : env.getExtClassPath()) {
+            if (file.getName().equals(JAXB_XJC_JAR_FILENAME)) {
+                return FileUtils.normalizePath(file.getAbsoluteFile());
+            }
+        }
+
+        return null;
+    }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final String JAXB_XJC_JAR_FILENAME = "jaxb-xjc.jar";
 }
