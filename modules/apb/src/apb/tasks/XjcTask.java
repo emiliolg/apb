@@ -31,7 +31,8 @@ import org.jetbrains.annotations.NotNull;
 /**
  * This task allow the invocation of the XML Binding Compiler (xjc)
  */
-public class XjcTask
+public class
+        XjcTask
     extends Task
 {
     //~ Instance fields ......................................................................................
@@ -40,13 +41,14 @@ public class XjcTask
     private boolean                   packageAnnotations;
     @NotNull private final String     schema;
     @NotNull private String           targetPackage;
+    private static final String JAXB_XJC_JAR_FILENAME = "jaxb-xjc.jar";
 
     //~ Constructors .........................................................................................
 
     /**
      * Construt the XML Binding Compiler Task
      * @param env The apb Environment
-     * @param schema  The xml schema to generate the java bindings for
+     * @param schema  The xml schema to generate the java bindings for, relative the source folder
      * @param targetPackage specifies the target package
      */
     public XjcTask(@NotNull Environment env, @NotNull String schema, @NotNull String targetPackage)
@@ -113,8 +115,23 @@ public class XjcTask
     private void execute(@NotNull final File targetDir, @NotNull final File schemaFile)
     {
         targetDir.mkdirs();
+        CommandTask command = null;
 
-        final ExecTask command = new ExecTask(env, "xjc");
+        //If there is a jaxb xjc jar in ext, use that
+        for (File file : env.getExtClassPath()) {
+            if (file.getName().equals(JAXB_XJC_JAR_FILENAME)) {
+                env.logInfo("Using external jaxb-xjc libraries from ext");
+                command = new JavaTask(env, true, file.getAbsolutePath());
+                break;
+            }
+        }
+
+        //If not, use the binary command included in the JDK
+        if (command == null) {
+            command = new ExecTask(env, "xjc");
+        }
+
+        command.addArguments("-extension");
 
         if (!packageAnnotations) {
             command.addArguments("-npa");

@@ -638,9 +638,9 @@ public abstract class Environment
     }
 
     /**
-     * Returns a File object whose path is relative to the basedir of the current module
-     * @param name The (Usually relative to the basedir of the module) file name.
-     * @return A file whose path is relative to the basedir of the current module.
+     * Returns a File object whose path is relative to the basedir
+     * @param name The (Usually relative to the basedir) file name.
+     * @return A file whose path is relative to the basedir.
      */
     @NotNull public File fileFromBase(@NotNull String name)
     {
