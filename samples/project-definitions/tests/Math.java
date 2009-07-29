@@ -4,6 +4,7 @@ import apb.metadata.TestModule;
 import apb.coverage.CoverageReport;
 import static apb.coverage.CoverageReport.HTML;
 import static apb.coverage.CoverageReport.Column.CLASS;
+import apb.testrunner.output.TestReport;
 //
 // User: emilio
 // Date: Mar 4, 2009
@@ -12,7 +13,8 @@ import static apb.coverage.CoverageReport.Column.CLASS;
 //
 public class Math extends TestModule {
     {
-        dependencies(localLibrary("../lib/junit.jar"));
+        dependencies(localLibrary("../lib/junit-3.8.2.jar"));
+        useProperties("module");
 
         //enableDebugger = true;
         //coverage.enable = true;

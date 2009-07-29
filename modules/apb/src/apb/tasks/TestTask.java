@@ -22,13 +22,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import static java.io.File.pathSeparator;
 import java.net.MalformedURLException;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -50,10 +50,11 @@ import apb.testrunner.output.TestReport;
 import apb.testrunner.output.TestReportBroadcaster;
 
 import apb.utils.FileUtils;
-import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static java.io.File.pathSeparator;
 
 import static apb.testrunner.TestRunner.listTests;
 import static apb.testrunner.TestRunner.worseResult;
@@ -61,7 +62,6 @@ import static apb.testrunner.TestRunner.worseResult;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
 import static apb.utils.StringUtils.makeString;
-import static apb.utils.StringUtils.isEmpty;
 //
 // User: emilio
 // Date: Nov 5, 2008
@@ -92,6 +92,7 @@ public class TestTask
      * The classpath for the tests
      */
     @NotNull private Collection<File>   classPath;
+    private boolean                     classPathInSystemClassloader;
     @NotNull private final CoverageInfo coverage;
 
     /**
@@ -140,7 +141,6 @@ public class TestTask
      * The list of test groups to execute
      */
     @NotNull private final List<String> testGroups;
-    private boolean classPathInSystemClassloader;
 
     //~ Constructors .........................................................................................
 
@@ -181,7 +181,7 @@ public class TestTask
         final String groups = env.getProperty("tests.groups", "");
         testGroups = groups.isEmpty() ? testModule.groups() : Arrays.asList(groups.split(","));
 
-        properties = testModule.properties();
+        properties = expandProperties(env, testModule.properties(), testModule.useProperties());
         enableAssertions = testModule.enableAssertions;
 
         enableDebugger = testModule.enableDebugger;
@@ -189,7 +189,8 @@ public class TestTask
         if (forkPerSuite || enableDebugger || isCoverageEnabled()) {
             fork = true;
         }
-	classPathInSystemClassloader = testModule.classPathInSystemClassloader;
+
+        classPathInSystemClassloader = testModule.classPathInSystemClassloader;
     }
 
     //~ Methods ..............................................................................................
@@ -237,21 +238,11 @@ public class TestTask
     public void execute()
     {
         if (env.isVerbose()) {
-            env.logVerbose("Test Classpath: \n");
-
-            for (File file : classPath) {
-                env.logVerbose("                %s\n", file);
-            }
+            showClassPath();
+            showProperties();
         }
-
-        Properties originalSystemProperties = processProperties(!fork);
 
         int result = fork ? executeOutOfProcess() : executeInProcess();
-
-        if (originalSystemProperties != null) {
-            // restore system properties, only makes sense when not forking..
-            System.setProperties(originalSystemProperties);
-        }
 
         if (result == TestRunner.NO_TESTS) {
             if (failIfEmpty) {
@@ -265,37 +256,50 @@ public class TestTask
 
             env.logWarning(FAILED_TESTS);
 
-
             if (reportDir != null && reportDir.exists()) {
                 env.logWarning("                 Check: %s\n", reportDir);
             }
         }
     }
 
-    protected Properties processProperties(boolean setInSystem)
+    public boolean isClassPathInSystemClassloader()
     {
-        Properties original = null;
+        return classPathInSystemClassloader;
+    }
 
-        if (!properties.isEmpty()) {
-            if (setInSystem) {
-                original = (Properties) System.getProperties().clone();
+    protected static Map<String, String> expandProperties(final Environment         env,
+                                                          final Map<String, String> properties,
+                                                          List<String>              useProperties)
+    {
+        Map<String, String> result = new HashMap<String, String>();
 
-                // Add all system properties configured by the user
-                for (Map.Entry<String, String> entry : properties.entrySet()) {
-                    System.setProperty(entry.getKey(), entry.getKey());
-                }
-            }
-
-            if (env.isVerbose()) {
-                env.logVerbose("Properties: \n");
-
-                for (Map.Entry<String, String> entry : properties.entrySet()) {
-                    env.logVerbose("         %s='%s'\n", entry.getKey(), entry.getValue());
-                }
-            }
+        for (Map.Entry<String, String> e : properties.entrySet()) {
+            result.put(e.getKey(), env.expand(e.getValue()));
         }
 
-        return original;
+        for (String prop : useProperties) {
+            result.put(prop, env.getProperty(prop, ""));
+        }
+
+        return result;
+    }
+
+    private void showClassPath()
+    {
+        env.logVerbose("Test Classpath: \n");
+
+        for (File file : classPath) {
+            env.logVerbose("                %s\n", file);
+        }
+    }
+
+    private void showProperties()
+    {
+        env.logVerbose("Properties: \n");
+
+        for (Map.Entry<String, String> e : properties.entrySet()) {
+            env.logVerbose("         %s='%s'\n", e.getKey(), e.getValue());
+        }
     }
 
     private boolean isCoverageEnabled()
@@ -430,7 +434,9 @@ public class TestTask
             args.add("-g");
             args.add(groups);
         }
+
         File r = reportDir;
+
         if (r != null) {
             args.add("-o");
             args.add(r.getPath());
@@ -453,11 +459,6 @@ public class TestTask
         return java.getExitValue();
     }
 
-    public boolean isClassPathInSystemClassloader()
-    {
-        return classPathInSystemClassloader;
-    }
-
     private String runnerClassPath()
     {
         final File appJar = env.applicationJarFile();
@@ -468,7 +469,7 @@ public class TestTask
             path.add(new File(appJar.getParent(), "emma.jar"));
             path.addAll(classPath);
         }
-	else if (isClassPathInSystemClassloader()) {
+        else if (isClassPathInSystemClassloader()) {
             path.addAll(classPath);
         }
         else {
@@ -496,6 +497,17 @@ public class TestTask
 
     private int executeInProcess()
     {
+        Properties originalSystemProperties = null;
+
+        if (!properties.isEmpty()) {
+            originalSystemProperties = (Properties) System.getProperties().clone();
+
+            // Add all system properties configured by the user
+            for (Map.Entry<String, String> entry : properties.entrySet()) {
+                System.setProperty(entry.getKey(), entry.getKey());
+            }
+        }
+
         try {
             TestRunner        runner =
                 new TestRunner(moduleHelper.getOutput(), reportDir, includes, excludes, testGroups);
@@ -504,6 +516,11 @@ public class TestTask
         }
         catch (Exception e) {
             env.handle(e);
+        }
+        finally {
+            if (originalSystemProperties != null) {
+                System.setProperties(originalSystemProperties);
+            }
         }
 
         return TestRunner.ERROR;

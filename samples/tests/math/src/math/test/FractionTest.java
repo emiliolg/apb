@@ -18,6 +18,8 @@
 
 package math.test;
 
+import java.util.Properties;
+
 import junit.framework.TestCase;
 import junit.framework.Assert;
 import math.Fraction;
@@ -31,6 +33,13 @@ public class FractionTest
     extends TestCase
 {
     //~ Methods ..............................................................................................
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        String s = System.getProperty("module");
+        System.out.println("module = " + s);
+    }
 
     public void testEquals()
     {

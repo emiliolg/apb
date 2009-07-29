@@ -19,14 +19,17 @@
 package apb.metadata;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import apb.Environment;
+
 import apb.tasks.TestTask;
+
 import apb.testrunner.output.TestReport;
+
+import static java.util.Arrays.asList;
 
 /**
  * This class defines a TestModule for the building system
@@ -61,6 +64,11 @@ public class TestModule
     extends Module
 {
     //~ Instance fields ......................................................................................
+
+    /**
+     * Wheter the dependencies classpath is included in the system classoader.
+     */
+    public boolean classPathInSystemClassloader = false;
 
     /**
      *  Info for coverage
@@ -123,11 +131,6 @@ public class TestModule
     @BuildProperty public String workingDirectory = "$moduledir";
 
     /**
-     * Wheter the dependencies classpath is included in the system classoader.
-     */
-    public boolean classPathInSystemClassloader = false;
-
-    /**
      * Environment variables to be set when running the tests
      */
     private final Map<String, String> environment = new HashMap<String, String>();
@@ -138,17 +141,20 @@ public class TestModule
     private final List<String> excludes = new ArrayList<String>();
 
     /**
+     * The list of tests groups to include.
+     */
+    private final List<String> groups = new ArrayList<String>();
+
+    /**
      * The list of tests files to include.
      * If empty {@link TestModule#DEFAULT_INCLUDES} and {@link TestModule#DEFAULT_EXCLUDES} are used
      */
     private final List<String> includes = new ArrayList<String>();
 
     /**
-     * The list of tests groups to include.
+     * The module being tested
      */
-    private final List<String> groups = new ArrayList<String>();
-
-
+    private Module module;
 
     /**
      * Properties to be set when running the tests
@@ -161,9 +167,9 @@ public class TestModule
     private final List<TestReport> reports = new ArrayList<TestReport>();
 
     /**
-     * The module being tested
+     * The list of properties to copy from the apb to the test to be run
      */
-    private Module module;
+    private List<String> useProperties = new ArrayList<String>();
 
     //~ Methods ..............................................................................................
 
@@ -177,7 +183,8 @@ public class TestModule
         return excludes;
     }
 
-    public List<String> groups() {
+    public List<String> groups()
+    {
         return groups;
     }
 
@@ -196,13 +203,18 @@ public class TestModule
         return properties;
     }
 
+    public List<String> useProperties()
+    {
+        return useProperties;
+    }
+
     /**
      * Method used to set the Reports to be generated when running the test.
      * @param report The Report generators to be used
      */
     public void reports(TestReport... report)
     {
-        reports.addAll(Arrays.asList(report));
+        reports.addAll(asList(report));
     }
 
     /**
@@ -211,7 +223,7 @@ public class TestModule
      */
     public void includes(String... patterns)
     {
-        includes.addAll(Arrays.asList(patterns));
+        includes.addAll(asList(patterns));
     }
 
     /**
@@ -220,9 +232,8 @@ public class TestModule
      */
     public void excludes(String... patterns)
     {
-        excludes.addAll(Arrays.asList(patterns));
+        excludes.addAll(asList(patterns));
     }
-
 
     /**
      * Method used to define the list of test group to be run
@@ -230,7 +241,7 @@ public class TestModule
      */
     public void groups(String... patterns)
     {
-        groups.addAll(Arrays.asList(patterns));
+        groups.addAll(asList(patterns));
     }
 
     /**
@@ -246,7 +257,8 @@ public class TestModule
     /**
      * Add or Set a property to be used when running the tests
      * @param var Property name
-     * @param value Property value
+     * @param value Property value. The value will be expanded.
+     * @see apb.Environment#expand(String)
      */
     public void setProperty(String var, String value)
     {
@@ -254,10 +266,21 @@ public class TestModule
     }
 
     /**
+     * A list of properties to be copied from the apb Environment to the test to be run
+     */
+    public void useProperties(String... props)
+    {
+        useProperties.addAll(asList(props));
+    }
+
+    /**
      * Run the tests
      * @param env
      */
-    @BuildTarget(depends = "package", recursive=false)
+    @BuildTarget(
+                 depends = "package",
+                 recursive = false
+                )
     public void run(Environment env)
     {
         TestTask.execute(env);
@@ -267,7 +290,10 @@ public class TestModule
      * Run the minimal tests
      * @param env
      */
-    @BuildTarget(depends = "package", recursive=false)
+    @BuildTarget(
+                 depends = "package",
+                 recursive = false
+                )
     public void runMinimal(Environment env)
     {
         env.putProperty("tests.groups", "minimal");
@@ -297,8 +323,9 @@ public class TestModule
 
     //~ Static fields/initializers ...........................................................................
 
-    public static final List<String> DEFAULT_INCLUDES = Arrays.asList("**/*Test.class", "**/*TestCase.class", "**/*TestSuite.class");
-    public static final List<String> DEFAULT_EXCLUDES = Arrays.asList("**/*$*");
+    public static final List<String> DEFAULT_INCLUDES =
+        asList("**/*Test.class", "**/*TestCase.class", "**/*TestSuite.class");
+    public static final List<String> DEFAULT_EXCLUDES = asList("**/*$*");
 
     //~ Instance initializers ................................................................................
 
@@ -308,5 +335,4 @@ public class TestModule
          */
         pkg.type = PackageType.NONE;
     }
-
 }
