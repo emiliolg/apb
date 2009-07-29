@@ -1,17 +1,24 @@
 
-// ...........................................................................................................
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
-// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
-// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
-// The copyright notice above does not evidence any actual or intended
-// publication of such source code.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-// ...........................................................................................................
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
 
 package apb.tasks;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -103,10 +110,10 @@ public class ExecTask
     private Process createProcess()
         throws IOException
     {
-        ProcessBuilder      b = new ProcessBuilder(cmd);
+        ProcessBuilder      b = new ProcessBuilder(getArguments());
         Map<String, String> e = b.environment();
 
-        for (Map.Entry<String, String> entry : environment.entrySet()) {
+        for (Map.Entry<String, String> entry : getEnvironment().entrySet()) {
             e.put(entry.getKey(), entry.getValue());
         }
 
@@ -149,14 +156,16 @@ public class ExecTask
         if (env.isVerbose()) {
             env.logVerbose("Executing: \n");
 
-            for (String arg : cmd) {
+            for (String arg : getArguments()) {
                 env.logVerbose("     %s\n", arg);
             }
 
-            if (!environment.isEmpty()) {
+            final Map<String, String> e = getEnvironment();
+
+            if (!e.isEmpty()) {
                 env.logVerbose("Environment: \n");
 
-                for (Map.Entry<String, String> entry : environment.entrySet()) {
+                for (Map.Entry<String, String> entry : e.entrySet()) {
                     env.logVerbose("            %s='%s'\n", entry.getKey(), entry.getValue());
                 }
             }

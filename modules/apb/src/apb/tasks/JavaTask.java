@@ -1,12 +1,20 @@
 
-// ...........................................................................................................
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
-// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
-// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
-// The copyright notice above does not evidence any actual or intended
-// publication of such source code.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-// ...........................................................................................................
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
 
 package apb.tasks;
 
@@ -36,11 +44,11 @@ public class JavaTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private String                    classpath = "";
-    private boolean                            executeJar;
-    private int                                exitValue;
-    private String                             jarOrClass;
-    @NotNull private final List<String>        javaArgs;
+    @NotNull private String             classpath = "";
+    private boolean                     executeJar;
+    private int                         exitValue;
+    private String                      jarOrClass;
+    @NotNull private final List<String> javaArgs;
 
     /**
      * Max memory in megabytes used by the Java command
@@ -160,12 +168,12 @@ public class JavaTask
         }
 
         args.add(jarOrClass);
-        args.addAll(cmd);
+        args.addAll(getArguments());
         ExecTask task = new ExecTask(env, args);
 
         task.setCurrentDirectory(getCurrentDirectory());
 
-        task.putAll(environment);
+        task.putAll(getEnvironment());
         task.execute();
         exitValue = task.getExitValue();
     }
@@ -208,4 +216,5 @@ public class JavaTask
     {
         this.memory = memory;
     }
+
 }

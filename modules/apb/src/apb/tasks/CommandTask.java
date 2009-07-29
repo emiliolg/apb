@@ -1,12 +1,20 @@
 
-// ...........................................................................................................
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
-// Copyright (c) 1993, 2009, Oracle and/or its affiliates. All rights reserved
-// THIS IS UNPUBLISHED PROPRIETARY SOURCE CODE OF Oracle Corp.
-// The copyright notice above does not evidence any actual or intended
-// publication of such source code.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-// ...........................................................................................................
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
 
 package apb.tasks;
 
@@ -18,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import apb.Environment;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -32,9 +39,9 @@ public abstract class CommandTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull protected final List<String>        cmd;
-    @NotNull private File                      currentDirectory;
-    @NotNull protected final Map<String, String> environment;
+    @NotNull private final Map<String, String> environment;
+    @NotNull private final List<String> cmd;
+    @NotNull private File               currentDirectory;
 
     //~ Constructors .........................................................................................
 
@@ -47,6 +54,11 @@ public abstract class CommandTask
     }
 
     //~ Methods ..............................................................................................
+
+    @NotNull public Map<String, String> getEnvironment()
+    {
+        return environment;
+    }
 
     /**
      * Add one or more arguments to the command line to be executed
@@ -95,5 +107,10 @@ public abstract class CommandTask
     @NotNull public File getCurrentDirectory()
     {
         return currentDirectory;
+    }
+
+    @NotNull public List<String> getArguments()
+    {
+        return cmd;
     }
 }
