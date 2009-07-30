@@ -489,32 +489,13 @@ public abstract class Environment
      */
     @NotNull public String getProperty(@NotNull String id)
     {
-        String result = baseProperties.get(id);
-
-        if (result == null) {
-            result = projectProperties.get(id);
-
-            if (result == null) {
-                PropertyException e = new PropertyException(id);
-
-                if (isVerbose()) {
-                    //                StringBuilder additionalInfo = new StringBuilder();
-                    //                additionalInfo.append("\nDefined properties are: \n");
-                    //
-                    //                for (Map.Entry<String, String> entry : properties.entrySet()) {
-                    //                    additionalInfo.append("  ").append(entry.getKey()).append(" = ")
-                    //                      .append(StringUtils.encode(entry.getValue())).append("\n");
-                    //                }
-                    //
-                    //                e.setAdditionalInfo(additionalInfo.toString());
-                }
-
-                handle(e);
-                result = "";
-            }
+        if (!hasProperty(id)) {
+            handle(new PropertyException(id));
+            return "";
         }
 
-        return result;
+        String result = baseProperties.get(id);
+        return result != null ? result : projectProperties.get(id);
     }
 
     /**
@@ -527,6 +508,11 @@ public abstract class Environment
     {
         String result = baseProperties.get(id);
         return result != null ? result : (result = projectProperties.get(id)) != null ? result : defaultValue;
+    }
+
+    public boolean hasProperty(@NotNull String id)
+    {
+        return baseProperties.containsKey(id) || projectProperties.containsKey(id);
     }
 
     /**

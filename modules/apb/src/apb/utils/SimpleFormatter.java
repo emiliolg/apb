@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +15,14 @@
 // limitations under the License
 //
 
+
 package apb.utils;
 
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
-import apb.Environment;
 import apb.Command;
+import apb.Environment;
 //
 // User: emilio
 // Date: Dec 4, 2008
@@ -31,8 +33,9 @@ public class SimpleFormatter
 {
     //~ Instance fields ......................................................................................
 
-    private final Environment env;
     private boolean beginOfLine;
+
+    private final Environment env;
 
     //~ Constructors .........................................................................................
 
@@ -46,30 +49,39 @@ public class SimpleFormatter
 
     public String format(LogRecord record)
     {
-        String str = formatMsg(record);
-        StringBuilder result = new StringBuilder(str.length() + 3 * HEADER_LENGTH);
+        String        str = trimColors(formatMsg(record));
+        StringBuilder result = new StringBuilder();
 
         LineSplitter splitter = new LineSplitter(str);
 
         while (splitter.nextLine()) {
             if (beginOfLine) {
-                appendHeader(result);
+                result.append(header());
             }
+
             beginOfLine = splitter.appendLine(result);
         }
 
         return result.toString();
     }
 
-    protected void appendHeader(StringBuilder result)
+    protected String trimColors(String str)
     {
-        final String current = env.getCurrentName();
+        return ColorUtils.trimColors(str);
+    }
+
+    protected String header()
+    {
+        StringBuilder result = new StringBuilder();
+        final String  current = env.getCurrentName();
+
         if (!current.isEmpty()) {
             int n = result.length();
             result.append('[');
             result.append(current);
 
             final Command cmd = env.getCurrentCommand();
+
             if (cmd != null) {
                 result.append('.');
                 result.append(cmd.getQName());
@@ -88,6 +100,8 @@ public class SimpleFormatter
                 result.append(' ');
             }
         }
+
+        return result.toString();
     }
 
     private static String formatMsg(LogRecord record)
@@ -104,8 +118,8 @@ public class SimpleFormatter
 
     //~ Static fields/initializers ...........................................................................
 
-    private static final int HEADER_LENGTH = 30;
-    private static final String      ls = System.getProperty("line.separator");
+    private static final int    HEADER_LENGTH = 30;
+    private static final String ls = System.getProperty("line.separator");
 
     //~ Inner Classes ........................................................................................
 
@@ -131,10 +145,14 @@ public class SimpleFormatter
         boolean appendLine(StringBuilder sb)
         {
             sb.append(str, start, length);
+
             // Append ls?
             final boolean eol = nextChar > start + length;
-            if (eol)
+
+            if (eol) {
                 sb.append(ls);
+            }
+
             return eol;
         }
 

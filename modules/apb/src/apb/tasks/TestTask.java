@@ -278,7 +278,9 @@ public class TestTask
         }
 
         for (String prop : useProperties) {
-            result.put(prop, env.getProperty(prop, ""));
+            if (env.hasProperty(prop)) {
+                result.put(prop, env.getProperty(prop));
+            }
         }
 
         return result;

@@ -35,6 +35,8 @@ import apb.utils.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static apb.utils.ColorUtils.*;
+
 /**
  * A Diagnostic Reporter for the Java Compiler
  * This class implements the DiagnosticListener interface for the JavaCompiler
@@ -120,7 +122,7 @@ public class DiagnosticReporter
             msg.append("Compilation failed: ");
 
             if (errors != 0) {
-                msg.append(errors == 1 ? "1 error" : errors + " errors");
+                msg.append(colorize(RED, errors == 1 ? "1 error" : errors + " errors"));
 
                 if (warns > 0) {
                     msg.append(" and ");
@@ -128,7 +130,7 @@ public class DiagnosticReporter
             }
 
             if (warns > 0) {
-                msg.append(warns == 1 ? "1 warning" : warns + " warnings");
+                msg.append(colorize(YELLOW, warns == 1 ? "1 warning" : warns + " warnings"));
             }
 
             msg.append(".");
@@ -180,6 +182,7 @@ public class DiagnosticReporter
     {
         if (!excludes.isEmpty()) {
             String name = javacTask.removeSourceDir(fileObject.toString());
+
             if (name != null) {
                 for (String exclude : excludes) {
                     if (StringUtils.matchPath(exclude, name, true)) {

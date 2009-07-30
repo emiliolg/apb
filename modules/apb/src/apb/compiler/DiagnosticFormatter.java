@@ -28,6 +28,7 @@ import apb.utils.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static apb.utils.ColorUtils.*;
 import static apb.utils.StringUtils.nChars;
 
 /**
@@ -122,14 +123,14 @@ class DiagnosticFormatter
         else {
             switch (diagnostic.getKind()) {
             case NOTE:
-                result = "Note";
+                result = colorize(BLUE, "Note");
                 break;
             case MANDATORY_WARNING:
             case WARNING:
-                result = "Warning";
+                result = colorize(YELLOW, "Warning");
                 break;
             case ERROR:
-                result = "Error";
+                result = colorize(RED, "Error");
                 break;
             default:
                 result = "";

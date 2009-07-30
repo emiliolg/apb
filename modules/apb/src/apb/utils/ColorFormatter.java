@@ -36,15 +36,13 @@ public class ColorFormatter
 
     //~ Methods ..............................................................................................
 
-    @Override protected void appendHeader(StringBuilder result)
+    @Override protected String trimColors(String str)
     {
-        result.append(GREEN_COLOR);
-        super.appendHeader(result);
-        result.append(RESET_COLOR);
+        return str;
     }
 
-    //~ Static fields/initializers ...........................................................................
-
-    private static final String GREEN_COLOR = "\033[32m";
-    private static final String RESET_COLOR = "\033[0m";
+    @Override protected String header()
+    {
+        return ColorUtils.colorize(ColorUtils.GREEN, super.header());
+    }
 }
