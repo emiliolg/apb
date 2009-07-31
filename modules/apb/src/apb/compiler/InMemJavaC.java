@@ -333,31 +333,21 @@ public class InMemJavaC
             throws ClassNotFoundException
         {
             String path = source.getPath();
+            int    lastDot = path.lastIndexOf('.');
 
-            for (Map.Entry<String, ClassInfo> entry : classMap.entrySet()) {
-                if (path.equals(entry.getValue().getPath())) {
-                    return entry.getKey();
+            if (lastDot != -1) {
+                path = path.substring(0, lastDot);
+            }
+
+            path = path.replace(File.separatorChar, '.');
+
+            for (String className : classMap.keySet()) {
+                if (path.endsWith(className)) {
+                    return className;
                 }
             }
 
             return null;
-                   //
-                   //TODO Check that further comparison is not necessary....
-
-            //            int    lastDot = path.lastIndexOf('.');
-            //
-            //            if (lastDot != -1) {
-            //                path = path.substring(0, lastDot);
-            //            }
-            //
-            //            path = path.replace(File.separatorChar, '.');
-            //
-            //            for (String className : classMap.keySet()) {
-            //                if (path.endsWith(className)) {
-            //                    return className;
-            //                }
-            //            }
-            //
         }
 
         @Nullable File sourceFile(String className)
