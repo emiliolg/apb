@@ -21,7 +21,6 @@ package apb.utils;
 import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
-import apb.Command;
 import apb.Environment;
 //
 // User: emilio
@@ -33,9 +32,9 @@ public class SimpleFormatter
 {
     //~ Instance fields ......................................................................................
 
-    private boolean beginOfLine;
+    final Environment env;
 
-    private final Environment env;
+    private boolean beginOfLine;
 
     //~ Constructors .........................................................................................
 
@@ -72,36 +71,7 @@ public class SimpleFormatter
 
     protected String header()
     {
-        StringBuilder result = new StringBuilder();
-        final String  current = env.getCurrentName();
-
-        if (!current.isEmpty()) {
-            int n = result.length();
-            result.append('[');
-            result.append(current);
-
-            final Command cmd = env.getCurrentCommand();
-
-            if (cmd != null) {
-                result.append('.');
-                result.append(cmd.getQName());
-            }
-
-            int maxLength = HEADER_LENGTH + n;
-
-            if (result.length() > maxLength) {
-                result.setLength(maxLength);
-            }
-
-            result.append(']');
-            n = result.length() - n;
-
-            for (int i = HEADER_LENGTH + 1 - n; i >= 0; i--) {
-                result.append(' ');
-            }
-        }
-
-        return result.toString();
+        return env.makeStandardHeader();
     }
 
     private static String formatMsg(LogRecord record)
@@ -118,7 +88,6 @@ public class SimpleFormatter
 
     //~ Static fields/initializers ...........................................................................
 
-    private static final int    HEADER_LENGTH = 30;
     private static final String ls = System.getProperty("line.separator");
 
     //~ Inner Classes ........................................................................................

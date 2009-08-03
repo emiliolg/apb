@@ -288,19 +288,19 @@ public class TestTask
 
     private void showClassPath()
     {
-        env.logVerbose("Test Classpath: \n");
+        logVerbose("Test Classpath: \n");
 
         for (File file : classPath) {
-            env.logVerbose("                %s\n", file);
+            logVerbose("                %s\n", file);
         }
     }
 
     private void showProperties()
     {
-        env.logVerbose("Properties: \n");
+        logVerbose("Properties: \n");
 
         for (Map.Entry<String, String> e : properties.entrySet()) {
-            env.logVerbose("         %s='%s'\n", e.getKey(), e.getValue());
+            logVerbose("         %s='%s'\n", e.getKey(), e.getValue());
         }
     }
 

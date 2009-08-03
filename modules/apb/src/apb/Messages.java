@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb;
 
@@ -70,18 +73,19 @@ public class Messages
         return "Project path directory: '" + dir + "' does not exist.\n";
     }
 
-    static String COMMANDS(String cmds)
-    {
-        return "command : one of " + cmds;
-    }
-
     public static String BUILD_COMPLETED(long ts)
     {
         return "\nBUILD COMPLETED in " + ts + " milliseconds.\n";
     }
 
-    public static String MANIFEST_OVERRIDE(final File file) {
-        return "Module's manifest is overriden by " + file.getAbsolutePath()  + "\n";
+    public static String MANIFEST_OVERRIDE(final File file)
+    {
+        return "Module's manifest is overriden by " + file.getAbsolutePath() + "\n";
+    }
+
+    static String COMMANDS(String cmds)
+    {
+        return "command : one of " + cmds;
     }
 
     //~ Static fields/initializers ...........................................................................
@@ -96,13 +100,12 @@ public class Messages
     @NonNls public static final String FORCE_BUILD = "Force build (Do not check timestamps).";
     @NonNls public static final String NON_RECURSIVE = "Do not recurse over module dependencies.";
     @NonNls public static final String DEFINE_PROPERTY = "Define a property.";
+    @NonNls public static final String TRACK_EXECUTION = "Track execution statistics.";
+    @NonNls public static final String DEBUG = "What to show when doing verbose output.";
     @NonNls public static final String COLON_SEPARATED_PATTERNS = "<pattern:pattern..>";
-    @NonNls public static final String SET_TO_INCLUDE =
-        "Set of test files to include.";
-    @NonNls public static final String SET_TO_EXCLUDE =
-        "Set of test files to exclude.";
-    @NonNls public static final String TEST_GROUPS =
-        "Set of test groups to execute.";
+    @NonNls public static final String SET_TO_INCLUDE = "Set of test files to include.";
+    @NonNls public static final String SET_TO_EXCLUDE = "Set of test files to exclude.";
+    @NonNls public static final String TEST_GROUPS = "Set of test groups to execute.";
     @NonNls public static final String REPORT_SPEC_FILE =
         "Specify a serialized object with the report specification";
     @NonNls public static final String OUTPUT_FOR_REPORTS =

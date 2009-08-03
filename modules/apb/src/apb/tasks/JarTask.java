@@ -151,7 +151,7 @@ public class JarTask
 
     public void setManifestAttribute(Attributes.Name name, String value)
     {
-        env.logVerbose("Set manifest attribute %s=%s\n", name, value);
+        logVerbose("Set manifest attribute %s=%s\n", name, value);
         manifest.getMainAttributes().put(name, value);
     }
 
@@ -352,7 +352,7 @@ public class JarTask
     {
         writeParentDirs(jarOut, fileName, addedDirs);
 
-        env.logVerbose("Adding entry... %s\n", fileName);
+        logVerbose("Adding entry... %s\n", fileName);
 
         JarEntry entry = new JarEntry(fileName);
         jarOut.putNextEntry(entry);
@@ -409,7 +409,7 @@ public class JarTask
 
         for (int i = directories.size() - 1; i >= 0; i--) {
             String dirName = directories.get(i);
-            env.logVerbose("Adding dir...   %s\n", dirName);
+            logVerbose("Adding dir...   %s\n", dirName);
             JarEntry ze = new JarEntry(dirName);
             ze.setSize(0);
             ze.setMethod(ZipEntry.STORED);

@@ -254,12 +254,12 @@ public class DownloadTask
         }
 
         final long destTime = dest.lastModified();
-        env.logVerbose("Local  file timestamp: %tc\n", destTime);
+        logVerbose("Local  file timestamp: %tc\n", destTime);
 
         final long baseTime = System.currentTimeMillis() - updatePolicy.getInterval();
 
         if (destTime >= baseTime) {
-            env.logVerbose("Update policy time %tc not reached\n", destTime + updatePolicy.getInterval());
+            logVerbose("Update policy time %tc not reached\n", destTime + updatePolicy.getInterval());
             return true;
         }
 
@@ -273,7 +273,9 @@ public class DownloadTask
         final long result =
             "ftp".equalsIgnoreCase(source.getProtocol()) ? getMDTM(new File(source.getFile()))
                                                          : getConnection().getLastModified();
-        env.logVerbose("Remote file timestamp: %tc\n", result);
+
+        logVerbose("Remote file timestamp: %tc\n", result);
+
         return result;
     }
 

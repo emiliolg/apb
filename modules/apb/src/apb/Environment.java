@@ -24,8 +24,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -40,6 +42,7 @@ import apb.metadata.DependencyList;
 import apb.metadata.Module;
 import apb.metadata.ProjectElement;
 
+import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 import apb.utils.PropertyExpansor;
 
@@ -50,6 +53,7 @@ import static java.lang.Character.isJavaIdentifierPart;
 
 import static apb.utils.FileUtils.JAVA_EXT;
 import static apb.utils.StringUtils.isEmpty;
+import static apb.utils.StringUtils.nChars;
 
 /**
  * This class represents an Environment that includes common services like:
@@ -86,14 +90,24 @@ public abstract class Environment
     private long clock;
 
     /**
-     * The current command being run
+     * The stack of executions
      */
-    @Nullable private Command currentCommand;
+    @NotNull private final LinkedList<Context> contextStack;
 
     /**
      * The current element being run
      */
     @Nullable private ProjectElementHelper currentElement;
+
+    /**
+     * The name of the current module being processed
+     */
+    @NotNull private String currentName;
+
+    /**
+     * Control what to show when logging
+     */
+    @NotNull private final EnumSet<DebugOption> debugOptions;
 
     /**
      * The index of definitions
@@ -113,6 +127,7 @@ public abstract class Environment
      */
     private final Map<String, ProjectElementHelper> helpersByElement;
     private InMemJavaC                              javac;
+    private boolean                                 nonRecursive;
 
     /**
      * An abstract representation of the Operating System
@@ -134,7 +149,8 @@ public abstract class Environment
     /**
      * Processing and messaging options
      */
-    private boolean quiet, showStackTrace, verbose, nonRecursive;
+    private boolean quiet;
+    private boolean showStackTrace;
 
     //~ Constructors .........................................................................................
 
@@ -147,6 +163,8 @@ public abstract class Environment
         os = Os.getInstance();
         baseProperties = new TreeMap<String, String>();
         projectProperties = new TreeMap<String, String>();
+        currentName = "";
+        contextStack = new LinkedList<Context>();
 
         helpersByElement = new HashMap<String, ProjectElementHelper>();
         artifactsCache = new ArtifactsCache(this);
@@ -163,6 +181,7 @@ public abstract class Environment
         extClassPath = loadExtensionsPath(baseProperties);
         resetJavac();
         projectPath = new LinkedHashSet<File>();
+        debugOptions = EnumSet.noneOf(DebugOption.class);
 
         // Assign the singleton
         environment = this;
@@ -274,19 +293,6 @@ public abstract class Environment
     }
 
     /**
-     * Set the current command being run (If command == null we are marking that no command is being ran
-     * @param command The command
-     */
-    public void setCurrentCommand(@Nullable Command command)
-    {
-        currentCommand = command;
-
-        if (command == null) {
-            currentElement = null;
-        }
-    }
-
-    /**
      * Handle an Error. It creates a build Exception with the specified msg.
      * And delegates the handling to {@link #handle(Throwable t)}
      * @param msg The message used to create the build exception
@@ -354,15 +360,15 @@ public abstract class Environment
      */
     public boolean isVerbose()
     {
-        return verbose;
+        return !debugOptions.isEmpty();
     }
 
     /**
-     * Log with level verbose (Log everything)
+     * Returns true if must show the following option
      */
-    public void setVerbose()
+    public boolean mustShow(DebugOption option)
     {
-        verbose = true;
+        return debugOptions.contains(option);
     }
 
     /**
@@ -403,7 +409,7 @@ public abstract class Environment
      */
     @NotNull public String getCurrentName()
     {
-        return currentElement == null ? "" : currentElement.getName();
+        return currentName;
     }
 
     /**
@@ -469,9 +475,9 @@ public abstract class Environment
     /**
      * Get the current command being run or null if no one
      */
-    @Nullable public Command getCurrentCommand()
+    @NotNull public String getCurrentCommand()
     {
-        return currentCommand;
+        return contextStack.isEmpty() ? "" : contextStack.getLast().getCommand();
     }
 
     /**
@@ -648,6 +654,7 @@ public abstract class Environment
     {
         final ProjectElementHelper helper = getHelper(element);
         currentElement = helper;
+        currentName = helper.getName();
 
         // @todo this can be optimize if currentElement.element != null
         // but I'll need to reset the properties in env
@@ -728,7 +735,7 @@ public abstract class Environment
 
     public void putProperty(String name, String value)
     {
-        if (isVerbose()) {
+        if (mustShow(DebugOption.PROPERTIES)) {
             logVerbose("property %s=%s\n", name, value);
         }
 
@@ -766,6 +773,7 @@ public abstract class Environment
             throw e.getException();
         }
 
+        currentName = element.getName();
         return getHelper(element);
     }
 
@@ -815,6 +823,56 @@ public abstract class Environment
             handle(e);
         }
     }
+
+    public void setDebugOptions(@NotNull EnumSet<DebugOption> options)
+    {
+        debugOptions.addAll(options);
+
+        if (!options.isEmpty()) {
+            setVerbose();
+        }
+    }
+
+    public String makeStandardHeader()
+    {
+        StringBuilder result = new StringBuilder();
+
+        if (mustShow(DebugOption.TRACK)) {
+            result.append(nChars(contextStack.size() * 4, ' '));
+        }
+
+        final String current = getCurrentName();
+
+        if (!current.isEmpty()) {
+            int n = result.length();
+            result.append('[');
+            result.append(current);
+
+            final String cmd = getCurrentCommand();
+
+            if (!cmd.isEmpty()) {
+                result.append('.');
+                result.append(cmd);
+            }
+
+            int maxLength = HEADER_LENGTH + n;
+
+            if (result.length() > maxLength) {
+                result.setLength(maxLength);
+            }
+
+            result.append(']');
+            n = result.length() - n;
+
+            for (int i = HEADER_LENGTH + 1 - n; i >= 0; i--) {
+                result.append(' ');
+            }
+        }
+
+        return result.toString();
+    }
+
+    protected void setVerbose() {}
 
     /**
      * Do all initializations that needs properties already initialized
@@ -918,6 +976,31 @@ public abstract class Environment
         return helpersByElement;
     }
 
+    void startExecution(@NotNull final String name, @NotNull String command)
+    {
+        contextStack.add(new Context(name, command));
+
+        if (mustShow(DebugOption.TRACK)) {
+            currentName = name;
+            logVerbose("About to execute '%s.%s'\n", name, command);
+        }
+    }
+
+    void endExecution(@NotNull final String name, @NotNull String command)
+    {
+        if (mustShow(DebugOption.TRACK)) {
+            Context       ctx = contextStack.getLast();
+            long          ms = System.currentTimeMillis() - ctx.startTime;
+            final Runtime runtime = Runtime.getRuntime();
+            long          free = runtime.freeMemory() / MB;
+            long          total = runtime.totalMemory() / MB;
+            logVerbose("Execution of '%s.%s'. Finished in %d milliseconds. Memory usage: %dM of %dM\n", name,
+                       command, ms, total - free, total);
+        }
+
+        contextStack.removeLast();
+    }
+
     private static Set<File> loadExtensionsPath(Map<String, String> baseProperties)
     {
         String path = System.getenv("APB_EXT_PATH");
@@ -1001,6 +1084,8 @@ public abstract class Environment
 
     //~ Static fields/initializers ...........................................................................
 
+    private static final long MB = (1024 * 1024);
+
     /**
      * A singleton to simplify Task invocations from the Module files
      * (May be in the future this should be a ThreadLocal...)
@@ -1015,8 +1100,35 @@ public abstract class Environment
     //
     private static final String PROJECTS_HOME_PROP_KEY = "projects-home";
 
-    static final String GROUP_PROP_KEY = "group";
-    static final String VERSION_PROP_KEY = "version";
-    static final String PKG_PROP_KEY = "pkg";
-    static final String PKG_DIR_KEY = PKG_PROP_KEY + ".dir";
+    static final String      GROUP_PROP_KEY = "group";
+    static final String      VERSION_PROP_KEY = "version";
+    static final String      PKG_PROP_KEY = "pkg";
+    static final String      PKG_DIR_KEY = PKG_PROP_KEY + ".dir";
+    private static final int HEADER_LENGTH = 30;
+
+    //~ Inner Classes ........................................................................................
+
+    private static class Context
+    {
+        private String command;
+        private String element;
+        private long   startTime;
+
+        public Context(String element, String command)
+        {
+            this.element = element;
+            this.command = command;
+            startTime = System.currentTimeMillis();
+        }
+
+        public String getCommand()
+        {
+            return command;
+        }
+
+        public String getElement()
+        {
+            return element;
+        }
+    }
 }

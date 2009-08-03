@@ -70,7 +70,7 @@ public class ProjectHelper
         return result;
     }
 
-    void build(String commandName)
+    protected void doBuild(String commandName)
     {
         for (ProjectElementHelper component : components) {
             component.build(commandName);

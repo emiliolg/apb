@@ -145,35 +145,35 @@ public class JavacTask
         List<File> files = findFiles();
 
         if (files.isEmpty()) {
-            env.logVerbose("Nothing to compile\n");
+            logVerbose("Nothing to compile\n");
         }
         else {
             env.logInfo("Compiling %3d file%s\n", files.size(), (files.size() > 1) ? "s" : "");
 
             if (env.isVerbose()) {
                 for (File file : FileUtils.removePrefix(sourceDirs, files)) {
-                    env.logVerbose("         %s\n", file);
+                    logVerbose("         %s\n", file);
                 }
 
-                env.logVerbose("ClassPath: \n");
+                logVerbose("ClassPath: \n");
 
                 for (File file : classPath) {
-                    env.logVerbose("         %s\n", file);
+                    logVerbose("         %s\n", file);
                 }
 
-                env.logVerbose("Extra Libraries: \n");
+                logVerbose("Extra Libraries: \n");
 
                 for (File file : extraLibraries) {
-                    env.logVerbose("         %s\n", file);
+                    logVerbose("         %s\n", file);
                 }
 
-                env.logVerbose("Source:\n");
+                logVerbose("Source:\n");
 
                 for (File dir : sourceDirs) {
-                    env.logVerbose("         %s\n", dir);
+                    logVerbose("         %s\n", dir);
                 }
 
-                env.logVerbose("Target directory: %s\n", targetDir);
+                logVerbose("Target directory: %s\n", targetDir);
             }
 
             List<String> options = new ArrayList<String>();
@@ -260,7 +260,7 @@ public class JavacTask
                 File classFile = new File(targetDir, FileUtils.changeExtension(file, ".class"));
 
                 if (classFile.exists()) {
-                    env.logVerbose("Removing class: %s\n", classFile);
+                    logVerbose("Removing class: %s\n", classFile);
                     classFile.delete();
                 }
             }
@@ -351,7 +351,7 @@ public class JavacTask
                     result.add(sourceFile);
                 }
                 else if (trackUnusedDependencies) {
-                    env.logVerbose("Not tracking dependencies because some files will not be compiled\n");
+                    logVerbose("Not tracking dependencies because some files will not be compiled\n");
                     trackUnusedDependencies = false;
                 }
             }

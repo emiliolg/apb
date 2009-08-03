@@ -91,7 +91,7 @@ public class RemoveTask
                 doRemoveDir(f);
             }
             else {
-                env.logVerbose("Deleting: %s\n", f.getAbsolutePath());
+                logVerbose("Deleting: %s\n", f.getAbsolutePath());
 
                 if (!f.delete()) {
                     env.handle("Unable to delete file " + f.getAbsolutePath());

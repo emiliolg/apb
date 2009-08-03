@@ -86,56 +86,6 @@ public class OptionParser
         return addOption(String.class, '\0', name, description, valueDescription);
     }
 
-    protected final Option<Boolean> addBooleanOption(final char letter, @NotNull final String name,
-                                                     @NotNull String description)
-    {
-        return addOption(Boolean.class, letter, name, description, "");
-    }
-
-    protected final Option<Integer> addIntegerOption(final char letter, @NotNull final String name,
-                                                     @NotNull String description, String valueDescription)
-    {
-        return addOption(Integer.class, letter, name, description, valueDescription);
-    }
-
-    protected List<String> parse()
-    {
-        int i;
-
-        for (i = 0; i < arguments.size(); ++i) {
-            String arg = arguments.get(i);
-
-            if (!arg.startsWith("-")) {
-                break;
-            }
-            if ("--".equals(arg) || "-".equals(arg)) {
-                i++;
-                break;
-            }
-
-            if (arg.charAt(1) == '-') {
-                Option opt = findOption(arg);
-                i = execute(opt, i);
-            }
-            else {
-                for (int j = 1; j < arg.length(); j++) {
-                    char   optChar = arg.charAt(j);
-                    Option opt = findOption(optChar);
-
-                    // Check if the value is embedded (e.g -Daaaa)
-                    if (!opt.isBoolean() && j < arg.length() - 1) {
-                        opt.execute(arg.substring(j + 1));
-                        break;
-                    }
-
-                    i = execute(opt, i);
-                }
-            }
-        }
-
-        return new ArrayList<String>(arguments.subList(i, arguments.size()));
-    }
-
     public void printHelp()
     {
         System.err.println(getAppName() + " " + Messages.OPT_IN_BRACKETS + " " + getArgShortDescription());
@@ -168,6 +118,57 @@ public class OptionParser
         }
 
         System.exit(0);
+    }
+
+    protected final Option<Boolean> addBooleanOption(final char letter, @NotNull final String name,
+                                                     @NotNull String description)
+    {
+        return addOption(Boolean.class, letter, name, description, "");
+    }
+
+    protected final Option<Integer> addIntegerOption(final char letter, @NotNull final String name,
+                                                     @NotNull String description, String valueDescription)
+    {
+        return addOption(Integer.class, letter, name, description, valueDescription);
+    }
+
+    protected List<String> parse()
+    {
+        int i;
+
+        for (i = 0; i < arguments.size(); ++i) {
+            String arg = arguments.get(i);
+
+            if (!arg.startsWith("-")) {
+                break;
+            }
+
+            if ("--".equals(arg) || "-".equals(arg)) {
+                i++;
+                break;
+            }
+
+            if (arg.charAt(1) == '-') {
+                Option opt = findOption(arg);
+                i = execute(opt, i);
+            }
+            else {
+                for (int j = 1; j < arg.length(); j++) {
+                    char   optChar = arg.charAt(j);
+                    Option opt = findOption(optChar);
+
+                    // Check if the value is embedded (e.g -Daaaa)
+                    if (!opt.isBoolean() && j < arg.length() - 1) {
+                        opt.execute(arg.substring(j + 1));
+                        break;
+                    }
+
+                    i = execute(opt, i);
+                }
+            }
+        }
+
+        return new ArrayList<String>(arguments.subList(i, arguments.size()));
     }
 
     Option findOption(char option)
@@ -396,6 +397,11 @@ public class OptionParser
                 new Option<T>(optionParser, type, letter, name, description, valueDescription);
             result.value = type.cast(!(Boolean) value);
             return result;
+        }
+
+        public List<T> getValidValues()
+        {
+            return validValues;
         }
 
         void execute(final String str)

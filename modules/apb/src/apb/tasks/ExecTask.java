@@ -154,23 +154,23 @@ public class ExecTask
     private void logCommand()
     {
         if (env.isVerbose()) {
-            env.logVerbose("Executing: \n");
+            logVerbose("Executing: \n");
 
             for (String arg : getArguments()) {
-                env.logVerbose("     %s\n", arg);
+                logVerbose("     %s\n", arg);
             }
 
             final Map<String, String> e = getEnvironment();
 
             if (!e.isEmpty()) {
-                env.logVerbose("Environment: \n");
+                logVerbose("Environment: \n");
 
                 for (Map.Entry<String, String> entry : e.entrySet()) {
-                    env.logVerbose("            %s='%s'\n", entry.getKey(), entry.getValue());
+                    logVerbose("            %s='%s'\n", entry.getKey(), entry.getValue());
                 }
             }
 
-            env.logVerbose("Current directory: %s\n", getCurrentDirectory());
+            logVerbose("Current directory: %s\n", getCurrentDirectory());
         }
     }
 }

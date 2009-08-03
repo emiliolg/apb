@@ -23,6 +23,8 @@ import java.util.concurrent.Callable;
 
 import apb.Environment;
 
+import apb.utils.DebugOption;
+
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -68,7 +70,7 @@ public abstract class Task
             File targetFile = env.fileFromBase(target);
 
             if (!targetFile.exists()) {
-                env.logVerbose("Executing because file '%s' does not exist.\n", target);
+                logVerbose("Executing because file '%s' does not exist.\n", target);
                 exec = true;
             }
             else {
@@ -90,8 +92,8 @@ public abstract class Task
                     }
 
                     if (sourceMod > targetMod) {
-                        env.logVerbose("Executing because file '%s' is more recent than '%s'.\n", dependency,
-                                       target);
+                        logVerbose("Executing because file '%s' is more recent than '%s'.\n", dependency,
+                                   target);
                         exec = true;
                         break;
                     }
@@ -103,7 +105,7 @@ public abstract class Task
             execute();
         }
         else {
-            env.logVerbose("Skipping because file '%s' is more recent than all the dependencies.\n", target);
+            logVerbose("Skipping because file '%s' is more recent than all the dependencies.\n", target);
         }
     }
 
@@ -120,7 +122,7 @@ public abstract class Task
                 final long targetMod = targetFile.lastModified();
 
                 if (targetMod == 0) {
-                    env.logVerbose("File '%s' does not exist.\n", targetFile);
+                    logVerbose("File '%s' does not exist.\n", targetFile);
                     exec = true;
                     break;
                 }
@@ -128,8 +130,8 @@ public abstract class Task
                 File sourceFile = new File(sourceDir, f);
 
                 if (sourceFile.lastModified() > targetMod) {
-                    env.logVerbose("Executing because file '%s' is more recent than '%s'.\n",
-                                   sourceFile.getPath(), targetFile.getPath());
+                    logVerbose("Executing because file '%s' is more recent than '%s'.\n",
+                               sourceFile.getPath(), targetFile.getPath());
                     exec = true;
                     break;
                 }
@@ -140,7 +142,7 @@ public abstract class Task
             execute();
         }
         else {
-            env.logVerbose("Skipping because all target files are more recent than source files\n");
+            logVerbose("Skipping because all target files are more recent than source files\n");
         }
     }
 
@@ -148,5 +150,12 @@ public abstract class Task
     {
         execute();
         return null;
+    }
+
+    protected void logVerbose(String msg, Object... args)
+    {
+        if (env.mustShow(DebugOption.TASK_INFO)) {
+            env.logVerbose(msg, args);
+        }
     }
 }

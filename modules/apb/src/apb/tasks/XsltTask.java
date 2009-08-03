@@ -220,11 +220,11 @@ public class XsltTask
             setTransformationParameters(transformer);
 
             if (env.isVerbose()) {
-                env.logVerbose("Processing :'%s'\n", infile);
-                env.logVerbose("        to :'%s'\n", outfile);
+                logVerbose("Processing :'%s'\n", infile);
+                logVerbose("        to :'%s'\n", outfile);
 
                 if (styleName != null) {
-                    env.logVerbose("using xslt :'%s'\n", styleName);
+                    logVerbose("using xslt :'%s'\n", styleName);
                 }
             }
             else {

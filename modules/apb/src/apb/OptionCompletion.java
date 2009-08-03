@@ -20,6 +20,7 @@ package apb;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import apb.index.DefinitionsIndex;
@@ -66,18 +67,25 @@ public class OptionCompletion
         else if (last.startsWith("-")) {
             print(findShortOptions(last.charAt(1)));
         }
-        else if (last.isEmpty()) {
-            final ModuleInfo info = env.getDefinitionsIndex().searchCurrentDirectory();
+        else {
+            List<?> values = optionValues(arguments.get(argc - 1));
 
-            if (info == null) {
-                printCompletions("");
+            if (!values.isEmpty()) {
+                printValues(values, last);
+            }
+            else if (last.isEmpty()) {
+                final ModuleInfo info = env.getDefinitionsIndex().searchCurrentDirectory();
+
+                if (info == null) {
+                    printCompletions("");
+                }
+                else {
+                    printCommands(info, "");
+                }
             }
             else {
-                printCommands(info, "");
+                printCompletions(last);
             }
-        }
-        else {
-            printCompletions(last);
         }
 
         System.exit(0);
@@ -87,6 +95,17 @@ public class OptionCompletion
     {
         for (String opt : opts) {
             System.out.print(opt + " ");
+        }
+    }
+
+    private static void printValues(Collection<?> values, String start)
+    {
+        for (Object v : values) {
+            String s = String.valueOf(v);
+
+            if (s.startsWith(start)) {
+                System.out.print(s + " ");
+            }
         }
     }
 
@@ -101,6 +120,30 @@ public class OptionCompletion
         }
 
         return result;
+    }
+
+    private List<?> optionValues(String opt)
+    {
+        if (opt.startsWith("--")) {
+            opt = opt.substring(2);
+
+            for (OptionParser.Option option : options) {
+                if (option.getName().equals(opt)) {
+                    return option.getValidValues();
+                }
+            }
+        }
+        else if (opt.startsWith("-") && opt.length() == 2) {
+            char o = opt.charAt(1);
+
+            for (OptionParser.Option option : options) {
+                if (option.getLetter() == o) {
+                    return option.getValidValues();
+                }
+            }
+        }
+
+        return Collections.emptyList();
     }
 
     private List<String> findShortOptions(char chr)
@@ -119,7 +162,7 @@ public class OptionCompletion
     private void printCompletions(String last)
     {
         int    dot = last.lastIndexOf(".");
-        String moduleName = dot == -1 ? last : last.substring(0, dot+1);
+        String moduleName = dot == -1 ? last : last.substring(0, dot + 1);
 
         final DefinitionsIndex index = env.getDefinitionsIndex();
 

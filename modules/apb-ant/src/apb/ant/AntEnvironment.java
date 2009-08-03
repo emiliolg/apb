@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +15,13 @@
 // limitations under the License
 //
 
+
 package apb.ant;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.Set;
 
-import apb.Command;
 import apb.Environment;
 
 import apb.utils.StringUtils;
@@ -42,8 +43,7 @@ public class AntEnvironment
 {
     //~ Instance fields ......................................................................................
 
-    @Nullable
-    private Set<File> definitionDir;
+    @Nullable private Set<File> definitionDir;
 
     private ApbTask task;
 
@@ -58,8 +58,7 @@ public class AntEnvironment
 
     //~ Methods ..............................................................................................
 
-    @NotNull
-    public Set<File> getProjectPath()
+    @NotNull public Set<File> getProjectPath()
     {
         return definitionDir == null ? super.getProjectPath() : definitionDir;
     }
@@ -98,32 +97,7 @@ public class AntEnvironment
 
     private void log(int level, String msg, Object... args)
     {
-        StringBuilder result = new StringBuilder();
-        final String  currentModule = getCurrentName();
-
-        if (!currentModule.isEmpty()) {
-            result.append('[');
-            result.append(currentModule);
-            final Command cmd = getCurrentCommand();
-
-            if (cmd != null) {
-                result.append('.').append(cmd.getQName());
-            }
-
-            if (result.length() >= HEADER_LENGTH - 1) {
-                result.setLength(HEADER_LENGTH - 1);
-            }
-
-            result.append(']');
-            result.append(StringUtils.nChars(HEADER_LENGTH - result.length(), ' '));
-        }
-
-        msg = StringUtils.appendIndenting(result.toString() + ' ', msg);
-
+        msg = StringUtils.appendIndenting(makeStandardHeader() + ' ', msg);
         task.log(args.length == 0 ? msg : String.format(msg, args), level);
     }
-
-    //~ Static fields/initializers ...........................................................................
-
-    private static final int HEADER_LENGTH = 30;
 }

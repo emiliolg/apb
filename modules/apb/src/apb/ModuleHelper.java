@@ -37,6 +37,7 @@ import apb.metadata.ProjectElement;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
 
+import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
 
@@ -244,21 +245,35 @@ public class ModuleHelper
         // Topological Sort elements
         tsort(dependencies, new IdentitySet<ModuleHelper>());
 
-        if (env.isVerbose()) {
+        if (env.mustShow(DebugOption.DEPENDENCIES)) {
             env.logVerbose("Dependencies for: %s = %s\n", getName(), dependencies.toString());
         }
     }
 
-    void build(String commandName)
+    protected void doBuild(String commandName)
     {
         Command command = findCommand(commandName);
 
-        if (command != null) {
-            build(command);
+        if (command == null) {
+            throw new BuildException("Invalid command: " + commandName);
+        }
+
+        if (command.isRecursive() && !env.isNonRecursive()) {
+            for (ModuleHelper dep : dependencies) {
+                dep.execute(commandName);
+            }
         }
         else {
-            env.handle("Invalid command: " + commandName);
+            for (ModuleHelper dep : dependencies) {
+                dep.activate();
+            }
+
+            for (Command cmd : command.getDirectDependencies()) {
+                build(cmd.getQName());
+            }
         }
+
+        execute(commandName);
     }
 
     void activate(@NotNull ProjectElement activatedModule)
@@ -306,28 +321,6 @@ public class ModuleHelper
         }
 
         return result;
-    }
-
-    private void build(Command command)
-    {
-        final String commandName = command.getQName();
-
-        if (command.isRecursive() && !env.isNonRecursive()) {
-            for (ModuleHelper dep : dependencies) {
-                dep.execute(commandName);
-            }
-        }
-        else {
-            for (ModuleHelper dep : dependencies) {
-                dep.activate();
-            }
-
-            for (Command cmd : command.getDirectDependencies()) {
-                build(cmd);
-            }
-        }
-
-        execute(commandName);
     }
 
     private void addTo(Set<ModuleHelper> result)

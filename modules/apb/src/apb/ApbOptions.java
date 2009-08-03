@@ -18,6 +18,7 @@
 
 package apb;
 
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import java.util.TreeSet;
 
 import apb.metadata.Module;
 
+import apb.utils.DebugOption;
 import apb.utils.OptionParser;
 import apb.utils.StandaloneEnv;
 
@@ -40,6 +42,8 @@ class ApbOptions
 {
     //~ Instance fields ......................................................................................
 
+    private Option<String> debug;
+
     private Option<String> defineProperty;
 
     private Option<Boolean> forceBuild;
@@ -47,6 +51,7 @@ class ApbOptions
     private Option<Boolean> nonRecursive;
     private Option<Boolean> quiet;
     private Option<Boolean> showStackTrace;
+    private Option<Boolean> track;
     private Option<Boolean> verbose;
 
     //~ Constructors .........................................................................................
@@ -54,7 +59,7 @@ class ApbOptions
     public ApbOptions(String[] ops)
     {
         super(ops, "apb", version());
-        showStackTrace = addBooleanOption('t', "show-stack-trace", SHOW_STACK_TRACE);
+        showStackTrace = addBooleanOption('s', "show-stack-trace", SHOW_STACK_TRACE);
         quiet = addBooleanOption('q', "quiet", QUIET_OUTPUT);
         verbose = addBooleanOption('v', "verbose", VERBOSE);
         noFailOnError = addBooleanOption('c', "continue", CONTINUE_AFTER_ERROR);
@@ -62,6 +67,15 @@ class ApbOptions
         nonRecursive = addBooleanOption('n', "non-recursive", NON_RECURSIVE);
         defineProperty = addOption('D', "define", DEFINE_PROPERTY, "<name>=<value>");
         defineProperty.setCanRepeat(true);
+        track = addBooleanOption('t', "track-execution", TRACK_EXECUTION);
+        debug = addOption('d', "debug", DEBUG, "<info type>");
+        debug.addValidValue(DebugOption.ALL);
+
+        for (DebugOption op : DebugOption.values()) {
+            debug.addValidValue(op.toString());
+        }
+
+        debug.setCanRepeat(true);
     }
 
     //~ Methods ..............................................................................................
@@ -84,10 +98,7 @@ class ApbOptions
 
     public void initEnv(Environment environment)
     {
-        if (verbose.getValue()) {
-            environment.setVerbose();
-        }
-        else if (quiet.getValue()) {
+        if (quiet.getValue()) {
             environment.setQuiet();
         }
 
@@ -98,6 +109,8 @@ class ApbOptions
         if (nonRecursive.getValue()) {
             environment.setNonRecursive();
         }
+
+        environment.setDebugOptions(debugOptions());
 
         environment.setFailOnError(!noFailOnError.getValue());
         environment.setForceBuild(forceBuild.getValue());
@@ -116,6 +129,33 @@ class ApbOptions
             else {
                 result.put(define.substring(0, pos).trim(), define.substring(pos + 1).trim());
             }
+        }
+
+        return result;
+    }
+
+    public EnumSet<DebugOption> debugOptions()
+    {
+        EnumSet<DebugOption> result = EnumSet.noneOf(DebugOption.class);
+
+        for (String d : debug.getValues()) {
+            if (d.equals(DebugOption.ALL)) {
+                return EnumSet.allOf(DebugOption.class);
+            }
+
+            DebugOption o = DebugOption.find(d);
+
+            if (o != null) {
+                result.add(o);
+            }
+        }
+
+        if (track.getValue()) {
+            result.add(DebugOption.TRACK);
+        }
+
+        if (verbose.getValue()) {
+            result.add(DebugOption.TASK_INFO);
         }
 
         return result;

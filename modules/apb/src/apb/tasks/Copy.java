@@ -224,12 +224,12 @@ public class Copy
         }
 
         if (env.isVerbose()) {
-            env.logVerbose("Copying resources from: %s\n", from);
-            env.logVerbose("                    to: %s\n", to);
-            env.logVerbose("              includes: %s\n", includes);
+            logVerbose("Copying resources from: %s\n", from);
+            logVerbose("                    to: %s\n", to);
+            logVerbose("              includes: %s\n", includes);
 
             if (!excludes.isEmpty()) {
-                env.logVerbose("              excludes: %s\n", excludes);
+                logVerbose("              excludes: %s\n", excludes);
             }
         }
 
@@ -259,13 +259,13 @@ public class Copy
     {
         try {
             if (filtering && !doNotFilter.contains(FileUtils.extension(source).toLowerCase())) {
-                env.logVerbose("Filtering %s\n", source);
-                env.logVerbose("       to %s\n", dest);
+                logVerbose("Filtering %s\n", source);
+                logVerbose("       to %s\n", dest);
                 FileUtils.copyFileFiltering(source, dest, false, encoding, getFilters());
             }
             else {
-                env.logVerbose("Copy %s\n", source);
-                env.logVerbose("  to %s\n", dest);
+                logVerbose("Copy %s\n", source);
+                logVerbose("  to %s\n", dest);
                 FileUtils.copyFile(source, dest, false);
             }
         }

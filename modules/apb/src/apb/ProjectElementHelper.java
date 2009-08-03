@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb;
 
@@ -181,6 +183,8 @@ public abstract class ProjectElementHelper
         }
     }
 
+    protected abstract void doBuild(String commandName);
+
     protected void initDependencyGraph() {}
 
     protected void execute(@NotNull String commandName)
@@ -189,21 +193,25 @@ public abstract class ProjectElementHelper
 
         if (command != null && notExecuted(command)) {
             ProjectElement projectElement = activate();
-            long           ms = startExecution(command);
 
             for (Command cmd : command.getDependencies()) {
                 if (notExecuted(cmd)) {
-                    env.setCurrentCommand(cmd);
+                    final String cmdName = cmd.getQName();
+                    env.startExecution(getName(), cmdName);
                     markExecuted(cmd);
                     cmd.invoke(projectElement, env);
+                    env.endExecution(getName(), cmdName);
                 }
             }
-
-            endExecution(command, ms);
         }
     }
 
-    abstract void build(String commandName);
+    void build(String commandName)
+    {
+        env.startExecution(getName(), commandName);
+        doBuild(commandName);
+        env.endExecution(getName(), commandName);
+    }
 
     void activate(@NotNull ProjectElement activatedElement)
     {
@@ -219,31 +227,6 @@ public abstract class ProjectElementHelper
         return builder;
     }
 
-    private void endExecution(Command command, long ms)
-    {
-        if (env.isVerbose()) {
-            ms = System.currentTimeMillis() - ms;
-            long free = Runtime.getRuntime().freeMemory() / MB;
-            long total = Runtime.getRuntime().totalMemory() / MB;
-            env.logVerbose("Execution of '%s'. Finished in %d milliseconds. Memory usage: %dM of %dM\n",
-                           command, ms, total - free, total);
-        }
-
-        env.setCurrentCommand(null);
-    }
-
-    private long startExecution(Command command)
-    {
-        long result = 0;
-
-        if (env.isVerbose()) {
-            env.logVerbose("About to execute '%s'\n", command);
-            result = System.currentTimeMillis();
-        }
-
-        return result;
-    }
-
     private void markExecuted(Command cmd)
     {
         executedCommands.add(cmd);
@@ -253,8 +236,4 @@ public abstract class ProjectElementHelper
     {
         return !executedCommands.contains(cmd);
     }
-
-    //~ Static fields/initializers ...........................................................................
-
-    private static final long MB = (1024 * 1024);
 }

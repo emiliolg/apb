@@ -17,32 +17,34 @@
 
 
 package apb.utils;
-
-import apb.Environment;
 //
 // User: emilio
-// Date: Dec 4, 2008
-// Time: 4:40:10 PM
+// Date: Jul 31, 2009
+// Time: 4:52:35 PM
 
-public class ColorFormatter
-    extends SimpleFormatter
+//
+public enum DebugOption
 {
-    //~ Constructors .........................................................................................
+    DEPENDENCIES,
+    PROPERTIES,
+    TASK_INFO,
+    TRACK;
 
-    public ColorFormatter(Environment env)
+    public static final String ALL = "all";
+
+    @Override public String toString()
     {
-        super(env);
+        return super.toString().toLowerCase();
     }
 
-    //~ Methods ..............................................................................................
-
-    @Override protected String trimColors(String str)
+    public static DebugOption find(String name)
     {
-        return str;
-    }
+        for (DebugOption option : values()) {
+            if (option.toString().equalsIgnoreCase(name)) {
+                return option;
+            }
+        }
 
-    @Override protected String header()
-    {
-        return ColorUtils.colorize(ColorUtils.GREEN, env.makeStandardHeader());
+        return null;
     }
 }
