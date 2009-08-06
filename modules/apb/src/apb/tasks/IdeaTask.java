@@ -168,11 +168,14 @@ public class IdeaTask
                 List<File> sources = module.getSourceDirs();
 
                 for (File source : sources) {
-                    if (source.exists()) {
-                        Element sourceContent =
+                    Element sourceContent =
                             findElement(component, "content", URL_ATTRIBUTE,
-                                        relativeUrl("file", source.getParentFile()));
-                        addSourceFolder(sourceContent, source, module.isTestModule());
+                                    relativeUrl("file", source.getParentFile()));
+                    addSourceFolder(sourceContent, source, module.isTestModule());
+
+                    if (!source.exists()) {
+                        getEnv().logVerbose("Adding inexistent source path to module definition. " +
+                                "Path: '%s'\n", source.toString());
                     }
                 }
 
