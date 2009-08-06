@@ -75,9 +75,21 @@ public class PackageInfo
     private final List<String> extraClassPathEntries = new ArrayList<String>();
 
     /**
-     * Package the following dependencies into the jar
+     * Additional dependencies added into the package.
+     * Libraries are not included in module package. Specified library dependencies will be ignored.
      */
-    private final DependencyList includeDependencies = new DependencyList();
+    private final DependencyList additionalDependencies = new DependencyList();
+
+    /**
+     * Indicates whether dependencies must be included in package.
+     */
+    private IncludeDependenciesMode includeDependenciesMode = IncludeDependenciesMode.NONE;
+
+
+    /**
+     * Excluded patterns specifying files that must not be included in package.
+     */
+    private List<String> excludes = new ArrayList<String>();
 
     /**
      * Services defined in the package
@@ -96,9 +108,26 @@ public class PackageInfo
         return name + type.getExt();
     }
 
-    public DependencyList includeDependencies()
+    public DependencyList additionalDependencies()
     {
-        return includeDependencies;
+        return additionalDependencies;
+    }
+
+
+    public IncludeDependenciesMode getIncludeDependenciesMode() {
+        return includeDependenciesMode;
+    }
+
+    public void setIncludeDependenciesMode(IncludeDependenciesMode includeDependenciesMode) {
+        this.includeDependenciesMode = includeDependenciesMode;
+    }
+
+    public List<String> getExcludes() {
+        return excludes;
+    }
+
+    public void setExcludes(List<String> excludes) {
+        this.excludes = excludes;
     }
 
     public List<String> extraClassPathEntries()
@@ -161,6 +190,23 @@ public class PackageInfo
     public void addAttribute(@NotNull String attName, @NotNull String attValue)
     {
         attributes.put(new Attributes.Name(attName), attValue);
+    }
+
+    public enum IncludeDependenciesMode {
+        /**
+         * No module dependencies are included in jar.
+         */
+        NONE,
+
+        /**
+         * Only direct module dependencies are included in jar.
+         */
+        DIRECT_MODULES,
+
+        /**
+         * Recursive module dependencies are included in jar.
+         */
+        DEEP_MODULES
     }
 
     /**

@@ -33,6 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -51,6 +52,7 @@ import apb.ModuleHelper;
 import apb.metadata.Dependency;
 import apb.metadata.PackageInfo;
 import apb.metadata.PackageType;
+import apb.metadata.Module;
 
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
@@ -102,7 +104,11 @@ public class JarTask
 
         if (packageInfo.type != PackageType.NONE) {
             JarTask jarTask = new JarTask(env, helper.getPackageFile());
+
+            // set output
             jarTask.addDir(helper.getOutput());
+
+            // set manifest attributes
             final String mainClass = packageInfo.mainClass;
 
             if (mainClass != null && !mainClass.isEmpty()) {
@@ -117,24 +123,64 @@ public class JarTask
 
             jarTask.addManifestAttributes(packageInfo.attributes());
 
-            if (!packageInfo.includeDependencies().isEmpty()) {
-                for (Dependency d : packageInfo.includeDependencies()) {
-                    if (d.isModule()) {
-                        ModuleHelper m = (ModuleHelper) env.getHelper(d.asModule());
-
-                        if (m.hasPackage()) {
-                            jarTask.addDir(m.getPackageFile());
-                        }
-                    }
-                    else if (d.isLibrary()) {
-                        jarTask.addDir(d.asLibrary().getArtifact(env, PackageType.JAR));
-                    }
+            // prepare dependencies included in package
+            Iterable<ModuleHelper> includedDeps = null;
+            switch (packageInfo.getIncludeDependenciesMode()){
+                case DIRECT_MODULES:
+                {
+                    includedDeps = helper.getDirectDependencies();
+                    break;
+                }
+                case DEEP_MODULES:
+                {
+                    includedDeps = helper.getDependencies();
+                    break;
                 }
             }
 
-            jarTask.setServices(packageInfo.services());
+            if (includedDeps != null){
+                for (ModuleHelper dep : includedDeps) {
+                    packageInfo.additionalDependencies().add(dep.getModule());
+                }
+            }
+
+
+            Map<String, Set<String>> services = packageInfo.services();
+
+            // add packaged dependencies
+            if (!packageInfo.additionalDependencies().isEmpty()) {
+                Map<String, Set<String>> mergedServices = new HashMap<String, Set<String>>();
+
+                for (Dependency d : packageInfo.additionalDependencies()) {
+                    if (d.isModule()) {
+                        Module depModule = d.asModule();
+                        env.logVerbose("Adding module '%s'.\n", d.toString());
+                        ModuleHelper m = (ModuleHelper) env.getHelper(depModule);
+                        jarTask.addDir(m.getOutput());
+
+                        mergedServices.putAll(depModule.pkg.services());
+                    }
+                    else if (d.isLibrary()) {
+                        env.logInfo("Library '%s' skipped. Libraries are not packaged as part of module jar.\n", d.toString());
+                    }
+                }
+
+                // give priority to current module (do it last)
+                mergedServices.putAll(packageInfo.services());
+                services = mergedServices;
+
+                List<String> newExcludes = new ArrayList<String>(jarTask.excludes);
+                newExcludes.addAll(packageInfo.getExcludes());
+                jarTask.setExcludes(newExcludes);
+            }
+
+            // set SPI services
+            jarTask.setServices(services);
+
+            // run task
             jarTask.execute();
 
+            // generate sources jar
             if (packageInfo.generateSourcesJar) {
                 jarTask = new JarTask(helper.getEnv(), helper.getSourcePackageFile());
                 jarTask.addDir(helper.getSource());
@@ -243,7 +289,7 @@ public class JarTask
         this.services = services;
     }
 
-    private void addDir(@Nullable File file)
+    public void addDir(@Nullable File file)
     {
         if (file != null) {
             sourceDir.add(file);

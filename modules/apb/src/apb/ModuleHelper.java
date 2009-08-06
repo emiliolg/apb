@@ -141,6 +141,11 @@ public class ModuleHelper
     {
         return directDependencies;
     }
+    
+    @NotNull public Iterable<ModuleHelper> getDependencies() {
+        return dependencies;
+    }
+
 
     public List<File> compileClassPath()
     {

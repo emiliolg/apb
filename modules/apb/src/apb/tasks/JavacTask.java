@@ -59,6 +59,7 @@ public class JavacTask
     //~ Instance fields ......................................................................................
 
     private Map<String, String>       annnotationOptions;
+    private String processing;
     @NotNull private final List<File> classPath;
     private boolean                   debug;
     private boolean                   deprecated;
@@ -119,6 +120,7 @@ public class JavacTask
         javac.trackUnusedDependencies = info.validateDependencies;
         javac.includes = info.includes();
         javac.excludes = info.excludes();
+        javac.processing = info.getProcessingOption().paramValue();
 
         if (info.defaultErrorFormatter) {
             javac.reporter = null;
@@ -215,6 +217,10 @@ public class JavacTask
 
             for (Map.Entry<String, String> entry : annnotationOptions.entrySet()) {
                 options.add("-A" + entry.getKey() + "=" + entry.getValue());
+            }
+
+            if (processing != null){
+                options.add("-proc:" + processing);
             }
 
             final boolean status =

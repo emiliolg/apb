@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static java.util.Arrays.asList;
 
@@ -115,6 +116,11 @@ public class CompileInfo
      */
     private final List<String> warnExcludes = new ArrayList<String>();
 
+    /**
+     * Controls whether annotation processing and/or compilation is done.
+     */
+    private ProcessingOption processingOption = ProcessingOption.DEFAULT;
+
     //~ Methods ..............................................................................................
 
     public List<String> includes()
@@ -182,5 +188,44 @@ public class CompileInfo
     public void setAnnotationOption(@NotNull final String key, @NotNull final String value)
     {
         annotationOptions.put(key, value);
+    }
+
+    public ProcessingOption getProcessingOption() {
+        return processingOption;
+    }
+
+    public void setProcessingOption(@NotNull ProcessingOption processingOption) {
+        this.processingOption = processingOption;
+    }
+
+    public enum ProcessingOption {
+        /**
+         * Both compilation and annotation processing are performed.
+         */
+        DEFAULT {
+            public String paramValue() {
+                return null;
+            }
+        },
+
+        /**
+         * No annotation processing takes place.
+         */
+        NONE {
+            public String paramValue() {
+                return "none";
+            }
+        },
+
+        /**
+         * Only annotation processing is done.
+         */
+        ONLY {
+            public String paramValue() {
+                return "only";
+            }
+        };
+        
+        public abstract String paramValue();
     }
 }
