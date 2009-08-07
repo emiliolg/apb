@@ -12,10 +12,9 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
 
 package apb.testrunner;
-
-import junit.framework.Test;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,19 +25,19 @@ import org.jetbrains.annotations.Nullable;
 
 //
 public class JunitTestSetCreator
-    implements TestSetCreator<junit.framework.Test>
+    implements TestSetCreator<Object>
 {
     //~ Methods ..............................................................................................
 
-    @Nullable public TestSet<Test> createTestSet(@NotNull Class<Test> testClass)
+    @Nullable public TestSet<Object> createTestSet(@NotNull Class<Object> testClass)
         throws TestSetFailedException
     {
-        return Test.class.isAssignableFrom(testClass) ? new JUnitTestSet(testClass) : null;
+        return JUnitTestSet.buildTestSet(testClass);
     }
 
-    @NotNull public Class<Test> getTestClass()
+    @NotNull public Class<Object> getTestClass()
     {
-        return Test.class;
+        return Object.class;
     }
 
     @NotNull public String getName()

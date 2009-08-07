@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 package apb.testrunner;
 
@@ -62,7 +60,7 @@ class TestRunnerOptions
 
     //~ Constructors .........................................................................................
 
-    public TestRunnerOptions(String[] ops)
+    TestRunnerOptions(String[] ops)
     {
         super(ops, "testrunner", "0.1");
         factory = new TestSetCreator.Factory();
@@ -208,8 +206,8 @@ class TestRunnerOptions
             try {
                 Object o = ClassUtils.newInstance(classloader, creatorClass);
 
-                if (TestSetCreator.class.isInstance(o)) {
-                    result = TestSetCreator.class.cast(o);
+                if (o instanceof TestSetCreator) {
+                    result = (TestSetCreator) o;
                 }
             }
             catch (Exception e) {}

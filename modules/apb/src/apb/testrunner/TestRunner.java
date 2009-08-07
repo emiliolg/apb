@@ -12,6 +12,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
 
 package apb.testrunner;
 
@@ -43,12 +44,12 @@ public class TestRunner
 
     @NotNull private File basedir;
 
-    @NotNull private List<String> excludes;
-    private boolean               failEmpty;
-    @NotNull private List<String> includes;
-    @NotNull private File         outputDir;
-    private boolean               verbose;
+    @NotNull private List<String>       excludes;
+    private boolean                     failEmpty;
+    @NotNull private List<String>       includes;
+    @NotNull private File               outputDir;
     @NotNull private final List<String> testGroups;
+    private boolean                     verbose;
 
     //~ Constructors .........................................................................................
 
@@ -93,10 +94,13 @@ public class TestRunner
         report.startRun(tests.size());
 
         int exit = OK;
+
         for (TestSet<?> testSet : tests) {
             boolean ok = testSet.run(testsClassLoader, report, testGroups);
-            if (!ok)
+
+            if (!ok) {
                 exit = ERROR;
+            }
         }
 
         report.stopRun();
@@ -144,7 +148,6 @@ public class TestRunner
         for (String file : collectTests(basedir, excludes, includes)) {
             TestSet<T> testSet = loadTest(testsClassLoader, creator, file);
 
-
             if (testSet != null) {
                 if (testSets.containsKey(testSet.getName())) {
                     throw new TestSetFailedException("Duplicate test '" + testSet.getName() + "'");
@@ -157,19 +160,17 @@ public class TestRunner
         return testSets;
     }
 
-    @Nullable
-    private static <T> TestSet<T> loadTest(ClassLoader testsClassLoader, TestSetCreator<T> creator,
-                                           String suite)
+    @Nullable private static <T> TestSet<T> loadTest(ClassLoader testsClassLoader, TestSetCreator<T> creator,
+                                                     String suite)
         throws TestSetFailedException
     {
-        Class<T>   testClass = loadTestClass(testsClassLoader, suite, creator.getTestClass());
-        TestSet<T> testSet = null;
+        final Class<T> testClass = loadTestClass(testsClassLoader, suite, creator.getTestClass());
 
-        if (!Modifier.isAbstract(testClass.getModifiers())) {
-            testSet = creator.createTestSet(testClass);
+        if (Modifier.isAbstract(testClass.getModifiers())) {
+            return null;
         }
 
-        return testSet;
+        return creator.createTestSet(testClass);
     }
 
     @SuppressWarnings("unchecked")
