@@ -13,6 +13,12 @@ public class NotNullInstrumentTask extends Task {
         super(env);
     }
 
+    static public void process(Environment env)
+    {
+       final NotNullInstrumentTask task = new NotNullInstrumentTask(env);
+       task.execute();
+    }
+
     public void execute() {
 
         final Collection<String> classesPaths = NotNullProcessor.getClassesToProcess();
