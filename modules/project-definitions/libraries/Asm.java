@@ -27,7 +27,7 @@ public class Asm
 
     private Asm()
     {
-        super("asm", "asm", "3.0");
+        super("asm", "asm", "3.1");
         setTargetDir("../lib");
     }
 

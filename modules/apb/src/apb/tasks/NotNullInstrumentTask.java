@@ -2,6 +2,7 @@ package apb.tasks;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.io.*;
 
 import org.objectweb.asm.*;
@@ -106,19 +107,18 @@ class NotNullClassInstrumenter
                                      String[] exceptions) {
         final Type[] args = Type.getArgumentTypes(desc);
         final Type returnType = Type.getReturnType(desc);
-        final int startParameter = getStartParameterIndex(name);
 
         MethodVisitor v = cv.visitMethod(access, name, desc, signature, exceptions);
         return new MethodAdapter(v) {
-            public AnnotationVisitor visitParameterAnnotation(int parameter, String anno, boolean visible) {
-                AnnotationVisitor av = mv.visitParameterAnnotation(parameter, anno, visible);
 
+            public AnnotationVisitor visitParameterAnnotation(int parameter, String anno, boolean visible) {
+                final AnnotationVisitor result = mv.visitParameterAnnotation(parameter, anno, visible);
                 if (NotNullClassInstrumenter.isReferenceType(args[parameter]) &&
                         anno.equals(NOT_NULL_ANNOATATION_SIGNATURE)) {
                     notNullParams.add(parameter);
                 }
 
-                return av;
+                return result;
             }
 
             public AnnotationVisitor visitAnnotation(String anno, boolean isRuntime) {
@@ -138,11 +138,10 @@ class NotNullClassInstrumenter
                     mv.visitLabel(startGeneratedCodeLabel);
                 }
 
-                for (Object nullParam : notNullParams) {
+                for (int nullParam : notNullParams) {
                     int var = (access & 8) != 0 ? 0 : 1;
-                    int param = (Integer) nullParam;
 
-                    for (int i = 0; i < param + startParameter; i++) {
+                    for (int i = 0; i < nullParam ; i++) {
                         var += args[i].getSize();
                     }
 
@@ -150,7 +149,7 @@ class NotNullClassInstrumenter
                     Label end = new Label();
                     mv.visitJumpInsn(199, end);
                     generateThrow(ILLEGAL_STATE_EXCEPTION_SIGNATURE,
-                            "Argument " + param + " for @NotNull parameter of " + className + "." +
+                            "Argument " + nullParam + " for @NotNull parameter of " + className + "." +
                                     name + " must not be null", end);
                 }
 
@@ -159,7 +158,7 @@ class NotNullClassInstrumenter
                     mv.visitJumpInsn(167, codeStart);
                     throwLabel = new Label();
                     mv.visitLabel(throwLabel);
-                    generateThrow("java/lang/IllegalStateException",
+                    generateThrow(ILLEGAL_STATE_EXCEPTION_SIGNATURE,
                             "@NotNull method " + className + "." + name + " must not return null",
                             codeStart);
                 }
@@ -194,35 +193,16 @@ class NotNullClassInstrumenter
                 isModified = true;
             }
 
-            private final ArrayList<Integer> notNullParams = new ArrayList<Integer>();
-            private boolean isNotNull;
+            private final List<Integer> notNullParams = new ArrayList<Integer>();
+            private boolean isNotNull = true;
             public Label throwLabel;
             private Label startGeneratedCodeLabel;
 
-            {
-                isNotNull = false;
-            }
         };
     }
 
     private static boolean isReferenceType(Type type) {
         return type.getSort() == 10 || type.getSort() == 9;
-    }
-
-    private int getStartParameterIndex(String name) {
-        int result = 0;
-
-        if ("<init>".equals(name)) {
-            if (mySuperName.equals("java/lang/Enum")) {
-                result += 2;
-            }
-
-            if (isNotStaticInner) {
-                result++;
-            }
-        }
-
-        return result;
     }
 
     //~ Static fields/initializers ...........................................................................
