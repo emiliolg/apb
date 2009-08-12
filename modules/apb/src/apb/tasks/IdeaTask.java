@@ -679,14 +679,10 @@ public class IdeaTask
     private void addLibEntry(Library library, Element lib, PackageType type, String tag)
     {
         final File url = library.getArtifact(env, type);
+        final String protocol;
+        final String endMarker;
 
         if (url != null) {
-            removeOldElements(lib, tag);
-            Element el = createElement(createElement(lib, tag), "root");
-
-            final String protocol;
-            final String endMarker;
-
             if (url.isDirectory()) {
                 protocol = "file";
                 endMarker = "";
@@ -696,7 +692,22 @@ public class IdeaTask
                 endMarker = "!/";
             }
 
-            el.setAttribute(URL_ATTRIBUTE, relativeUrl(protocol, url) + endMarker);
+
+            if (library instanceof LocalLibrary && ((LocalLibrary) library).sourcePaths() != null) {
+                final LocalLibrary localLibrary = (LocalLibrary) library;
+                for (String sourcePath : localLibrary.sourcePaths())
+                {
+                    final String endMarkerSource = "!/" + sourcePath;
+                    Element element = createElement(createElement(lib, tag), "root");
+                    element.setAttribute(URL_ATTRIBUTE, relativeUrl(protocol, url) + endMarkerSource);
+                }
+            }
+            else {
+                removeOldElements(lib, tag);
+                Element el = createElement(createElement(lib, tag), "root");
+
+                el.setAttribute(URL_ATTRIBUTE, relativeUrl(protocol, url) + endMarker);
+            }
         }
     }
 

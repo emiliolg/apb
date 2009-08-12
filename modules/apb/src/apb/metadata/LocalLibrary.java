@@ -37,6 +37,7 @@ public class LocalLibrary
     @Nullable public final String runtimePath;
     private boolean               optional;
     @Nullable private String      sourcesPath;
+    private String[] sourcePaths;
 
     //~ Constructors .........................................................................................
 
@@ -75,6 +76,16 @@ public class LocalLibrary
     public void setSources(@NotNull String sources)
     {
         sourcesPath = sources;
+    }
+
+    public String[] sourcePaths()
+    {
+        return sourcePaths;
+    }
+
+    public void sourcePaths(String... sourcePaths)
+    {
+        this.sourcePaths = sourcePaths;
     }
 
     @Nullable private File fileFromBase(@NotNull Environment env, @NotNull String p, boolean ignore)
