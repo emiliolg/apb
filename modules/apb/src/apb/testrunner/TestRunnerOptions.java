@@ -231,7 +231,7 @@ class TestRunnerOptions
         final String value = option.getValue();
 
         if (!isEmpty(value)) {
-            StringTokenizer tok = new StringTokenizer(value, ":");
+            StringTokenizer tok = new StringTokenizer(value, File.pathSeparator);
 
             while (tok.hasMoreTokens()) {
                 result.add(tok.nextToken());

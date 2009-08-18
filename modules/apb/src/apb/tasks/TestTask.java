@@ -422,10 +422,18 @@ public class TestTask
         }
 
         if (suite == null) {
-            args.add("-i");
-            args.add(makePathFromStrings(includes));
-            args.add("-e");
-            args.add(makePathFromStrings(excludes));
+
+            final String includeString = makePathFromStrings(includes);
+            if(!"".equals(includeString)){
+                args.add("-i");
+                args.add(includeString);
+            }
+
+            final String excludeString = makePathFromStrings(excludes);
+            if(!"".equals(excludeString)){
+                args.add("-e");
+                args.add(excludeString);
+            }
         }
         else {
             args.add("-s");
