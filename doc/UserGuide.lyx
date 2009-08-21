@@ -1,0 +1,279 @@
+#LyX 1.6.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass book
+\options pdftex
+\use_default_options true
+\language english
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+APB User Guide
+\end_layout
+
+\begin_layout Author
+Emilio López-Gabeiras
+\end_layout
+
+\begin_layout Date
+Aug 6, 2009
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Chapter
+Introduction
+\end_layout
+
+\begin_layout Section
+Welcome to APB! 
+\end_layout
+
+\begin_layout Paragraph
+APB is a simple, yet powerfull, project build system that inherits some
+ ideas from Ant and Maven while trying to avoid the use of complex XML files
+ to define the metadata of the project.
+ Project Definition is done in Java so you have the full power of Java plus
+ the benefit of using your favorite IDE to edit the configuration files.
+ Here are some of the features APB provides out-of-the-box:
+\end_layout
+
+\begin_layout Itemize
+Simple project definition based on default layouts, but with flexibility
+ to accomodate your preferred one.
+\end_layout
+
+\begin_layout Itemize
+Model based builds: APB is able to build projects based on metadata about
+ the project.
+\end_layout
+
+\begin_layout Itemize
+Full extensibility using Java.
+\end_layout
+
+\begin_layout Itemize
+Dependency management.
+\end_layout
+
+\begin_layout Itemize
+Full project lifecycle, including compilation, packaging and testing.
+\end_layout
+
+\begin_layout Itemize
+Coverage support during testing.
+\end_layout
+
+\begin_layout Itemize
+Documentation generation.
+\end_layout
+
+\begin_layout Itemize
+Generation of project files for common IDEs (Currently Intellij Idea).
+\end_layout
+
+\begin_layout Itemize
+Ant tasks to integrate APB projects into foreign contexts.
+ 
+\end_layout
+
+\begin_layout Itemize
+Command line invocation including shell-completion
+\end_layout
+
+\begin_layout Chapter
+Getting Started
+\end_layout
+
+\begin_layout Section
+Prerequisites
+\end_layout
+
+\begin_layout Standard
+APB requires a Java 6+ JDK installed.
+ By default it is going to use the one in your PATH (you can check it using
+ 
+\series bold
+java -version
+\series default
+).
+ You can also set the APB_JAVA_HOME environment variable to point to the
+ install directory of the desired JDK.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+APB can compiled code in 
+\emph on
+any 
+\emph default
+java version.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Installing APB
+\end_layout
+
+\begin_layout Standard
+The APB distribution comes packaged as a zip and contains:
+\end_layout
+
+\begin_layout Itemize
+The APB binaries.
+\end_layout
+
+\begin_layout Itemize
+The user guide (HTML and PDF).
+\end_layout
+
+\begin_layout Itemize
+The API documentation.
+\end_layout
+
+\begin_layout Itemize
+Samples, including those referenced in the user guide, along with some complete
+ and more complex projects that you can use as the starting point for your
+ own ones.
+\end_layout
+
+\begin_layout Itemize
+The sources as a reference of the binary jars.
+ (If you want to build APB yourself you can download the source distribution
+ from: 
+\begin_inset Flex URL
+status open
+
+\begin_layout Plain Layout
+
+http://github.com/emiliolg/apb
+\end_layout
+
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Section
+Configuring your environment
+\end_layout
+
+\begin_layout Standard
+Now if you run 
+\family typewriter
+\series bold
+apb -v 
+\family default
+\series default
+you should get an output like:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\scriptsize},frame=tb,language=Java,numbers=left,numberstyle={\tiny},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+public final class ApbTestNG
+\end_layout
+
+\begin_layout Plain Layout
+
+	extends DefaultModule 
+\end_layout
+
+\begin_layout Plain Layout
+
+{{
+\end_layout
+
+\begin_layout Plain Layout
+
+    description = "APB TestNG Report Executor";
+\end_layout
+
+\begin_layout Plain Layout
+
+    dependencies(Apb.MODULE, TestNG.LIB);
+\end_layout
+
+\begin_layout Plain Layout
+
+    pkg.name = "apb-testng";
+\end_layout
+
+\begin_layout Plain Layout
+
+    pkg.services("apb.testrunner.TestSetCreator",
+\end_layout
+
+\begin_layout Plain Layout
+
+                 "apb.testrunner.TestNGTestSetCreator");
+\end_layout
+
+\begin_layout Plain Layout
+
+}}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\end_body
+\end_document
