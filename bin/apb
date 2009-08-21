@@ -38,6 +38,16 @@ case "$OSTYPE" in
 esac
 
 #
+# Check which JAVA to use
+#
+if [ -z $APB_JAVA_HOME ]
+then
+	JAVA=java
+else
+	JAVA=$APB_JAVA_HOME/bin/java
+fi
+
+#
 # setup memory for java
 #
 if [ -z $APB_MEMORY ]
@@ -46,4 +56,4 @@ then
 fi
 # launch APB
 
-java $APB_MEMORY -jar $APB_JAR $*
+$JAVA $APB_MEMORY -jar $APB_JAR $*
