@@ -40,11 +40,12 @@ public abstract class Command
 
     @NotNull private final String  name;
     @Nullable private final String nameSpace;
-    private boolean recursive;
+    private boolean                recursive;
 
     //~ Constructors .........................................................................................
 
-    protected Command(@NotNull String nameSpace, @NotNull String name, @NotNull String description, boolean recursive)
+    protected Command(@NotNull String nameSpace, @NotNull String name, @NotNull String description,
+                      boolean recursive)
     {
         this.name = name;
         this.description = description;
@@ -90,13 +91,13 @@ public abstract class Command
         return Collections.emptyList();
     }
 
-    @Override
-    public boolean equals(Object obj) {
+    @Override public boolean equals(Object obj)
+    {
         return this == obj || obj instanceof Command && getQName().equals(((Command) obj).getQName());
     }
 
-    @Override
-    public int hashCode() {
+    @Override public int hashCode()
+    {
         return 31 * name.hashCode() + (nameSpace != null ? nameSpace.hashCode() : 0);
     }
 
@@ -114,6 +115,7 @@ public abstract class Command
     {
         return nameSpace == null ? "" : nameSpace;
     }
+
     public boolean hasNameSpace()
     {
         return nameSpace != null && !nameSpace.isEmpty();
@@ -122,6 +124,16 @@ public abstract class Command
     @NotNull public String getName()
     {
         return name;
+    }
+
+    public final boolean isRecursive()
+    {
+        return recursive;
+    }
+
+    public List<String> getOptions()
+    {
+        return Collections.emptyList();
     }
 
     /**
@@ -144,6 +156,4 @@ public abstract class Command
     //~ Static fields/initializers ...........................................................................
 
     @NonNls public static final String DEFAULT_COMMAND = "default";
-
-    final public boolean isRecursive() { return recursive; }
 }

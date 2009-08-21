@@ -31,6 +31,8 @@ import apb.utils.DebugOption;
 import apb.utils.OptionParser;
 import apb.utils.StandaloneEnv;
 
+import static java.lang.System.getProperty;
+
 import static apb.Messages.*;
 //
 // User: emilio
@@ -58,7 +60,7 @@ class ApbOptions
 
     public ApbOptions(String[] ops)
     {
-        super(ops, "apb", version());
+        super(ops, "apb");
         showStackTrace = addBooleanOption('s', "show-stack-trace", SHOW_STACK_TRACE);
         quiet = addBooleanOption('q', "quiet", QUIET_OUTPUT);
         verbose = addBooleanOption('v', "verbose", VERBOSE);
@@ -161,10 +163,16 @@ class ApbOptions
         return result;
     }
 
-    private static String version()
+    protected void printVersion()
     {
-        final String result = ApbOptions.class.getPackage().getImplementationVersion();
-        return result == null ? "" : result;
+        final Package pkg = ApbOptions.class.getPackage();
+        final String  version = pkg.getImplementationVersion();
+        System.err.printf("%-4s: %s\n", pkg.getName(), version == null ? "" : version);
+        System.err.printf("java: %s\n", getProperty("java.version"));
+        System.err.printf("OS  : %s %s on %s\n", getProperty("os.name"), getProperty("os.version"),
+                          getProperty("os.arch"));
+
+        System.exit(0);
     }
 
     private static String printCommands()

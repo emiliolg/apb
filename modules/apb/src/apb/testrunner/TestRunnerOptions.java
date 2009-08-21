@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.testrunner;
 
@@ -62,7 +64,7 @@ class TestRunnerOptions
 
     TestRunnerOptions(String[] ops)
     {
-        super(ops, "testrunner", "0.1");
+        super(ops, "testrunner");
         factory = new TestSetCreator.Factory();
 
         quiet = addBooleanOption('q', "quiet", Messages.QUIET_OUTPUT);
@@ -189,6 +191,12 @@ class TestRunnerOptions
     public String getReportSpecFile()
     {
         return reportSpecs.getValue();
+    }
+
+    protected void printVersion()
+    {
+        System.err.println(getAppName() + " version: 1.0");
+        System.exit(0);
     }
 
     File getBaseDir()

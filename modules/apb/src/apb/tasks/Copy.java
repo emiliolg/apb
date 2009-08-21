@@ -20,12 +20,10 @@ package apb.tasks;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,60 +45,44 @@ public class Copy
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private Set<String> doNotFilter;
-
     @NotNull private String encoding;
 
-    @NotNull private List<String>                      excludes;
-    private boolean                                    filtering;
-    @NotNull private final ArrayList<FileUtils.Filter> filters;
-    @NotNull private final File                        from;
-    @NotNull private List<String>                      includes;
-    @Nullable private File                             target;
+    @NotNull private Set<String> excludes;
+    private final boolean        filter;
+    @NotNull private final File  from;
+    @NotNull private Set<String> includes;
+    @Nullable private File       target;
 
     //~ Constructors .........................................................................................
 
     /**
-     * Private constructor called from copy methods
+     * Private constructor called from factory methods
      * @param env The current environment
      * @param from The source to copy from. It can be a file or a directory
+     * @param filter Whether to apply filtering (keyword expansion) when copying
      */
-    private Copy(@NotNull Environment env, @NotNull File from)
+    Copy(@NotNull Environment env, @NotNull File from, boolean filter)
     {
         super(env);
         this.from = from;
-        includes = Collections.emptyList();
-        excludes = Collections.emptyList();
+        this.filter = filter;
+        includes = new HashSet<String>();
+        excludes = new HashSet<String>();
+
+        if (filter) {
+            excludes.addAll(ResourcesInfo.DEFAULT_DO_NOT_FILTER);
+        }
+
         encoding = ResourcesInfo.DEFAULT_ENCODING;
-        doNotFilter = new HashSet<String>(ResourcesInfo.DEFAULT_DO_NOT_FILTER);
-        filters = new ArrayList<FileUtils.Filter>();
     }
 
     //~ Methods ..............................................................................................
 
     /**
-     * Entry point to the fluent interface.
-     * @param from The File or Directory to copy from
-     */
-    @NotNull public static Copy copy(@NotNull String from)
-    {
-        return copy(new File(from));
-    }
-
-    /**
-     * Entry point to the fluent interface.
-     * @param from The File or Directory to copy from
-     */
-    @NotNull public static Copy copy(@NotNull File from)
-    {
-        return new Copy(Environment.getInstance(), from);
-    }
-
-    /**
      * Specify the target file or directory
      * If not specified, then the file/s will be copied to the current module output
      * @param to The File or directory to copy from
-     * @throws IllegalArgumentException if trying to copy a directoy to a signle file.
+     * @throws IllegalArgumentException if trying to copy a directoy to a single file.
      */
     @NotNull public Copy to(@NotNull String to)
     {
@@ -125,25 +107,6 @@ public class Copy
     }
 
     /**
-     * Apply filtering (keyword expansion) to the files being copied
-     */
-    @NotNull public Copy filtering()
-    {
-        filtering = true;
-        return this;
-    }
-
-    /**
-     * If filtering is being done. Indicate which files to exclude
-     * @param patterns Patters indicating wich files to exclude from filtering
-     */
-    @NotNull public Copy excludingFromFiltering(@NotNull String... patterns)
-    {
-        doNotFilter.addAll(Arrays.asList(patterns));
-        return this;
-    }
-
-    /**
      * Specify the encoding to use when doing filtering
      * If none is specfied UTF8 will be used
      * @param enc The encoding to be used
@@ -160,7 +123,7 @@ public class Copy
      */
     @NotNull public Copy including(@NotNull String... patterns)
     {
-        includes = Arrays.asList(patterns);
+        includes.addAll(Arrays.asList(patterns));
         return this;
     }
 
@@ -170,7 +133,7 @@ public class Copy
      */
     @NotNull public Copy excluding(@NotNull String... patterns)
     {
-        excludes = Arrays.asList(patterns);
+        excludes.addAll(Arrays.asList(patterns));
         return this;
     }
 
@@ -193,29 +156,16 @@ public class Copy
             copyFromDirectory(to);
         }
         else {
-            copyFromFile(to);
+            File dest = to.isDirectory() ? new File(to, from.getName()) : to;
+            copyFile(from, dest);
         }
-    }
-
-    @NotNull public List<FileUtils.Filter> getFilters()
-    {
-        if (filters.isEmpty()) {
-            filters.add(new FileUtils.Filter() {
-                    public String filter(String str)
-                    {
-                        return env.expand(str);
-                    }
-                });
-        }
-
-        return filters;
     }
 
     private void copyFromDirectory(@NotNull File to)
     {
         // Defaults
         if (includes.isEmpty()) {
-            includes = Arrays.asList("**/**");
+            includes.add("**/**");
         }
 
         if (!to.exists() && !to.mkdirs()) {
@@ -245,23 +195,14 @@ public class Copy
         }
     }
 
-    private void copyFromFile(@NotNull File to)
-    {
-        if (to.isDirectory()) {
-            copyFile(from, new File(to, from.getName()));
-        }
-        else {
-            copyFile(from, to);
-        }
-    }
-
     private void copyFile(File source, File dest)
     {
         try {
-            if (filtering && !doNotFilter.contains(FileUtils.extension(source).toLowerCase())) {
+            if (filter) {
                 logVerbose("Filtering %s\n", source);
                 logVerbose("       to %s\n", dest);
-                FileUtils.copyFileFiltering(source, dest, false, encoding, getFilters());
+                final FileUtils.Filter f = new PropertyFilter(env);
+                FileUtils.copyFileFiltering(source, dest, false, encoding, Collections.singletonList(f));
             }
             else {
                 logVerbose("Copy %s\n", source);
@@ -297,5 +238,23 @@ public class Copy
         }
 
         return files;
+    }
+
+    //~ Inner Classes ........................................................................................
+
+    private static class PropertyFilter
+        implements FileUtils.Filter
+    {
+        private Environment env;
+
+        public PropertyFilter(Environment env)
+        {
+            this.env = env;
+        }
+
+        public String filter(String str)
+        {
+            return env.expand(str);
+        }
     }
 }

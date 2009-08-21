@@ -18,19 +18,12 @@
 
 package apb.ant;
 
-import java.io.File;
-import java.util.Collections;
-import java.util.Set;
-
 import apb.Environment;
+import apb.ProjectBuilder;
 
 import apb.utils.StringUtils;
 
-import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 //
 // User: emilio
@@ -42,8 +35,6 @@ public class AntEnvironment
     extends Environment
 {
     //~ Instance fields ......................................................................................
-
-    @Nullable private Set<File> definitionDir;
 
     private ApbTask task;
 
@@ -57,11 +48,6 @@ public class AntEnvironment
     }
 
     //~ Methods ..............................................................................................
-
-    @NotNull public Set<File> getProjectPath()
-    {
-        return definitionDir == null ? super.getProjectPath() : definitionDir;
-    }
 
     public void logInfo(String msg, Object... args)
     {
@@ -83,21 +69,9 @@ public class AntEnvironment
         log(Project.MSG_VERBOSE, msg, args);
     }
 
-    void initDefinitionDir(@NotNull String defdir)
-    {
-        File f = new File(defdir);
-
-        if (!f.isDirectory()) {
-            throw new BuildException("Non existent project definiton directory: '" + defdir + '\'');
-        }
-
-        logVerbose("Definition directory = '%s'", defdir);
-        definitionDir = Collections.singleton(f);
-    }
-
     private void log(int level, String msg, Object... args)
     {
-        msg = StringUtils.appendIndenting(makeStandardHeader() + ' ', msg);
+        msg = StringUtils.appendIndenting(ProjectBuilder.getInstance().makeStandardHeader() + ' ', msg);
         task.log(args.length == 0 ? msg : String.format(msg, args), level);
     }
 }

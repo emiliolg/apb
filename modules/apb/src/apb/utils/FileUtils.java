@@ -25,6 +25,7 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +43,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -630,6 +632,31 @@ public class FileUtils
         return normalized.getPath().equals(file.getPath()) ? file : normalized;
     }
 
+    /**
+     * Return the apb home directory
+     * @return the apb home directory
+     */
+    @NotNull public static File getApbDir()
+    {
+        return new File(System.getProperty("user.home"), APB_DIR);
+    }
+
+    @NotNull public static Properties userProperties()
+    {
+        File propFile = new File(getApbDir(), APB_PROPERTIES);
+
+        Properties p = new Properties();
+
+        try {
+            p.load(new FileReader(propFile));
+        }
+        catch (IOException ignore) {
+            // Ignore
+        }
+
+        return p;
+    }
+
     static boolean isSymbolicLink(File file)
         throws IOException
     {
@@ -697,6 +724,10 @@ public class FileUtils
     }
 
     //~ Static fields/initializers ...........................................................................
+
+    public static final String APB_PROPERTIES = "apb.properties";
+
+    private static final String APB_DIR = ".apb";
 
     public static final String JAVA_HOME = System.getenv("JAVA_HOME");
     public static final String java_home = System.getProperty("java.home");

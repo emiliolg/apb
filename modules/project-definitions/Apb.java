@@ -19,8 +19,8 @@
 
 import apb.metadata.Module;
 
-import libraries.Junit3;
 import libraries.Asm;
+import libraries.Junit3;
 
 public final class Apb
     extends DefaultModule
@@ -33,7 +33,7 @@ public final class Apb
 
     {
         description = "APB Project Builder";
-        dependencies(Junit3.LIB, Asm.LIB,ApbTest.MODULE);                
+        dependencies(Junit3.LIB, Asm.LIB, ApbTest.MODULE);
 
         pkg.mainClass = "apb.Main";
         pkg.name = "apb";
@@ -43,7 +43,7 @@ public final class Apb
         pkg.services("apb.Command", "apb.commands.idegen.Idea", "apb.commands.idegen.Eclipse");
         pkg.services("apb.Command", "apb.commands.module.Clone");
         pkg.services("apb.testrunner.TestSetCreator", "apb.testrunner.JunitTestSetCreator");
-        pkg.services("javax.annotation.processing.Processor","apb.processors.NotNullProcessor");
+        pkg.services("javax.annotation.processing.Processor", "apb.processors.NotNullProcessor");
 
         javadoc.deprecatedList = false;
         javadoc.links("http://java.sun.com/javase/6/docs/api");

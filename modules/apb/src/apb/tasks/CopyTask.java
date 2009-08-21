@@ -101,7 +101,8 @@ public class CopyTask
         }
 
         copy.setDoNotFilter(resources.doNotFilter());
-        copy.setFiltering(resources.filtering);
+
+        //  copy.setFiltering(resources.filtering);
         copy.setIncludes(resources.includes());
         copy.setExcludes(resources.excludes());
         copy.execute();

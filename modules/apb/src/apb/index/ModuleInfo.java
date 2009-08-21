@@ -25,9 +25,15 @@ import java.util.Collection;
 import java.util.Map;
 
 import apb.Command;
-import apb.ProjectElementHelper;
+import apb.CommandBuilder;
+import apb.Environment;
+import apb.ProjectBuilder;
+
+import apb.metadata.ProjectElement;
 
 import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.FileUtils.normalizeFile;
 //
 // User: emilio
 // Date: Apr 27, 2009
@@ -42,26 +48,34 @@ public class ModuleInfo
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final Collection<String> commands;
+    @NotNull private final String basedir;
 
-    @NotNull private final File contentDir;
-    @NotNull private String     defaultCommand;
+    @NotNull private final Collection<String> commands;
+    @NotNull private String                   defaultCommand;
 
     @NotNull private final String id;
+
+    @NotNull private final String moduleDir;
     @NotNull private final String name;
     private transient String      path;
+    private File                  projectPath;
 
     //~ Constructors .........................................................................................
 
-    ModuleInfo(ProjectElementHelper element)
+    ModuleInfo(File projectPath, ProjectElement element)
     {
+        this.projectPath = projectPath;
         name = element.getName();
         id = element.getId();
-        contentDir = element.getDirFile();
+        moduleDir = element.getDir();
+        basedir = element.basedir;
+
         commands = new ArrayList<String>();
         defaultCommand = Command.DEFAULT_COMMAND;
 
-        for (Map.Entry<String, Command> cmd : element.listCommands().entrySet()) {
+        CommandBuilder b = new CommandBuilder(element);
+
+        for (Map.Entry<String, Command> cmd : b.commands().entrySet()) {
             final String nm = cmd.getValue().getQName();
 
             if (cmd.getKey().equals(Command.DEFAULT_COMMAND)) {
@@ -80,9 +94,16 @@ public class ModuleInfo
         return commands;
     }
 
-    @NotNull public File getContentDir()
+    @NotNull public File contentDir(Environment env)
     {
-        return contentDir;
+        env.putProperty(ProjectBuilder.PROJECTS_HOME_PROP_KEY, projectPath.getPath());
+        File result = new File(env.expand(moduleDir));
+
+        if (!result.isAbsolute()) {
+            result = new File(normalizeFile(new File(env.expand(basedir))), result.getPath());
+        }
+
+        return result;
     }
 
     @NotNull public String getId()

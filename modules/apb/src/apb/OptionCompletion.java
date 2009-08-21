@@ -28,6 +28,9 @@ import apb.index.ModuleInfo;
 
 import apb.utils.OptionParser;
 import apb.utils.StandaloneEnv;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Mar 4, 2009
@@ -38,15 +41,14 @@ public class OptionCompletion
 {
     //~ Instance fields ......................................................................................
 
-    private Environment env;
+    @Nullable private DefinitionsIndex definitionsIndex;
 
-    private List<OptionParser.Option> options;
+    @NotNull private final List<OptionParser.Option> options;
 
     //~ Constructors .........................................................................................
 
     public OptionCompletion(List<OptionParser.Option> options)
     {
-        env = new StandaloneEnv();
         this.options = options;
     }
 
@@ -74,7 +76,7 @@ public class OptionCompletion
                 printValues(values, last);
             }
             else if (last.isEmpty()) {
-                final ModuleInfo info = env.getDefinitionsIndex().searchCurrentDirectory();
+                final ModuleInfo info = getDefinitionsIndex().searchCurrentDirectory();
 
                 if (info == null) {
                     printCompletions("");
@@ -107,6 +109,21 @@ public class OptionCompletion
                 System.out.print(s + " ");
             }
         }
+    }
+
+    /**
+     * Return (Initializing it if necessary) an instance of the DefinitionsIndex
+     * that contains informatio avoid the modules in th eproject path
+     * @return The DefinitionIndex
+     */
+    @NotNull private synchronized DefinitionsIndex getDefinitionsIndex()
+    {
+        if (definitionsIndex == null) {
+            Environment env = new StandaloneEnv();
+            definitionsIndex = new DefinitionsIndex(env, Main.loadProjectPath(env));
+        }
+
+        return definitionsIndex;
     }
 
     private List<String> findOptions(String opt)
@@ -164,7 +181,7 @@ public class OptionCompletion
         int    dot = last.lastIndexOf(".");
         String moduleName = dot == -1 ? last : last.substring(0, dot + 1);
 
-        final DefinitionsIndex index = env.getDefinitionsIndex();
+        final DefinitionsIndex index = getDefinitionsIndex();
 
         List<ModuleInfo> modules = index.findAllByName(moduleName);
 

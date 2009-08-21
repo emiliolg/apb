@@ -36,7 +36,7 @@ import static apb.utils.StringUtils.nChars;
  * one-letter options can be combined (preceding them with a single
  * '-').
  */
-public class OptionParser
+public abstract class OptionParser
 {
     //~ Instance fields ......................................................................................
 
@@ -46,15 +46,13 @@ public class OptionParser
 
     private final String  appName;
     private final boolean exitOnStopParsing = true;
-    private final String  versionNumber;
 
     //~ Constructors .........................................................................................
 
-    protected OptionParser(final String[] args, String name, String version)
+    protected OptionParser(final String[] args, String name)
     {
         arguments = Arrays.asList(args);
         appName = name;
-        versionNumber = version;
     }
 
     //~ Methods ..............................................................................................
@@ -119,6 +117,13 @@ public class OptionParser
 
         System.exit(0);
     }
+
+    public String getAppName()
+    {
+        return appName;
+    }
+
+    protected abstract void printVersion();
 
     protected final Option<Boolean> addBooleanOption(final char letter, @NotNull final String name,
                                                      @NotNull String description)
@@ -199,17 +204,6 @@ public class OptionParser
         printError(Messages.INVOPT("'--" + option + "'"));
         stopParsing();
         throw new RuntimeException();
-    }
-
-    String getAppName()
-    {
-        return appName;
-    }
-
-    void printVersion()
-    {
-        System.err.println(getAppName() + " version: " + versionNumber);
-        System.exit(0);
     }
 
     private int execute(Option opt, int i)

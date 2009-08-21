@@ -46,9 +46,11 @@ public abstract class ProjectElementHelper
     @NotNull protected final Set<Command> executedCommands;
     @Nullable ProjectElement              element;
 
-    private CommandBuilder builder;
+    private CommandBuilder      builder;
+    @NotNull private final File projectDirectory;
 
     @NotNull private final ProjectElement proto;
+    @NotNull private final File           sourceFile;
     private boolean                       topLevel;
 
     //~ Constructors .........................................................................................
@@ -58,10 +60,10 @@ public abstract class ProjectElementHelper
         proto = element;
         env = environment;
         executedCommands = new HashSet<Command>();
-
-        synchronized (env.getHelpers()) {
-            env.getHelpers().put(getName(), this);
-        }
+        final ProjectBuilder pb = ProjectBuilder.getInstance();
+        pb.registerHelper(this);
+        sourceFile = pb.sourceFile(element);
+        projectDirectory = findProjectDir(element, sourceFile);
     }
 
     //~ Methods ..............................................................................................
@@ -138,7 +140,7 @@ public abstract class ProjectElementHelper
 
     public final long lastModified()
     {
-        return env.sourceLastModified(getElement().getClass());
+        return sourceFile.lastModified();
     }
 
     public final SortedMap<String, Command> listCommands()
@@ -163,10 +165,10 @@ public abstract class ProjectElementHelper
      */
     @NotNull public File getDirFile()
     {
-        File result = new File(env.expand(proto.getDir()));
+        File result = new File(expand(proto.getDir()));
 
         if (!result.isAbsolute()) {
-            File basedir = new File(env.expand(proto.basedir));
+            File basedir = new File(expand(proto.basedir));
 
             basedir = FileUtils.normalizeFile(basedir);
 
@@ -178,44 +180,67 @@ public abstract class ProjectElementHelper
 
     public void remove()
     {
-        synchronized (env.getHelpers()) {
-            env.getHelpers().remove(getName());
-        }
+        ProjectBuilder.getInstance().remove(this);
     }
 
-    protected abstract void doBuild(String commandName);
+    @NotNull public File getSourceFile()
+    {
+        return sourceFile;
+    }
+
+    /**
+     * Returns The directory where the project definition files are stored
+     */
+    @NotNull public File getProjectDirectory()
+    {
+        return projectDirectory;
+    }
+
+    protected abstract void build(ProjectBuilder pb, String commandName);
 
     protected void initDependencyGraph() {}
-
-    protected void execute(@NotNull String commandName)
-    {
-        Command command = findCommand(commandName);
-
-        if (command != null && notExecuted(command)) {
-            ProjectElement projectElement = activate();
-
-            for (Command cmd : command.getDependencies()) {
-                if (notExecuted(cmd)) {
-                    final String cmdName = cmd.getQName();
-                    env.startExecution(getName(), cmdName);
-                    markExecuted(cmd);
-                    cmd.invoke(projectElement, env);
-                    env.endExecution(getName(), cmdName);
-                }
-            }
-        }
-    }
-
-    void build(String commandName)
-    {
-        env.startExecution(getName(), commandName);
-        doBuild(commandName);
-        env.endExecution(getName(), commandName);
-    }
 
     void activate(@NotNull ProjectElement activatedElement)
     {
         element = activatedElement;
+    }
+
+    void markExecuted(Command cmd)
+    {
+        executedCommands.add(cmd);
+    }
+
+    boolean notExecuted(Command cmd)
+    {
+        return !executedCommands.contains(cmd);
+    }
+
+    private static File findProjectDir(ProjectElement proto, File sourceFile)
+    {
+        File   result = sourceFile;
+        String className = proto.getClass().getName();
+
+        for (int i = 0; i != -1; i = className.indexOf('.', i + 1)) {
+            result = result.getParentFile();
+        }
+
+        return result;
+    }
+
+    /**
+    * Process the string expanding property values.
+    * The `$' character introduces property expansion.
+    * The property  name  or  symbol  to  be expanded  may be enclosed in braces,
+    * which are optional but serve to protect the variable to be expanded from characters
+    * immediately following it which could be interpreted as part of the name.
+    * When braces are used, the matching ending brace is the first `}' not escaped by a backslash
+    *
+    * @param string The string to be expanded.
+    * @return An String with properties expanded.
+    */
+    private String expand(String string)
+    {
+        return env.expand(string);
     }
 
     @NotNull private CommandBuilder getBuilder()
@@ -225,15 +250,5 @@ public abstract class ProjectElementHelper
         }
 
         return builder;
-    }
-
-    private void markExecuted(Command cmd)
-    {
-        executedCommands.add(cmd);
-    }
-
-    private boolean notExecuted(Command cmd)
-    {
-        return !executedCommands.contains(cmd);
     }
 }

@@ -18,29 +18,36 @@
 
 package apb.commands.idegen;
 
-import apb.Environment;
+import java.util.Arrays;
+import java.util.List;
 
-import apb.metadata.ProjectElement;
+import apb.Command;
+
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
-// Date: Mar 18, 2009
-// Time: 4:11:52 PM
+// Date: Aug 19, 2009
+// Time: 5:42:56 PM
 
 //
-public class Eclipse
-    extends Idegen
+public abstract class Idegen
+    extends Command
 {
     //~ Constructors .........................................................................................
 
-    public Eclipse()
+    public Idegen(@NotNull String name)
     {
-        super("eclipse");
+        super("idegen", name, "Generate " + name + " project and module files.", true);
     }
 
     //~ Methods ..............................................................................................
 
-    public void invoke(ProjectElement projectElement, Environment env)
+    public List<String> getOptions()
     {
-        System.out.println("Not yet implemented");
+        return Arrays.asList(INCLUDE_EMPTY_DIRS + ": Include empty source directories. (default = false)");
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    public static final String INCLUDE_EMPTY_DIRS = "idegen-include-empty-dirs";
 }

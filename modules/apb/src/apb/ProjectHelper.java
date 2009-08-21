@@ -48,7 +48,7 @@ public class ProjectHelper
         components = new ArrayList<ProjectElementHelper>();
 
         for (ProjectElement module : project.components()) {
-            components.add(env.getHelper(module));
+            components.add(ProjectBuilder.findHelper(module));
         }
     }
 
@@ -70,12 +70,12 @@ public class ProjectHelper
         return result;
     }
 
-    protected void doBuild(String commandName)
+    protected void build(ProjectBuilder pb, String commandName)
     {
         for (ProjectElementHelper component : components) {
-            component.build(commandName);
+            pb.build(component, commandName);
         }
 
-        execute(commandName);
+        pb.execute(this, commandName);
     }
 }

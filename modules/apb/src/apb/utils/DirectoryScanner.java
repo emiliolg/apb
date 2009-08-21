@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -47,8 +48,8 @@ public class DirectoryScanner
 
     //~ Constructors .........................................................................................
 
-    public DirectoryScanner(@NotNull File baseDir, @NotNull List<String> includes,
-                            @NotNull List<String> excludes)
+    public DirectoryScanner(@NotNull File baseDir, @NotNull Collection<String> includes,
+                            @NotNull Collection<String> excludes)
     {
         this.baseDir = baseDir;
         this.includes = StringUtils.normalizePaths(includes);

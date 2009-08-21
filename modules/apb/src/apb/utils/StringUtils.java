@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -326,7 +327,7 @@ public class StringUtils
         return pattern;
     }
 
-    public static List<String> normalizePaths(List<String> list)
+    public static List<String> normalizePaths(Collection<String> list)
     {
         List<String> patterns = new ArrayList<String>();
 

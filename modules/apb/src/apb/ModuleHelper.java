@@ -78,7 +78,7 @@ public class ModuleHelper
         // Add Direct Dependencies & local libraries
         for (Dependency dependency : module.dependencies()) {
             if (dependency.isModule()) {
-                directDependencies.add((ModuleHelper) env.getHelper(dependency.asModule()));
+                directDependencies.add((ModuleHelper) ProjectBuilder.findHelper(dependency.asModule()));
             }
             else if (dependency.isLibrary()) {
                 localLibraries.add(dependency.asLibrary());
@@ -141,11 +141,11 @@ public class ModuleHelper
     {
         return directDependencies;
     }
-    
-    @NotNull public Iterable<ModuleHelper> getDependencies() {
+
+    @NotNull public Iterable<ModuleHelper> getDependencies()
+    {
         return dependencies;
     }
-
 
     public List<File> compileClassPath()
     {
@@ -255,7 +255,7 @@ public class ModuleHelper
         }
     }
 
-    protected void doBuild(String commandName)
+    protected void build(ProjectBuilder pb, String commandName)
     {
         Command command = findCommand(commandName);
 
@@ -265,7 +265,7 @@ public class ModuleHelper
 
         if (command.isRecursive() && !env.isNonRecursive()) {
             for (ModuleHelper dep : dependencies) {
-                dep.execute(commandName);
+                pb.execute(dep, commandName);
             }
         }
         else {
@@ -274,11 +274,11 @@ public class ModuleHelper
             }
 
             for (Command cmd : command.getDirectDependencies()) {
-                build(cmd.getQName());
+                pb.build(this, cmd.getQName());
             }
         }
 
-        execute(commandName);
+        pb.execute(this, commandName);
     }
 
     void activate(@NotNull ProjectElement activatedModule)
@@ -293,7 +293,7 @@ public class ModuleHelper
         packageDir = FileUtils.normalizeFile(env.fileFromBase(module.pkg.dir));
 
         for (TestModule testModule : module.tests()) {
-            final TestModuleHelper helper = (TestModuleHelper) env.getHelper(testModule);
+            final TestModuleHelper helper = (TestModuleHelper) ProjectBuilder.findHelper(testModule);
             helper.setModuleToTest(this);
         }
     }
@@ -316,7 +316,7 @@ public class ModuleHelper
         for (Dependency dependency : getModule().dependencies()) {
             if (dependency.mustInclude(compile)) {
                 if (dependency.isModule()) {
-                    ModuleHelper hlp = (ModuleHelper) env.getHelper(dependency.asModule());
+                    ModuleHelper hlp = (ModuleHelper) ProjectBuilder.findHelper(dependency.asModule());
                     result.add(useJars && hlp.hasPackage() ? hlp.getPackageFile() : hlp.getOutput());
                 }
                 else if (dependency.isLibrary()) {
@@ -333,7 +333,7 @@ public class ModuleHelper
         result.add(this);
 
         for (TestModule testModule : getModule().tests()) {
-            result.add((ModuleHelper) env.getHelper(testModule));
+            result.add((ModuleHelper) ProjectBuilder.findHelper(testModule));
         }
     }
 

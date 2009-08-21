@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,6 +38,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
+import apb.BuildException;
 import apb.Environment;
 
 import apb.utils.FileUtils;
@@ -71,13 +73,18 @@ public class InMemJavaC
      * @param environment
      */
     public InMemJavaC(@NotNull Environment environment)
-        throws MalformedURLException
     {
         env = environment;
         compiler = ToolProvider.getSystemJavaCompiler();
-        memoryClassLoader =
-            new MemoryClassLoader(FileUtils.toUrl(environment.getExtClassPath()),
-                                  getClass().getClassLoader());
+
+        try {
+            memoryClassLoader =
+                new MemoryClassLoader(FileUtils.toUrl(environment.getExtClassPath()),
+                                      getClass().getClassLoader());
+        }
+        catch (MalformedURLException e) {
+            throw new BuildException(e);
+        }
 
         fileManager = new MemoryJavaFileManager(compiler, memoryClassLoader);
         classesByFile = new HashMap<File, Class>();
@@ -143,7 +150,7 @@ public class InMemJavaC
         }
 
         options.add("-implicit:class");
-        
+
         String extClassPath = FileUtils.makePath(env.getExtClassPath());
 
         if (!extClassPath.isEmpty()) {

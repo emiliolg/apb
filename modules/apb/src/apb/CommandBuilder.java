@@ -163,7 +163,8 @@ public class CommandBuilder
         {
             System.err.println("Commands for '" + projectElement.getName() + "' : ");
 
-            final Collection<Command> cmds = env.getHelper(projectElement).listCommands().values();
+            final Collection<Command> cmds =
+                ProjectBuilder.findHelper(projectElement).listCommands().values();
 
             for (Command cmd : cmds) {
                 if (!cmd.hasNameSpace()) {
@@ -199,7 +200,13 @@ public class CommandBuilder
 
         private static void printCommand(Command cmd)
         {
-            System.err.printf(cmd.hasNameSpace() ? "  %-18s: %s\n" : "%-20s: %s\n", cmd.getName(), cmd.getDescription());
+            System.err.printf(cmd.hasNameSpace() ? "  %-18s: %s\n" : "%-20s: %s\n", cmd.getName(),
+                              cmd.getDescription());
+
+            for (String option : cmd.getOptions()) {
+                printSpaces();
+                System.err.printf("%22s%s\n", "", option);
+            }
         }
     }
 
@@ -210,7 +217,8 @@ public class CommandBuilder
 
         private final Method method;
 
-        protected InstanceCommand(@NotNull String name, @NotNull Method method, @NotNull String description, boolean recursive)
+        protected InstanceCommand(@NotNull String name, @NotNull Method method, @NotNull String description,
+                                  boolean recursive)
         {
             super(name, description, recursive);
             this.method = method;

@@ -26,13 +26,18 @@ import java.util.Map;
 
 import apb.Environment;
 import apb.ModuleHelper;
+import apb.ProjectBuilder;
 import apb.ProjectElementHelper;
+
 import apb.metadata.Dependency;
 import apb.metadata.DependencyList;
 import apb.metadata.PackageType;
-import static apb.utils.CollectionUtils.addIfNotNull;
+
 import apb.utils.FileUtils;
+
 import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.CollectionUtils.addIfNotNull;
 //
 // User: emilio
 // Date: Oct 22, 2008
@@ -111,7 +116,7 @@ public class JavaTask
                 addIfNotNull(result, dependency.asLibrary().getArtifact(env, PackageType.JAR));
             }
             else if (dependency.isModule()) {
-                final ModuleHelper module = (ModuleHelper) env.getHelper(dependency.asModule());
+                final ModuleHelper module = (ModuleHelper) ProjectBuilder.findHelper(dependency.asModule());
                 result.addAll(module.deepClassPath(false, true));
             }
         }
@@ -216,5 +221,4 @@ public class JavaTask
     {
         this.memory = memory;
     }
-
 }

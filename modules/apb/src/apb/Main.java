@@ -18,12 +18,17 @@
 
 package apb;
 
+import java.io.File;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
+import apb.index.DefinitionsIndex;
 import apb.index.ModuleInfo;
 
 import apb.utils.StandaloneEnv;
+
 import static apb.Messages.BUILD_COMPLETED;
 import static apb.Messages.BUILD_FAILED;
 
@@ -36,23 +41,48 @@ public class Main
     {
         ApbOptions   options = new ApbOptions(args);
         List<String> arguments = options.parse();
-        Environment  env = new StandaloneEnv(Main.class.getPackage().getName(), options.definedProperties());
+
+        Environment env = new StandaloneEnv(Main.class.getPackage().getName(), options.definedProperties());
         options.initEnv(env);
 
+        final Set<File> path = loadProjectPath(env);
+
         if (arguments.isEmpty()) {
-            arguments = searchDefault(env, options);
+            arguments = searchDefault(env, options, path);
         }
 
-        Main.execute(env, arguments);
+        Main.execute(env, arguments, path);
     }
 
-    public static boolean execute(Environment env, String element, String command)
-        throws DefinitionException
+    /**
+     * Load the projectpath list.
+     * @param env
+     */
+    public static Set<File> loadProjectPath(Environment env)
     {
-        ProjectElementHelper projectElement = env.constructProjectElement(element);
-        projectElement.setTopLevel(true);
-        projectElement.build(command);
-        return true;
+        Set<File> result = new LinkedHashSet<File>();
+        String    path = System.getenv("APB_PROJECT_PATH");
+        String    path2 = env.getBaseProperty("project.path");
+
+        if (path2 != null) {
+            path = path == null ? path2 : path + File.pathSeparator + path2;
+        }
+
+        if (path == null) {
+            path = "./project-definitions";
+        }
+
+        for (String p : path.split(File.pathSeparator)) {
+            File dir = new File(p);
+
+            if (dir.isAbsolute() && !dir.isDirectory()) {
+                env.logWarning(Messages.INV_PROJECT_DIR(dir));
+            }
+
+            result.add(dir);
+        }
+
+        return result;
     }
 
     /**
@@ -60,12 +90,14 @@ public class Main
      * of the current directory one.
      * @param env
      * @param options
+     * @param projectPath
      * @result The definiton
      */
-    private static List<String> searchDefault(Environment env, ApbOptions options)
+    private static List<String> searchDefault(Environment env, ApbOptions options,
+                                              final Set<File> projectPath)
     {
         final List<String> result;
-        final ModuleInfo   info = env.getDefinitionsIndex().searchCurrentDirectory();
+        final ModuleInfo   info = new DefinitionsIndex(env, projectPath).searchCurrentDirectory();
 
         if (info != null) {
             env.logInfo("Executing: %s.%s\n", info.getName(), info.getDefaultCommand());
@@ -79,20 +111,19 @@ public class Main
         return result;
     }
 
-    private static void execute(Environment env, List<String> arguments)
+    private static void execute(Environment env, List<String> arguments, final Set<File> projectPath)
         throws Throwable
     {
-        env.resetClock();
-
-        boolean ok = true;
+        long clock = System.currentTimeMillis();
 
         for (String argument : arguments) {
             final String[] argParts = splitParts(argument);
 
             try {
-                if (!execute(env, argParts[0], argParts[1])) {
-                    ok = false;
-                }
+                ProjectBuilder b = new ProjectBuilder(env, projectPath);
+                b.build(argParts[0], argParts[1]);
+                env.logInfo(BUILD_COMPLETED(System.currentTimeMillis() - clock));
+                return;
             }
             catch (DefinitionException e) {
                 env.logSevere("%s\nCause: %s\n", e.getMessage(), e.getCause().getMessage());
@@ -100,11 +131,8 @@ public class Main
                 if (env.showStackTrace()) {
                     throw e.getCause();
                 }
-
-                ok = false;
             }
             catch (BuildException b) {
-                ok = false;
                 Throwable e = b.getCause() == null ? b : b.getCause();
                 env.logSevere("%s\n", b.getMessage());
 
@@ -114,12 +142,7 @@ public class Main
             }
         }
 
-        if (ok) {
-            env.logInfo(BUILD_COMPLETED(System.currentTimeMillis() - env.getClock()));
-        }
-        else {
-            env.logInfo(BUILD_FAILED);
-        }
+        env.logInfo(BUILD_FAILED);
     }
 
     private static String[] splitParts(String argument)

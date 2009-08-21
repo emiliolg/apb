@@ -43,6 +43,6 @@ public class ColorFormatter
 
     @Override protected String header()
     {
-        return ColorUtils.colorize(ColorUtils.GREEN, env.makeStandardHeader());
+        return ColorUtils.colorize(ColorUtils.GREEN, super.header());
     }
 }

@@ -40,6 +40,8 @@ import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
 
+import apb.commands.idegen.Idegen;
+
 import apb.metadata.Library;
 import apb.metadata.LocalLibrary;
 import apb.metadata.Module;
@@ -76,6 +78,7 @@ public class IdeaTask
     private File deploymentDescriptorFile;
 
     private ProjectElementHelper helper;
+    private boolean              includeEmptyDirs;
 
     private File    modulesHome;
     private boolean overwrite;
@@ -88,11 +91,12 @@ public class IdeaTask
         super(env);
         helper = env.getCurrent();
         modulesHome =
-            IDEA_MODULES_HOME == null ? new File(env.getProjectsHome(), IDEA_DIR)
+            IDEA_MODULES_HOME == null ? new File(helper.getProjectDirectory(), IDEA_DIR)
                                       : env.fileFromBase(IDEA_MODULES_HOME);
 
         templateDir = new File(modulesHome, "templates");
         overwrite = env.forceBuild();
+        includeEmptyDirs = env.getBooleanProperty(Idegen.INCLUDE_EMPTY_DIRS, false);
     }
 
     //~ Methods ..............................................................................................
@@ -165,17 +169,19 @@ public class IdeaTask
 
                 addExcludeFolders(module, content);
 
-                List<File> sources = module.getSourceDirs();
+                for (File source : module.getSourceDirs()) {
+                    final boolean exists = source.exists();
 
-                for (File source : sources) {
-                    Element sourceContent =
+                    if (exists || includeEmptyDirs) {
+                        if (!exists) {
+                            env.logVerbose("Adding inexistent source path to module definition. " +
+                                           "Path: '%s'\n", source.toString());
+                        }
+
+                        Element sourceContent =
                             findElement(component, "content", URL_ATTRIBUTE,
-                                    relativeUrl("file", source.getParentFile()));
-                    addSourceFolder(sourceContent, source, module.isTestModule());
-
-                    if (!source.exists()) {
-                        getEnv().logVerbose("Adding inexistent source path to module definition. " +
-                                "Path: '%s'\n", source.toString());
+                                        relativeUrl("file", source.getParentFile()));
+                        addSourceFolder(sourceContent, source, module.isTestModule());
                     }
                 }
 

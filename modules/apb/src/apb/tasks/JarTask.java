@@ -28,12 +28,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -48,11 +48,12 @@ import apb.BuildException;
 import apb.Environment;
 import apb.Messages;
 import apb.ModuleHelper;
+import apb.ProjectBuilder;
 
 import apb.metadata.Dependency;
+import apb.metadata.Module;
 import apb.metadata.PackageInfo;
 import apb.metadata.PackageType;
-import apb.metadata.Module;
 
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
@@ -125,25 +126,23 @@ public class JarTask
 
             // prepare dependencies included in package
             Iterable<ModuleHelper> includedDeps = null;
-            switch (packageInfo.getIncludeDependenciesMode()){
-                case DIRECT_MODULES:
-                {
-                    includedDeps = helper.getDirectDependencies();
-                    break;
-                }
-                case DEEP_MODULES:
-                {
-                    includedDeps = helper.getDependencies();
-                    break;
-                }
+
+            switch (packageInfo.getIncludeDependenciesMode()) {
+            case DIRECT_MODULES: {
+                includedDeps = helper.getDirectDependencies();
+                break;
+            }
+            case DEEP_MODULES: {
+                includedDeps = helper.getDependencies();
+                break;
+            }
             }
 
-            if (includedDeps != null){
+            if (includedDeps != null) {
                 for (ModuleHelper dep : includedDeps) {
                     packageInfo.additionalDependencies().add(dep.getModule());
                 }
             }
-
 
             Map<String, Set<String>> services = packageInfo.services();
 
@@ -155,13 +154,14 @@ public class JarTask
                     if (d.isModule()) {
                         Module depModule = d.asModule();
                         env.logVerbose("Adding module '%s'.\n", d.toString());
-                        ModuleHelper m = (ModuleHelper) env.getHelper(depModule);
+                        ModuleHelper m = (ModuleHelper) ProjectBuilder.findHelper(depModule);
                         jarTask.addDir(m.getOutput());
 
                         mergedServices.putAll(depModule.pkg.services());
                     }
                     else if (d.isLibrary()) {
-                        env.logInfo("Library '%s' skipped. Libraries are not packaged as part of module jar.\n", d.toString());
+                        env.logInfo("Library '%s' skipped. Libraries are not packaged as part of module jar.\n",
+                                    d.toString());
                     }
                 }
 
@@ -261,6 +261,13 @@ public class JarTask
         setManifestAttribute(Attributes.Name.CLASS_PATH, result);
     }
 
+    public void addDir(@Nullable File file)
+    {
+        if (file != null) {
+            sourceDir.add(file);
+        }
+    }
+
     /**
      * Check if the jar file is uptodate.
      * (The timestamp for all files is lower than the jar one)
@@ -287,13 +294,6 @@ public class JarTask
     private void setServices(@NotNull Map<String, Set<String>> services)
     {
         this.services = services;
-    }
-
-    public void addDir(@Nullable File file)
-    {
-        if (file != null) {
-            sourceDir.add(file);
-        }
     }
 
     private long checkJarFile()

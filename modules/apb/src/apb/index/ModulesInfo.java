@@ -25,8 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import apb.Environment;
-import apb.ProjectElementHelper;
+import apb.ProjectBuilder;
+
+import apb.metadata.ProjectElement;
 
 import org.jetbrains.annotations.NotNull;
 // User: emilio
@@ -70,13 +71,13 @@ class ModulesInfo
         return path;
     }
 
-    void loadModulesInfo(Environment env, List<File> files)
+    void loadModulesInfo(ProjectBuilder pb, List<File> files)
     {
         for (File file : files) {
-            ProjectElementHelper element = loadElement(env, file);
+            ProjectElement element = pb.loadElement(path, file);
 
             if (element != null) {
-                ModuleInfo info = new ModuleInfo(element);
+                ModuleInfo info = new ModuleInfo(path, element);
                 modules.put(info.getName(), info);
             }
         }
@@ -86,16 +87,6 @@ class ModulesInfo
     {
         for (ModuleInfo moduleInfo : modules.values()) {
             moduleInfo.establishPath(path);
-        }
-    }
-
-    private ProjectElementHelper loadElement(Environment env, File file)
-    {
-        try {
-            return env.constructProjectElement(file);
-        }
-        catch (Throwable e) {
-            return null;
         }
     }
 

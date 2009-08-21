@@ -22,6 +22,7 @@ import java.util.logging.Formatter;
 import java.util.logging.LogRecord;
 
 import apb.Environment;
+import apb.ProjectBuilder;
 //
 // User: emilio
 // Date: Dec 4, 2008
@@ -71,7 +72,7 @@ public class SimpleFormatter
 
     protected String header()
     {
-        return env.makeStandardHeader();
+        return ProjectBuilder.getInstance().makeStandardHeader();
     }
 
     private static String formatMsg(LogRecord record)

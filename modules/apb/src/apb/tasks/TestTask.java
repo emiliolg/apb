@@ -178,7 +178,7 @@ public class TestTask
             excludes = testModule.excludes();
         }
 
-        final String groups = env.getProperty("tests.groups", "");
+        final String groups = moduleHelper.getProperty("tests.groups", "");
         testGroups = groups.isEmpty() ? testModule.groups() : Arrays.asList(groups.split(","));
 
         properties = expandProperties(env, testModule.properties(), testModule.useProperties());

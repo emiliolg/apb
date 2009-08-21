@@ -30,10 +30,12 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
 import apb.Environment;
+import apb.ProjectBuilder;
 
 import apb.utils.FileUtils;
 
@@ -58,7 +60,7 @@ public class DefinitionsIndex
 
     //~ Constructors .........................................................................................
 
-    public DefinitionsIndex(@NotNull Environment e)
+    public DefinitionsIndex(@NotNull Environment e, Set<File> projectPath)
     {
         env = e;
         modules = new TreeSet<ModuleInfo>();
@@ -70,7 +72,7 @@ public class DefinitionsIndex
         }
 
         excludeDirs = excludes.split(",");
-        loadCache();
+        loadCache(projectPath);
     }
 
     //~ Methods ..............................................................................................
@@ -88,7 +90,7 @@ public class DefinitionsIndex
     @Nullable public ModuleInfo searchByDirectory(@NotNull String dir)
     {
         for (ModuleInfo info : modules) {
-            String p = info.getContentDir().getPath();
+            String p = info.contentDir(env).getPath();
 
             if (dir.startsWith(p)) {
                 return info;
@@ -140,13 +142,13 @@ public class DefinitionsIndex
         }
     }
 
-    private void loadCache()
+    private void loadCache(final Set<File> projectPath)
     {
         loadEntries();
 
         boolean mustStore = false;
 
-        for (File pdir : env.getProjectPath()) {
+        for (File pdir : projectPath) {
             ModulesInfo info = mdir.get(pdir);
             List<File>  files = new ArrayList<File>();
             listDefinitionFiles(pdir, files);
@@ -159,8 +161,8 @@ public class DefinitionsIndex
 
                 mustStore = true;
                 info = new ModulesInfo(pdir, lastModified);
-                info.loadModulesInfo(env, files);
-                env.resetJavac();
+                ProjectBuilder pb = new ProjectBuilder(env, projectPath);
+                info.loadModulesInfo(pb, files);
                 mdir.put(pdir, info);
             }
 
@@ -212,7 +214,7 @@ public class DefinitionsIndex
 
     @NotNull private File getModulesDirFile()
     {
-        return new File(env.getApbDir(), DEFINITIONS_IDX);
+        return new File(FileUtils.getApbDir(), DEFINITIONS_IDX);
     }
 
     private void loadEntries()

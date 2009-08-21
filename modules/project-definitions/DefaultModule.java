@@ -16,11 +16,17 @@
 //
 
 
+
+import apb.metadata.BuildProperty;
 import apb.metadata.Module;
 
 public class DefaultModule
     extends Module
 {
+    //~ Instance fields ......................................................................................
+
+    @BuildProperty boolean ideIncludeEmtyDirs = true;
+
     //~ Instance initializers ................................................................................
 
     {

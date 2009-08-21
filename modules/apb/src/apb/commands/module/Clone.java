@@ -20,9 +20,10 @@ package apb.commands.module;
 
 import java.io.File;
 
-import apb.BuildException;
 import apb.Command;
 import apb.Environment;
+import apb.ProjectBuilder;
+import apb.ProjectElementHelper;
 
 import apb.metadata.ProjectElement;
 
@@ -48,14 +49,9 @@ public class Clone
 
     public void invoke(ProjectElement projectElement, Environment env)
     {
-        final Class<? extends ProjectElement> clazz = projectElement.getClass();
-        File                                  f = env.sourceFile(clazz);
+        ProjectElementHelper helper = ProjectBuilder.findHelper(projectElement);
 
-        if (f == null) {
-            throw new BuildException("Cannot find project file.");
-        }
-
-        File   dir = projectDirectory(f, clazz.getName());
+        File   dir = helper.getProjectDirectory();
         File   newDir = getNewProjectDir(dir);
         String newModule = getString("New module name", "NewModule");
         System.out.println("newDir = " + newDir);
@@ -82,16 +78,5 @@ public class Clone
         while (!ok);
 
         return result;
-    }
-
-    private File projectDirectory(File projectFile, String className)
-    {
-        File dir = projectFile;
-
-        for (int i = 0; i != -1; i = className.indexOf('.', i + 1)) {
-            dir = dir.getParentFile();
-        }
-
-        return dir;
     }
 }
