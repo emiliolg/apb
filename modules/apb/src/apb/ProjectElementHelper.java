@@ -26,6 +26,7 @@ import java.util.SortedMap;
 import apb.metadata.Module;
 import apb.metadata.Project;
 import apb.metadata.ProjectElement;
+import apb.metadata.Synthetic;
 import apb.metadata.TestModule;
 
 import apb.utils.FileUtils;
@@ -62,8 +63,14 @@ public abstract class ProjectElementHelper
         executedCommands = new HashSet<Command>();
         final ProjectBuilder pb = ProjectBuilder.getInstance();
         pb.registerHelper(this);
-        sourceFile = pb.sourceFile(element);
-        projectDirectory = findProjectDir(element, sourceFile);
+
+        if (element instanceof Synthetic) {
+            sourceFile = projectDirectory = new File("");
+        }
+        else {
+            sourceFile = pb.sourceFile(element);
+            projectDirectory = findProjectDir(element, sourceFile);
+        }
     }
 
     //~ Methods ..............................................................................................

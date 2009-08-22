@@ -27,17 +27,12 @@ import java.util.Map;
 import java.util.Set;
 
 import apb.compiler.InMemJavaC;
-
 import apb.index.ArtifactsCache;
-
 import apb.metadata.DependencyList;
 import apb.metadata.ProjectElement;
-
 import apb.utils.DebugOption;
-
-import org.jetbrains.annotations.NotNull;
-
 import static apb.utils.FileUtils.JAVA_EXT;
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Aug 21, 2009

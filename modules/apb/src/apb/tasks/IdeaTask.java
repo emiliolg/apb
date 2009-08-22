@@ -36,7 +36,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import apb.BuildException;
-import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
 
@@ -48,6 +47,7 @@ import apb.metadata.Module;
 import apb.metadata.PackageType;
 import apb.metadata.ProjectElement;
 import apb.metadata.TestModule;
+import apb.metadata.Synthetic;
 
 import apb.utils.FileUtils;
 import apb.utils.NameUtils;
@@ -86,10 +86,10 @@ public class IdeaTask
 
     //~ Constructors .........................................................................................
 
-    public IdeaTask(@NotNull Environment env)
+    public IdeaTask(@NotNull ProjectElementHelper helper)
     {
-        super(env);
-        helper = env.getCurrent();
+        super(helper.getEnv());
+        this.helper = helper;
         modulesHome =
             IDEA_MODULES_HOME == null ? new File(helper.getProjectDirectory(), IDEA_DIR)
                                       : env.fileFromBase(IDEA_MODULES_HOME);
@@ -101,9 +101,9 @@ public class IdeaTask
 
     //~ Methods ..............................................................................................
 
-    public static void execute(Environment env)
+    public static void execute(ProjectElementHelper helper)
     {
-        new IdeaTask(env).execute();
+        new IdeaTask(helper).execute();
     }
 
     public void execute()
@@ -376,10 +376,10 @@ public class IdeaTask
             final ProjectElement prev = env.getCurrent().getElement();
             final Module         mod = new ProjectDefinitions(helper, env.applicationJarFile());
             env.activate(mod);
-            final IdeaTask task = new IdeaTask(env);
+            final ModuleHelper h = env.getModuleHelper();
+            final IdeaTask task = new IdeaTask(h);
             task.overwrite = true;
             task.execute();
-            final ModuleHelper h = env.getModuleHelper();
             addModuleToProject(modulesElement, h, EMPTY_STRING_SET);
             h.remove();
             env.activate(prev);
@@ -741,6 +741,7 @@ public class IdeaTask
 
     public static class ProjectDefinitions
         extends Module
+        implements Synthetic
     {
         public ProjectDefinitions() {}
 
