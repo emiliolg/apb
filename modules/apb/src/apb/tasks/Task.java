@@ -44,6 +44,11 @@ public abstract class Task
         this.env = env;
     }
 
+    protected Task()
+    {
+        this(Environment.getInstance());
+    }
+
     //~ Methods ..............................................................................................
 
     public abstract void execute();
