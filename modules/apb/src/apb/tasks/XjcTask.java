@@ -98,21 +98,13 @@ public class XjcTask
 
         final File targetDir = env.fileFromGeneratedSource(targetPackage.replace('.', '/'));
 
-        if (mustBuild(targetDir, schemaFile)) {
-            execute(targetDir, schemaFile);
-        }
+        execute(targetDir, schemaFile);
     }
 
-    private boolean mustBuild(@NotNull final File targetDir, @NotNull final File schemaFile)
-    {
-        final long ts;
-
-        return env.forceBuild() || (ts = targetDir.lastModified()) == 0 || schemaFile.lastModified() > ts ||
-               FileUtils.uptodate(externalBindings, ts);
-    }
 
     private void execute(@NotNull final File targetDir, @NotNull final File schemaFile)
     {
+        //noinspection ResultOfMethodCallIgnored
         targetDir.mkdirs();
 
         //If there is a jaxb xjc jar in ext, use that
