@@ -30,5 +30,5 @@ if [ "$1" != "clean" ]
 then
     mkdir -p $OUT_DIR
     javac -classpath $LIB_DIR/annotations.jar -sourcepath $SRC_DIR -d $OUT_DIR $SRC_DIR/apb/Main.java $SRC_DIR/apb/metadata/*.java
-    java -classpath $OUT_DIR apb.Main -fs $APB_DIR/modules/project-definitions/ApbAll.package
+    java $JAVA_OPTIONS -classpath $OUT_DIR apb.Main -fs $APB_DIR/modules/project-definitions/ApbAll.package
 fi
