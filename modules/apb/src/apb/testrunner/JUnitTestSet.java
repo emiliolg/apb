@@ -66,7 +66,14 @@ public final class JUnitTestSet
 
             testResult.addListener(new TestListenerAdaptor(report));
 
-            test.run(testResult);
+            final ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
+            Thread.currentThread().setContextClassLoader(classLoader);
+            try {
+                test.run(testResult);
+            }
+            finally {
+                Thread.currentThread().setContextClassLoader(previousClassLoader);
+            }
         }
     }
 
