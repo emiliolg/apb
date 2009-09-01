@@ -237,28 +237,60 @@ public interface Environment
     /**
      * Log with the lowest level
      */
+<<<<<<< HEAD:modules/apb/src/apb/Environment.java
     void setQuiet();
+=======
+    @NotNull public ProjectHelper getProjectHelper()
+    {
+        if (currentElement == null || !(currentElement instanceof ProjectHelper)) {
+            throw new IllegalStateException("Not current Project");
+        }
 
-    /**
-     * Avoid APB to recursively invoke the target in each of the module dependencies
-     */
-    void setNonRecursive();
+        return (ProjectHelper) currentElement;
+    }
 
-    void setDebugOptions(EnumSet<DebugOption> debugOptions);
+    public ProjectElementHelper getCurrent()
+    {
+        return currentElement;
+    }
 
-    /**
-     * Sets the flags that marks wheter to fail when an exception is raised or try to continue the
-     * build
-     * @param b
-     */
-    void setFailOnError(boolean b);
+    public void forward(@NotNull String command, Iterable<? extends Module> modules)
+    {
+        for (Module module : modules) {
+            final ProjectBuilder pb = ProjectBuilder.getInstance();
+            pb.build(pb.getHelper(module), command);
+        }
+    }
 
-    /**
-     * Sets the flags that marks to ignore file timestamps and build everything
-     * @param b
-     */
-    void setForceBuild(boolean b);
+    public void putProperty(String name, String value)
+    {
+        if (mustShow(DebugOption.PROPERTIES)) {
+            logVerbose("property %s=%s\n", name, value);
+        }
 
+        projectProperties.put(name, value);
+    }
+
+    public void setProperties(Map<String, String> values)
+    {
+        System.out.println("values = " + values);
+    }
+
+    public String getBaseProperty(String propertyName)
+    {
+        return baseProperties.get(propertyName);
+    }
+
+    public void setDebugOptions(@NotNull EnumSet<DebugOption> options)
+    {
+        debugOptions.addAll(options);
+
+        if (!options.isEmpty()) {
+            setVerbose();
+        }
+    }
+
+    protected void setVerbose() {}
     /**
      * Get an optional property. It can return null
      * @param id The property to get

@@ -37,7 +37,7 @@ public class Apb
 
     public static File applicationJarFile()
     {
-        String url = Main.class.getResource("").toExternalForm();
+        String url = Apb.class.getResource("").toExternalForm();
         int    ind = url.lastIndexOf('!');
 
         if (ind == -1 || !url.startsWith(JAR_FILE_URL_PREFIX)) {
@@ -95,6 +95,19 @@ public class Apb
     static void setEnv(Environment e)
     {
         env.set(e);
+    }
+    /**
+     * Get the Apb home directory
+     * Returns null if we cannot find it.
+     */
+    @Nullable public static File getHome()
+    {
+        try {
+            return applicationJarFile().getParentFile().getParentFile();
+        }
+        catch (BuildException e) {
+            return null;
+        }
     }
 
     //~ Static fields/initializers ...........................................................................

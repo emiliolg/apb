@@ -1,8 +1,28 @@
-#LyX 1.6.0 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.4 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
 \textclass book
+\begin_preamble
+%Some color definitions
+\definecolor{DarkGreen}{rgb}{0,0.5,.2}
+\definecolor{DarkBlue}{rgb}{0,0,0.5}
+\definecolor{Wheat}{rgb}{0.8,0.7,0.5}
+\definecolor{LightGray}{gray}{0.95}
+\definecolor{LightBlue}{rgb}{0.6,0.6,0.8}
+\definecolor{MediumGray}{gray}{0.4}
+
+% "define" Shell Interaction
+\lstdefinelanguage{shell} {morecomment=[l][keywordstyle]{$}}
+\lstdefinelanguage[apb]{shell}{morecomment=[l][keywordstyle]{$},morecomment=[s][\color{DarkGreen}]{\[}{\]}}
+
+% Default settings for listing
+
+\lstset{frame=box, language=Java, aboveskip=3mm, belowskip=3mm, showstringspaces=false, columns=flexible, basicstyle={\small\ttfamily},backgroundcolor={\color{LightGray}} }
+
+% Define foot notes reference format
+\newrefformat{fn}{$^{\ref{#1}}$} 
+\end_preamble
 \options pdftex
 \use_default_options true
 \language english
@@ -134,14 +154,6 @@ Prerequisites
 
 \begin_layout Standard
 APB requires a Java 6+ JDK installed.
- By default it is going to use the one in your PATH (you can check it using
- 
-\series bold
-java -version
-\series default
-).
- You can also set the APB_JAVA_HOME environment variable to point to the
- install directory of the desired JDK.
 \begin_inset Foot
 status open
 
@@ -155,7 +167,14 @@ java version.
 
 \end_inset
 
-
+ By default it is going to use the one in your PATH (you can check it using
+ 
+\series bold
+java -version
+\series default
+).
+ You can also set the APB_JAVA_HOME environment variable to point to the
+ install directory of the desired JDK.
 \end_layout
 
 \begin_layout Section
@@ -202,68 +221,112 @@ http://github.com/emiliolg/apb
 \end_layout
 
 \begin_layout Section
-Configuring your environment
+Test your installation
 \end_layout
 
 \begin_layout Standard
+Make sure that your 
+\family typewriter
+\noun on
+PATH
+\family default
+\noun default
+ environment variable includes the APB 
+\family typewriter
+bin
+\family default
+ directory.
+ 
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:first-run"
+
+\end_inset
+
 Now if you run 
 \family typewriter
 \series bold
-apb -v 
+apb --version
 \family default
 \series default
-you should get an output like:
+ you should get an output like:
 \end_layout
 
 \begin_layout Standard
 \begin_inset listings
-lstparams "basicstyle={\scriptsize},frame=tb,language=Java,numbers=left,numberstyle={\tiny},showstringspaces=false"
+lstparams "basicstyle={\footnotesize},frame=single,language=shell,showstringspaces=false"
 inline false
 status open
 
 \begin_layout Plain Layout
 
-public final class ApbTestNG
+$ apb --version
 \end_layout
 
 \begin_layout Plain Layout
 
-	extends DefaultModule 
+apb       : 0.9.11
 \end_layout
 
 \begin_layout Plain Layout
 
-{{
+java      : 1.6.0_13
 \end_layout
 
 \begin_layout Plain Layout
 
-    description = "APB TestNG Report Executor";
+OS        : Mac OS X 10.5.8 on x86_64
 \end_layout
 
 \begin_layout Plain Layout
 
-    dependencies(Apb.MODULE, TestNG.LIB);
+Memory    : 252M
 \end_layout
 
 \begin_layout Plain Layout
 
-    pkg.name = "apb-testng";
 \end_layout
 
-\begin_layout Plain Layout
+\end_inset
 
-    pkg.services("apb.testrunner.TestSetCreator",
+
 \end_layout
 
-\begin_layout Plain Layout
-
-                 "apb.testrunner.TestNGTestSetCreator");
+\begin_layout Section
+Configuring your environment
 \end_layout
 
-\begin_layout Plain Layout
+\begin_layout Standard
+APB configuration properties are located in the 
+\family typewriter
+$HOME/.apb/apb.properties
+\family default
+ file.
+ If you have done a fresh installation of APB, and have run the command
+ as explained in Section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sec:first-run"
 
-}}
+\end_inset
+
+you should have an apb.properties file with a content similar to the following
+ one
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fn:Assuming-installed-dir"
+
+\end_inset
+
+Assuming APB was installed in the 
+\family typewriter
+/usr/local/apb
+\family default
+ directory
 \end_layout
 
 \end_inset
@@ -272,7 +335,364 @@ public final class ApbTestNG
 \end_layout
 
 \begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\bf\small},commentstyle={\it\color{MediumGray}},frame=single,language=sh,moredelim={[l][\ttfamily]{\=}}"
+inline false
+status open
 
+\begin_layout Plain Layout
+
+#
+\end_layout
+
+\begin_layout Plain Layout
+
+# Some default properties
+\end_layout
+
+\begin_layout Plain Layout
+
+#
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+# The path where APB definitions files are searched
+\end_layout
+
+\begin_layout Plain Layout
+
+project.path=./APB:/usr/local/apb/samples/APB:
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+# A path used to load APB plugins
+\end_layout
+
+\begin_layout Plain Layout
+
+ext.path=/usr/local/apb/ext
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+# Whether to use colorized output or not
+\end_layout
+
+\begin_layout Plain Layout
+
+color=true
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+# Uncoment and replace values to configure your http proxy if necessary
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+#proxy.user=user
+\end_layout
+
+\begin_layout Plain Layout
+
+#proxy.password=password
+\end_layout
+
+\begin_layout Plain Layout
+
+#proxy.protocol=protocol
+\end_layout
+
+\end_inset
+
+In particular the project.path property tells APB where to search for modules
+ and project definitions files.
+\end_layout
+
+\begin_layout Standard
+It is good idea to configure bash completion, to do that just include the
+ following line in your .bashrc file
+\begin_inset CommandInset ref
+LatexCommand prettyref
+reference "fn:Assuming-installed-dir"
+
+\end_inset
+
+: 
+\end_layout
+
+\begin_layout Quote
+.
+ /usr/local/apb/bin/completion/apb-complete.sh
+\end_layout
+
+\begin_layout Chapter
+First Steps
+\end_layout
+
+\begin_layout Section
+Hello World
+\end_layout
+
+\begin_layout Standard
+To build an APB module you run the 
+\series bold
+apb
+\series default
+ command with the name of the module followed by 
+\begin_inset Quotes eld
+\end_inset
+
+.
+\begin_inset Quotes erd
+\end_inset
+
+ (dot character) followed by the method (BuildTarget) that you want to invoke.
+ APB will search for a file called 
+\family typewriter
+
+\begin_inset Quotes eld
+\end_inset
+
+ModuleName.java
+\begin_inset Quotes erd
+\end_inset
+
+
+\family default
+ in each of the directories specified in the project.path property, it will
+ compile and load the file, and execute the specified method.
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+ So module files are similar to build.xml files in ant or pom.xml files in
+ maven, while methods (also called build targets) are similar to targets
+ in ant or goals in maven.
+ 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Let's try this with one of the samples distributed with APB.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize},frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+$ apb HelloWorld.hello
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld.hello]              Hello World ! 
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld]                     
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld]                    BUILD COMPLETED in 597 milliseconds.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb HelloWorld.bye
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld.hello]              Hello World ! 
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld.bye]                Good Bye World ! 
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld]                     
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld]                    BUILD COMPLETED in 540 milliseconds.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Let's take a look at the HelloWorld.java file to figure out what is happening.
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=tb,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+import apb.metadata.BuildTarget;
+\end_layout
+
+\begin_layout Plain Layout
+
+import apb.metadata.Module;
+\end_layout
+
+\begin_layout Plain Layout
+
+import apb.tasks.CoreTasks.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+public final class HelloWorld
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends Module
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+    @BuildTarget(description = "Greetings from APB")
+\end_layout
+
+\begin_layout Plain Layout
+
+    public void hello() {
+\end_layout
+
+\begin_layout Plain Layout
+
+        printf("Hello World !
+\backslash
+n");
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+	
+\end_layout
+
+\begin_layout Plain Layout
+
+    @BuildTarget(depends="hello", description="Good Bye from APB")
+\end_layout
+
+\begin_layout Plain Layout
+
+    public void bye() {
+\end_layout
+
+\begin_layout Plain Layout
+
+        printf("Good Bye World !
+\backslash
+n");
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+} 
+\end_layout
+
+\end_inset
+
+The java file defines a class (HelloWorld) that inherits from apb.metadata.Module,
+ APB recognize any class that inherits (directly or indirectly) from Module
+ as a container for methods to be executed.
+ Also this class contains two methods annotated as BuildTargets this methods
+ are equivalent to Ant targets, so when you request APB to execute one of
+ this methods they code inside them will be executed.
+\end_layout
+
+\begin_layout Standard
+Additionally in the case of the
+\series bold
+ bye
+\series default
+ method the annotation indicates that this method 
+\series bold
+depends
+\series default
+ from the 
+\series bold
+hello
+\series default
+ method, this is why when you invoke the 
+\series bold
+bye
+\series default
+ target you will get the 
+\series bold
+hello
+\series default
+ target implicitly executed.
 \end_layout
 
 \end_body

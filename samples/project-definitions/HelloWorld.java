@@ -16,10 +16,11 @@
 //
 
 
-import apb.Environment;
 
 import apb.metadata.BuildTarget;
 import apb.metadata.Module;
+
+import apb.tasks.CoreTasks.*;
 
 public final class HelloWorld
     extends Module
@@ -29,14 +30,15 @@ public final class HelloWorld
     @BuildTarget(description = "Greetings from APB")
     public void hello()
     {
-        getHelper().getEnv().logInfo("Hello World !\n");
+        printf("Hello World !\n");
     }
 
-
-    @BuildTarget(depends = "hello", description = "Good Bye from APB")
-    public void bye()
+    @BuildTarget(
+                 depends = "hello",
+                 description = "Good Bye from APB"
+                )
+    public void bye(Environment env)
     {
-        getHelper().getEnv().logInfo("Good Bye World !\n");
+        printf("Good Bye World !\n");
     }
-
 }

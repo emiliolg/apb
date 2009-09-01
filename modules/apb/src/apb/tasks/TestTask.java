@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;

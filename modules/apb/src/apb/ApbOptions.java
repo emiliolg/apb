@@ -31,6 +31,7 @@ import apb.utils.DebugOption;
 import apb.utils.OptionParser;
 import apb.utils.StandaloneEnv;
 
+import static java.lang.System.err;
 import static java.lang.System.getProperty;
 
 import static apb.Messages.*;
@@ -176,6 +177,19 @@ class ApbOptions
         return result;
     }
 
+    protected void printVersion()
+    {
+        final Package pkg = ApbOptions.class.getPackage();
+        final String  version = pkg.getImplementationVersion();
+        err.printf("%-10s: %s\n", pkg.getName(), version == null ? "" : version);
+        err.printf("%-10s: %s\n", "java", getProperty("java.version"));
+        err.printf("%-10s: %s %s on %s\n", "OS", getProperty("os.name"), getProperty("os.version"),
+                   getProperty("os.arch"));
+        err.printf("%-10s: %dM\n", "Memory", Runtime.getRuntime().maxMemory() / MB);
+
+        System.exit(0);
+    }
+
     private static String printCommands()
     {
         StringBuilder cmds = new StringBuilder();
@@ -210,4 +224,8 @@ class ApbOptions
             op.execute(arguments);
         }
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final long MB = 1024 * 1024;
 }

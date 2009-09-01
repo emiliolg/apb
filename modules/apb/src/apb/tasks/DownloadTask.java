@@ -251,14 +251,21 @@ public class DownloadTask
         final long destTime = dest.lastModified();
         logVerbose("Local  file timestamp: %tc\n", destTime);
 
-        final long baseTime = System.currentTimeMillis() - updatePolicy.getInterval();
+        final long now = System.currentTimeMillis();
+        final long baseTime = now - updatePolicy.getInterval();
 
         if (destTime >= baseTime) {
             logVerbose("Update policy time %tc not reached\n", destTime + updatePolicy.getInterval());
             return true;
         }
 
-        return destTime >= getSourceTime();
+        final boolean uptodate = destTime >= getSourceTime();
+
+        if (uptodate) {
+            dest.setLastModified(now);
+        }
+
+        return uptodate;
     }
 
     private long getSourceTime()

@@ -18,7 +18,11 @@
 
 package apb;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +30,7 @@ import java.util.Set;
 import apb.index.DefinitionsIndex;
 import apb.index.ModuleInfo;
 
+import apb.utils.FileUtils;
 import apb.utils.StandaloneEnv;
 
 import static apb.Messages.BUILD_COMPLETED;
@@ -38,6 +43,7 @@ public class Main
     public static void main(String[] args)
         throws Throwable
     {
+        checkEnvironment();
         ApbOptions   options = new ApbOptions(args);
         List<String> arguments = options.parse();
 
@@ -52,6 +58,42 @@ public class Main
         }
 
         Main.execute(env, arguments, path, options.showStackTrace());
+    }
+
+    private static void checkEnvironment()
+        throws IOException
+    {
+        File dir = FileUtils.getApbDir();
+
+        if (dir.exists()) {
+            if (!dir.isDirectory()) {
+                throw new IOException(String.format("Invalid apb directory: %s\n", dir.getPath()));
+            }
+        }
+        else if (!dir.mkdirs()) {
+            throw new IOException(String.format("Cannot create directory: %s\n", dir.getPath()));
+        }
+
+        File properties = new File(dir, FileUtils.APB_PROPERTIES);
+
+        if (!properties.exists()) {
+            File apbHome = Apb.getHome();
+
+            if (apbHome != null) {
+                BufferedReader s =
+                    new BufferedReader(new InputStreamReader(Main.class.getResourceAsStream("/resources/apb.properties"),
+                                                             "UTF8"));
+                PrintStream    w = new PrintStream(properties);
+                String         line;
+
+                while ((line = s.readLine()) != null) {
+                    w.printf(line, apbHome.getPath());
+                    w.println();
+                }
+
+                w.close();
+            }
+        }
     }
 
     /**

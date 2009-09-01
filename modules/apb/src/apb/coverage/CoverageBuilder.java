@@ -29,16 +29,20 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;
 import apb.Apb;
 import apb.metadata.CoverageInfo;
+
 import apb.utils.FileUtils;
-import static apb.utils.FileUtils.*;
+
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.utils.FileUtils.*;
 
 /**
  * To be used from TestTask
