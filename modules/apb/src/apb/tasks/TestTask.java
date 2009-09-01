@@ -19,6 +19,7 @@
 package apb.tasks;
 
 import java.io.File;
+import static java.io.File.pathSeparator;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -37,31 +38,23 @@ import java.util.Set;
 import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;
-
+import apb.Apb;
 import apb.coverage.CoverageBuilder;
-
 import apb.metadata.CoverageInfo;
 import apb.metadata.TestModule;
-
 import apb.testrunner.Invocation;
 import apb.testrunner.TestRunner;
+import static apb.testrunner.TestRunner.listTests;
+import static apb.testrunner.TestRunner.worseResult;
 import apb.testrunner.output.SimpleReport;
 import apb.testrunner.output.TestReport;
 import apb.testrunner.output.TestReportBroadcaster;
-
 import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import static java.io.File.pathSeparator;
-
-import static apb.testrunner.TestRunner.listTests;
-import static apb.testrunner.TestRunner.worseResult;
-
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
 import static apb.utils.StringUtils.makeString;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Nov 5, 2008
@@ -144,11 +137,11 @@ public class TestTask
 
     //~ Constructors .........................................................................................
 
-    public TestTask(@NotNull Environment env)
+    public TestTask(@NotNull TestModuleHelper module)
     {
-        super(env);
+        super(module);
         report = new SimpleReport(true, true);
-        moduleHelper = env.getTestModuleHelper();
+        moduleHelper = module;
         classPath = moduleHelper.deepClassPath(true, false);
 
         classesToTest = moduleHelper.getClassesToTest();
@@ -181,7 +174,7 @@ public class TestTask
         final String groups = moduleHelper.getProperty("tests.groups", "");
         testGroups = groups.isEmpty() ? testModule.groups() : Arrays.asList(groups.split(","));
 
-        properties = expandProperties(env, testModule.properties(), testModule.useProperties());
+        properties = expandProperties(module, testModule.properties(), testModule.useProperties());
         enableAssertions = testModule.enableAssertions;
 
         enableDebugger = testModule.enableDebugger;
@@ -195,18 +188,16 @@ public class TestTask
 
     //~ Methods ..............................................................................................
 
-    public static void execute(Environment env)
+    public static void execute(TestModuleHelper module)
     {
-        TestTask task = new TestTask(env);
+        TestTask task = new TestTask(module);
         task.execute();
     }
 
-    public static void cleanReports(Environment env)
+    public static void cleanReports(TestModuleHelper module)
     {
-        TestModuleHelper helper = env.getTestModuleHelper();
-
-        RemoveTask.remove(env, helper.getReportsDir());
-        RemoveTask.remove(env, helper.getCoverageDir());
+        RemoveTask.remove(module, module.getReportsDir());
+        RemoveTask.remove(module, module.getCoverageDir());
     }
 
     public void setReport(@NotNull List<TestReport> testReports)
@@ -463,7 +454,7 @@ public class TestTask
 
     private String runnerClassPath()
     {
-        final File appJar = env.applicationJarFile();
+        final File appJar = Apb.applicationJarFile();
 
         List<File> path = new ArrayList<File>();
 

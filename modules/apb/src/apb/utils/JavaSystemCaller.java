@@ -101,7 +101,7 @@ public final class JavaSystemCaller
     public abstract static class ExecEnvironmentFactory
     {
         private String            command = null;
-        private ArrayList<String> parameters = new ArrayList<String>();
+        private final ArrayList<String> parameters = new ArrayList<String>();
 
         /**
          * Builds an execution environment for a system command to be played. <br />
@@ -244,9 +244,9 @@ public final class JavaSystemCaller
     public static class StreamGobbler
         extends Thread
     {
-        private InputStream  is;
-        private StringBuffer output = new StringBuffer();
-        private String       type;
+        private final InputStream  is;
+        private final StringBuffer output = new StringBuffer();
+        private final String       type;
 
         StreamGobbler(final InputStream anIs, final String aType)
         {

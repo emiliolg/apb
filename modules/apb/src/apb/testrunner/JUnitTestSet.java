@@ -180,26 +180,24 @@ public final class JUnitTestSet
     @Nullable private Test constructTestObject(@NotNull List<String> testGroups)
         throws TestSetFailedException
     {
-        final Class<?> testClazz = getTestClass();
-
         // First try to see if there is a 'suite' method.
-        final Method suiteMethod = this.suiteMethod;
+        final Method m = suiteMethod;
 
         // No suite build one
-        if (suiteMethod == null) {
+        if (m == null) {
             //but only if no annotations because can only annotate suites.
             if (!testGroups.isEmpty()) {
                 return null;
             }
 
-            return this.testSuite;
+            return testSuite;
         }
 
         // Check if I've to run it and run it
 
-        if (mustRun(suiteMethod, testGroups)) {
+        if (mustRun(m, testGroups)) {
             try {
-                return (Test) suiteMethod.invoke(null);
+                return (Test) m.invoke(null);
             }
             catch (InvocationTargetException e) {
                 throw new TestSetFailedException(e.getTargetException());

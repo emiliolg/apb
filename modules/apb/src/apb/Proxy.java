@@ -31,7 +31,7 @@ public class Proxy
     @NotNull private final String host;
     @NotNull private final String nonProxyHosts;
     @NotNull private final String password;
-    private int                   port;
+    private final int                   port;
     @NotNull private final String protocol;
     @NotNull private final String username;
 

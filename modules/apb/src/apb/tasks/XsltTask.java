@@ -240,8 +240,7 @@ public class XsltTask
     }
 
     private Transformer createTransformer()
-        throws TransformerConfigurationException, IOException, SAXException, ParserConfigurationException
-    {
+        throws TransformerConfigurationException {
         Templates templates = readTemplates();
 
         Transformer transformer = templates.newTransformer();
@@ -267,8 +266,7 @@ public class XsltTask
     }
 
     private Templates readTemplates()
-        throws IOException, TransformerConfigurationException, ParserConfigurationException, SAXException
-    {
+        throws TransformerConfigurationException {
         InputStream xslStream = null;
 
         try {

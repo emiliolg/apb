@@ -50,7 +50,7 @@ public class DiagnosticReporter
     @NotNull private final List<Diagnostic<? extends JavaFileObject>> ds;
     @NotNull private final Environment                                env;
     @NotNull private List<String>                                     excludes;
-    private JavacTask                                                 javacTask;
+    private final JavacTask                                                 javacTask;
     @Nullable private String                                          lastFile;
     private int                                                       warns, errors;
 

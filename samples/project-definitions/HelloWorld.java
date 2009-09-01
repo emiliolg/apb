@@ -27,16 +27,16 @@ public final class HelloWorld
     //~ Methods ..............................................................................................
 
     @BuildTarget(description = "Greetings from APB")
-    public void hello(Environment env)
+    public void hello()
     {
-        env.logInfo("Hello World !\n");
+        getHelper().getEnv().logInfo("Hello World !\n");
     }
 
 
     @BuildTarget(depends = "hello", description = "Good Bye from APB")
-    public void bye(Environment env)
+    public void bye()
     {
-        env.logInfo("Good Bye World !\n");
+        getHelper().getEnv().logInfo("Good Bye World !\n");
     }
 
 }

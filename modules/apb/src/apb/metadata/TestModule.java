@@ -19,17 +19,14 @@
 package apb.metadata;
 
 import java.util.ArrayList;
+import static java.util.Arrays.asList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import apb.Environment;
-
+import apb.TestModuleHelper;
 import apb.tasks.TestTask;
-
 import apb.testrunner.output.TestReport;
-
-import static java.util.Arrays.asList;
 
 /**
  * This class defines a TestModule for the building system
@@ -68,7 +65,7 @@ public class TestModule
     /**
      * Wheter the dependencies classpath is included in the system classoader.
      */
-    public boolean classPathInSystemClassloader = false;
+    public final boolean classPathInSystemClassloader = false;
 
     /**
      *  Info for coverage
@@ -78,57 +75,57 @@ public class TestModule
     /**
      * A custom creator classname
      */
-    public String customCreator = null;
+    public final String customCreator = null;
 
     /**
      * Whether to enable assertions when running the tests
      */
-    public boolean enableAssertions = true;
+    public final boolean enableAssertions = true;
 
     /**
      * Enable the java debugger in the forked process
      */
-    public boolean enableDebugger = false;
+    public final boolean enableDebugger = false;
 
     /**
      * Fail if no tests are found
      */
-    public boolean failIfEmpty = false;
+    public final boolean failIfEmpty = false;
 
     /**
      * Fail the build when a test fails
      */
-    public boolean failOnError = false;
+    public final boolean failOnError = false;
 
     /**
      *  Whether to fork a new process to run the tests or not.
      */
-    public boolean fork = true;
+    public final boolean fork = true;
 
     /**
      *  Whether to fork a new process for EACH test suite.
      */
-    public boolean forkPerSuite = false;
+    public final boolean forkPerSuite = false;
 
     /**
      * Max. memory allocate for the tests (in megabytes).
      */
-    public int memory = 256;
+    public final int memory = 256;
 
     /**
       * The directory to generate the reports output
       */
-    @BuildProperty public String reportsDir = "$moduledir/output/reports";
+    @BuildProperty public final String reportsDir = "$moduledir/output/reports";
 
     /**
      * The type of runner for the test
      */
-    public TestType testType = TestType.JUNIT;
+    public final TestType testType = TestType.JUNIT;
 
     /**
      * Working directory for running the tests
      */
-    @BuildProperty public String workingDirectory = "$moduledir";
+    @BuildProperty public final String workingDirectory = "$moduledir";
 
     /**
      * Environment variables to be set when running the tests
@@ -169,7 +166,7 @@ public class TestModule
     /**
      * The list of properties to copy from the apb to the test to be run
      */
-    private List<String> useProperties = new ArrayList<String>();
+    private final List<String> useProperties = new ArrayList<String>();
 
     //~ Methods ..............................................................................................
 
@@ -275,36 +272,39 @@ public class TestModule
 
     /**
      * Run the tests
-     * @param env
      */
     @BuildTarget(
                  depends = "package",
                  recursive = false
                 )
-    public void run(Environment env)
+    public void run()
     {
-        TestTask.execute(env);
+        TestTask.execute(getHelper());
     }
 
     /**
      * Run the minimal tests
-     * @param env
      */
     @BuildTarget(
                  depends = "package",
                  recursive = false
                 )
-    public void runMinimal(Environment env)
+    public void runMinimal()
     {
-        env.putProperty("tests.groups", "minimal");
+        getHelper().putProperty("tests.groups", "minimal");
 
-        TestTask.execute(env);
+        TestTask.execute(getHelper());
     }
 
-    @Override public void clean(Environment env)
+    @Override public TestModuleHelper getHelper()
     {
-        super.clean(env);
-        TestTask.cleanReports(env);
+        return (TestModuleHelper) super.getHelper();
+    }
+
+    @Override public void clean()
+    {
+        super.clean();
+        TestTask.cleanReports(getHelper());
     }
 
     /**

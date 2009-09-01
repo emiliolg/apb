@@ -29,9 +29,9 @@ public class Invocation
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private String className;
+    @NotNull private final String className;
 
-    private Object[] params;
+    private final Object[] params;
 
     //~ Constructors .........................................................................................
 

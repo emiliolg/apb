@@ -20,7 +20,7 @@ package apb.tasks;
 
 import java.io.File;
 
-import apb.Environment;
+import apb.Apb;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -43,7 +43,7 @@ public class CoreTasks
      */
     @NotNull public static Copy copy(@NotNull File from)
     {
-        return new Copy(Environment.getInstance(), from, false);
+        return new Copy(Apb.getEnv(), from, false);
     }
 
     /**
@@ -61,7 +61,7 @@ public class CoreTasks
      */
     @NotNull public static Copy copyFiltering(@NotNull File from)
     {
-        return new Copy(Environment.getInstance(), from, true);
+        return new Copy(Apb.getEnv(), from, true);
     }
 
     public static void main(String[] args)

@@ -27,17 +27,12 @@ import java.util.Map;
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
-import apb.ProjectElementHelper;
-
 import apb.metadata.Dependency;
 import apb.metadata.DependencyList;
 import apb.metadata.PackageType;
-
-import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NotNull;
-
 import static apb.utils.CollectionUtils.addIfNotNull;
+import apb.utils.FileUtils;
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Oct 22, 2008
@@ -50,9 +45,9 @@ public class JavaTask
     //~ Instance fields ......................................................................................
 
     @NotNull private String             classpath = "";
-    private boolean                     executeJar;
+    private final boolean                     executeJar;
     private int                         exitValue;
-    private String                      jarOrClass;
+    private final String                      jarOrClass;
     @NotNull private final List<String> javaArgs;
 
     /**
@@ -77,14 +72,6 @@ public class JavaTask
         properties = new HashMap<String, String>();
         javaArgs = new ArrayList<String>();
         memory = 256;
-
-        // By default use the classpath of the current module if it is active
-        ProjectElementHelper mod = env.getCurrent();
-
-        if (mod != null && mod instanceof ModuleHelper) {
-            final ModuleHelper m = (ModuleHelper) mod;
-            classpath = FileUtils.makePath(m.runtimePath());
-        }
     }
 
     //~ Methods ..............................................................................................
@@ -92,7 +79,7 @@ public class JavaTask
     public static void executeClass(@NotNull ModuleHelper helper, @NotNull String className,
                                     @NotNull String... args)
     {
-        JavaTask j = new JavaTask(helper.getEnv(), false, className);
+        JavaTask j = new JavaTask(helper, false, className);
         j.addArguments(args);
         j.setClasspath(helper);
         j.execute();
@@ -101,7 +88,7 @@ public class JavaTask
     public static void executeJar(@NotNull ModuleHelper helper, @NotNull String jarName,
                                   @NotNull String... args)
     {
-        JavaTask j = new JavaTask(helper.getEnv(), true, jarName);
+        JavaTask j = new JavaTask(helper, true, jarName);
         j.addArguments(args);
         j.setClasspath(helper);
         j.execute();

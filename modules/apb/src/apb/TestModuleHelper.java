@@ -142,23 +142,12 @@ public class TestModuleHelper
         return m.testType.creatorClass(m.customCreator);
     }
 
-    /**
-     * Return the value of the specified property
-     * @param id The property to search
-     * @param defaultValue The default value to return in case the property is not set
-     * @return The value of the property
-     */
-    @NotNull public String getProperty(@NotNull String id, @NotNull String defaultValue)
+    void init(@NotNull ProjectElement activatedTestModule)
     {
-        return env.getProperty(id, defaultValue);
-    }
-
-    void activate(@NotNull ProjectElement activatedTestModule)
-    {
-        super.activate(activatedTestModule);
+        super.init(activatedTestModule);
         TestModule m = getModule();
-        workingDirectory = env.fileFromBase(m.workingDirectory);
-        reportsDir = env.fileFromBase(m.reportsDir);
-        coverageDir = env.fileFromBase(m.coverage.output);
+        workingDirectory = fileFromBase(m.workingDirectory);
+        reportsDir = fileFromBase(m.reportsDir);
+        coverageDir = fileFromBase(m.coverage.output);
     }
 }

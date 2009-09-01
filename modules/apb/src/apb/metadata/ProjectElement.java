@@ -18,7 +18,8 @@
 
 package apb.metadata;
 
-import apb.Environment;
+
+import apb.ProjectElementHelper;
 import apb.utils.NameUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,6 +30,9 @@ import org.jetbrains.annotations.NotNull;
 public abstract class ProjectElement
     implements Named
 {
+    // @Todo Create an accesor
+    public ProjectElementHelper helper;
+
     public ProjectElement()
     {
         NameRegistry.intern(this);
@@ -65,24 +69,28 @@ public abstract class ProjectElement
 
     //~ Methods ..............................................................................................
 
+    public ProjectElementHelper getHelper() {
+        return helper;
+    }
+
     @BuildTarget(description = "Deletes all output directories (compiled code and packages).")
-    public abstract void clean(Environment env);
+    public abstract void clean();
 
     @BuildTarget(description = "Copy (eventually filtering) resources to the output directory.")
-    public abstract void resources(Environment env);
+    public abstract void resources();
 
     @BuildTarget(
                  depends = "resources",
                  description = "Compile classes and place them in the output directory."
                 )
-    public abstract void compile(Environment env);
+    public abstract void compile();
 
     @BuildTarget(
                  depends = "compile",
                  description = "Compile test classes.",
                  recursive = false
                 )
-    public abstract void compileTests(Environment env);
+    public abstract void compileTests();
 
     @BuildTarget(
                  depends = { "compile-tests", "package" },
@@ -90,7 +98,7 @@ public abstract class ProjectElement
                  "Test the compiled sources, generating reports and (optional) coverage information.",
                  recursive = false 
                 )
-    public abstract void runTests(Environment env);
+    public abstract void runTests();
     
     @BuildTarget(
                  depends = "compile-tests",
@@ -98,7 +106,7 @@ public abstract class ProjectElement
                  "Run test with the annotation @Test(group=\"minimal\") generating reports and (optional) coverage information.",
                  recursive = false 
                 )
-    public abstract void runMinimalTests(Environment env);
+    public abstract void runMinimalTests();
 
     @BuildTarget(
                  depends = "compile",
@@ -106,13 +114,7 @@ public abstract class ProjectElement
                  description =
                  "Creates a jar file containing the compiled classes and resources of the module."
                 )
-    public abstract void packageit(Environment env);
-
-//    @BuildTarget(description = "Generate Idea project and module files.")
-//    public void genIdea(Environment env)
-//    {
-//        IdeaTask.execute(env);
-//    }
+    public abstract void packageit();
 
     /**
      * Initialization hook.

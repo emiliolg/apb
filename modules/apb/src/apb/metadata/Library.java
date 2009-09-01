@@ -32,9 +32,12 @@ abstract public class Library
 {
     //~ Instance fields ......................................................................................
 
-    protected @NotNull String group;
-    protected @NotNull String id;
-    protected @NotNull String version;
+    protected @NotNull
+    final String group;
+    protected @NotNull
+    final String id;
+    protected @NotNull
+    final String version;
 
     //~ Constructors .........................................................................................
 

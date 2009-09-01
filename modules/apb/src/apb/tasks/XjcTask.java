@@ -40,7 +40,7 @@ public class XjcTask
     @NotNull private final List<File> externalBindings;
     private boolean                   packageAnnotations;
     @NotNull private final String     schema;
-    @NotNull private String           targetPackage;
+    @NotNull private final String           targetPackage;
 
     //~ Constructors .........................................................................................
 
@@ -136,7 +136,7 @@ public class XjcTask
             command.addArguments("-quiet");
         }
 
-        command.addArguments("-d", env.getModuleHelper().getGeneratedSource().getPath());
+        command.addArguments("-d", env.fileFromGeneratedSource("").getPath());
 
         if (!targetPackage.isEmpty()) {
             command.addArguments("-p", targetPackage);

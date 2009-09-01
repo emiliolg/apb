@@ -38,22 +38,22 @@ public class CoverageInfo
     /**
      * Output coverage data for future analysis
      */
-    public boolean dumpData = true;
+    public final boolean dumpData = true;
 
     /**
      * Whether to enable coverage processing
      */
-    public boolean enable = false;
+    public final boolean enable = false;
 
     /**
      * Ensure a minimun level of coverage in % (0% = Do not fail)
      */
-    public int ensure = 0;
+    public final int ensure = 0;
 
     /**
      * The output directory for reports
      */
-    public String output = "$moduledir/output/coverage";
+    public final String output = "$moduledir/output/coverage";
 
     /**
      * The list of classes to exclude from coverage

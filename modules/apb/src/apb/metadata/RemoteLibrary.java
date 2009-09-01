@@ -36,7 +36,7 @@ public class RemoteLibrary
 {
     //~ Instance fields ......................................................................................
 
-    private String relativeUrl;
+    private final String relativeUrl;
 
     @NotNull private String targetDir;
 

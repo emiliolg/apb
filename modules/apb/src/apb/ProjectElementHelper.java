@@ -30,6 +30,7 @@ import apb.metadata.Synthetic;
 import apb.metadata.TestModule;
 
 import apb.utils.FileUtils;
+import apb.utils.PropertyExpansor;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,10 +41,10 @@ import org.jetbrains.annotations.Nullable;
 
 //
 public abstract class ProjectElementHelper
+    extends DelegatedEnvironment
 {
     //~ Instance fields ......................................................................................
 
-    public Environment                    env;
     @NotNull protected final Set<Command> executedCommands;
     @Nullable ProjectElement              element;
 
@@ -58,8 +59,8 @@ public abstract class ProjectElementHelper
 
     protected ProjectElementHelper(@NotNull ProjectElement element, @NotNull Environment environment)
     {
+        super(environment);
         proto = element;
-        env = environment;
         executedCommands = new HashSet<Command>();
         final ProjectBuilder pb = ProjectBuilder.getInstance();
         pb.registerHelper(this);
@@ -92,6 +93,8 @@ public abstract class ProjectElementHelper
             result = new ProjectHelper((Project) element, environment);
         }
 
+        result.init(new PropertyExpansor(result).expand(element));
+
         result.initDependencyGraph();
         return result;
     }
@@ -111,11 +114,6 @@ public abstract class ProjectElementHelper
         return proto.getId();
     }
 
-    public final Environment getEnv()
-    {
-        return env;
-    }
-
     @NotNull public ProjectElement getElement()
     {
         if (element == null) {
@@ -125,9 +123,13 @@ public abstract class ProjectElementHelper
         return element;
     }
 
-    public final File getBasedir()
+    @NotNull public final File getBaseDir()
     {
-        return env.getBaseDir();
+        if (element == null) {
+            throw new IllegalStateException("Element not initialized");
+        }
+
+        return new File(element.basedir);
     }
 
     public final void setTopLevel(boolean b)
@@ -153,11 +155,6 @@ public abstract class ProjectElementHelper
     public final SortedMap<String, Command> listCommands()
     {
         return getBuilder().commands();
-    }
-
-    public final ProjectElement activate()
-    {
-        return env.activate(proto);
     }
 
     public Command findCommand(String commandName)
@@ -203,13 +200,23 @@ public abstract class ProjectElementHelper
         return projectDirectory;
     }
 
+    @NotNull public CommandBuilder getBuilder()
+    {
+        if (builder == null) {
+            builder = new CommandBuilder(proto);
+        }
+
+        return builder;
+    }
+
     protected abstract void build(ProjectBuilder pb, String commandName);
 
     protected void initDependencyGraph() {}
 
-    void activate(@NotNull ProjectElement activatedElement)
+    void init(@NotNull ProjectElement projectElement)
     {
-        element = activatedElement;
+        element = projectElement;
+        projectElement.helper = this;
     }
 
     void markExecuted(Command cmd)
@@ -232,30 +239,5 @@ public abstract class ProjectElementHelper
         }
 
         return result;
-    }
-
-    /**
-    * Process the string expanding property values.
-    * The `$' character introduces property expansion.
-    * The property  name  or  symbol  to  be expanded  may be enclosed in braces,
-    * which are optional but serve to protect the variable to be expanded from characters
-    * immediately following it which could be interpreted as part of the name.
-    * When braces are used, the matching ending brace is the first `}' not escaped by a backslash
-    *
-    * @param string The string to be expanded.
-    * @return An String with properties expanded.
-    */
-    private String expand(String string)
-    {
-        return env.expand(string);
-    }
-
-    @NotNull private CommandBuilder getBuilder()
-    {
-        if (builder == null) {
-            builder = new CommandBuilder(proto);
-        }
-
-        return builder;
     }
 }

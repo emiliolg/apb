@@ -21,7 +21,6 @@ package apb.commands.module;
 import java.io.File;
 
 import apb.Command;
-import apb.Environment;
 import apb.ProjectBuilder;
 import apb.ProjectElementHelper;
 
@@ -47,7 +46,7 @@ public class Clone
 
     //~ Methods ..............................................................................................
 
-    public void invoke(ProjectElement projectElement, Environment env)
+    public void invoke(ProjectElement projectElement)
     {
         ProjectElementHelper helper = ProjectBuilder.findHelper(projectElement);
 

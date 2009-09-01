@@ -49,15 +49,12 @@ import apb.Environment;
 import apb.Messages;
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
-
 import apb.metadata.Dependency;
 import apb.metadata.Module;
 import apb.metadata.PackageInfo;
 import apb.metadata.PackageType;
-
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -72,14 +69,14 @@ public class JarTask
     //~ Instance fields ......................................................................................
 
     private String       comment;
-    private boolean      doCompress = true;
+    private final boolean      doCompress = true;
     private List<String> excludes, includes;
-    private File         jarFile;
+    private final File         jarFile;
 
-    private int                               level = Deflater.DEFAULT_COMPRESSION;
+    private final int                               level = Deflater.DEFAULT_COMPRESSION;
     @NotNull private Manifest                 manifest;
     @NotNull private Map<String, Set<String>> services;
-    private List<File>                        sourceDir;
+    private final List<File>                        sourceDir;
 
     //~ Constructors .........................................................................................
 
@@ -98,16 +95,15 @@ public class JarTask
 
     //~ Methods ..............................................................................................
 
-    public static void execute(@NotNull Environment env)
+    public static void execute(@NotNull ModuleHelper module)
     {
-        ModuleHelper      helper = env.getModuleHelper();
-        final PackageInfo packageInfo = helper.getPackageInfo();
+        final PackageInfo packageInfo = module.getPackageInfo();
 
         if (packageInfo.type != PackageType.NONE) {
-            JarTask jarTask = new JarTask(env, helper.getPackageFile());
+            JarTask jarTask = new JarTask(module, module.getPackageFile());
 
             // set output
-            jarTask.addDir(helper.getOutput());
+            jarTask.addDir(module.getOutput());
 
             // set manifest attributes
             final String mainClass = packageInfo.mainClass;
@@ -117,10 +113,10 @@ public class JarTask
             }
 
             if (packageInfo.addClassPath) {
-                jarTask.setClassPath(helper.manifestClassPath());
+                jarTask.setClassPath(module.manifestClassPath());
             }
 
-            jarTask.setManifestAttribute(Attributes.Name.IMPLEMENTATION_VERSION, helper.getModule().version);
+            jarTask.setManifestAttribute(Attributes.Name.IMPLEMENTATION_VERSION, module.getModule().version);
 
             jarTask.addManifestAttributes(packageInfo.attributes());
 
@@ -129,11 +125,11 @@ public class JarTask
 
             switch (packageInfo.getIncludeDependenciesMode()) {
             case DIRECT_MODULES: {
-                includedDeps = helper.getDirectDependencies();
+                includedDeps = module.getDirectDependencies();
                 break;
             }
             case DEEP_MODULES: {
-                includedDeps = helper.getDependencies();
+                includedDeps = module.getDependencies();
                 break;
             }
             }
@@ -153,14 +149,14 @@ public class JarTask
                 for (Dependency d : packageInfo.additionalDependencies()) {
                     if (d.isModule()) {
                         Module depModule = d.asModule();
-                        env.logVerbose("Adding module '%s'.\n", d.toString());
+                        module.logVerbose("Adding module '%s'.\n", d.toString());
                         ModuleHelper m = (ModuleHelper) ProjectBuilder.findHelper(depModule);
                         jarTask.addDir(m.getOutput());
 
                         mergedServices.putAll(depModule.pkg.services());
                     }
                     else if (d.isLibrary()) {
-                        env.logInfo("Library '%s' skipped. Libraries are not packaged as part of module jar.\n",
+                        module.logInfo("Library '%s' skipped. Libraries are not packaged as part of module jar.\n",
                                     d.toString());
                     }
                 }
@@ -182,8 +178,8 @@ public class JarTask
 
             // generate sources jar
             if (packageInfo.generateSourcesJar) {
-                jarTask = new JarTask(helper.getEnv(), helper.getSourcePackageFile());
-                jarTask.addDir(helper.getSource());
+                jarTask = new JarTask(module, module.getSourcePackageFile());
+                jarTask.addDir(module.getSource());
                 jarTask.setExcludes(FileUtils.DEFAULT_EXCLUDES);
                 jarTask.execute();
             }

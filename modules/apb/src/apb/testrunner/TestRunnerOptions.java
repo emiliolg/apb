@@ -46,17 +46,17 @@ class TestRunnerOptions
 
     @NotNull private File                   basedir;
     private final Option<String>            classpath;
-    private Option<String>                  creator;
+    private final Option<String>                  creator;
     private final Option<String>            excludes;
-    @NotNull private TestSetCreator.Factory factory;
+    @NotNull private final TestSetCreator.Factory factory;
     private final Option<Boolean>           failEmpty;
     private final Option<String>            includes;
-    private Option<String>                  output;
+    private final Option<String>                  output;
     private final Option<Boolean>           quiet;
-    private Option<String>                  reports;
-    private Option<String>                  reportSpecs;
+    private final Option<String>                  reports;
+    private final Option<String>                  reportSpecs;
     private final Option<String>            suite;
-    private Option<String>                  testGroups;
+    private final Option<String>                  testGroups;
     private final Option<String>            type;
     private final Option<Boolean>           verbose;
 

@@ -3,6 +3,8 @@ package apb.utils;
 import java.util.Collection;
 import java.util.List;
 import java.util.Collections;
+import java.util.Map;
+import java.util.Properties;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -34,5 +36,12 @@ public class CollectionUtils {
     public static<T> List<T> optionalSingleton(@Nullable T element) {
         if (element == null) return Collections.emptyList();
         else return Collections.singletonList(element);
+    }
+
+    public static void copyProperties(Map<String,String> m, Properties p)
+    {
+        for (String id: p.stringPropertyNames()) {
+            m.put(id, p.getProperty(id));
+        }
     }
 }

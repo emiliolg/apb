@@ -29,23 +29,18 @@ import java.util.Map;
 import apb.BuildException;
 import apb.Environment;
 import apb.ModuleHelper;
-
 import apb.compiler.DiagnosticReporter;
 import apb.compiler.JavaC;
-
 import apb.metadata.CompileInfo;
 import apb.metadata.Library;
 import apb.metadata.PackageType;
-
+import static apb.utils.CollectionUtils.addIfNotNull;
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import static apb.utils.CollectionUtils.addIfNotNull;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.StringUtils.appendIndenting;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 //
 // User: emilio
@@ -93,17 +88,16 @@ public class JavacTask
 
     //~ Methods ..............................................................................................
 
-    public static void execute(Environment env)
+    public static void execute(ModuleHelper module)
     {
-        ModuleHelper     module = env.getModuleHelper();
         CompileInfo      info = module.getCompileInfo();
         final List<File> sourceDirs = module.getSourceDirs();
 
         if (sourceDirs.isEmpty()) {
-            env.handle(module.getSource() + " does not exists!");
+            module.handle(module.getSource() + " does not exists!");
         }
 
-        final JavacTask javac = new JavacTask(env, sourceDirs, module.getOutput());
+        final JavacTask javac = new JavacTask(module, sourceDirs, module.getOutput());
         javac.classPathAddAll(module.compileClassPath());
 
         javac.addExtraLibraries(info.extraLibraries());

@@ -42,7 +42,7 @@ public class UpdatePolicy
 {
     //~ Instance fields ......................................................................................
 
-    private long interval;
+    private final long interval;
 
     //~ Constructors .........................................................................................
 
@@ -95,9 +95,9 @@ public class UpdatePolicy
     private static final int MS_PER_HOUR = 60 * 60 * 1000;
 
     public static UpdatePolicy WEEKLY = every(24 * 7);
-    public static UpdatePolicy DAILY = every(24);
+    public static final UpdatePolicy DAILY = every(24);
     public static UpdatePolicy HOURLY = every(1);
     public static UpdatePolicy ALWAYS = new UpdatePolicy(0);
-    public static UpdatePolicy NEVER = new UpdatePolicy(-1);
-    public static UpdatePolicy FORCE = new UpdatePolicy(-2);
+    public static final UpdatePolicy NEVER = new UpdatePolicy(-1);
+    public static final UpdatePolicy FORCE = new UpdatePolicy(-2);
 }

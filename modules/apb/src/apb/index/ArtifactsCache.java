@@ -23,10 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import apb.Environment;
-
 import apb.tasks.DownloadTask;
 import apb.tasks.Task;
-
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -38,8 +36,8 @@ public class ArtifactsCache
 {
     //~ Instance fields ......................................................................................
 
-    private Environment       env;
-    private Map<String, File> map;
+    private final Environment env;
+    private final Map<String, File> map;
 
     //~ Constructors .........................................................................................
 
@@ -95,5 +93,5 @@ public class ArtifactsCache
     //~ Static fields/initializers ...........................................................................
 
     private static final String REPOSITORY = "repository";
-    private static String       DEFAULT_REPOSITORY = "http://mirrors.ibiblio.org/pub/mirrors/maven2";
+    private static final String       DEFAULT_REPOSITORY = "http://mirrors.ibiblio.org/pub/mirrors/maven2";
 }

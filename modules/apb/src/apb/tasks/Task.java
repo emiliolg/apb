@@ -22,9 +22,7 @@ import java.io.File;
 import java.util.concurrent.Callable;
 
 import apb.Environment;
-
 import apb.utils.DebugOption;
-
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -37,7 +35,7 @@ public abstract class Task
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull protected Environment env;
+    @NotNull protected final Environment env;
 
     //~ Constructors .........................................................................................
 

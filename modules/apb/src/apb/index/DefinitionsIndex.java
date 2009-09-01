@@ -34,11 +34,10 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import apb.Environment;
+import apb.BuildException;
 import apb.ProjectBuilder;
-
+import apb.Environment;
 import apb.utils.FileUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,7 +52,6 @@ public class DefinitionsIndex
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final Environment            env;
     @NotNull private final String[]               excludeDirs;
     @NotNull private final Map<File, ModulesInfo> mdir;
     @NotNull private final Collection<ModuleInfo> modules;
@@ -62,17 +60,16 @@ public class DefinitionsIndex
 
     public DefinitionsIndex(@NotNull Environment e, Set<File> projectPath)
     {
-        env = e;
         modules = new TreeSet<ModuleInfo>();
         mdir = new TreeMap<File, ModulesInfo>();
-        String excludes = env.getProperty("project.path.exclude", DEFAULT_EXCLUDES);
+        String excludes = e.getProperty("project.path.exclude", DEFAULT_EXCLUDES);
 
         if (!excludes.equals(DEFAULT_EXCLUDES)) {
             excludes += "," + DEFAULT_EXCLUDES;
         }
 
         excludeDirs = excludes.split(",");
-        loadCache(projectPath);
+        loadCache(e, projectPath);
     }
 
     //~ Methods ..............................................................................................
@@ -90,7 +87,7 @@ public class DefinitionsIndex
     @Nullable public ModuleInfo searchByDirectory(@NotNull String dir)
     {
         for (ModuleInfo info : modules) {
-            String p = info.contentDir(env).getPath();
+            String p = info.getContentDir().getPath();
 
             if (dir.startsWith(p)) {
                 return info;
@@ -138,11 +135,11 @@ public class DefinitionsIndex
             oos.close();
         }
         catch (IOException e) {
-            env.logSevere("Cannot write definitions cache. Cause: %s\n", e.getMessage());
+            throw new BuildException("Cannot write definitions cache. Cause: " + e.getMessage());
         }
     }
 
-    private void loadCache(final Set<File> projectPath)
+    private void loadCache(Environment e, final Set<File> projectPath)
     {
         loadEntries();
 
@@ -156,12 +153,12 @@ public class DefinitionsIndex
 
             if (info == null || lastModified > info.getLastScanTime()) {
                 if (!mustStore) {
-                    env.logVerbose("Regenerating definitions cache");
+                    e.logVerbose("Regenerating definitions cache");
                 }
 
                 mustStore = true;
                 info = new ModulesInfo(pdir, lastModified);
-                ProjectBuilder pb = new ProjectBuilder(env, projectPath);
+                ProjectBuilder pb = new ProjectBuilder(e, projectPath);
                 info.loadModulesInfo(pb, files);
                 mdir.put(pdir, info);
             }

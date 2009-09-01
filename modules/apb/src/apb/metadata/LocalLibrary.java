@@ -35,7 +35,7 @@ public class LocalLibrary
 
     @NotNull public final String  path;
     @Nullable public final String runtimePath;
-    private boolean               optional;
+    private final boolean               optional;
     @Nullable private String      sourcesPath;
 
     //~ Constructors .........................................................................................

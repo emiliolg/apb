@@ -33,7 +33,7 @@ public abstract class TestSet<T>
 {
     //~ Instance fields ......................................................................................
 
-    private Class<T> testClass;
+    private final Class<T> testClass;
 
     //~ Constructors .........................................................................................
 

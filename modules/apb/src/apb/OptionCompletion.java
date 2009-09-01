@@ -120,7 +120,7 @@ public class OptionCompletion
     {
         if (definitionsIndex == null) {
             Environment env = new StandaloneEnv();
-            definitionsIndex = new DefinitionsIndex(env, Main.loadProjectPath(env));
+            definitionsIndex = new DefinitionsIndex(env, Apb.loadProjectPath());
         }
 
         return definitionsIndex;

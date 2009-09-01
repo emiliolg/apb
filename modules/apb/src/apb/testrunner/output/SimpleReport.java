@@ -41,7 +41,7 @@ public class SimpleReport
 
     @Nullable private transient List<Failure> failures;
     @NotNull private transient PrintWriter    output;
-    private boolean                           showDetail;
+    private final boolean                           showDetail;
 
     //~ Constructors .........................................................................................
 
@@ -201,8 +201,8 @@ public class SimpleReport
 
     private static class Failure
     {
-        private Throwable cause;
-        private String    test;
+        private final Throwable cause;
+        private final String    test;
 
         public Failure(String test, Throwable cause)
         {

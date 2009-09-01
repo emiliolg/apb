@@ -32,6 +32,7 @@ import java.util.Map;
 import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;
+import apb.Apb;
 import apb.metadata.CoverageInfo;
 import apb.utils.FileUtils;
 import static apb.utils.FileUtils.*;
@@ -48,7 +49,7 @@ public class CoverageBuilder
 
     @NotNull private final CoverageInfo coverage;
 
-    @NotNull private final Environment      env;
+    @NotNull private final Environment env;
     @NotNull private final List<File>       filesDoDelete;
     @NotNull private final TestModuleHelper helper;
     @NotNull private final File             outputDir;
@@ -93,7 +94,7 @@ public class CoverageBuilder
             args.add("-sp");
             args.add(makePath(helper.getSourcesToTest()));
             args.add("-cp");
-            args.add(makePath(env.applicationJarFile(), helper.getOutput()) + File.pathSeparator + makePath(cs));
+            args.add(makePath(Apb.applicationJarFile(), helper.getOutput()) + File.pathSeparator + makePath(cs));
             args.add(TESTRUNNER_MAIN);
         }
 

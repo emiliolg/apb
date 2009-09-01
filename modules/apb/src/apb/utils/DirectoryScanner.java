@@ -38,13 +38,13 @@ public class DirectoryScanner
     //~ Instance fields ......................................................................................
 
     private final File baseDir;
-    private boolean    caseSensitive = true;
+    private final boolean    caseSensitive = true;
 
     private boolean      everythingIncluded;
-    private List<String> excludes;
+    private final List<String> excludes;
     private List<String> filesIncluded;
-    private boolean      followSymlinks = true;
-    private List<String> includes;
+    private final boolean      followSymlinks = true;
+    private final List<String> includes;
 
     //~ Constructors .........................................................................................
 
@@ -85,7 +85,7 @@ public class DirectoryScanner
         return filesIncluded;
     }
 
-    protected boolean couldHoldIncluded(String name)
+    boolean couldHoldIncluded(String name)
     {
         for (String include : includes) {
             if (StringUtils.matchPatternStart(include, name, caseSensitive)) {
@@ -96,7 +96,7 @@ public class DirectoryScanner
         return false;
     }
 
-    protected boolean isIncluded(String name)
+    boolean isIncluded(String name)
     {
         for (String include : includes) {
             if (StringUtils.matchPath(include, name, caseSensitive)) {
@@ -107,7 +107,7 @@ public class DirectoryScanner
         return false;
     }
 
-    protected boolean isExcluded(String name)
+    boolean isExcluded(String name)
     {
         for (String include : excludes) {
             if (StringUtils.matchPath(include, name, caseSensitive)) {

@@ -29,11 +29,9 @@ import java.util.TreeSet;
 import apb.BuildException;
 import apb.Environment;
 import apb.PropertyException;
-
 import apb.metadata.BuildProperty;
 import apb.metadata.Project;
 import apb.metadata.ProjectElement;
-
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -173,10 +171,10 @@ public class PropertyExpansor
     class FieldHelper
         implements Comparable<FieldHelper>
     {
-        private BuildProperty annotation;
-        private Field         field;
-        private int           order;
-        private String        parent;
+        private final BuildProperty annotation;
+        private final Field         field;
+        private final int           order;
+        private final String        parent;
 
         FieldHelper(String parent, Field field)
         {
@@ -263,7 +261,7 @@ public class PropertyExpansor
 
                 if (type.equals(String.class) || type.isPrimitive() || type.isEnum()) {
                     final String propertyName = getCompoundName();
-                    final String v = env.getBaseProperty(propertyName);
+                    final String v = env.getOptionalProperty(propertyName);
                     final String value = v != null ? v : expand(propertyName, fieldValue);
 
                     setFieldValue(result, convert(value, type));

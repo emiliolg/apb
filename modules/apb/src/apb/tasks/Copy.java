@@ -47,10 +47,10 @@ public class Copy
 
     @NotNull private String encoding;
 
-    @NotNull private Set<String> excludes;
+    @NotNull private final Set<String> excludes;
     private final boolean        filter;
     @NotNull private final File  from;
-    @NotNull private Set<String> includes;
+    @NotNull private final Set<String> includes;
     @Nullable private File       target;
 
     //~ Constructors .........................................................................................
@@ -245,7 +245,7 @@ public class Copy
     private static class PropertyFilter
         implements FileUtils.Filter
     {
-        private Environment env;
+        private final Environment env;
 
         public PropertyFilter(Environment env)
         {

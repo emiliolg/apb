@@ -23,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -33,19 +34,13 @@ import java.util.TimeZone;
 
 import apb.BuildException;
 import apb.Environment;
-
 import apb.metadata.UpdatePolicy;
-
 import apb.utils.ClassUtils;
 import apb.utils.FileUtils;
 import apb.utils.StringUtils;
-
+import static apb.utils.StringUtils.nChars;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
-
-import static apb.utils.StringUtils.nChars;
 
 public class DownloadTask
     extends Task
@@ -361,7 +356,7 @@ public class DownloadTask
     {
         private int         currentSize;
         private int         dots;
-        private Environment env;
+        private final Environment env;
         private int         totalSize;
 
         /**

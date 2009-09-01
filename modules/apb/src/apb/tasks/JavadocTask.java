@@ -28,13 +28,10 @@ import java.util.Locale;
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.Proxy;
-
 import apb.metadata.JavadocInfo;
 import apb.metadata.ResourcesInfo;
-
 import apb.utils.FileUtils;
 import apb.utils.StringUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -114,15 +111,14 @@ public class JavadocTask
 
     //~ Methods ..............................................................................................
 
-    public static void execute(Environment env)
+    public static void execute(ModuleHelper module)
     {
-        ModuleHelper module = env.getModuleHelper();
         JavadocInfo  javadoc = module.getJavadocInfo();
 
         String sourcePath = module.getSource().getPath();
         String classPath = FileUtils.makePath(module.compileClassPath());
 
-        JavadocTask t = new JavadocTask(env, env.fileFromBase(javadoc.output), classPath, sourcePath);
+        JavadocTask t = new JavadocTask(module, module.fileFromBase(javadoc.output), classPath, sourcePath);
 
         t.initParameters(javadoc);
 

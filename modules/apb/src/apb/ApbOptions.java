@@ -44,17 +44,17 @@ class ApbOptions
 {
     //~ Instance fields ......................................................................................
 
-    private Option<String> debug;
+    private final Option<String> debug;
 
-    private Option<String> defineProperty;
+    private final Option<String> defineProperty;
 
-    private Option<Boolean> forceBuild;
-    private Option<Boolean> noFailOnError;
-    private Option<Boolean> nonRecursive;
-    private Option<Boolean> quiet;
-    private Option<Boolean> showStackTrace;
-    private Option<Boolean> track;
-    private Option<Boolean> verbose;
+    private final Option<Boolean> forceBuild;
+    private final Option<Boolean> noFailOnError;
+    private final Option<Boolean> nonRecursive;
+    private final Option<Boolean> quiet;
+    private final Option<Boolean> showStackTrace;
+    private final Option<Boolean> track;
+    private final Option<Boolean> verbose;
 
     //~ Constructors .........................................................................................
 
@@ -104,10 +104,6 @@ class ApbOptions
             environment.setQuiet();
         }
 
-        if (showStackTrace.getValue()) {
-            environment.setShowStackTrace();
-        }
-
         if (nonRecursive.getValue()) {
             environment.setNonRecursive();
         }
@@ -136,7 +132,24 @@ class ApbOptions
         return result;
     }
 
-    public EnumSet<DebugOption> debugOptions()
+    public boolean showStackTrace()
+    {
+        return showStackTrace.getValue();
+    }
+
+    protected void printVersion()
+    {
+        final Package pkg = ApbOptions.class.getPackage();
+        final String  version = pkg.getImplementationVersion();
+        System.err.printf("%-4s: %s\n", pkg.getName(), version == null ? "" : version);
+        System.err.printf("java: %s\n", getProperty("java.version"));
+        System.err.printf("OS  : %s %s on %s\n", getProperty("os.name"), getProperty("os.version"),
+                          getProperty("os.arch"));
+
+        System.exit(0);
+    }
+
+    EnumSet<DebugOption> debugOptions()
     {
         EnumSet<DebugOption> result = EnumSet.noneOf(DebugOption.class);
 
@@ -161,18 +174,6 @@ class ApbOptions
         }
 
         return result;
-    }
-
-    protected void printVersion()
-    {
-        final Package pkg = ApbOptions.class.getPackage();
-        final String  version = pkg.getImplementationVersion();
-        System.err.printf("%-4s: %s\n", pkg.getName(), version == null ? "" : version);
-        System.err.printf("java: %s\n", getProperty("java.version"));
-        System.err.printf("OS  : %s %s on %s\n", getProperty("os.name"), getProperty("os.version"),
-                          getProperty("os.arch"));
-
-        System.exit(0);
     }
 
     private static String printCommands()

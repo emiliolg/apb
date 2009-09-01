@@ -21,10 +21,11 @@ package apb.ant;
 import java.io.File;
 import java.util.Collections;
 import java.util.Set;
+import java.util.Map;
 
 import apb.Command;
-import apb.Main;
 import apb.ProjectBuilder;
+import apb.Apb;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
@@ -47,6 +48,7 @@ public class ApbTask
     @NotNull private final AntEnvironment env;
     private String                        module;
     private boolean                       recurse;
+    private Map<String, String> properties;
 
     //~ Constructors .........................................................................................
 
@@ -66,7 +68,7 @@ public class ApbTask
         final Set<File> projectPath;
 
         if (defdir == null) {
-            projectPath = Main.loadProjectPath(env);
+            projectPath = Apb.loadProjectPath();
         }
         else {
             File f = new File(defdir);
@@ -119,5 +121,9 @@ public class ApbTask
     public String getDefdir()
     {
         return defdir;
+    }
+
+    public Map<String, String> getProperties() {
+        return properties;
     }
 }

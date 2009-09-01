@@ -26,21 +26,21 @@ import apb.utils.XmlUtils;
 
 //
 public class XmlTestReport extends BaseTestReport {
-    String ATTR_CLASSNAME = "classname";
-    String ATTR_FAILURES = "failures";
-    String ATTR_MESSAGE = "message";
-    String ATTR_NAME = "name";
-    String ATTR_PKG = "package";
-    String ATTR_SKIPPED = "skipped";
-    String ATTR_TESTS = "tests";
-    String ATTR_TIME = "time";
-    String ATTR_TYPE = "type";
-    String FAILURE = "failure";
-    String HOSTNAME = "hostname";
-    String PROPERTIES = "properties";
-    String TESTCASE = "testcase";
-    String TESTSUITE = "testsuite";
-    String TIMESTAMP = "timestamp";
+    final String ATTR_CLASSNAME = "classname";
+    final String ATTR_FAILURES = "failures";
+    final String ATTR_MESSAGE = "message";
+    final String ATTR_NAME = "name";
+    final String ATTR_PKG = "package";
+    final String ATTR_SKIPPED = "skipped";
+    final String ATTR_TESTS = "tests";
+    final String ATTR_TIME = "time";
+    final String ATTR_TYPE = "type";
+    final String FAILURE = "failure";
+    final String HOSTNAME = "hostname";
+    final String PROPERTIES = "properties";
+    final String TESTCASE = "testcase";
+    final String TESTSUITE = "testsuite";
+    final String TIMESTAMP = "timestamp";
     /**
      * The XML document.
      */
@@ -48,7 +48,7 @@ public class XmlTestReport extends BaseTestReport {
     /**
      * tests that failed.
      */
-    private Set<String> failedTests = new HashSet<String>();
+    private final Set<String> failedTests = new HashSet<String>();
     /**
      * The wrapper for the whole testsuite.
      */
@@ -56,11 +56,11 @@ public class XmlTestReport extends BaseTestReport {
     /**
      * Element for the current test.
      */
-    private Map<CharSequence, Element> testElements = new HashMap<CharSequence, Element>();
+    private final Map<CharSequence, Element> testElements = new HashMap<CharSequence, Element>();
     /**
      * Timing helper.
      */
-    private Map<String, Long> testStarts = new HashMap<String, Long>();
+    private final Map<String, Long> testStarts = new HashMap<String, Long>();
     private static final String DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
     private static final long serialVersionUID = 7656301463663508457L;
     /** constant for unnnamed testsuites/cases */

@@ -26,14 +26,8 @@ import java.util.Map;
 
 import apb.Command;
 import apb.CommandBuilder;
-import apb.Environment;
-import apb.ProjectBuilder;
-
-import apb.metadata.ProjectElement;
-
+import apb.ProjectElementHelper;
 import org.jetbrains.annotations.NotNull;
-
-import static apb.utils.FileUtils.normalizeFile;
 //
 // User: emilio
 // Date: Apr 27, 2009
@@ -48,32 +42,26 @@ public class ModuleInfo
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final String basedir;
-
     @NotNull private final Collection<String> commands;
+
+    @NotNull private final File contentDir;
     @NotNull private String                   defaultCommand;
 
     @NotNull private final String id;
-
-    @NotNull private final String moduleDir;
     @NotNull private final String name;
     private transient String      path;
-    private File                  projectPath;
 
     //~ Constructors .........................................................................................
 
-    ModuleInfo(File projectPath, ProjectElement element)
+    ModuleInfo(ProjectElementHelper element)
     {
-        this.projectPath = projectPath;
         name = element.getName();
         id = element.getId();
-        moduleDir = element.getDir();
-        basedir = element.basedir;
-
+        contentDir = element.getDirFile();
         commands = new ArrayList<String>();
         defaultCommand = Command.DEFAULT_COMMAND;
 
-        CommandBuilder b = new CommandBuilder(element);
+        CommandBuilder b = element.getBuilder();
 
         for (Map.Entry<String, Command> cmd : b.commands().entrySet()) {
             final String nm = cmd.getValue().getQName();
@@ -94,17 +82,10 @@ public class ModuleInfo
         return commands;
     }
 
-    @NotNull public File contentDir(Environment env)
+    @NotNull public File getContentDir()
     {
-        env.putProperty(ProjectBuilder.PROJECTS_HOME_PROP_KEY, projectPath.getPath());
-        File result = new File(env.expand(moduleDir));
-
-        if (!result.isAbsolute()) {
-            result = new File(normalizeFile(new File(env.expand(basedir))), result.getPath());
+        return contentDir;
         }
-
-        return result;
-    }
 
     @NotNull public String getId()
     {

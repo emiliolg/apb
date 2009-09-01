@@ -18,8 +18,6 @@
 
 package apb.commands.idegen;
 
-import apb.Environment;
-
 import apb.metadata.ProjectElement;
 //
 // User: emilio
@@ -39,7 +37,7 @@ public class Eclipse
 
     //~ Methods ..............................................................................................
 
-    public void invoke(ProjectElement projectElement, Environment env)
+    public void invoke(ProjectElement projectElement)
     {
         System.out.println("Not yet implemented");
     }

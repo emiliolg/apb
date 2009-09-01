@@ -42,12 +42,12 @@ public class TestRunner
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private File basedir;
+    @NotNull private final File basedir;
 
-    @NotNull private List<String>       excludes;
+    @NotNull private final List<String>       excludes;
     private boolean                     failEmpty;
-    @NotNull private List<String>       includes;
-    @NotNull private File               outputDir;
+    @NotNull private final List<String>       includes;
+    @NotNull private final File               outputDir;
     @NotNull private final List<String> testGroups;
     private boolean                     verbose;
 

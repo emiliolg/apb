@@ -26,9 +26,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import apb.ProjectBuilder;
-
-import apb.metadata.ProjectElement;
-
+import apb.ProjectElementHelper;
 import org.jetbrains.annotations.NotNull;
 // User: emilio
 // Date: Apr 25, 2009
@@ -74,10 +72,10 @@ class ModulesInfo
     void loadModulesInfo(ProjectBuilder pb, List<File> files)
     {
         for (File file : files) {
-            ProjectElement element = pb.loadElement(path, file);
+            ProjectElementHelper element = pb.constructProjectElement(path, file);
 
             if (element != null) {
-                ModuleInfo info = new ModuleInfo(path, element);
+                ModuleInfo info = new ModuleInfo(element);
                 modules.put(info.getName(), info);
             }
         }

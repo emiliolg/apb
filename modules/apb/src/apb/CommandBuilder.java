@@ -47,7 +47,7 @@ public class CommandBuilder
 {
     //~ Instance fields ......................................................................................
 
-    private SortedMap<String, Command> commands;
+    private final SortedMap<String, Command> commands;
 
     //~ Constructors .........................................................................................
 
@@ -79,7 +79,7 @@ public class CommandBuilder
     private static boolean hasRightSignature(Method method)
     {
         Class<?>[] pars = method.getParameterTypes();
-        return pars.length == 1 && pars[0].equals(Environment.class) &&
+        return pars.length == 0 &&
                java.lang.reflect.Modifier.isPublic(method.getModifiers()) &&
                method.getReturnType().equals(Void.TYPE);
     }
@@ -139,7 +139,7 @@ public class CommandBuilder
 
     private static final Command HELP_COMMAND = new HelpCommand();
 
-    private static Map<String, Command> extensionCommands;
+    private static final Map<String, Command> extensionCommands;
 
     static {
         extensionCommands = new HashMap<String, Command>();
@@ -159,7 +159,7 @@ public class CommandBuilder
             super("help", "List the available commands with a brief description", false);
         }
 
-        public void invoke(ProjectElement projectElement, Environment env)
+        public void invoke(ProjectElement projectElement)
         {
             System.err.println("Commands for '" + projectElement.getName() + "' : ");
 
@@ -213,11 +213,11 @@ public class CommandBuilder
     private static class InstanceCommand
         extends Command
     {
-        private List<Command> directDependencies;
+        private final List<Command> directDependencies;
 
         private final Method method;
 
-        protected InstanceCommand(@NotNull String name, @NotNull Method method, @NotNull String description,
+        InstanceCommand(@NotNull String name, @NotNull Method method, @NotNull String description,
                                   boolean recursive)
         {
             super(name, description, recursive);
@@ -236,22 +236,22 @@ public class CommandBuilder
             return directDependencies;
         }
 
-        public void invoke(ProjectElement element, Environment env)
+        public void invoke(ProjectElement element)
         {
             try {
                 if (Modifier.isStatic(method.getModifiers())) {
-                    method.invoke(null, element, env);
+                    method.invoke(null, element);
                 }
                 else {
-                    method.invoke(element, env);
+                    method.invoke(element);
                 }
             }
             catch (IllegalAccessException e) {
-                env.handle(e);
+                throw new BuildException(e);
             }
             catch (InvocationTargetException e) {
                 final Throwable t = e.getCause();
-                env.handle(t);
+                throw t instanceof BuildException ? (BuildException) t : new BuildException(t);
             }
         }
 

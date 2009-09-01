@@ -30,40 +30,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import apb.Apb;
 import apb.BuildException;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
-
 import apb.commands.idegen.Idegen;
-
 import apb.metadata.Library;
 import apb.metadata.LocalLibrary;
 import apb.metadata.Module;
 import apb.metadata.PackageType;
-import apb.metadata.ProjectElement;
-import apb.metadata.TestModule;
 import apb.metadata.Synthetic;
-
+import apb.metadata.TestModule;
 import apb.utils.FileUtils;
+import static apb.utils.FileUtils.makeRelative;
 import apb.utils.NameUtils;
 import apb.utils.XmlUtils;
-
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
 import org.xml.sax.SAXException;
-
-import static apb.utils.FileUtils.makeRelative;
 //
 // User: emilio
 // Date: Oct 7, 2008
@@ -77,18 +69,18 @@ public class IdeaTask
 
     private File deploymentDescriptorFile;
 
-    private ProjectElementHelper helper;
-    private boolean              includeEmptyDirs;
+    private final ProjectElementHelper helper;
+    private final boolean              includeEmptyDirs;
 
-    private File    modulesHome;
+    private final File    modulesHome;
     private boolean overwrite;
-    private File    templateDir;
+    private final File    templateDir;
 
     //~ Constructors .........................................................................................
 
-    public IdeaTask(@NotNull ProjectElementHelper helper)
+    private IdeaTask(@NotNull ProjectElementHelper helper)
     {
-        super(helper.getEnv());
+        super(helper);
         this.helper = helper;
         modulesHome =
             IDEA_MODULES_HOME == null ? new File(helper.getProjectDirectory(), IDEA_DIR)
@@ -113,11 +105,8 @@ public class IdeaTask
             rewriteModule(mod);
 
             for (TestModule testModule : mod.getModule().tests()) {
-                env.activate(testModule);
-                rewriteModule(env.getModuleHelper());
+                rewriteModule(testModule.getHelper());
             }
-
-            env.activate(mod.getModule());
         }
 
         if (helper.isTopLevel()) {
@@ -373,16 +362,13 @@ public class IdeaTask
     private void generateProjectDefinitionsModule(Element modulesElement)
     {
         try {
-            final ProjectElement prev = env.getCurrent().getElement();
-            final Module         mod = new ProjectDefinitions(helper, env.applicationJarFile());
-            env.activate(mod);
-            final ModuleHelper h = env.getModuleHelper();
+            final Module         mod = new ProjectDefinitions(helper, Apb.applicationJarFile());
+            final ModuleHelper h = mod.getHelper();
             final IdeaTask task = new IdeaTask(h);
             task.overwrite = true;
             task.execute();
             addModuleToProject(modulesElement, h, EMPTY_STRING_SET);
             h.remove();
-            env.activate(prev);
         }
         catch (IOException e) {
             throw new BuildException(e);
@@ -759,7 +745,7 @@ public class IdeaTask
                 library.setSources(makePath(project, srcFile));
             }
 
-            for (File file : project.getEnv().getExtClassPath()) {
+            for (File file : project.getExtClassPath()) {
                 dependencies(localLibrary(makePath(project, file)));
             }
 
@@ -778,7 +764,7 @@ public class IdeaTask
         private String makePath(ProjectElementHelper project, File file)
             throws IOException
         {
-            return makeRelative(project.getBasedir(), file).getPath();
+            return makeRelative(project.getBaseDir(), file).getPath();
         }
     }
 }

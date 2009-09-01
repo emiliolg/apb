@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 import java.util.Map;
 import java.util.Collections;
 
-import apb.Environment;
+import apb.BaseEnvironment;
 //
 // User: emilio
 // Date: Dec 10, 2008
@@ -33,7 +33,7 @@ import apb.Environment;
 
 //
 public class StandaloneEnv
-    extends Environment
+    extends BaseEnvironment
 {
     //~ Instance fields ......................................................................................
 
@@ -43,13 +43,13 @@ public class StandaloneEnv
 
     public StandaloneEnv()
     {
-        this("default", Collections.emptyMap());
+        this(Collections.<String, String>emptyMap());
     }
 
-    public StandaloneEnv(final String name, Map<?,?> properties)
+    public StandaloneEnv(Map<String, String> properties)
     {
-        copyProperties(properties);
-        logger = createLogger(name);
+        super(properties);
+        logger = createLogger("apb");
         postInit();
     }
 
@@ -87,7 +87,7 @@ public class StandaloneEnv
         setLogLevel(Level.WARNING);
     }
 
-    protected void setLogLevel(Level level)
+    void setLogLevel(Level level)
     {
         logger.setLevel(level);
 

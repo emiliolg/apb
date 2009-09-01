@@ -37,6 +37,8 @@ import apb.metadata.ProjectElement;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
 
+import apb.tasks.RemoveTask;
+
 import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
@@ -172,7 +174,7 @@ public class ModuleHelper
 
         // The classpath for libraries
         for (Library library : getLocalLibraries()) {
-            addIfNotNull(result, library.getArtifact(env, PackageType.JAR));
+            addIfNotNull(result, library.getArtifact(this, PackageType.JAR));
         }
 
         return result;
@@ -245,13 +247,25 @@ public class ModuleHelper
         return files;
     }
 
+    @NotNull @Override public ModuleHelper getModuleHelper()
+    {
+        return this;
+    }
+
+    public void clean()
+    {
+        RemoveTask.remove(this, getOutput());
+        RemoveTask.remove(this, getPackageFile());
+        RemoveTask.remove(this, getGeneratedSource());
+    }
+
     protected void initDependencyGraph()
     {
         // Topological Sort elements
         tsort(dependencies, new IdentitySet<ModuleHelper>());
 
-        if (env.mustShow(DebugOption.DEPENDENCIES)) {
-            env.logVerbose("Dependencies for: %s = %s\n", getName(), dependencies.toString());
+        if (mustShow(DebugOption.DEPENDENCIES)) {
+            logVerbose("Dependencies for: %s = %s\n", getName(), dependencies.toString());
         }
     }
 
@@ -263,16 +277,12 @@ public class ModuleHelper
             throw new BuildException("Invalid command: " + commandName);
         }
 
-        if (command.isRecursive() && !env.isNonRecursive()) {
+        if (command.isRecursive() && !isNonRecursive()) {
             for (ModuleHelper dep : dependencies) {
                 pb.execute(dep, commandName);
             }
         }
         else {
-            for (ModuleHelper dep : dependencies) {
-                dep.activate();
-            }
-
             for (Command cmd : command.getDirectDependencies()) {
                 pb.build(this, cmd.getQName());
             }
@@ -281,16 +291,16 @@ public class ModuleHelper
         pb.execute(this, commandName);
     }
 
-    void activate(@NotNull ProjectElement activatedModule)
+    void init(@NotNull ProjectElement activatedModule)
     {
-        super.activate(activatedModule);
+        super.init(activatedModule);
 
         Module module = getModule();
-        output = env.fileFromBase(module.output);
-        source = env.fileFromBase(module.source);
-        generatedSource = env.fileFromBase(module.generatedSource);
+        output = fileFromBase(module.output);
+        source = fileFromBase(module.source);
+        generatedSource = fileFromBase(module.generatedSource);
 
-        packageDir = FileUtils.normalizeFile(env.fileFromBase(module.pkg.dir));
+        packageDir = FileUtils.normalizeFile(fileFromBase(module.pkg.dir));
 
         for (TestModule testModule : module.tests()) {
             final TestModuleHelper helper = (TestModuleHelper) ProjectBuilder.findHelper(testModule);
@@ -320,7 +330,7 @@ public class ModuleHelper
                     result.add(useJars && hlp.hasPackage() ? hlp.getPackageFile() : hlp.getOutput());
                 }
                 else if (dependency.isLibrary()) {
-                    addIfNotNull(result, dependency.asLibrary().getArtifact(env, PackageType.JAR));
+                    addIfNotNull(result, dependency.asLibrary().getArtifact(this, PackageType.JAR));
                 }
             }
         }

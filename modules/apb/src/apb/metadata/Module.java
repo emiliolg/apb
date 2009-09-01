@@ -21,13 +21,12 @@ package apb.metadata;
 import java.util.ArrayList;
 import java.util.List;
 
-import apb.Environment;
 import apb.ModuleHelper;
+import apb.ProjectBuilder;
 import apb.tasks.CopyTask;
 import apb.tasks.JarTask;
 import apb.tasks.JavacTask;
 import apb.tasks.JavadocTask;
-import apb.tasks.RemoveTask;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -134,49 +133,51 @@ public class Module
         return tests;
     }
 
-    public void clean(Environment env)
-    {
-        ModuleHelper helper = env.getModuleHelper();
-        RemoveTask.remove(env, helper.getOutput());
-        RemoveTask.remove(env, helper.getPackageFile());
-        RemoveTask.remove(env, helper.getGeneratedSource());
-        env.forward("clean", tests());
+    @Override
+    public ModuleHelper getHelper() {
+        return (ModuleHelper) super.getHelper();
     }
 
-    public void resources(Environment env)
+    public void clean()
     {
-        CopyTask.copyResources(env);
+        getHelper().clean();
+        ProjectBuilder.forward("clean", tests());
     }
 
-    public void compile(Environment env)
+    public void resources()
     {
-        JavacTask.execute(env);
+        CopyTask.copyResources(getHelper());
     }
 
-    public void compileTests(Environment env)
+    public void compile()
     {
-        env.forward("compile", tests());
+        JavacTask.execute(getHelper());
     }
 
-    public void runTests(Environment env)
+    public void compileTests()
     {
-        env.forward("run", tests());
+        ProjectBuilder.forward("compile", tests());
     }
 
-    public void runMinimalTests(Environment env)
+    public void runTests()
     {
-        env.forward("run-minimal", tests());
+        ProjectBuilder.forward("run", tests());
     }
 
-    public void packageit(Environment env)
+    public void runMinimalTests()
     {
-        JarTask.execute(env);
+        ProjectBuilder.forward("run-minimal", tests());
+    }
+
+    public void packageit()
+    {
+        JarTask.execute(getHelper());
     }
 
     @BuildTarget(description = "Generates the Standard Java Documentation (Javadoc) for the module.")
-    public void javadoc(Environment env)
+    public void javadoc()
     {
-        JavadocTask.execute(env);
+        JavadocTask.execute(getHelper());
     }
 
     /**

@@ -45,7 +45,7 @@ public abstract class CommandTask
 
     //~ Constructors .........................................................................................
 
-    public CommandTask(@NotNull Environment env, List<String> cmd)
+    CommandTask(@NotNull Environment env, List<String> cmd)
     {
         super(env);
         this.cmd = cmd;

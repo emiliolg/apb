@@ -16,63 +16,62 @@
 //
 
 
-package apb.ant;
+package apb;
 
-import apb.ProjectBuilder;
-import apb.BaseEnvironment;
+import java.io.File;
+import java.util.Collection;
 
-import apb.utils.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import org.apache.tools.ant.Project;
-
-//
-// User: emilio
-// Date: Dec 10, 2008
-// Time: 6:34:03 PM
-
-//
-public class AntEnvironment
-    extends BaseEnvironment
+public class DelegatedEnvironment
+    extends DefaultEnvironment
 {
     //~ Instance fields ......................................................................................
 
-    private ApbTask task;
+    @NotNull private final Environment parent;
 
     //~ Constructors .........................................................................................
 
-    public AntEnvironment(ApbTask task)
+    /**
+     * Properties for the current environment
+     */
+
+    public DelegatedEnvironment(@NotNull Environment parent)
     {
-        super(task.getProperties());
-        postInit();
-        this.task = task;
-        setFailOnError(true);
+        this.parent = parent;
     }
 
     //~ Methods ..............................................................................................
 
     public void logInfo(String msg, Object... args)
     {
-        log(Project.MSG_INFO, msg, args);
+        parent.logInfo(msg, args);
     }
 
     public void logWarning(String msg, Object... args)
     {
-        log(Project.MSG_WARN, msg, args);
+        parent.logWarning(msg, args);
     }
 
     public void logSevere(String msg, Object... args)
     {
-        log(Project.MSG_ERR, msg, args);
+        parent.logSevere(msg, args);
     }
 
     public void logVerbose(String msg, Object... args)
     {
-        log(Project.MSG_VERBOSE, msg, args);
+        parent.logVerbose(msg, args);
     }
 
-    private void log(int level, String msg, Object... args)
+    public Collection<File> getExtClassPath()
     {
-        msg = StringUtils.appendIndenting(ProjectBuilder.getInstance().makeStandardHeader() + ' ', msg);
-        task.log(args.length == 0 ? msg : String.format(msg, args), level);
+        return parent.getExtClassPath();
+    }
+
+    @Nullable protected String retrieveProperty(@NotNull String id)
+    {
+        String result = super.getOptionalProperty(id);
+        return result == null ? parent.getOptionalProperty(id) : result;
     }
 }

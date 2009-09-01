@@ -296,9 +296,9 @@ public abstract class OptionParser
         private final List<T>      validValues;
 
         private T      value;
-        private String valueDescription;
+        private final String valueDescription;
 
-        private List<T> values;
+        private final List<T> values;
 
         Option(OptionParser optionParser, final Class<T> type, final char letter, @NotNull final String name,
                @NotNull String description, @NotNull String valueDescription)

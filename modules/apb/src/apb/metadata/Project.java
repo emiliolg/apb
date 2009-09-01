@@ -15,8 +15,6 @@
 
 package apb.metadata;
 
-import apb.Environment;
-
 /**
  * This class defines a Module for the building system
  * Every Module definition must inherit (directly or indirectly) from this class
@@ -40,17 +38,17 @@ public class Project
         components.addAll(ms);
     }
 
-    public void clean(Environment env) {}
+    public void clean() {}
 
-    public void resources(Environment env) {}
+    public void resources() {}
 
-    public void compile(Environment env) {}
+    public void compile() {}
 
-    public void compileTests(Environment env) {}
+    public void compileTests() {}
 
-    public void runTests(Environment env) {}
+    public void runTests() {}
 
-    public void runMinimalTests(Environment env) {}
+    public void runMinimalTests() {}
 
-    public void packageit(Environment env) {}
+    public void packageit() {}
 }

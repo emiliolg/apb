@@ -40,7 +40,7 @@ public abstract class Command
 
     @NotNull private final String  name;
     @Nullable private final String nameSpace;
-    private boolean                recursive;
+    private final boolean                recursive;
 
     //~ Constructors .........................................................................................
 
@@ -63,7 +63,7 @@ public abstract class Command
 
     //~ Methods ..............................................................................................
 
-    public abstract void invoke(ProjectElement projectElement, Environment env);
+    public abstract void invoke(ProjectElement projectElement);
 
     @NotNull public String getQName()
     {

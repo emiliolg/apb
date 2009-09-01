@@ -167,7 +167,7 @@ public class ClassUtils
 
     //~ Static fields/initializers ...........................................................................
 
-    private static Map<Class, Class> wrappers = new HashMap<Class, Class>();
+    private static final Map<Class, Class> wrappers = new HashMap<Class, Class>();
 
     static {
         wrappers.put(Boolean.TYPE, Boolean.class);

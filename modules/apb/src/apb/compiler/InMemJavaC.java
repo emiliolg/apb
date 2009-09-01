@@ -62,7 +62,7 @@ public class InMemJavaC
     @NotNull private final Map<File, Class> classesByFile;
 
     @NotNull private final JavaCompiler          compiler;
-    @NotNull private final Environment           env;
+    @NotNull private final Environment env;
     @NotNull private final MemoryJavaFileManager fileManager;
     @NotNull private final MemoryClassLoader     memoryClassLoader;
 
@@ -131,7 +131,8 @@ public class InMemJavaC
      * @return The compiled class
      * @throws ClassNotFoundException if the compilation fails or the class cannot be loaded
      */
-    @NotNull public Class<?> compileToClass(@Nullable File sourcePath, @NotNull File source)
+    @NotNull
+    Class<?> compileToClass(@Nullable File sourcePath, @NotNull File source)
         throws ClassNotFoundException
     {
         String className = memoryClassLoader.classNameFromSource(source);
@@ -226,9 +227,9 @@ public class InMemJavaC
     static class MemoryJavaOutput
         extends SimpleJavaFileObject
     {
-        private String            className;
-        private long              lastModified;
-        private MemoryClassLoader memoryClassLoader;
+        private final String            className;
+        private final long              lastModified;
+        private final MemoryClassLoader memoryClassLoader;
 
         public MemoryJavaOutput(FileObject fileObject, String className, MemoryClassLoader memoryClassLoader)
         {
@@ -257,8 +258,8 @@ public class InMemJavaC
      */
     private static class ClassInfo
     {
-        private ByteArrayOutputStream bytes;
-        private MemoryJavaOutput      file;
+        private final ByteArrayOutputStream bytes;
+        private final MemoryJavaOutput      file;
 
         public ClassInfo(MemoryJavaOutput fileObject, ByteArrayOutputStream outputStream)
         {
@@ -372,7 +373,7 @@ public class InMemJavaC
     private static class MemoryJavaFileManager
         extends DefaultJavaFileManager
     {
-        private MemoryClassLoader memoryClassLoader;
+        private final MemoryClassLoader memoryClassLoader;
 
         public MemoryJavaFileManager(JavaCompiler stdFileManager, MemoryClassLoader memoryClassLoader)
         {

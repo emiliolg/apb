@@ -31,15 +31,11 @@ import java.util.Set;
 
 import apb.Environment;
 import apb.ModuleHelper;
-
 import apb.metadata.ResourcesInfo;
-
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NotNull;
-
 import static apb.utils.StringUtils.isEmpty;
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Oct 1, 2008
@@ -88,13 +84,12 @@ public class CopyTask
         copy.execute();
     }
 
-    public static void copyResources(Environment env)
+    public static void copyResources(ModuleHelper module)
     {
-        ModuleHelper  helper = env.getModuleHelper();
-        ResourcesInfo resources = helper.getResourcesInfo();
+        ResourcesInfo resources = module.getResourcesInfo();
 
         CopyTask copy =
-            new CopyTask(env, env.fileFromBase(resources.dir), env.fileFromBase(resources.output));
+            new CopyTask(module, module.fileFromBase(resources.dir), module.fileFromBase(resources.output));
 
         if (!isEmpty(resources.encoding)) {
             copy.setEncoding(resources.encoding);

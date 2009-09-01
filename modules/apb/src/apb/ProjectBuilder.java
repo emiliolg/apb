@@ -20,19 +20,25 @@ package apb;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
 import apb.compiler.InMemJavaC;
+
 import apb.index.ArtifactsCache;
+
 import apb.metadata.DependencyList;
+import apb.metadata.Module;
 import apb.metadata.ProjectElement;
+
 import apb.utils.DebugOption;
-import static apb.utils.FileUtils.JAVA_EXT;
+
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static apb.utils.FileUtils.JAVA_EXT;
 //
 // User: emilio
 // Date: Aug 21, 2009
@@ -76,7 +82,11 @@ public class ProjectBuilder
     /**
      * The project path where files are searched
      */
-    private Set<File> projectPath;
+    private final Set<File> projectPath;
+    /**
+     * Track execution
+     */
+    private final boolean track;
 
     //~ Constructors .........................................................................................
 
@@ -90,6 +100,7 @@ public class ProjectBuilder
         contextStack = new LinkedList<Context>();
         currentName = "";
         instance = this;
+        track = this.env.mustShow(DebugOption.TRACK);
     }
 
     //~ Methods ..............................................................................................
@@ -105,7 +116,7 @@ public class ProjectBuilder
         return getInstance().getHelper(element);
     }
 
-    public static ProjectBuilder getInstance()
+    @NotNull public static ProjectBuilder getInstance()
     {
         if (instance == null) {
             throw new IllegalStateException();
@@ -114,11 +125,19 @@ public class ProjectBuilder
         return instance;
     }
 
+    public static void forward(@NotNull String command, Iterable<? extends Module> modules)
+    {
+        for (Module module : modules) {
+            final ProjectBuilder pb = getInstance();
+            pb.build(pb.getHelper(module), command);
+        }
+    }
+
     public String makeStandardHeader()
     {
         StringBuilder result = new StringBuilder();
 
-        if (env.mustShow(DebugOption.TRACK)) {
+        if (track) {
             final int depth = getInstance().contextStack.size();
             result.append(apb.utils.StringUtils.nChars(depth * 4, ' '));
         }
@@ -154,10 +173,10 @@ public class ProjectBuilder
         return result.toString();
     }
 
-    public ProjectElement loadElement(File path, File file)
+    @Nullable public ProjectElementHelper constructProjectElement(@NotNull File path, @NotNull File file)
     {
         try {
-            return loadProjectElement(javac, path, file);
+            return loadProjectElement(path, file);
         }
         catch (Throwable e) {
             return null;
@@ -175,7 +194,21 @@ public class ProjectBuilder
     public void build(String element, String command)
         throws DefinitionException, BuildException
     {
-        ProjectElementHelper projectElement = constructProjectElement(element);
+        File       source = projectElementFile(element);
+        final File pdir = projectDir(source);
+
+        ProjectElementHelper projectElement;
+
+        try {
+            projectElement = loadProjectElement(pdir, source);
+        }
+        catch (DependencyList.NullDependencyException e) {
+            throw new DefinitionException(element, e);
+        }
+        catch (Throwable e) {
+            throw new DefinitionException(element, e);
+        }
+
         build(projectElement, command);
     }
 
@@ -246,34 +279,34 @@ public class ProjectBuilder
         Command command = element.findCommand(commandName);
 
         if (command != null && element.notExecuted(command)) {
-            ProjectElement projectElement = element.activate();
-
             for (Command cmd : command.getDependencies()) {
                 if (element.notExecuted(cmd)) {
                     final String cmdName = cmd.getQName();
                     startExecution(element.getName(), cmdName);
                     element.markExecuted(cmd);
-                    cmd.invoke(projectElement, env);
+                    cmd.invoke(element.getElement());
                     endExecution();
                 }
             }
         }
     }
 
-    private static ProjectElement loadProjectElement(@NotNull InMemJavaC javac, @NotNull File projectDir,
-                                                     @NotNull File file)
+    private ProjectElementHelper loadProjectElement(@NotNull File projectDirectory, @NotNull File file)
         throws Throwable
     {
-        final ProjectElement element;
+        env.putProperty(PROJECTS_HOME_PROP_KEY, projectDirectory.getAbsolutePath());
 
         try {
-            element = javac.loadClass(projectDir, file).asSubclass(ProjectElement.class).newInstance();
+            final ProjectElement element =
+                javac.loadClass(projectDirectory, file).asSubclass(ProjectElement.class).newInstance();
+            currentName = element.getName();
+            final ProjectElementHelper helper = getHelper(element);
+            helper.setTopLevel(true);
+            return helper;
         }
         catch (ExceptionInInitializerError e) {
             throw e.getException();
         }
-
-        return element;
     }
 
     private void startExecution(@NotNull final String name, @NotNull String command)
@@ -281,14 +314,14 @@ public class ProjectBuilder
         contextStack.add(new Context(name, command));
         currentName = name;
 
-        if (env.mustShow(DebugOption.TRACK)) {
+        if (track) {
             env.logVerbose("About to execute '%s.%s'\n", name, command);
         }
     }
 
     private void endExecution()
     {
-        if (env.mustShow(DebugOption.TRACK)) {
+        if (track) {
             Context       ctx = contextStack.getLast();
             long          ms = System.currentTimeMillis() - ctx.startTime;
             final Runtime runtime = Runtime.getRuntime();
@@ -299,34 +332,6 @@ public class ProjectBuilder
         }
 
         contextStack.removeLast();
-    }
-
-    /**
-     * Construct a Helper for the element
-     * @param name The module or project name
-     * @return
-     */
-    @NotNull private ProjectElementHelper constructProjectElement(String name)
-        throws DefinitionException
-    {
-        try {
-            File       source = projectElementFile(name);
-            final File pdir = projectDir(source);
-            env.putProperty(PROJECTS_HOME_PROP_KEY, pdir.getAbsolutePath());
-
-            final ProjectElement element = loadProjectElement(javac, pdir, source);
-
-            currentName = element.getName();
-            final ProjectElementHelper helper = getHelper(element);
-            helper.setTopLevel(true);
-            return helper;
-        }
-        catch (DependencyList.NullDependencyException e) {
-            throw new DefinitionException(name, e);
-        }
-        catch (Throwable e) {
-            throw new DefinitionException(name, e);
-        }
     }
 
     @NotNull private File projectDir(File projectElementFile)
@@ -352,7 +357,7 @@ public class ProjectBuilder
     }
 
     @NotNull private File projectElementFile(String projectElement)
-        throws IOException
+        throws DefinitionException
     {
         // Strip JAVA_EXT
         if (projectElement.endsWith(JAVA_EXT)) {
@@ -364,7 +369,12 @@ public class ProjectBuilder
         // Replace 'dots' by file separators BUT ONLY IN THE FILE NAME.
         File file = new File(f.getParentFile(), f.getName().replace('.', File.separatorChar) + JAVA_EXT);
 
-        return file.exists() ? file : searchInProjectPath(file.getPath());
+        try {
+            return file.exists() ? file : searchInProjectPath(file.getPath());
+        }
+        catch (FileNotFoundException e) {
+            throw new DefinitionException(projectElement, e);
+        }
     }
 
     @NotNull private File searchInProjectPath(String projectElement)
@@ -394,9 +404,9 @@ public class ProjectBuilder
 
     private static class Context
     {
-        private String command;
-        private String element;
-        private long   startTime;
+        private final String command;
+        private final String element;
+        private final long   startTime;
 
         public Context(String element, String command)
         {

@@ -133,7 +133,7 @@ class NotNullClassInstrumenter
             }
 
             public void visitCode() {
-                if (isNotNull || notNullParams.size() > 0) {
+                if (isNotNull || !notNullParams.isEmpty()) {
                     startGeneratedCodeLabel = new Label();
                     mv.visitLabel(startGeneratedCodeLabel);
                 }
@@ -183,10 +183,10 @@ class NotNullClassInstrumenter
             }
 
             private void generateThrow(String exceptionClass, String descr, Label end) {
-                String exceptionParamClass = "(Ljava/lang/String;)V";
                 mv.visitTypeInsn(187, exceptionClass);
                 mv.visitInsn(89);
                 mv.visitLdcInsn(descr);
+                String exceptionParamClass = "(Ljava/lang/String;)V";
                 mv.visitMethodInsn(183, exceptionClass, "<init>", exceptionParamClass);
                 mv.visitInsn(191);
                 mv.visitLabel(end);
