@@ -162,6 +162,12 @@ public class TestModule
     private final Map<String, String> properties = new HashMap<String, String>();
 
     /**
+     * Additional Java Args to be set when running the tests
+     */
+    private final List<String> javaArgs = new ArrayList<String>();
+
+
+    /**
      * test reports
      */
     private final List<TestReport> reports = new ArrayList<TestReport>();
@@ -206,6 +212,10 @@ public class TestModule
     public List<String> useProperties()
     {
         return useProperties;
+    }
+
+    public List<String> javaArgs() {
+        return javaArgs;
     }
 
     /**

@@ -134,6 +134,12 @@ public class TestTask
      * List of System properties to pass to the tests.
      */
     @NotNull private Map<String, String> properties;
+
+    /**
+     * List of additional args to pass to the tests.
+     */
+    @NotNull private List<String> javaArgs;
+
     @NotNull private TestReport          report;
     @Nullable private File               reportDir;
 
@@ -182,6 +188,8 @@ public class TestTask
         testGroups = groups.isEmpty() ? testModule.groups() : Arrays.asList(groups.split(","));
 
         properties = expandProperties(env, testModule.properties(), testModule.useProperties());
+        javaArgs = new ArrayList<String>(testModule.javaArgs());
+
         enableAssertions = testModule.enableAssertions;
 
         enableDebugger = testModule.enableDebugger;
@@ -240,6 +248,7 @@ public class TestTask
         if (env.isVerbose()) {
             showClassPath();
             showProperties();
+            showJavaArgs();
         }
 
         int result = fork ? executeOutOfProcess() : executeInProcess();
@@ -303,6 +312,16 @@ public class TestTask
             logVerbose("         %s='%s'\n", e.getKey(), e.getValue());
         }
     }
+
+    private void showJavaArgs()
+    {
+        logVerbose("Java args: \n");
+
+        for (String javaArg : javaArgs) {
+            logVerbose("         '%s'\n", javaArg);
+        }
+    }
+
 
     private boolean isCoverageEnabled()
     {
@@ -398,6 +417,11 @@ public class TestTask
 
         // Add properties
         java.setProperties(properties);
+
+        // add args
+        for (String javaArg : javaArgs) {
+            java.addJavaArg(javaArg);
+        }
 
         if (enableDebugger) {
             for (String arg : DEBUG_ARGUMENTS) {
