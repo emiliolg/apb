@@ -18,61 +18,61 @@
 
 package apb.ant;
 
+import apb.Logger;
 import apb.ProjectBuilder;
-import apb.BaseEnvironment;
 
 import apb.utils.StringUtils;
 
 import org.apache.tools.ant.Project;
+import org.apache.tools.ant.Task;
 
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
-// Date: Dec 10, 2008
-// Time: 6:34:03 PM
+// Date: Sep 1, 2009
+// Time: 3:34:39 PM
 
-//
-public class AntEnvironment
-    extends BaseEnvironment
+class AntLogger
+    implements Logger
 {
     //~ Instance fields ......................................................................................
 
-    private ApbTask task;
+    private Task antTask;
 
     //~ Constructors .........................................................................................
 
-    public AntEnvironment(ApbTask task)
+    public AntLogger(Task task)
     {
-        super(task.getProperties());
-        postInit();
-        this.task = task;
-        setFailOnError(true);
+        antTask = task;
     }
 
     //~ Methods ..............................................................................................
 
-    public void logInfo(String msg, Object... args)
+    @Override public void log(Level level, String msg, Object... args)
     {
-        log(Project.MSG_INFO, msg, args);
+        int l = convertLevel(level);
+        msg = StringUtils.appendIndenting(ProjectBuilder.makeStandardHeader() + ' ', msg);
+        antTask.log(args.length == 0 ? msg : String.format(msg, args), l);
     }
 
-    public void logWarning(String msg, Object... args)
+    @Override public void setLevel(Level level)
     {
-        log(Project.MSG_WARN, msg, args);
+        // Ignore
     }
 
-    public void logSevere(String msg, Object... args)
+    private int convertLevel(@NotNull Level level)
     {
-        log(Project.MSG_ERR, msg, args);
-    }
-
-    public void logVerbose(String msg, Object... args)
-    {
-        log(Project.MSG_VERBOSE, msg, args);
-    }
-
-    private void log(int level, String msg, Object... args)
-    {
-        msg = StringUtils.appendIndenting(ProjectBuilder.getInstance().makeStandardHeader() + ' ', msg);
-        task.log(args.length == 0 ? msg : String.format(msg, args), level);
+        switch (level) {
+        case INFO:
+            return Project.MSG_INFO;
+        case VERBOSE:
+            return Project.MSG_VERBOSE;
+        case SEVERE:
+            return Project.MSG_ERR;
+        case WARNING:
+            return Project.MSG_WARN;
+        default:
+            throw new IllegalArgumentException(String.valueOf(level));
+        }
     }
 }

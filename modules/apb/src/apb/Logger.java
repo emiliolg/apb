@@ -16,33 +16,29 @@
 //
 
 
-package apb.utils;
+package apb;
 
-import apb.Environment;
 //
 // User: emilio
-// Date: Dec 4, 2008
-// Time: 4:40:10 PM
+// Date: Sep 1, 2009
+// Time: 2:43:34 PM
 
-public class ColorFormatter
-    extends SimpleFormatter
+//
+public interface Logger
 {
-    //~ Constructors .........................................................................................
-
-    public ColorFormatter(Environment env)
-    {
-        super(env);
-    }
-
     //~ Methods ..............................................................................................
 
-    @Override protected String trimColors(String str)
-    {
-        return str;
-    }
+    void log(Level level, String msg, Object... args);
 
-    @Override protected String header()
+    void setLevel(Level warning);
+
+    //~ Enums ................................................................................................
+
+    public enum Level
     {
-        return ColorUtils.colorize(ColorUtils.GREEN, super.header());
+        VERBOSE,
+        INFO,
+        WARNING,
+        SEVERE;
     }
 }

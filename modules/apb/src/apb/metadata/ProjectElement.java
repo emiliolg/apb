@@ -18,9 +18,11 @@
 
 package apb.metadata;
 
-
+import apb.ProjectBuilder;
 import apb.ProjectElementHelper;
+
 import apb.utils.NameUtils;
+
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -30,14 +32,6 @@ import org.jetbrains.annotations.NotNull;
 public abstract class ProjectElement
     implements Named
 {
-    // @Todo Create an accesor
-    public ProjectElementHelper helper;
-
-    public ProjectElement()
-    {
-        NameRegistry.intern(this);
-    }
-
     //~ Instance fields ......................................................................................
 
     /**
@@ -67,11 +61,16 @@ public abstract class ProjectElement
      */
     @BuildProperty public String version = "";
 
-    //~ Methods ..............................................................................................
+    @NotNull private final ProjectElementHelper helper;
 
-    public ProjectElementHelper getHelper() {
-        return helper;
+    //~ Constructors .........................................................................................
+
+    public ProjectElement()
+    {
+        helper = ProjectBuilder.register(NameRegistry.intern(this));
     }
+
+    //~ Methods ..............................................................................................
 
     @BuildTarget(description = "Deletes all output directories (compiled code and packages).")
     public abstract void clean();
@@ -96,15 +95,15 @@ public abstract class ProjectElement
                  depends = { "compile-tests", "package" },
                  description =
                  "Test the compiled sources, generating reports and (optional) coverage information.",
-                 recursive = false 
+                 recursive = false
                 )
     public abstract void runTests();
-    
+
     @BuildTarget(
                  depends = "compile-tests",
                  description =
                  "Run test with the annotation @Test(group=\"minimal\") generating reports and (optional) coverage information.",
-                 recursive = false 
+                 recursive = false
                 )
     public abstract void runMinimalTests();
 
@@ -116,17 +115,19 @@ public abstract class ProjectElement
                 )
     public abstract void packageit();
 
+    @NotNull public ProjectElementHelper getHelper()
+    {
+        return helper;
+    }
+
     /**
      * Initialization hook.
      * You can override this method to provide initializations AFTER
      * the Object is constructed. This can be useful to avoid problem with cyclic references.
      */
-    public void init()
-    {
-    }
+    public void init() {}
 
-    @NotNull
-    public String getName()
+    @NotNull public String getName()
     {
         return NameUtils.name(getClass());
     }

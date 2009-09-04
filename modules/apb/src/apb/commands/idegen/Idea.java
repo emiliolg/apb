@@ -18,8 +18,6 @@
 
 package apb.commands.idegen;
 
-import apb.ProjectBuilder;
-
 import apb.metadata.ProjectElement;
 
 import apb.tasks.IdeaTask;
@@ -43,6 +41,6 @@ public class Idea
 
     public void invoke(ProjectElement projectElement)
     {
-        IdeaTask.execute(ProjectBuilder.findHelper(projectElement));
+        IdeaTask.execute(projectElement.getHelper());
     }
 }

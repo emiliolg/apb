@@ -18,7 +18,16 @@
 
 package apb.metadata;
 
+import java.io.File;
+
+import org.jetbrains.annotations.NotNull;
+
 /**
  * A marker for modules that do not come from a source file
  */
-public interface Synthetic {}
+public interface Synthetic
+{
+    //~ Methods ..............................................................................................
+
+    @NotNull File getProjectDirectory();
+}

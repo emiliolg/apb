@@ -27,6 +27,7 @@ import java.util.Map;
 import apb.Command;
 import apb.CommandBuilder;
 import apb.ProjectElementHelper;
+
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -45,7 +46,7 @@ public class ModuleInfo
     @NotNull private final Collection<String> commands;
 
     @NotNull private final File contentDir;
-    @NotNull private String                   defaultCommand;
+    @NotNull private String     defaultCommand;
 
     @NotNull private final String id;
     @NotNull private final String name;
@@ -61,7 +62,7 @@ public class ModuleInfo
         commands = new ArrayList<String>();
         defaultCommand = Command.DEFAULT_COMMAND;
 
-        CommandBuilder b = element.getBuilder();
+        CommandBuilder b = element.getCommandBuilder();
 
         for (Map.Entry<String, Command> cmd : b.commands().entrySet()) {
             final String nm = cmd.getValue().getQName();
@@ -85,7 +86,7 @@ public class ModuleInfo
     @NotNull public File getContentDir()
     {
         return contentDir;
-        }
+    }
 
     @NotNull public String getId()
     {

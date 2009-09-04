@@ -79,8 +79,7 @@ public class CommandBuilder
     private static boolean hasRightSignature(Method method)
     {
         Class<?>[] pars = method.getParameterTypes();
-        return pars.length == 0 &&
-               java.lang.reflect.Modifier.isPublic(method.getModifiers()) &&
+        return pars.length == 0 && java.lang.reflect.Modifier.isPublic(method.getModifiers()) &&
                method.getReturnType().equals(Void.TYPE);
     }
 
@@ -163,8 +162,7 @@ public class CommandBuilder
         {
             System.err.println("Commands for '" + projectElement.getName() + "' : ");
 
-            final Collection<Command> cmds =
-                ProjectBuilder.findHelper(projectElement).listCommands().values();
+            final Collection<Command> cmds = projectElement.getHelper().listCommands().values();
 
             for (Command cmd : cmds) {
                 if (!cmd.hasNameSpace()) {
@@ -217,18 +215,18 @@ public class CommandBuilder
 
         private final Method method;
 
-        InstanceCommand(@NotNull String name, @NotNull Method method, @NotNull String description,
-                                  boolean recursive)
-        {
-            super(name, description, recursive);
-            this.method = method;
-            directDependencies = new ArrayList<Command>();
-        }
-
         InstanceCommand(Method method, BuildTarget annotation)
         {
             this(annotation.name().isEmpty() ? NameUtils.idFromMember(method) : annotation.name(), method,
                  annotation.description(), annotation.recursive());
+        }
+
+        InstanceCommand(@NotNull String name, @NotNull Method method, @NotNull String description,
+                        boolean recursive)
+        {
+            super(name, description, recursive);
+            this.method = method;
+            directDependencies = new ArrayList<Command>();
         }
 
         @NotNull @Override public List<Command> getDirectDependencies()

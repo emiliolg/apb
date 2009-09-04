@@ -33,12 +33,14 @@ public abstract class BaseTestReport
 {
     //~ Instance fields ......................................................................................
 
-    protected final String fileName;
+    protected final boolean showOutput;
+
+    //private OutputHandler                       outputHandler;
+    protected File reportsDir;
 
     @Nullable protected transient OutputHandler out;
-    protected File                              reportsDir;
-    protected final boolean                     showOutput;
-    private OutputHandler                       outputHandler;
+
+    protected final String fileName;
 
     //~ Constructors .........................................................................................
 
@@ -53,19 +55,18 @@ public abstract class BaseTestReport
     public void startRun(int n)
     {
         super.startRun(n);
-        outputHandler = OutputHandler.getInstance();
     }
 
     public void startSuite(@NotNull String suiteName)
     {
         super.startSuite(suiteName);
-        outputHandler.init(showOutput);
+        OutputHandler.getInstance().init(showOutput);
     }
 
     public void endSuite()
     {
         super.endSuite();
-        outputHandler.restore();
+        OutputHandler.getInstance().restore();
     }
 
     public void stopRun()
@@ -78,15 +79,17 @@ public abstract class BaseTestReport
     protected void appendOutAndErr()
     {
         if (showOutput) {
-            printOutput(SYSTEM_OUT, outputHandler.getOutput());
-            printOutput(SYSTEM_ERR, outputHandler.getError());
+            printOutput(SYSTEM_OUT, OutputHandler.getInstance().getOutput());
+            printOutput(SYSTEM_ERR, OutputHandler.getInstance().getError());
         }
     }
 
     protected File reportFile(@NotNull String suffix, @NotNull String ext)
     {
-        if (!reportsDir.exists())
+        if (!reportsDir.exists()) {
             reportsDir.mkdirs();
+        }
+
         return new File(reportsDir, fileName + suffix + ext);
     }
 

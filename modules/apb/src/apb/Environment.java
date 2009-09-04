@@ -20,25 +20,11 @@ package apb;
 
 import java.io.File;
 import java.util.Collection;
-import java.util.EnumSet;
 
 import apb.utils.DebugOption;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;  // Copyright 2008-2009 Emilio Lopez-Gabeiras
-
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License
+import org.jetbrains.annotations.Nullable;
 
 // User: emilio
 // Date: Aug 22, 2009
@@ -47,6 +33,11 @@ import org.jetbrains.annotations.Nullable;  // Copyright 2008-2009 Emilio Lopez-
 public interface Environment
 {
     //~ Methods ..............................................................................................
+
+    /**
+     * Get the environment id
+     */
+    String getId();
 
     /**
      * Log items with INFO Level using the specified format string and
@@ -235,63 +226,6 @@ public interface Environment
     void abort(String msg);
 
     /**
-     * Log with the lowest level
-     */
-<<<<<<< HEAD:modules/apb/src/apb/Environment.java
-    void setQuiet();
-=======
-    @NotNull public ProjectHelper getProjectHelper()
-    {
-        if (currentElement == null || !(currentElement instanceof ProjectHelper)) {
-            throw new IllegalStateException("Not current Project");
-        }
-
-        return (ProjectHelper) currentElement;
-    }
-
-    public ProjectElementHelper getCurrent()
-    {
-        return currentElement;
-    }
-
-    public void forward(@NotNull String command, Iterable<? extends Module> modules)
-    {
-        for (Module module : modules) {
-            final ProjectBuilder pb = ProjectBuilder.getInstance();
-            pb.build(pb.getHelper(module), command);
-        }
-    }
-
-    public void putProperty(String name, String value)
-    {
-        if (mustShow(DebugOption.PROPERTIES)) {
-            logVerbose("property %s=%s\n", name, value);
-        }
-
-        projectProperties.put(name, value);
-    }
-
-    public void setProperties(Map<String, String> values)
-    {
-        System.out.println("values = " + values);
-    }
-
-    public String getBaseProperty(String propertyName)
-    {
-        return baseProperties.get(propertyName);
-    }
-
-    public void setDebugOptions(@NotNull EnumSet<DebugOption> options)
-    {
-        debugOptions.addAll(options);
-
-        if (!options.isEmpty()) {
-            setVerbose();
-        }
-    }
-
-    protected void setVerbose() {}
-    /**
      * Get an optional property. It can return null
      * @param id The property to get
      * @return The property if it has value, null otherwise.
@@ -299,4 +233,8 @@ public interface Environment
     @Nullable String getOptionalProperty(String id);
 
     void putProperty(@NotNull String name, @NotNull String value);
+
+    Logger getLogger();
+
+    void setNonRecursive(boolean b);
 }

@@ -18,9 +18,7 @@
 
 package apb;
 
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 import apb.metadata.Project;
@@ -36,20 +34,14 @@ import org.jetbrains.annotations.NotNull;
 public class ProjectHelper
     extends ProjectElementHelper
 {
-    //~ Instance fields ......................................................................................
-
-    @NotNull private final List<ProjectElementHelper> components;
-
     //~ Constructors .........................................................................................
 
-    ProjectHelper(@NotNull Project project, @NotNull Environment env)
+    ProjectHelper(ProjectBuilder pb, @NotNull Project project)
     {
-        super(project, env);
-        components = new ArrayList<ProjectElementHelper>();
-
-        for (ProjectElement module : project.components()) {
-            components.add(ProjectBuilder.findHelper(module));
-        }
+        super(pb, project);
+        putProperty(PROJECT_PROP_KEY, getName());
+        putProperty(PROJECT_PROP_KEY + ID_SUFFIX, getId());
+        putProperty(PROJECT_PROP_KEY + DIR_SUFFIX, project.getDir());
     }
 
     //~ Methods ..............................................................................................
@@ -63,8 +55,8 @@ public class ProjectHelper
     {
         Set<ModuleHelper> result = new LinkedHashSet<ModuleHelper>();
 
-        for (ProjectElementHelper helper : components) {
-            result.addAll(helper.listAllModules());
+        for (ProjectElement e : getProject().components()) {
+            result.addAll(e.getHelper().listAllModules());
         }
 
         return result;
@@ -72,10 +64,14 @@ public class ProjectHelper
 
     protected void build(ProjectBuilder pb, String commandName)
     {
-        for (ProjectElementHelper component : components) {
-            pb.build(component, commandName);
+        for (ProjectElement component : getProject().components()) {
+            pb.build(component.getHelper(), commandName);
         }
 
         pb.execute(this, commandName);
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final String PROJECT_PROP_KEY = "project";
 }

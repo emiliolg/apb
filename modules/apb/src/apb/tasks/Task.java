@@ -21,8 +21,11 @@ package apb.tasks;
 import java.io.File;
 import java.util.concurrent.Callable;
 
+import apb.Apb;
 import apb.Environment;
+
 import apb.utils.DebugOption;
+
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -46,7 +49,7 @@ public abstract class Task
 
     protected Task()
     {
-        this(Environment.getInstance());
+        this(Apb.getEnv());
     }
 
     //~ Methods ..............................................................................................

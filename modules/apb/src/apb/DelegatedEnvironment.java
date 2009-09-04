@@ -21,10 +21,12 @@ package apb;
 import java.io.File;
 import java.util.Collection;
 
+import apb.utils.DebugOption;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class DelegatedEnvironment
+public abstract class DelegatedEnvironment
     extends DefaultEnvironment
 {
     //~ Instance fields ......................................................................................
@@ -39,39 +41,73 @@ public class DelegatedEnvironment
 
     public DelegatedEnvironment(@NotNull Environment parent)
     {
+        super(parent.getLogger());
         this.parent = parent;
     }
 
     //~ Methods ..............................................................................................
-
-    public void logInfo(String msg, Object... args)
-    {
-        parent.logInfo(msg, args);
-    }
-
-    public void logWarning(String msg, Object... args)
-    {
-        parent.logWarning(msg, args);
-    }
-
-    public void logSevere(String msg, Object... args)
-    {
-        parent.logSevere(msg, args);
-    }
-
-    public void logVerbose(String msg, Object... args)
-    {
-        parent.logVerbose(msg, args);
-    }
 
     public Collection<File> getExtClassPath()
     {
         return parent.getExtClassPath();
     }
 
+    @Override public boolean isFailOnError()
+    {
+        return parent.isFailOnError();
+    }
+
+    @Override public void setNonRecursive(boolean b)
+    {
+        parent.setNonRecursive(b);
+    }
+
+    /**
+     * Returns true if log level is quiet
+     * @return true if log level is quiet
+     */
+    public boolean isQuiet()
+    {
+        return parent.isQuiet();
+    }
+
+    /**
+     * Returns true if the build must NOT proceed recursive to the module dependecies
+     */
+    public boolean isNonRecursive()
+    {
+        return parent.isNonRecursive();
+    }
+
+    /**
+     * Returns true if we want the build to proceed unconditionally without checking file timestamps
+     * @return true if we want the build to proceed unconditionally without checking file timestamps
+     */
+    public boolean forceBuild()
+    {
+        return parent.forceBuild();
+    }
+
+    /**
+     * Returns true if log level is verbose
+     * @return true if log level is verbose
+     */
+    public boolean isVerbose()
+    {
+        return parent.isVerbose();
+    }
+
+    /**
+     * Returns true if must show the following option
+     */
+    public boolean mustShow(DebugOption option)
+    {
+        return parent.mustShow(option);
+    }
+
     @Nullable protected String retrieveProperty(@NotNull String id)
     {
-        String result = super.getOptionalProperty(id);
+        String result = super.retrieveProperty(id);
         return result == null ? parent.getOptionalProperty(id) : result;
     }
 }

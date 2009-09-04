@@ -31,7 +31,6 @@ import apb.index.DefinitionsIndex;
 import apb.index.ModuleInfo;
 
 import apb.utils.FileUtils;
-import apb.utils.StandaloneEnv;
 
 import static apb.Messages.BUILD_COMPLETED;
 import static apb.Messages.BUILD_FAILED;
@@ -47,9 +46,7 @@ public class Main
         ApbOptions   options = new ApbOptions(args);
         List<String> arguments = options.parse();
 
-        Environment env = new StandaloneEnv(options.definedProperties());
-        options.initEnv(env);
-        Apb.setEnv(env);
+        Environment env = Apb.createBaseEnvironment(options);
 
         final Set<File> path = Apb.loadProjectPath();
 
@@ -134,7 +131,7 @@ public class Main
 
             try {
                 ProjectBuilder b = new ProjectBuilder(env, projectPath);
-                b.build(argParts[0], argParts[1]);
+                b.build(env, argParts[0], argParts[1]);
             }
             catch (DefinitionException d) {
                 env.logSevere("%s\nCause: %s\n", d.getMessage(), d.getCause().getMessage());
@@ -153,6 +150,7 @@ public class Main
             if (showStackTrace) {
                 e.printStackTrace(System.err);
             }
+
             env.logInfo(BUILD_FAILED);
         }
     }

@@ -20,18 +20,14 @@ package apb.tasks;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import apb.Environment;
 
 import apb.metadata.ResourcesInfo;
 
-import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -41,17 +37,15 @@ import org.jetbrains.annotations.Nullable;
  * Fluent interface based Copy Task
  */
 public class Copy
-    extends Task
+    extends FileTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private String encoding;
+    private final boolean       filter;
+    @NotNull private final File from;
+    @Nullable private File      target;
 
-    @NotNull private final Set<String> excludes;
-    private final boolean        filter;
-    @NotNull private final File  from;
-    @NotNull private final Set<String> includes;
-    @Nullable private File       target;
+    @NotNull private String encoding;
 
     //~ Constructors .........................................................................................
 
@@ -63,11 +57,8 @@ public class Copy
      */
     Copy(@NotNull Environment env, @NotNull File from, boolean filter)
     {
-        super(env);
         this.from = from;
         this.filter = filter;
-        includes = new HashSet<String>();
-        excludes = new HashSet<String>();
 
         if (filter) {
             excludes.addAll(ResourcesInfo.DEFAULT_DO_NOT_FILTER);
@@ -118,26 +109,6 @@ public class Copy
     }
 
     /**
-     * When copying a directory content specify the list of files to include
-     * @param patterns The patterns that define the list of files to include
-     */
-    @NotNull public Copy including(@NotNull String... patterns)
-    {
-        includes.addAll(Arrays.asList(patterns));
-        return this;
-    }
-
-    /**
-     * When copying a directory content specify the list of files to exclude
-     * @param patterns The patterns that define the list of files to exclude
-     */
-    @NotNull public Copy excluding(@NotNull String... patterns)
-    {
-        excludes.addAll(Arrays.asList(patterns));
-        return this;
-    }
-
-    /**
      * Execute the copy
      */
     public void execute()
@@ -163,11 +134,6 @@ public class Copy
 
     private void copyFromDirectory(@NotNull File to)
     {
-        // Defaults
-        if (includes.isEmpty()) {
-            includes.add("**/**");
-        }
-
         if (!to.exists() && !to.mkdirs()) {
             env.handle("Cannot create resource output directory: " + to);
             return;
@@ -217,18 +183,9 @@ public class Copy
 
     private Map<File, File> findFiles(File fromDirectory, File outputDirectory)
     {
-        DirectoryScanner scanner = new DirectoryScanner(fromDirectory, includes, excludes);
-
-        try {
-            scanner.scan();
-        }
-        catch (IOException e) {
-            env.handle(e);
-        }
-
         Map<File, File> files = new LinkedHashMap<File, File>();
 
-        for (String name : scanner.getIncludedFiles()) {
+        for (String name : includedFiles(fromDirectory)) {
             File source = new File(fromDirectory, name);
             File to = new File(outputDirectory, name);
 

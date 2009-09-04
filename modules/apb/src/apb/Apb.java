@@ -19,10 +19,13 @@
 package apb;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 // User: emilio
 // Date: Aug 24, 2009
@@ -83,7 +86,7 @@ public class Apb
      */
     @NotNull public static Environment getEnv()
     {
-        final Environment result = env.get();
+        final Environment result = currentEnvironment.get();
 
         if (result == null) {
             throw new IllegalStateException("Environment not initialized");
@@ -92,10 +95,6 @@ public class Apb
         return result;
     }
 
-    static void setEnv(Environment e)
-    {
-        env.set(e);
-    }
     /**
      * Get the Apb home directory
      * Returns null if we cannot find it.
@@ -110,9 +109,58 @@ public class Apb
         }
     }
 
+    public static Environment createBaseEnvironment()
+    {
+        return createBaseEnvironment(new StandaloneLogger(), Collections.<String, String>emptyMap());
+    }
+
+    public static Environment createBaseEnvironment(@NotNull ApbOptions options)
+    {
+        final StandaloneLogger logger = new StandaloneLogger();
+        final BaseEnvironment  env = new BaseEnvironment(logger, options.definedProperties());
+        setCurrentEnv(env);
+        logger.setColor(env.getBooleanProperty("color", true));
+        options.initEnv(env);
+        initProxies(env);
+        return env;
+    }
+
+    public static Environment createBaseEnvironment(@NotNull Logger                    logger,
+                                                    @NotNull final Map<String, String> ps)
+    {
+        final BaseEnvironment env = new BaseEnvironment(logger, ps);
+        setCurrentEnv(env);
+        return env;
+    }
+
+    static Environment setCurrentEnv(Environment e)
+    {
+        Environment result = currentEnvironment.get();
+        currentEnvironment.set(e);
+        return result;
+    }
+
+    private static void initProxies(Environment env)
+    {
+        Proxy proxy = Proxy.getDefaultProxy(env);
+
+        if (proxy != null && !proxy.getHost().isEmpty()) {
+            System.setProperty("http.proxyHost", proxy.getHost());
+
+            if (proxy.getPort() > 0) {
+                System.setProperty("http.proxyPort", String.valueOf(proxy.getPort()));
+            }
+
+            if (!proxy.getNonProxyHosts().isEmpty()) {
+                System.setProperty("http.nonProxyHosts", proxy.getNonProxyHosts());
+            }
+        }
+    }
+
     //~ Static fields/initializers ...........................................................................
 
-    private static final InheritableThreadLocal<Environment> env = new InheritableThreadLocal<Environment>();
+    private static final InheritableThreadLocal<Environment> currentEnvironment =
+        new InheritableThreadLocal<Environment>();
 
     private static final String JAR_FILE_URL_PREFIX = "jar:file:";
 }

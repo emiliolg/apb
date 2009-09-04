@@ -25,4 +25,14 @@ public class TestTasks
     //~ Static fields/initializers ...........................................................................
 
     public static final TestModule MODULE = new TestTasks();
+
+    //~ Instance initializers ................................................................................
+
+    {
+        //        coverage.enable = true;
+        //        // Explicitily include apb. (It will be excluded by default otherwise)
+        //        coverage.includes("apb.*");
+        //        coverage.excludes("apb.testrunner.*");
+        //        coverage.reports(CoverageReport.HTML);
+    }
 }

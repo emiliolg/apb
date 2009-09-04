@@ -168,14 +168,6 @@ public class StringUtils
         return allStars(pattern, patternStart, patternEnd);
     }
 
-    public static void main(String[] args)
-    {
-        String  pattern = "/**/X.java";
-        String  str = "/A/B/C/X.java";
-        boolean match = matchPath(pattern, str, true);
-        System.out.println("match = " + match);
-    }
-
     public static String encode(String str)
     {
         final int           len = str.length();

@@ -27,7 +27,6 @@ import apb.index.DefinitionsIndex;
 import apb.index.ModuleInfo;
 
 import apb.utils.OptionParser;
-import apb.utils.StandaloneEnv;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -119,7 +118,7 @@ public class OptionCompletion
     @NotNull private synchronized DefinitionsIndex getDefinitionsIndex()
     {
         if (definitionsIndex == null) {
-            Environment env = new StandaloneEnv();
+            Environment env = Apb.createBaseEnvironment();
             definitionsIndex = new DefinitionsIndex(env, Apb.loadProjectPath());
         }
 

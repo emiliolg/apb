@@ -48,13 +48,14 @@ import apb.BuildException;
 import apb.Environment;
 import apb.Messages;
 import apb.ModuleHelper;
-import apb.ProjectBuilder;
+
 import apb.metadata.Dependency;
 import apb.metadata.Module;
 import apb.metadata.PackageInfo;
-import apb.metadata.PackageType;
+
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -68,15 +69,16 @@ public class JarTask
 {
     //~ Instance fields ......................................................................................
 
-    private String       comment;
-    private final boolean      doCompress = true;
-    private List<String> excludes, includes;
-    private final File         jarFile;
+    private final boolean doCompress = true;
+    private final File    jarFile;
 
-    private final int                               level = Deflater.DEFAULT_COMPRESSION;
+    private final int                         level = Deflater.DEFAULT_COMPRESSION;
+    private List<String>                      excludes, includes;
+    private final List<File>                  sourceDir;
     @NotNull private Manifest                 manifest;
     @NotNull private Map<String, Set<String>> services;
-    private final List<File>                        sourceDir;
+
+    private String comment;
 
     //~ Constructors .........................................................................................
 
@@ -99,7 +101,7 @@ public class JarTask
     {
         final PackageInfo packageInfo = module.getPackageInfo();
 
-        if (packageInfo.type != PackageType.NONE) {
+        if (module.hasPackage()) {
             JarTask jarTask = new JarTask(module, module.getPackageFile());
 
             // set output
@@ -150,14 +152,13 @@ public class JarTask
                     if (d.isModule()) {
                         Module depModule = d.asModule();
                         module.logVerbose("Adding module '%s'.\n", d.toString());
-                        ModuleHelper m = (ModuleHelper) ProjectBuilder.findHelper(depModule);
-                        jarTask.addDir(m.getOutput());
+                        jarTask.addDir(depModule.getHelper().getOutput());
 
                         mergedServices.putAll(depModule.pkg.services());
                     }
                     else if (d.isLibrary()) {
                         module.logInfo("Library '%s' skipped. Libraries are not packaged as part of module jar.\n",
-                                    d.toString());
+                                       d.toString());
                     }
                 }
 

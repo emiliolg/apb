@@ -25,8 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import apb.Environment;
 import apb.ProjectBuilder;
 import apb.ProjectElementHelper;
+
 import org.jetbrains.annotations.NotNull;
 // User: emilio
 // Date: Apr 25, 2009
@@ -37,11 +39,11 @@ class ModulesInfo
 {
     //~ Instance fields ......................................................................................
 
+    @NotNull private final File path;
+
     private final long lastScanTime;
 
     @NotNull private final Map<String, ModuleInfo> modules;
-
-    @NotNull private final File path;
 
     //~ Constructors .........................................................................................
 
@@ -69,10 +71,10 @@ class ModulesInfo
         return path;
     }
 
-    void loadModulesInfo(ProjectBuilder pb, List<File> files)
+    void loadModulesInfo(Environment e, ProjectBuilder pb, List<File> files)
     {
         for (File file : files) {
-            ProjectElementHelper element = pb.constructProjectElement(path, file);
+            ProjectElementHelper element = pb.constructProjectElement(e, path, file);
 
             if (element != null) {
                 ModuleInfo info = new ModuleInfo(element);

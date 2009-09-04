@@ -19,7 +19,6 @@
 package apb;
 
 import java.io.File;
-import java.util.EnumSet;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -28,6 +27,8 @@ import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.Logger.Level.*;
 
 // User: emilio
 // Date: Aug 24, 2009
@@ -39,27 +40,20 @@ public abstract class DefaultEnvironment
     //~ Instance fields ......................................................................................
 
     /**
-     * Control what to show when logging
+     * The logger to display messages
      */
-
-    @NotNull protected final EnumSet<DebugOption> debugOptions;
-
-    @NotNull protected final Map<String, String> properties;
-    private boolean                              failOnError = true;
-    private boolean                              forceBuild;
-
-    private boolean nonRecursive;
+    @NotNull protected final Logger logger;
 
     /**
-     * Processing and messaging options
+     * The base proprty map
      */
-    private boolean quiet;
+    @NotNull protected final Map<String, String> properties;
 
     //~ Constructors .........................................................................................
 
-    protected DefaultEnvironment()
+    protected DefaultEnvironment(@NotNull Logger logger)
     {
-        debugOptions = EnumSet.noneOf(DebugOption.class);
+        this.logger = logger;
         properties = new TreeMap<String, String>();
     }
 
@@ -68,13 +62,13 @@ public abstract class DefaultEnvironment
     @Nullable public final String getOptionalProperty(@NotNull String id)
     {
         String result = overrideProperty(id);
-        return result != null ? result : properties.get(id);
+        return result != null ? result : retrieveProperty(id);
     }
 
-    public void putProperty(@NotNull String name, @NotNull String value)
+    public final void putProperty(@NotNull String name, @NotNull String value)
     {
         if (mustShow(DebugOption.PROPERTIES)) {
-            logVerbose("property %s=%s\n", name, value);
+            logVerbose("Setting property %s.%s=%s\n", getId(), name, value);
         }
 
         properties.put(name, value);
@@ -91,7 +85,7 @@ public abstract class DefaultEnvironment
      * @param string The string to be expanded.
      * @return An String with properties expanded.
      */
-    @NotNull public String expand(@Nullable String string)
+    @NotNull public final String expand(@Nullable String string)
     {
         if (apb.utils.StringUtils.isEmpty(string)) {
             return "";
@@ -121,6 +115,8 @@ public abstract class DefaultEnvironment
                     if (!closeWithBrace) {
                         result.append(chr);
                     }
+
+                    closeWithBrace = false;
                 }
             }
             else if (chr == '$') {
@@ -147,12 +143,32 @@ public abstract class DefaultEnvironment
         return result.toString();
     }
 
+    public final void logInfo(String msg, Object... args)
+    {
+        logger.log(INFO, msg, args);
+    }
+
+    public final void logWarning(String msg, Object... args)
+    {
+        logger.log(WARNING, msg, args);
+    }
+
+    public final void logSevere(String msg, Object... args)
+    {
+        logger.log(SEVERE, msg, args);
+    }
+
+    public final void logVerbose(String msg, Object... args)
+    {
+        logger.log(VERBOSE, msg, args);
+    }
+
     /**
      * Handle an Error. It creates a build Exception with the specified msg.
      * And delegates the handling to {@link #handle(Throwable t)}
      * @param msg The message used to create the build exception
      */
-    public void handle(@NotNull String msg)
+    public final void handle(@NotNull String msg)
     {
         handle(new BuildException(msg));
     }
@@ -162,7 +178,7 @@ public abstract class DefaultEnvironment
      * Either raise the exception or log it depending on the value of the failOnError flag
      * @param e The Exception causing the failure
      */
-    public void handle(@NotNull Throwable e)
+    public final void handle(@NotNull Throwable e)
     {
         if (isFailOnError()) {
             throw (e instanceof BuildException) ? (BuildException) e : new BuildException(e);
@@ -171,12 +187,12 @@ public abstract class DefaultEnvironment
         logSevere(e.getMessage());
     }
 
-    @NotNull public Os getOs()
+    @NotNull public final Os getOs()
     {
         return Os.getInstance();
     }
 
-    public void abort(String msg)
+    public final void abort(String msg)
     {
         logInfo(msg);
         System.exit(1);
@@ -191,78 +207,6 @@ public abstract class DefaultEnvironment
     public final boolean getBooleanProperty(@NotNull String id, boolean defaultValue)
     {
         return Boolean.parseBoolean(getProperty(id, Boolean.toString(defaultValue)));
-    }
-
-    /**
-     * Returns true if log level is quiet
-     * @return true if log level is quiet
-     */
-    public boolean isQuiet()
-    {
-        return quiet;
-    }
-
-    public void setQuiet()
-    {
-        quiet = true;
-    }
-
-    /**
-     * Returns true if the build must NOT proceed recursive to the module dependecies
-     */
-    public boolean isNonRecursive()
-    {
-        return nonRecursive;
-    }
-
-    public void setNonRecursive()
-    {
-        nonRecursive = true;
-    }
-
-    public void setFailOnError(boolean b)
-    {
-        failOnError = b;
-    }
-
-    /**
-     * Returns true if we want the build to proceed unconditionally without checking file timestamps
-     * @return true if we want the build to proceed unconditionally without checking file timestamps
-     */
-    public boolean forceBuild()
-    {
-        return forceBuild;
-    }
-
-    public void setForceBuild(boolean b)
-    {
-        forceBuild = b;
-    }
-
-    /**
-     * Returns true if log level is verbose
-     * @return true if log level is verbose
-     */
-    public boolean isVerbose()
-    {
-        return !debugOptions.isEmpty();
-    }
-
-    /**
-     * Returns true if must show the following option
-     */
-    public boolean mustShow(DebugOption option)
-    {
-        return debugOptions.contains(option);
-    }
-
-    public void setDebugOptions(@NotNull EnumSet<DebugOption> options)
-    {
-        debugOptions.addAll(options);
-
-        if (!options.isEmpty()) {
-            setVerbose();
-        }
     }
 
     /**
@@ -294,14 +238,9 @@ public abstract class DefaultEnvironment
         return result;
     }
 
-    public boolean hasProperty(@NotNull String id)
+    public final boolean hasProperty(@NotNull String id)
     {
         return getOptionalProperty(id) != null;
-    }
-
-    public boolean isFailOnError()
-    {
-        return failOnError;
     }
 
     /**
@@ -367,6 +306,11 @@ public abstract class DefaultEnvironment
         return getModuleHelper().getOutput();
     }
 
+    @NotNull public final Logger getLogger()
+    {
+        return logger;
+    }
+
     @Nullable protected String overrideProperty(@NotNull String id)
     {
         return null;
@@ -376,6 +320,4 @@ public abstract class DefaultEnvironment
     {
         return properties.get(id);
     }
-
-    protected void setVerbose() {}
 }

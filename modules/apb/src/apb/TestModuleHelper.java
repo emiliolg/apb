@@ -24,12 +24,13 @@ import java.util.List;
 import java.util.Map;
 
 import apb.metadata.CoverageInfo;
-import apb.metadata.ProjectElement;
+import apb.metadata.Module;
 import apb.metadata.TestModule;
 
 import apb.testrunner.output.TestReport;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Dec 2, 2008
@@ -41,18 +42,15 @@ public class TestModuleHelper
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private File coverageDir;
-
-    private ModuleHelper moduleToTest;
-
-    @NotNull private File reportsDir;
-    @NotNull private File workingDirectory;
+    @Nullable private File coverageDir;
+    @Nullable private File reportsDir;
+    @Nullable private File workingDirectory;
 
     //~ Constructors .........................................................................................
 
-    TestModuleHelper(@NotNull TestModule module, @NotNull Environment env)
+    TestModuleHelper(ProjectBuilder pb, @NotNull TestModule module)
     {
-        super(module, env);
+        super(pb, module);
     }
 
     //~ Methods ..............................................................................................
@@ -67,18 +65,15 @@ public class TestModuleHelper
         return getModule().coverage;
     }
 
-    public void setModuleToTest(ModuleHelper module)
-    {
-        moduleToTest = module;
-    }
-
     @NotNull public ModuleHelper getModuleToTest()
     {
-        if (moduleToTest == null) {
+        Module m = getModule().getModuleToTest();
+
+        if (m == null) {
             throw new IllegalStateException("'moduleToTest' not initialized");
         }
 
-        return moduleToTest;
+        return m.getHelper();
     }
 
     @Override public boolean isTestModule()
@@ -88,6 +83,10 @@ public class TestModuleHelper
 
     @NotNull public File getWorkingDirectory()
     {
+        if (workingDirectory == null) {
+            workingDirectory = fileFromBase(getModule().workingDirectory);
+        }
+
         return workingDirectory;
     }
 
@@ -98,22 +97,25 @@ public class TestModuleHelper
 
     @NotNull public File getReportsDir()
     {
+        if (reportsDir == null) {
+            reportsDir = fileFromBase(getModule().reportsDir);
+        }
+
         return reportsDir;
     }
 
     @NotNull public File getCoverageDir()
     {
+        if (coverageDir == null) {
+            coverageDir = fileFromBase(getModule().coverage.output);
+        }
+
         return coverageDir;
     }
 
     @NotNull public List<File> getClassesToTest()
     {
-        if (moduleToTest == null) {
-            return Collections.emptyList();
-        }
-        else {
-            return Collections.singletonList(moduleToTest.getOutput());
-        }
+        return Collections.singletonList(getModuleToTest().getOutput());
     }
 
     public boolean isCoverageEnabled()
@@ -123,7 +125,7 @@ public class TestModuleHelper
 
     public List<File> getSourcesToTest()
     {
-        return moduleToTest.getSourceDirs();
+        return getModuleToTest().getSourceDirs();
     }
 
     public int getMemory()
@@ -140,14 +142,5 @@ public class TestModuleHelper
     {
         final TestModule m = getModule();
         return m.testType.creatorClass(m.customCreator);
-    }
-
-    void init(@NotNull ProjectElement activatedTestModule)
-    {
-        super.init(activatedTestModule);
-        TestModule m = getModule();
-        workingDirectory = fileFromBase(m.workingDirectory);
-        reportsDir = fileFromBase(m.reportsDir);
-        coverageDir = fileFromBase(m.coverage.output);
     }
 }

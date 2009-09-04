@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -38,43 +39,52 @@ import apb.Apb;
 import apb.BuildException;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
+import apb.TestModuleHelper;
+
 import apb.commands.idegen.Idegen;
+
 import apb.metadata.Library;
 import apb.metadata.LocalLibrary;
 import apb.metadata.Module;
 import apb.metadata.PackageType;
 import apb.metadata.Synthetic;
-import apb.metadata.TestModule;
+
 import apb.utils.FileUtils;
-import static apb.utils.FileUtils.makeRelative;
 import apb.utils.NameUtils;
 import apb.utils.XmlUtils;
+
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
 import org.xml.sax.SAXException;
+
+import static apb.utils.FileUtils.makeRelative;
 //
 // User: emilio
 // Date: Oct 7, 2008
 // Time: 12:50:45 PM
 
 //
+//Todo Check generation when using an absolute path to the project file
 public class IdeaTask
     extends Task
 {
     //~ Instance fields ......................................................................................
 
+    private final boolean includeEmptyDirs;
+    private boolean       overwrite;
+
     private File deploymentDescriptorFile;
 
-    private final ProjectElementHelper helper;
-    private final boolean              includeEmptyDirs;
+    private final File modulesHome;
+    private final File templateDir;
 
-    private final File    modulesHome;
-    private boolean overwrite;
-    private final File    templateDir;
+    private final ProjectElementHelper helper;
 
     //~ Constructors .........................................................................................
 
@@ -104,8 +114,8 @@ public class IdeaTask
             final ModuleHelper mod = (ModuleHelper) helper;
             rewriteModule(mod);
 
-            for (TestModule testModule : mod.getModule().tests()) {
-                rewriteModule(testModule.getHelper());
+            for (TestModuleHelper testModule : mod.getTestModules()) {
+                rewriteModule(testModule);
             }
         }
 
@@ -362,13 +372,12 @@ public class IdeaTask
     private void generateProjectDefinitionsModule(Element modulesElement)
     {
         try {
-            final Module         mod = new ProjectDefinitions(helper, Apb.applicationJarFile());
+            final Module       mod = new ProjectDefinitions(helper, Apb.applicationJarFile());
             final ModuleHelper h = mod.getHelper();
-            final IdeaTask task = new IdeaTask(h);
+            final IdeaTask     task = new IdeaTask(h);
             task.overwrite = true;
             task.execute();
             addModuleToProject(modulesElement, h, EMPTY_STRING_SET);
-            h.remove();
         }
         catch (IOException e) {
             throw new BuildException(e);
@@ -428,7 +437,7 @@ public class IdeaTask
 
     private void addPackageSpecificInfo(ModuleHelper module, Element element)
     {
-        switch (module.getPackageInfo().type) {
+        switch (module.getPackageType()) {
         case WAR:
             addWebModule(module, element);
             break;
@@ -729,7 +738,12 @@ public class IdeaTask
         extends Module
         implements Synthetic
     {
-        public ProjectDefinitions() {}
+        @NotNull private final File projectDirectory;
+
+        public ProjectDefinitions()
+        {
+            projectDirectory = new File("");
+        }
 
         ProjectDefinitions(ProjectElementHelper project, final File jarFile)
             throws IOException
@@ -745,11 +759,17 @@ public class IdeaTask
                 library.setSources(makePath(project, srcFile));
             }
 
-            for (File file : project.getExtClassPath()) {
-                dependencies(localLibrary(makePath(project, file)));
+            for (File f : project.getExtClassPath()) {
+                dependencies(localLibrary(makePath(project, f)));
             }
 
             dependencies(library);
+            projectDirectory = project.getProjectDirectory();
+        }
+
+        @NotNull public File getProjectDirectory()
+        {
+            return projectDirectory;
         }
 
         /**
@@ -761,10 +781,10 @@ public class IdeaTask
             return getClass().getSimpleName();
         }
 
-        private String makePath(ProjectElementHelper project, File file)
+        private static String makePath(ProjectElementHelper project, File f)
             throws IOException
         {
-            return makeRelative(project.getBaseDir(), file).getPath();
+            return makeRelative(project.getBaseDir(), f).getPath();
         }
     }
 }

@@ -20,12 +20,13 @@ package apb.ant;
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Set;
 import java.util.Map;
+import java.util.Set;
 
-import apb.Command;
-import apb.ProjectBuilder;
 import apb.Apb;
+import apb.Command;
+import apb.Environment;
+import apb.ProjectBuilder;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
@@ -42,19 +43,20 @@ public class ApbTask
 {
     //~ Instance fields ......................................................................................
 
+    private boolean recurse;
+
+    @NotNull private final Environment env;
+    private Map<String, String>        properties;
+
     @NotNull private String command = Command.DEFAULT_COMMAND;
     private String          defdir;
-
-    @NotNull private final AntEnvironment env;
-    private String                        module;
-    private boolean                       recurse;
-    private Map<String, String> properties;
+    private String          module;
 
     //~ Constructors .........................................................................................
 
     public ApbTask()
     {
-        env = new AntEnvironment(this);
+        env = Apb.createBaseEnvironment(new AntLogger(this), properties);
         recurse = true;
     }
 
@@ -81,9 +83,7 @@ public class ApbTask
             projectPath = Collections.singleton(f);
         }
 
-        if (!recurse) {
-            env.setNonRecursive();
-        }
+        env.setNonRecursive(!recurse);
 
         if (module == null) {
             throw new BuildException("You must specify a module name");
@@ -91,7 +91,7 @@ public class ApbTask
 
         try {
             ProjectBuilder b = new ProjectBuilder(env, projectPath);
-            b.build(module, command);
+            b.build(env, module, command);
         }
         catch (Throwable throwable) {
             throw new BuildException(throwable);
@@ -123,7 +123,8 @@ public class ApbTask
         return defdir;
     }
 
-    public Map<String, String> getProperties() {
+    public Map<String, String> getProperties()
+    {
         return properties;
     }
 }

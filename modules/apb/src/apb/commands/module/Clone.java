@@ -21,7 +21,6 @@ package apb.commands.module;
 import java.io.File;
 
 import apb.Command;
-import apb.ProjectBuilder;
 import apb.ProjectElementHelper;
 
 import apb.metadata.ProjectElement;
@@ -48,7 +47,7 @@ public class Clone
 
     public void invoke(ProjectElement projectElement)
     {
-        ProjectElementHelper helper = ProjectBuilder.findHelper(projectElement);
+        ProjectElementHelper helper = projectElement.getHelper();
 
         File   dir = helper.getProjectDirectory();
         File   newDir = getNewProjectDir(dir);

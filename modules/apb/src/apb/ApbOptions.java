@@ -22,14 +22,9 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
-import apb.metadata.Module;
 
 import apb.utils.DebugOption;
 import apb.utils.OptionParser;
-import apb.utils.StandaloneEnv;
 
 import static java.lang.System.err;
 import static java.lang.System.getProperty;
@@ -90,7 +85,7 @@ class ApbOptions
 
     public String[] getArgFullDescription()
     {
-        return new String[] { MODULE_OR_PROJECT, COMMANDS(printCommands()) };
+        return new String[] { MODULE_OR_PROJECT, COMMANDS };
     }
 
     public List<String> parse()
@@ -99,15 +94,13 @@ class ApbOptions
         return super.parse();
     }
 
-    public void initEnv(Environment environment)
+    public void initEnv(BaseEnvironment environment)
     {
         if (quiet.getValue()) {
             environment.setQuiet();
         }
 
-        if (nonRecursive.getValue()) {
-            environment.setNonRecursive();
-        }
+        environment.setNonRecursive(nonRecursive.getValue());
 
         environment.setDebugOptions(debugOptions());
 
@@ -142,10 +135,11 @@ class ApbOptions
     {
         final Package pkg = ApbOptions.class.getPackage();
         final String  version = pkg.getImplementationVersion();
-        System.err.printf("%-4s: %s\n", pkg.getName(), version == null ? "" : version);
-        System.err.printf("java: %s\n", getProperty("java.version"));
-        System.err.printf("OS  : %s %s on %s\n", getProperty("os.name"), getProperty("os.version"),
-                          getProperty("os.arch"));
+        err.printf("%-10s: %s\n", pkg.getName(), version == null ? "" : version);
+        err.printf("%-10s: %s\n", "java", getProperty("java.version"));
+        err.printf("%-10s: %s %s on %s\n", "OS", getProperty("os.name"), getProperty("os.version"),
+                   getProperty("os.arch"));
+        err.printf("%-10s: %dM\n", "Memory", Runtime.getRuntime().maxMemory() / MB);
 
         System.exit(0);
     }
@@ -175,45 +169,6 @@ class ApbOptions
         }
 
         return result;
-    }
-
-    protected void printVersion()
-    {
-        final Package pkg = ApbOptions.class.getPackage();
-        final String  version = pkg.getImplementationVersion();
-        err.printf("%-10s: %s\n", pkg.getName(), version == null ? "" : version);
-        err.printf("%-10s: %s\n", "java", getProperty("java.version"));
-        err.printf("%-10s: %s %s on %s\n", "OS", getProperty("os.name"), getProperty("os.version"),
-                   getProperty("os.arch"));
-        err.printf("%-10s: %dM\n", "Memory", Runtime.getRuntime().maxMemory() / MB);
-
-        System.exit(0);
-    }
-
-    private static String printCommands()
-    {
-        StringBuilder cmds = new StringBuilder();
-
-        // Create a Mock Module Helper
-        ModuleHelper mock = new ModuleHelper(new Module(), new StandaloneEnv());
-        Set<String>  nameSpaces = new TreeSet<String>();
-
-        for (Command cmd : mock.listCommands().values()) {
-            if (cmd.hasNameSpace()) {
-                nameSpaces.add(cmd.getNameSpace());
-            }
-            else {
-                cmds.append(cmds.length() == 0 ? "[ " : " | ");
-                cmds.append(cmd.getName());
-            }
-        }
-
-        for (String nameSpace : nameSpaces) {
-            cmds.append(" | ").append(nameSpace).append(":*");
-        }
-
-        cmds.append(" ]");
-        return cmds.toString();
     }
 
     private void doCompletion()

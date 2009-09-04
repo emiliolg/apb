@@ -1,8 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jalopy vendor="TRIEMAX">
- <profile name="default">
+ <profile name="apb">
+  <html>
+   <output>
+    <blankLines>
+     <keepUpTo>2</keepUpTo>
+    </blankLines>
+    <indent>
+     <size>2</size>
+    </indent>
+    <wrap>
+     <attributes>never</attributes>
+     <keepBreak>
+      <tags>false</tags>
+      <text>false</text>
+     </keepBreak>
+     <size>80</size>
+     <text>necessary</text>
+    </wrap>
+   </output>
+  </html>
   <internal>
-   <version>36</version>
+   <version>38</version>
   </internal>
   <java>
    <general>
@@ -120,7 +139,7 @@
     </alignment>
     <annotation>
      <insert>false</insert>
-     <patterns></patterns>
+     <patterns />
     </annotation>
     <blanklines>
      <abstractNone>false</abstractNone>
@@ -129,6 +148,8 @@
       <assign>0</assign>
       <block>1</block>
       <braceLeft>0</braceLeft>
+      <braceLeftClass>-1</braceLeftClass>
+      <braceLeftMethod>-1</braceLeftMethod>
       <braceLeftNewline>0</braceLeftNewline>
       <class>1</class>
       <comment>
@@ -239,6 +260,7 @@
       <doWhile>true</doWhile>
       <for>true</for>
       <ifElse>true</ifElse>
+      <singleIf>true</singleIf>
       <singleLine>false</singleLine>
       <switch>false</switch>
       <while>true</while>
@@ -253,6 +275,7 @@
       <doWhile>false</doWhile>
       <for>false</for>
       <ifElse>false</ifElse>
+      <singleIf>false</singleIf>
       <switch>true</switch>
       <while>false</while>
      </remove>
@@ -280,6 +303,9 @@
       <singleLine>false</singleLine>
      </format>
      <javadoc>
+      <blankLines>
+       <xdoclet>-1</xdoclet>
+      </blankLines>
       <blockTagsShort>false</blockTagsShort>
       <check>
        <description>
@@ -305,6 +331,9 @@
        <throwsTags>false</throwsTags>
       </check>
       <classShort>false</classShort>
+      <compact>
+       <attribute>false</attribute>
+      </compact>
       <enumShort>false</enumShort>
       <failOnError>false</failOnError>
       <fieldsShort>true</fieldsShort>
@@ -314,7 +343,7 @@
        <constructor>0</constructor>
        <enabled>false</enabled>
        <excludeOverride>false</excludeOverride>
-       <exclusions></exclusions>
+       <exclusions />
        <field>0</field>
        <formatBeanProperty>true</formatBeanProperty>
        <method>0</method>
@@ -333,10 +362,10 @@
        <align>true</align>
        <alignAttributes>false</alignAttributes>
        <custom>
-        <html></html>
-        <inline></inline>
-        <standard></standard>
-        <xdoclet></xdoclet>
+        <html />
+        <inline />
+        <standard />
+        <xdoclet />
        </custom>
        <group>true</group>
        <indent>true</indent>
@@ -346,6 +375,7 @@
        <removeMisused>false</removeMisused>
        <sort>false</sort>
        <sortAttributes>false</sortAttributes>
+       <sortXDoclet>false</sortXDoclet>
        <spelling>false</spelling>
       </tags>
       <templates>
@@ -428,17 +458,17 @@
       <javadoc>
        <all>false</all>
        <enable>false</enable>
-       <pattern></pattern>
+       <pattern />
       </javadoc>
       <multiLine>
        <all>false</all>
        <enable>false</enable>
-       <pattern></pattern>
+       <pattern />
       </multiLine>
       <singleLine>
        <all>false</all>
        <enable>false</enable>
-       <pattern></pattern>
+       <pattern />
       </singleLine>
      </remove>
      <separator>
@@ -472,13 +502,13 @@
       <singleLine>false</singleLine>
      </wrap>
     </comments>
-    <environment></environment>
+    <environment />
     <footer>
      <keepTags>false</keepTags>
-     <keys></keys>
+     <keys />
      <override>true</override>
      <smartMode>0</smartMode>
-     <text></text>
+     <text />
      <use>false</use>
     </footer>
     <header>
@@ -597,7 +627,7 @@
     <searchAndReplace>
      <javadoc>false</javadoc>
      <multiLine>false</multiLine>
-     <patterns></patterns>
+     <patterns />
      <singleLine>false</singleLine>
      <stringLiteral>false</stringLiteral>
     </searchAndReplace>
@@ -639,7 +669,7 @@
        <enable>true</enable>
        <level>true</level>
        <name>true</name>
-       <order>level|name|type</order>
+       <order>level|type|name</order>
        <type>true</type>
       </field>
       <interface>
@@ -658,7 +688,7 @@
        <order>level|name|count|bean|custom|regex</order>
        <regex>
         <enable>false</enable>
-        <order></order>
+        <order />
        </regex>
       </method>
       <modifier>
@@ -917,12 +947,17 @@
      </emptyParen>
     </whitespace>
     <wrapping>
+     <after>
+      <annotationMember>always</annotationMember>
+      <leftParenthesis>
+       <annotation>whenExceed</annotation>
+      </leftParenthesis>
+     </after>
      <allWhenFirst>
       <operator>false</operator>
      </allWhenFirst>
      <always>
       <after>
-       <annotationMember>true</annotationMember>
        <arrayElement>0</arrayElement>
        <assignRegistry>false</assignRegistry>
        <braceRight>true</braceRight>
@@ -956,6 +991,11 @@
        <methodDeclaration>false</methodDeclaration>
       </parameter>
      </always>
+     <before>
+      <rightParenthesis>
+       <annotation>whenExceed</annotation>
+      </rightParenthesis>
+     </before>
      <general>
       <avoidBareLeftParen>false</avoidBareLeftParen>
       <beforeOperator>false</beforeOperator>
@@ -1027,17 +1067,18 @@
    </backup>
    <convention>
     <description>ELG Java Coding Convention</description>
-    <local></local>
+    <local />
     <location>file:/Users/emilio/apb/data/jalopyCodeConvention.xml</location>
     <name>ELG</name>
     <synchronize>false</synchronize>
    </convention>
+   <exclusions />
    <fileTypes><![CDATA[Java
 *.java
 *.sqlj
 ---]]></fileTypes>
    <history>
-    <location></location>
+    <location />
     <method>adler32</method>
    </history>
    <locale>
@@ -1047,15 +1088,20 @@
     <timePattern>HH:mm:ss (Z)</timePattern>
    </locale>
    <misc>
+    <checkout>false</checkout>
+    <encoding>UTF-8</encoding>
+    <forceEncoding>false</forceEncoding>
     <forceFormatting>false</forceFormatting>
     <forceLineSeparator>false</forceLineSeparator>
     <formatOnCheckin>false</formatOnCheckin>
+    <formatOnGeneration>false</formatOnGeneration>
     <formatOnLoad>false</formatOnLoad>
     <formatOnSave>false</formatOnSave>
     <keepEditorState>false</keepEditorState>
     <lineSeparator>AUTO</lineSeparator>
     <testFormatting>false</testFormatting>
     <threadCount>2</threadCount>
+    <useEditorPreview>false</useEditorPreview>
    </misc>
    <project>
     <autoSwitch>true</autoSwitch>

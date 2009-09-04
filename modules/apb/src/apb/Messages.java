@@ -83,12 +83,10 @@ public class Messages
         return "Module's manifest is overriden by " + file.getAbsolutePath() + "\n";
     }
 
-    static String COMMANDS(String cmds)
-    {
-        return "command : one of " + cmds;
-    }
-
     //~ Static fields/initializers ...........................................................................
+
+    public static final String COMMANDS =
+        "command : help and others. (Execute the help command over a module to get the actual list).";
 
     public static final String BUILD_FAILED = "\nBUILD FAILED !!\n";
 

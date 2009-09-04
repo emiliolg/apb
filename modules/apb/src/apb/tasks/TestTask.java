@@ -19,7 +19,6 @@
 package apb.tasks;
 
 import java.io.File;
-import static java.io.File.pathSeparator;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -39,23 +38,31 @@ import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;
-import apb.Apb;
+
 import apb.coverage.CoverageBuilder;
+
 import apb.metadata.CoverageInfo;
 import apb.metadata.TestModule;
+
 import apb.testrunner.Invocation;
 import apb.testrunner.TestRunner;
-import static apb.testrunner.TestRunner.listTests;
-import static apb.testrunner.TestRunner.worseResult;
 import apb.testrunner.output.SimpleReport;
 import apb.testrunner.output.TestReport;
 import apb.testrunner.output.TestReportBroadcaster;
+
 import apb.utils.FileUtils;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static java.io.File.pathSeparator;
+
+import static apb.testrunner.TestRunner.listTests;
+import static apb.testrunner.TestRunner.worseResult;
+
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
 import static apb.utils.StringUtils.makeString;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Nov 5, 2008
@@ -75,19 +82,8 @@ public class TestTask
     /**
      * Run EACH test suite in an independent (fork'ed) process
      */
-    boolean forkPerSuite;
-
-    /**
-     * The classes to be tested
-     */
-    @NotNull private final List<File> classesToTest;
-
-    /**
-     * The classpath for the tests
-     */
-    @NotNull private Collection<File>   classPath;
-    private boolean                     classPathInSystemClassloader;
-    @NotNull private final CoverageInfo coverage;
+    boolean         forkPerSuite;
+    private boolean classPathInSystemClassloader;
 
     /**
      * Enable assertions when running the tests
@@ -100,11 +96,6 @@ public class TestTask
     private boolean enableDebugger;
 
     /**
-     * The list of tests to exclude
-     */
-    @NotNull private List<String> excludes;
-
-    /**
      * Fail if no tests are found
      */
     private boolean failIfEmpty;
@@ -115,26 +106,42 @@ public class TestTask
     private boolean failOnError;
 
     /**
+     * The classpath for the tests
+     */
+    @NotNull private Collection<File>   classPath;
+    @NotNull private final CoverageInfo coverage;
+    @Nullable private File              reportDir;
+
+    /**
+     * The classes to be tested
+     */
+    @NotNull private final List<File> classesToTest;
+
+    /**
+     * The list of tests to exclude
+     */
+    @NotNull private List<String> excludes;
+
+    /**
      * The list of tests to include
      */
     @NotNull private List<String> includes;
 
     /**
-     * The test module helper
+     * The list of test groups to execute
      */
-    private TestModuleHelper moduleHelper;
+    @NotNull private final List<String> testGroups;
 
     /**
      * List of System properties to pass to the tests.
      */
     @NotNull private Map<String, String> properties;
-    @NotNull private TestReport          report;
-    @Nullable private File               reportDir;
 
     /**
-     * The list of test groups to execute
+     * The test module helper
      */
-    @NotNull private final List<String> testGroups;
+    private TestModuleHelper    moduleHelper;
+    @NotNull private TestReport report;
 
     //~ Constructors .........................................................................................
 
@@ -350,7 +357,9 @@ public class TestTask
     private int executeEachSuite(@NotNull File reportSpecsFile, @NotNull CoverageBuilder coverageBuilder)
         throws Exception
     {
-        ClassLoader cl = createClassLoader(classPath);
+        List<File> cp = new ArrayList<File>(classPath);
+        cp.add(moduleHelper.getOutput());
+        ClassLoader cl = createClassLoader(cp);
 
         final Invocation  creator = testCreator();
         final Set<String> tests = listTests(cl, creator, moduleHelper.getOutput(), includes, excludes);

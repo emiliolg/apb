@@ -33,17 +33,18 @@ import apb.metadata.Library;
 import apb.metadata.Module;
 import apb.metadata.PackageInfo;
 import apb.metadata.PackageType;
-import apb.metadata.ProjectElement;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
 
 import apb.tasks.RemoveTask;
 
+import apb.utils.CollectionUtils;
 import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static apb.utils.CollectionUtils.addIfNotNull;
 //
@@ -57,35 +58,25 @@ public class ModuleHelper
 {
     //~ Instance fields ......................................................................................
 
-    private final List<ModuleHelper>          dependencies;
-    @NotNull private final List<ModuleHelper> directDependencies;
+    @Nullable private File generatedSource;
+    @Nullable private File output;
+    @Nullable private File packageFile;
+    @Nullable private File source;
+    @Nullable private File sourcePackageFile;
 
-    private File                         generatedSource;
-    @NotNull private final List<Library> localLibraries;
-    private File                         output;
-    private File                         packageDir;
-    private File                         source;
+    @Nullable private Iterable<ModuleHelper>     dependencies;
+    @Nullable private Iterable<ModuleHelper>     directDependencies;
+    @Nullable private Iterable<Library>          localLibraries;
+    @Nullable private Iterable<TestModuleHelper> testModules;
 
     //~ Constructors .........................................................................................
 
-    ModuleHelper(Module module, Environment env)
+    ModuleHelper(ProjectBuilder pb, Module module)
     {
-        super(module, env);
-
-        dependencies = new ArrayList<ModuleHelper>();
-
-        directDependencies = new ArrayList<ModuleHelper>();
-        localLibraries = new ArrayList<Library>();
-
-        // Add Direct Dependencies & local libraries
-        for (Dependency dependency : module.dependencies()) {
-            if (dependency.isModule()) {
-                directDependencies.add((ModuleHelper) ProjectBuilder.findHelper(dependency.asModule()));
-            }
-            else if (dependency.isLibrary()) {
-                localLibraries.add(dependency.asLibrary());
-            }
-        }
+        super(pb, module);
+        putProperty(MODULE_PROP_KEY, getName());
+        putProperty(MODULE_PROP_KEY + ID_SUFFIX, getId());
+        putProperty(MODULE_PROP_KEY + DIR_SUFFIX, module.getDir());
     }
 
     //~ Methods ..............................................................................................
@@ -98,55 +89,158 @@ public class ModuleHelper
     /**
      * Get current module output directory
      * @return current module output directory
-     * @throws IllegalStateException If there is no current module
      */
     @NotNull public File getOutput()
     {
         if (output == null) {
-            throw new IllegalStateException("Module:'" + getName() + "' not initialized");
+            output = fileFromBase(getModule().output);
         }
 
         return output;
     }
 
-    public File getSource()
+    /**
+     * Get current module source directory
+     * @return current module source directory
+     */
+    @NotNull public File getSource()
     {
+        if (source == null) {
+            source = fileFromBase(getModule().source);
+        }
+
         return source;
     }
 
-    public File getPackageFile()
+    /**
+     * Get current module generated sources directory
+     * @return current module generated sources directory
+     */
+    @NotNull public File getGeneratedSource()
     {
-        return new File(packageDir, getPackageName() + getPackageInfo().type.getExt());
+        if (generatedSource == null) {
+            generatedSource = fileFromBase(getModule().generatedSource);
+        }
+
+        return generatedSource;
     }
 
-    public File getSourcePackageFile()
+    /**
+     * Get current module package (.jar, .war etc) file
+     * @return current module pacjage file
+     */
+    @NotNull public File getPackageFile()
     {
-        return new File(packageDir, getPackageName() + SRC_JAR);
+        if (packageFile == null) {
+            if (!hasPackage()) {
+                throw new IllegalArgumentException("Module: '" + getName() + "' does not have a package.");
+            }
+
+            File dir = FileUtils.normalizeFile(fileFromBase(getModule().pkg.dir));
+            packageFile = new File(dir, getPackageName() + getPackageType().getExt());
+        }
+
+        return packageFile;
     }
 
-    public PackageInfo getPackageInfo()
+    /**
+     * Get current module sources package (xxxx-src.jar) file
+     * @return current module sources package file
+     */
+    @NotNull public File getSourcePackageFile()
+    {
+        if (sourcePackageFile == null) {
+            File dir = FileUtils.normalizeFile(fileFromBase(getModule().pkg.dir));
+            sourcePackageFile = new File(dir, getPackageName() + SRC_JAR);
+        }
+
+        return sourcePackageFile;
+    }
+
+    @NotNull public PackageInfo getPackageInfo()
     {
         return getModule().pkg;
     }
 
-    @NotNull public List<Library> getLocalLibraries()
+    public boolean hasPackage()
     {
-        return localLibraries;
+        return getPackageType() != PackageType.NONE;
     }
 
-    public ResourcesInfo getResourcesInfo()
+    @NotNull public PackageType getPackageType()
+    {
+        return getPackageInfo().type;
+    }
+
+    @NotNull public ResourcesInfo getResourcesInfo()
     {
         return getModule().resources;
     }
 
     @NotNull public Iterable<ModuleHelper> getDirectDependencies()
     {
+        if (directDependencies == null) {
+            ArrayList<ModuleHelper> list = new ArrayList<ModuleHelper>();
+
+            for (Dependency dependency : getModule().dependencies()) {
+                if (dependency.isModule()) {
+                    list.add(dependency.asModule().getHelper());
+                }
+            }
+
+            directDependencies = list;
+        }
+
         return directDependencies;
+    }
+
+    @NotNull public Iterable<Library> getLocalLibraries()
+    {
+        if (localLibraries == null) {
+            List<Library> list = new ArrayList<Library>();
+
+            for (Dependency dependency : getModule().dependencies()) {
+                if (dependency.isLibrary()) {
+                    list.add(dependency.asLibrary());
+                }
+            }
+
+            localLibraries = list;
+        }
+
+        return localLibraries;
     }
 
     @NotNull public Iterable<ModuleHelper> getDependencies()
     {
+        if (dependencies == null) {
+            // Topological Sort elements
+            List<ModuleHelper> list = new ArrayList<ModuleHelper>();
+            tsort(list, new IdentitySet<ModuleHelper>());
+
+            if (mustShow(DebugOption.DEPENDENCIES)) {
+                logVerbose("Dependencies for: %s = %s\n", getName(), list.toString());
+            }
+
+            dependencies = list;
+        }
+
         return dependencies;
+    }
+
+    @NotNull public Iterable<TestModuleHelper> getTestModules()
+    {
+        if (testModules == null) {
+            List<TestModuleHelper> list = new ArrayList<TestModuleHelper>();
+
+            for (TestModule testModule : getModule().tests()) {
+                list.add(testModule.getHelper());
+            }
+
+            testModules = list;
+        }
+
+        return testModules;
     }
 
     public List<File> compileClassPath()
@@ -180,11 +274,6 @@ public class ModuleHelper
         return result;
     }
 
-    public File getGeneratedSource()
-    {
-        return generatedSource;
-    }
-
     public List<File> getSourceDirs()
     {
         List<File> sourceDirs = new ArrayList<File>();
@@ -213,11 +302,13 @@ public class ModuleHelper
     {
         Set<ModuleHelper> result = new LinkedHashSet<ModuleHelper>();
 
-        for (ModuleHelper mod : dependencies) {
-            mod.addTo(result);
+        for (ModuleHelper mod : getDependencies()) {
+            result.add(mod);
+            CollectionUtils.addAll(result, mod.getTestModules());
         }
 
-        addTo(result);
+        result.add(this);
+        CollectionUtils.addAll(result, getTestModules());
 
         return result;
     }
@@ -225,11 +316,6 @@ public class ModuleHelper
     public List<File> runtimePath()
     {
         return classPath(false, true, false);
-    }
-
-    public boolean hasPackage()
-    {
-        return getPackageInfo().type != PackageType.NONE;
     }
 
     public List<String> manifestClassPath()
@@ -259,16 +345,6 @@ public class ModuleHelper
         RemoveTask.remove(this, getGeneratedSource());
     }
 
-    protected void initDependencyGraph()
-    {
-        // Topological Sort elements
-        tsort(dependencies, new IdentitySet<ModuleHelper>());
-
-        if (mustShow(DebugOption.DEPENDENCIES)) {
-            logVerbose("Dependencies for: %s = %s\n", getName(), dependencies.toString());
-        }
-    }
-
     protected void build(ProjectBuilder pb, String commandName)
     {
         Command command = findCommand(commandName);
@@ -278,7 +354,7 @@ public class ModuleHelper
         }
 
         if (command.isRecursive() && !isNonRecursive()) {
-            for (ModuleHelper dep : dependencies) {
+            for (ModuleHelper dep : getDependencies()) {
                 pb.execute(dep, commandName);
             }
         }
@@ -289,23 +365,6 @@ public class ModuleHelper
         }
 
         pb.execute(this, commandName);
-    }
-
-    void init(@NotNull ProjectElement activatedModule)
-    {
-        super.init(activatedModule);
-
-        Module module = getModule();
-        output = fileFromBase(module.output);
-        source = fileFromBase(module.source);
-        generatedSource = fileFromBase(module.generatedSource);
-
-        packageDir = FileUtils.normalizeFile(fileFromBase(module.pkg.dir));
-
-        for (TestModule testModule : module.tests()) {
-            final TestModuleHelper helper = (TestModuleHelper) ProjectBuilder.findHelper(testModule);
-            helper.setModuleToTest(this);
-        }
     }
 
     private static String trimDashes(String s)
@@ -323,28 +382,20 @@ public class ModuleHelper
             result.add(getOutput());
         }
 
-        for (Dependency dependency : getModule().dependencies()) {
-            if (dependency.mustInclude(compile)) {
-                if (dependency.isModule()) {
-                    ModuleHelper hlp = (ModuleHelper) ProjectBuilder.findHelper(dependency.asModule());
-                    result.add(useJars && hlp.hasPackage() ? hlp.getPackageFile() : hlp.getOutput());
-                }
-                else if (dependency.isLibrary()) {
-                    addIfNotNull(result, dependency.asLibrary().getArtifact(this, PackageType.JAR));
-                }
+        // Add dependencies from modules
+        for (ModuleHelper module : getDirectDependencies()) {
+            if (module.getModule().mustInclude(compile)) {
+                result.add(useJars && module.hasPackage() ? module.getPackageFile() : module.getOutput());
+            }
+        }
+
+        for (Library lib : getLocalLibraries()) {
+            if (lib.mustInclude(compile)) {
+                addIfNotNull(result, lib.getArtifact(this, PackageType.JAR));
             }
         }
 
         return result;
-    }
-
-    private void addTo(Set<ModuleHelper> result)
-    {
-        result.add(this);
-
-        for (TestModule testModule : getModule().tests()) {
-            result.add((ModuleHelper) ProjectBuilder.findHelper(testModule));
-        }
     }
 
     /**
@@ -356,7 +407,7 @@ public class ModuleHelper
     {
         visited.add(this);
 
-        for (ModuleHelper dependency : directDependencies) {
+        for (ModuleHelper dependency : getDirectDependencies()) {
             if (!visited.contains(dependency)) {
                 dependency.tsort(elements, visited);
                 elements.add(dependency);
@@ -366,5 +417,6 @@ public class ModuleHelper
 
     //~ Static fields/initializers ...........................................................................
 
-    public static final String SRC_JAR = "-src.jar";
+    public static final String  SRC_JAR = "-src.jar";
+    private static final String MODULE_PROP_KEY = "module";
 }

@@ -23,10 +23,12 @@ import java.util.List;
 
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
+
 import apb.tasks.CopyTask;
 import apb.tasks.JarTask;
 import apb.tasks.JavacTask;
 import apb.tasks.JavadocTask;
+
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -82,19 +84,9 @@ public class Module
     @BuildProperty public final CompileInfo compiler = new CompileInfo();
 
     /**
-     * The directory where the generated source files for this module are placed
-     */
-    @BuildProperty public String generatedSource = "output/$moduledir/gsrc";
-
-    /**
      * All the info for Javadoc
      */
     @BuildProperty public JavadocInfo javadoc = new JavadocInfo();
-
-    /**
-     * The directory for the output classes
-     */
-    @BuildProperty public String output = "output/$moduledir/classes";
 
     /**
      * All the info for the package (Jar,War, etc)
@@ -105,6 +97,16 @@ public class Module
      * All the info for processing resources
      */
     @BuildProperty public ResourcesInfo resources = new ResourcesInfo();
+
+    /**
+     * The directory where the generated source files for this module are placed
+     */
+    @BuildProperty public String generatedSource = "output/$moduledir/gsrc";
+
+    /**
+     * The directory for the output classes
+     */
+    @BuildProperty public String output = "output/$moduledir/classes";
 
     /**
      * The directory where the source files for this module are placed
@@ -133,8 +135,8 @@ public class Module
         return tests;
     }
 
-    @Override
-    public ModuleHelper getHelper() {
+    @NotNull @Override public ModuleHelper getHelper()
+    {
         return (ModuleHelper) super.getHelper();
     }
 
@@ -180,13 +182,38 @@ public class Module
         JavadocTask.execute(getHelper());
     }
 
+    @NotNull public Module asModule()
+    {
+        return this;
+    }
+
+    public boolean isModule()
+    {
+        return true;
+    }
+
+    public boolean isLibrary()
+    {
+        return false;
+    }
+
+    @NotNull public Library asLibrary()
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean mustInclude(boolean compile)
+    {
+        return true;
+    }
+
     /**
      * Method used to set dependencies when defining a module
      * @param dependencyList The list of dependencies to be set
      */
     protected final void dependencies(Dependencies... dependencyList)
     {
-            dependencies.addAll(dependencyList);
+        dependencies.addAll(dependencyList);
     }
 
     /**
@@ -196,7 +223,7 @@ public class Module
     protected final void tests(TestModule... testList)
     {
         for (TestModule test : testList) {
-            test.setModule(this);
+            test.setModuleToTest(this);
             tests.add(NameRegistry.intern(test));
         }
     }
@@ -208,8 +235,9 @@ public class Module
 
     protected Dependencies compile(Dependency... dep)
     {
-        return DecoratedDependency.asCompileOnly(dep);         
+        return DecoratedDependency.asCompileOnly(dep);
     }
+
     protected Dependencies runtime(Dependency... dep)
     {
         return DecoratedDependency.asRuntimeOnly(dep);
@@ -218,28 +246,5 @@ public class Module
     protected LocalLibrary optionalLibrary(String path)
     {
         return new LocalLibrary(path, true);
-    }
-
-    @NotNull
-    public Module asModule() {
-        return this;
-    }
-
-    public boolean isModule() {
-        return true;
-    }
-
-    public boolean isLibrary() {
-        return false;
-    }
-
-    @NotNull
-    public Library asLibrary() {
-       throw new UnsupportedOperationException();
-    }
-
-    public boolean mustInclude(boolean compile)
-    {
-        return true;
     }
 }

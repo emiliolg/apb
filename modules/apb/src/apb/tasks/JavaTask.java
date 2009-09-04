@@ -26,13 +26,16 @@ import java.util.Map;
 
 import apb.Environment;
 import apb.ModuleHelper;
-import apb.ProjectBuilder;
+
 import apb.metadata.Dependency;
 import apb.metadata.DependencyList;
 import apb.metadata.PackageType;
-import static apb.utils.CollectionUtils.addIfNotNull;
+
 import apb.utils.FileUtils;
+
 import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.CollectionUtils.addIfNotNull;
 //
 // User: emilio
 // Date: Oct 22, 2008
@@ -44,17 +47,18 @@ public class JavaTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private String             classpath = "";
-    private final boolean                     executeJar;
-    private int                         exitValue;
-    private final String                      jarOrClass;
-    @NotNull private final List<String> javaArgs;
+    private final boolean executeJar;
+    private int           exitValue;
 
     /**
      * Max memory in megabytes used by the Java command
      */
     private int                                memory = 256;
+    @NotNull private final List<String>        javaArgs;
     @NotNull private final Map<String, String> properties;
+
+    @NotNull private String classpath = "";
+    private final String    jarOrClass;
 
     //~ Constructors .........................................................................................
 
@@ -103,8 +107,7 @@ public class JavaTask
                 addIfNotNull(result, dependency.asLibrary().getArtifact(env, PackageType.JAR));
             }
             else if (dependency.isModule()) {
-                final ModuleHelper module = (ModuleHelper) ProjectBuilder.findHelper(dependency.asModule());
-                result.addAll(module.deepClassPath(false, true));
+                result.addAll(dependency.asModule().getHelper().deepClassPath(false, true));
             }
         }
 

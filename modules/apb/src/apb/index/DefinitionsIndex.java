@@ -35,9 +35,11 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import apb.BuildException;
-import apb.ProjectBuilder;
 import apb.Environment;
+import apb.ProjectBuilder;
+
 import apb.utils.FileUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,9 +54,10 @@ public class DefinitionsIndex
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final String[]               excludeDirs;
-    @NotNull private final Map<File, ModulesInfo> mdir;
     @NotNull private final Collection<ModuleInfo> modules;
+    @NotNull private final Map<File, ModulesInfo> mdir;
+
+    @NotNull private final String[] excludeDirs;
 
     //~ Constructors .........................................................................................
 
@@ -159,7 +162,7 @@ public class DefinitionsIndex
                 mustStore = true;
                 info = new ModulesInfo(pdir, lastModified);
                 ProjectBuilder pb = new ProjectBuilder(e, projectPath);
-                info.loadModulesInfo(pb, files);
+                info.loadModulesInfo(e, pb, files);
                 mdir.put(pdir, info);
             }
 

@@ -23,11 +23,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedMap;
 
-import apb.metadata.Module;
-import apb.metadata.Project;
 import apb.metadata.ProjectElement;
 import apb.metadata.Synthetic;
-import apb.metadata.TestModule;
 
 import apb.utils.FileUtils;
 import apb.utils.PropertyExpansor;
@@ -46,58 +43,37 @@ public abstract class ProjectElementHelper
     //~ Instance fields ......................................................................................
 
     @NotNull protected final Set<Command> executedCommands;
-    @Nullable ProjectElement              element;
-
-    private CommandBuilder      builder;
-    @NotNull private final File projectDirectory;
-
-    @NotNull private final ProjectElement proto;
-    @NotNull private final File           sourceFile;
+    private boolean                       initialized;
     private boolean                       topLevel;
+
+    @Nullable private CommandBuilder      commandBuilder;
+    @NotNull private final File           projectDirectory;
+    @NotNull private final File           sourceFile;
+    @NotNull private final ProjectElement element;
 
     //~ Constructors .........................................................................................
 
-    protected ProjectElementHelper(@NotNull ProjectElement element, @NotNull Environment environment)
+    protected ProjectElementHelper(@NotNull ProjectBuilder pb, @NotNull ProjectElement element)
     {
-        super(environment);
-        proto = element;
+        super(pb.getBaseEnvironment());
+        this.element = element;
         executedCommands = new HashSet<Command>();
-        final ProjectBuilder pb = ProjectBuilder.getInstance();
-        pb.registerHelper(this);
 
         if (element instanceof Synthetic) {
-            sourceFile = projectDirectory = new File("");
+            projectDirectory = ((Synthetic) element).getProjectDirectory();
+            sourceFile = new File(projectDirectory, element.getClass().getSimpleName());
         }
         else {
             sourceFile = pb.sourceFile(element);
             projectDirectory = findProjectDir(element, sourceFile);
         }
+
+        initialized = false;
     }
 
     //~ Methods ..............................................................................................
 
     public abstract Set<ModuleHelper> listAllModules();
-
-    @NotNull public static ProjectElementHelper create(ProjectElement element, Environment environment)
-    {
-        element.init();
-        ProjectElementHelper result;
-
-        if (element instanceof TestModule) {
-            result = new TestModuleHelper((TestModule) element, environment);
-        }
-        else if (element instanceof Module) {
-            result = new ModuleHelper((Module) element, environment);
-        }
-        else {
-            result = new ProjectHelper((Project) element, environment);
-        }
-
-        result.init(new PropertyExpansor(result).expand(element));
-
-        result.initDependencyGraph();
-        return result;
-    }
 
     public final String toString()
     {
@@ -106,29 +82,21 @@ public abstract class ProjectElementHelper
 
     @NotNull public final String getName()
     {
-        return proto.getName();
+        return element.getName();
     }
 
     public final String getId()
     {
-        return proto.getId();
+        return element.getId();
     }
 
     @NotNull public ProjectElement getElement()
     {
-        if (element == null) {
-            throw new IllegalStateException("Not activated element: " + getName());
-        }
-
         return element;
     }
 
     @NotNull public final File getBaseDir()
     {
-        if (element == null) {
-            throw new IllegalStateException("Element not initialized");
-        }
-
         return new File(element.basedir);
     }
 
@@ -154,12 +122,12 @@ public abstract class ProjectElementHelper
 
     public final SortedMap<String, Command> listCommands()
     {
-        return getBuilder().commands();
+        return getCommandBuilder().commands();
     }
 
     public Command findCommand(String commandName)
     {
-        return getBuilder().commands().get(commandName);
+        return getCommandBuilder().commands().get(commandName);
     }
 
     /**
@@ -169,10 +137,10 @@ public abstract class ProjectElementHelper
      */
     @NotNull public File getDirFile()
     {
-        File result = new File(expand(proto.getDir()));
+        File result = new File(expand(element.getDir()));
 
         if (!result.isAbsolute()) {
-            File basedir = new File(expand(proto.basedir));
+            File basedir = new File(expand(element.basedir));
 
             basedir = FileUtils.normalizeFile(basedir);
 
@@ -180,11 +148,6 @@ public abstract class ProjectElementHelper
         }
 
         return result;
-    }
-
-    public void remove()
-    {
-        ProjectBuilder.getInstance().remove(this);
     }
 
     @NotNull public File getSourceFile()
@@ -200,24 +163,27 @@ public abstract class ProjectElementHelper
         return projectDirectory;
     }
 
-    @NotNull public CommandBuilder getBuilder()
+    @NotNull public CommandBuilder getCommandBuilder()
     {
-        if (builder == null) {
-            builder = new CommandBuilder(proto);
+        if (commandBuilder == null) {
+            commandBuilder = new CommandBuilder(getElement());
         }
 
-        return builder;
+        return commandBuilder;
+    }
+
+    @Override public boolean equals(Object o)
+    {
+        return this == o ||
+               o instanceof ProjectElementHelper && getName().equals(((ProjectElementHelper) o).getName());
+    }
+
+    @Override public int hashCode()
+    {
+        return getName().hashCode();
     }
 
     protected abstract void build(ProjectBuilder pb, String commandName);
-
-    protected void initDependencyGraph() {}
-
-    void init(@NotNull ProjectElement projectElement)
-    {
-        element = projectElement;
-        projectElement.helper = this;
-    }
 
     void markExecuted(Command cmd)
     {
@@ -227,6 +193,15 @@ public abstract class ProjectElementHelper
     boolean notExecuted(Command cmd)
     {
         return !executedCommands.contains(cmd);
+    }
+
+    void init()
+    {
+        if (!initialized) {
+            PropertyExpansor.expandProperties(this, "", getElement());
+            getElement().init();
+            initialized = true;
+        }
     }
 
     private static File findProjectDir(ProjectElement proto, File sourceFile)
@@ -240,4 +215,9 @@ public abstract class ProjectElementHelper
 
         return result;
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    static final String ID_SUFFIX = "id";
+    static final String DIR_SUFFIX = "dir";
 }

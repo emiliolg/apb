@@ -20,13 +20,16 @@ package apb;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
 import apb.utils.CollectionUtils;
+import apb.utils.DebugOption;
 import apb.utils.FileUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,15 +41,31 @@ import org.jetbrains.annotations.Nullable;
  * - Error handling
  */
 
-public abstract class BaseEnvironment
+final class BaseEnvironment
     extends DefaultEnvironment
 {
     //~ Instance fields ......................................................................................
 
     /**
+     * Control what to show when logging
+     */
+
+    @NotNull protected final EnumSet<DebugOption> debugOptions;
+
+    /**
      * The directory where the project definition files are stored
      */
     @Nullable File projectsHome;
+
+    private boolean failOnError = true;
+    private boolean forceBuild;
+
+    private boolean nonRecursive;
+
+    /**
+     * Processing and messaging options
+     */
+    private boolean quiet;
 
     /**
      * Override properties are argument properties
@@ -65,16 +84,15 @@ public abstract class BaseEnvironment
      * Crate an Environment
      * @param override
      */
-    protected BaseEnvironment(Map<String, String> override)
+    BaseEnvironment(@NotNull Logger logger, Map<String, String> override)
     {
-        // Read Environment
-        //        for (Map.Entry<String,String> entry : System.getenv().entrySet()) {
-        //            baseProperties.put(entry.getKey(), entry.getValue());
-        //        }
+        super(logger);
+        debugOptions = EnumSet.noneOf(DebugOption.class);
+
         CollectionUtils.copyProperties(properties, FileUtils.userProperties());
 
         // Read System Properties
-        overrideProperties = new TreeMap<String,String>();
+        overrideProperties = new TreeMap<String, String>();
         CollectionUtils.copyProperties(overrideProperties, System.getProperties());
         overrideProperties.putAll(override);
 
@@ -92,19 +110,97 @@ public abstract class BaseEnvironment
         return extClassPath;
     }
 
+    /**
+     * Returns true if log level is quiet
+     * @return true if log level is quiet
+     */
+    public boolean isQuiet()
+    {
+        return quiet;
+    }
 
-    @Nullable
-    protected String overrideProperty(@NotNull String id)
+    public void setQuiet()
+    {
+        quiet = true;
+        logger.setLevel(Logger.Level.WARNING);
+    }
+
+    /**
+     * Returns true if the build must NOT proceed recursive to the module dependecies
+     */
+    public boolean isNonRecursive()
+    {
+        return nonRecursive;
+    }
+
+    public void setNonRecursive(boolean b)
+    {
+        nonRecursive = b;
+    }
+
+    public void setFailOnError(boolean b)
+    {
+        failOnError = b;
+    }
+
+    @Override public String getId()
+    {
+        return "base";
+    }
+
+    /**
+     * Returns true if we want the build to proceed unconditionally without checking file timestamps
+     * @return true if we want the build to proceed unconditionally without checking file timestamps
+     */
+    public boolean forceBuild()
+    {
+        return forceBuild;
+    }
+
+    public void setForceBuild(boolean b)
+    {
+        forceBuild = b;
+    }
+
+    /**
+     * Returns true if log level is verbose
+     * @return true if log level is verbose
+     */
+    public boolean isVerbose()
+    {
+        return !debugOptions.isEmpty();
+    }
+
+    /**
+     * Returns true if must show the following option
+     */
+    public boolean mustShow(DebugOption option)
+    {
+        return debugOptions.contains(option);
+    }
+
+    public void setDebugOptions(@NotNull EnumSet<DebugOption> options)
+    {
+        debugOptions.addAll(options);
+
+        if (!options.isEmpty()) {
+            setVerbose();
+        }
+    }
+
+    public boolean isFailOnError()
+    {
+        return failOnError;
+    }
+
+    @Nullable protected String overrideProperty(@NotNull String id)
     {
         return overrideProperties.get(id);
     }
 
-    /**
-     * Do all initializations that needs properties already initialized
-     */
-    protected void postInit()
+    protected void setVerbose()
     {
-        initProxies();
+        logger.setLevel(Logger.Level.VERBOSE);
     }
 
     private static Set<File> loadExtensionsPath(Map<String, String> baseProperties)
@@ -126,23 +222,6 @@ public abstract class BaseEnvironment
         }
 
         return jars;
-    }
-
-    private void initProxies()
-    {
-        Proxy proxy = Proxy.getDefaultProxy(this);
-
-        if (proxy != null && !proxy.getHost().isEmpty()) {
-            System.setProperty("http.proxyHost", proxy.getHost());
-
-            if (proxy.getPort() > 0) {
-                System.setProperty("http.proxyPort", String.valueOf(proxy.getPort()));
-            }
-
-            if (!proxy.getNonProxyHosts().isEmpty()) {
-                System.setProperty("http.nonProxyHosts", proxy.getNonProxyHosts());
-            }
-        }
     }
 
     //~ Static fields/initializers ...........................................................................

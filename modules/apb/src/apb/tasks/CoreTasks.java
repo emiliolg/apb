@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import apb.Apb;
+import apb.Environment;
 
 import apb.metadata.UpdatePolicy;
 
@@ -33,21 +34,40 @@ public class CoreTasks
     //~ Methods ..............................................................................................
 
     /**
+     * A convenience method to write a formatted string to the apb output as a log with INFO level.
+     *
+     * @param  format
+     *         A format string as described in {@link java.util.Formatter}.
+     *         Properties in the string will be expanded.
+     *
+     * @param  args
+     *         Arguments referenced by the format specifiers in the format
+     *         string.
+     */
+    public static void printf(String format, Object... args)
+    {
+        final Environment env = Apb.getEnv();
+        env.logInfo(env.expand(format), args);
+    }
+
+    /**
      * Deletes a file or a directory
      * @param name The File or Directory to copy from
+     *             Properties in the name will be expanded.
      */
-    @NotNull public static Delete delete(@NotNull String name)
+    @NotNull public static DeleteTask delete(@NotNull String name)
     {
-        return delete(new File(name));
+        final Environment env = Apb.getEnv();
+        return new DeleteTask(new File(env.expand(name)));
     }
 
     /**
      * Deletes a file or a directory
      * @param file The File or Directory to copy from
      */
-    @NotNull public static Delete delete(@NotNull File file)
+    @NotNull public static DeleteTask delete(@NotNull File file)
     {
-        return new Delete(file);
+        return new DeleteTask(file);
     }
 
     /**
@@ -121,28 +141,13 @@ public class CoreTasks
     //~ Inner Classes ........................................................................................
 
     //
-    static class Delete
-        extends Task
-    {
-        @NotNull private File file;
-
-        Delete(@NotNull File file)
-        {
-            this.file = file;
-        }
-
-        @Override public void execute()
-        {
-            new RemoveTask(env, file).execute();
-        }
-    }
 
     static class Download
         extends Task
     {
         @NotNull private String target;
-        private UpdatePolicy    updatePolicy;
         @NotNull private String url;
+        private UpdatePolicy    updatePolicy;
 
         Download(@NotNull String url)
         {

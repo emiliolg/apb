@@ -20,10 +20,11 @@ package apb;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import apb.compiler.InMemJavaC;
 
@@ -31,12 +32,16 @@ import apb.index.ArtifactsCache;
 
 import apb.metadata.DependencyList;
 import apb.metadata.Module;
+import apb.metadata.Project;
 import apb.metadata.ProjectElement;
+import apb.metadata.TestModule;
 
 import apb.utils.DebugOption;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.Logger.Level.VERBOSE;
 
 import static apb.utils.FileUtils.JAVA_EXT;
 //
@@ -60,19 +65,14 @@ public class ProjectBuilder
     @NotNull private final ArtifactsCache artifactsCache;
 
     /**
-     * The stack of executions
+     * Track execution
      */
-    @NotNull private final LinkedList<Context> contextStack;
+    private final boolean track;
 
     /**
      * The initial Environment
      */
-    @NotNull private final Environment env;
-
-    /**
-     * A Map that contains all constructed Helpers
-     */
-    @NotNull private final Map<String, ProjectElementHelper> helpersByElement;
+    @NotNull private final Environment baseEnvironment;
 
     /**
      * The java compiler
@@ -80,43 +80,167 @@ public class ProjectBuilder
     @NotNull private final InMemJavaC javac;
 
     /**
+     * The stack of executions
+     */
+    @NotNull private final LinkedList<Context> contextStack;
+    @NotNull private final Logger              logger;
+
+    /**
+     * A Map that contains all constructed Helpers
+     */
+    @NotNull private final Map<String, ProjectElementHelper> helpers;
+
+    /**
      * The project path where files are searched
      */
     private final Set<File> projectPath;
-    /**
-     * Track execution
-     */
-    private final boolean track;
 
     //~ Constructors .........................................................................................
 
     public ProjectBuilder(Environment env, Set<File> projectPath)
     {
-        this.env = env;
+        baseEnvironment = env;
+        logger = env.getLogger();
         javac = new InMemJavaC(env);
-        helpersByElement = new HashMap<String, ProjectElementHelper>();
+        helpers = new TreeMap<String, ProjectElementHelper>();
         artifactsCache = new ArtifactsCache(env);
         this.projectPath = projectPath;
         contextStack = new LinkedList<Context>();
         currentName = "";
         instance = this;
-        track = this.env.mustShow(DebugOption.TRACK);
+        track = env.mustShow(DebugOption.TRACK);
     }
 
     //~ Methods ..............................................................................................
 
-    /**
-     * Get (Constructing it if necessary) the helper for a given element
-     * A Helper is an Object that extends the functionality of a given ProjectElement
-     * @param element The Project Element to get the helper from
-     * @return The helper for the given element
-     */
-    @NotNull public static ProjectElementHelper findHelper(@NotNull ProjectElement element)
+    public static void forward(@NotNull String command, Iterable<? extends Module> modules)
     {
-        return getInstance().getHelper(element);
+        final ProjectBuilder pb = getInstance();
+
+        for (Module module : modules) {
+            pb.build(module.getHelper(), command);
+        }
     }
 
-    @NotNull public static ProjectBuilder getInstance()
+    public static String makeStandardHeader()
+    {
+        return instance == null ? "" : instance.standardHeader();
+    }
+
+    // @Todo create an accesor
+    public static ProjectElementHelper register(ProjectElement element)
+    {
+        return getInstance().findOrCreate(element);
+    }
+
+    /**
+     * Return an instance of the ArtifactsCache
+     * that contains information avoid library Artifacts.
+     * @return The ArtifactCache
+     */
+    @NotNull public static ArtifactsCache getArtifactsCache()
+    {
+        return getInstance().artifactsCache;
+    }
+
+    @Nullable public ProjectElementHelper constructProjectElement(Environment env, @NotNull File path,
+                                                                  @NotNull File file)
+    {
+        try {
+            return loadProjectElement(env, path, file);
+        }
+        catch (Throwable e) {
+            return null;
+        }
+    }
+
+    /**
+     * Build the project
+     * Run the specified command over the given element
+     * @param env
+     *@param element The Project Element to run the command over
+     * @param command The command to be run   @throws DefinitionException if a definition problem is found over the given element
+     * @throws BuildException If an exception is raised doing the build
+     */
+    public void build(Environment env, String element, String command)
+        throws DefinitionException, BuildException
+    {
+        currentName = element;
+        File       source = projectElementFile(element);
+        final File pdir = projectDir(source);
+
+        ProjectElementHelper projectElement;
+
+        try {
+            projectElement = loadProjectElement(env, pdir, source);
+        }
+        catch (DependencyList.NullDependencyException e) {
+            throw new DefinitionException(element, e);
+        }
+        catch (Throwable e) {
+            throw new DefinitionException(element, e);
+        }
+
+        build(projectElement, command);
+    }
+
+    @NotNull public File sourceFile(ProjectElement element)
+    {
+        final File file = javac.sourceFile(element.getClass());
+
+        if (file == null) {
+            throw new IllegalStateException("Cannot find source file for: " + element.getClass());
+        }
+
+        return file;
+    }
+
+    /**
+     * Get the current command being run or null if no one
+     */
+    @NotNull public String getCurrentCommand()
+    {
+        return contextStack.isEmpty() ? "" : contextStack.getLast().getCommand();
+    }
+
+    @NotNull public String getCurrentName()
+    {
+        return currentName;
+    }
+
+    @NotNull public Environment getBaseEnvironment()
+    {
+        return baseEnvironment;
+    }
+
+    void build(@NotNull ProjectElementHelper element, @NotNull String commandName)
+    {
+        startExecution(element.getName(), commandName);
+        element.build(this, commandName);
+        endExecution();
+    }
+
+    void execute(@NotNull ProjectElementHelper element, @NotNull String commandName)
+    {
+        Environment prev = Apb.setCurrentEnv(element);
+        Command     command = element.findCommand(commandName);
+
+        if (command != null && element.notExecuted(command)) {
+            for (Command cmd : command.getDependencies()) {
+                if (element.notExecuted(cmd)) {
+                    final String cmdName = cmd.getQName();
+                    startExecution(element.getName(), cmdName);
+                    element.markExecuted(cmd);
+                    cmd.invoke(element.getElement());
+                    endExecution();
+                }
+            }
+        }
+
+        Apb.setCurrentEnv(prev);
+    }
+
+    @NotNull private static ProjectBuilder getInstance()
     {
         if (instance == null) {
             throw new IllegalStateException();
@@ -125,20 +249,45 @@ public class ProjectBuilder
         return instance;
     }
 
-    public static void forward(@NotNull String command, Iterable<? extends Module> modules)
+    private ProjectElementHelper createHelper(ProjectElement element)
     {
-        for (Module module : modules) {
-            final ProjectBuilder pb = getInstance();
-            pb.build(pb.getHelper(module), command);
+        ProjectElementHelper result;
+
+        if (element instanceof TestModule) {
+            result = new TestModuleHelper(this, (TestModule) element);
+        }
+        else if (element instanceof Module) {
+            result = new ModuleHelper(this, (Module) element);
+        }
+        else {
+            result = new ProjectHelper(this, (Project) element);
+        }
+
+        return result;
+    }
+
+    private void initHelpers()
+    {
+        final Set<ProjectElementHelper> processed = new HashSet<ProjectElementHelper>();
+        final Set<ProjectElementHelper> hs = new HashSet<ProjectElementHelper>(helpers.values());
+
+        while (!hs.isEmpty()) {
+            for (ProjectElementHelper helper : hs) {
+                helper.init();
+                processed.add(helper);
+            }
+
+            hs.addAll(helpers.values());
+            hs.removeAll(processed);
         }
     }
 
-    public String makeStandardHeader()
+    private String standardHeader()
     {
         StringBuilder result = new StringBuilder();
 
         if (track) {
-            final int depth = getInstance().contextStack.size();
+            final int depth = contextStack.size();
             result.append(apb.utils.StringUtils.nChars(depth * 4, ' '));
         }
 
@@ -173,125 +322,8 @@ public class ProjectBuilder
         return result.toString();
     }
 
-    @Nullable public ProjectElementHelper constructProjectElement(@NotNull File path, @NotNull File file)
-    {
-        try {
-            return loadProjectElement(path, file);
-        }
-        catch (Throwable e) {
-            return null;
-        }
-    }
-
-    /**
-     * Build the project
-     * Run the specified command over the given element
-     * @param element The Project Element to run the command over
-     * @param command The command to be run
-     * @throws DefinitionException if a definition problem is found over the given element
-     * @throws BuildException If an exception is raised doing the build
-     */
-    public void build(String element, String command)
-        throws DefinitionException, BuildException
-    {
-        File       source = projectElementFile(element);
-        final File pdir = projectDir(source);
-
-        ProjectElementHelper projectElement;
-
-        try {
-            projectElement = loadProjectElement(pdir, source);
-        }
-        catch (DependencyList.NullDependencyException e) {
-            throw new DefinitionException(element, e);
-        }
-        catch (Throwable e) {
-            throw new DefinitionException(element, e);
-        }
-
-        build(projectElement, command);
-    }
-
-    /**
-     * Return an instance of the ArtifactsCache
-     * that contains information avoid library Artifacts.
-     * @return The ArtifactCache
-     */
-    @NotNull public ArtifactsCache getArtifactsCache()
-    {
-        return artifactsCache;
-    }
-
-    public synchronized void registerHelper(@NotNull ProjectElementHelper helper)
-    {
-        helpersByElement.put(helper.getName(), helper);
-    }
-
-    public void remove(@NotNull ProjectElementHelper helper)
-    {
-        helpersByElement.remove(helper.getName());
-    }
-
-    @NotNull public File sourceFile(ProjectElement element)
-    {
-        final File file = javac.sourceFile(element.getClass());
-
-        if (file == null) {
-            throw new IllegalStateException("Cannot find source file for: " + element.getClass());
-        }
-
-        return file;
-    }
-
-    /**
-     * Get the current command being run or null if no one
-     */
-    @NotNull public String getCurrentCommand()
-    {
-        return contextStack.isEmpty() ? "" : contextStack.getLast().getCommand();
-    }
-
-    @NotNull public String getCurrentName()
-    {
-        return currentName;
-    }
-
-    synchronized ProjectElementHelper getHelper(ProjectElement element)
-    {
-        ProjectElementHelper result = helpersByElement.get(element.getName());
-
-        if (result == null) {
-            result = ProjectElementHelper.create(element, env);
-        }
-
-        return result;
-    }
-
-    void build(@NotNull ProjectElementHelper element, @NotNull String commandName)
-    {
-        startExecution(element.getName(), commandName);
-        element.build(this, commandName);
-        endExecution();
-    }
-
-    void execute(@NotNull ProjectElementHelper element, @NotNull String commandName)
-    {
-        Command command = element.findCommand(commandName);
-
-        if (command != null && element.notExecuted(command)) {
-            for (Command cmd : command.getDependencies()) {
-                if (element.notExecuted(cmd)) {
-                    final String cmdName = cmd.getQName();
-                    startExecution(element.getName(), cmdName);
-                    element.markExecuted(cmd);
-                    cmd.invoke(element.getElement());
-                    endExecution();
-                }
-            }
-        }
-    }
-
-    private ProjectElementHelper loadProjectElement(@NotNull File projectDirectory, @NotNull File file)
+    private ProjectElementHelper loadProjectElement(Environment env, @NotNull File projectDirectory,
+                                                    @NotNull File file)
         throws Throwable
     {
         env.putProperty(PROJECTS_HOME_PROP_KEY, projectDirectory.getAbsolutePath());
@@ -300,9 +332,9 @@ public class ProjectBuilder
             final ProjectElement element =
                 javac.loadClass(projectDirectory, file).asSubclass(ProjectElement.class).newInstance();
             currentName = element.getName();
-            final ProjectElementHelper helper = getHelper(element);
-            helper.setTopLevel(true);
-            return helper;
+            initHelpers();
+            element.getHelper().setTopLevel(true);
+            return element.getHelper();
         }
         catch (ExceptionInInitializerError e) {
             throw e.getException();
@@ -315,7 +347,7 @@ public class ProjectBuilder
         currentName = name;
 
         if (track) {
-            env.logVerbose("About to execute '%s.%s'\n", name, command);
+            logger.log(VERBOSE, "About to execute '%s.%s'\n", name, command);
         }
     }
 
@@ -327,8 +359,9 @@ public class ProjectBuilder
             final Runtime runtime = Runtime.getRuntime();
             long          free = runtime.freeMemory() / MB;
             long          total = runtime.totalMemory() / MB;
-            env.logVerbose("Execution of '%s.%s'. Finished in %d milliseconds. Memory usage: %dM of %dM\n",
-                           ctx.getElement(), ctx.getCommand(), ms, total - free, total);
+            logger.log(VERBOSE,
+                       "Execution of '%s.%s'. Finished in %d milliseconds. Memory usage: %dM of %dM\n",
+                       ctx.getElement(), ctx.getCommand(), ms, total - free, total);
         }
 
         contextStack.removeLast();
@@ -391,6 +424,19 @@ public class ProjectBuilder
         throw new FileNotFoundException(projectElement);
     }
 
+    private ProjectElementHelper findOrCreate(ProjectElement element)
+    {
+        final String         name = element.getName();
+        ProjectElementHelper result = helpers.get(name);
+
+        if (result == null) {
+            result = createHelper(element);
+            helpers.put(name, result);
+        }
+
+        return result;
+    }
+
     //~ Static fields/initializers ...........................................................................
 
     public static final int HEADER_LENGTH = 30;
@@ -404,9 +450,9 @@ public class ProjectBuilder
 
     private static class Context
     {
+        private final long   startTime;
         private final String command;
         private final String element;
-        private final long   startTime;
 
         public Context(String element, String command)
         {

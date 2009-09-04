@@ -20,7 +20,7 @@
 import apb.metadata.BuildTarget;
 import apb.metadata.Module;
 
-import apb.tasks.CoreTasks.*;
+import static apb.tasks.CoreTasks.printf;
 
 public final class HelloWorld
     extends Module
@@ -37,7 +37,7 @@ public final class HelloWorld
                  depends = "hello",
                  description = "Good Bye from APB"
                 )
-    public void bye(Environment env)
+    public void bye()
     {
         printf("Good Bye World !\n");
     }

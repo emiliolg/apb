@@ -26,14 +26,16 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;
-import apb.Apb;
+
 import apb.metadata.CoverageInfo;
 
 import apb.utils.FileUtils;
@@ -52,12 +54,12 @@ public class CoverageBuilder
     //~ Instance fields ......................................................................................
 
     @NotNull private final CoverageInfo coverage;
+    @Nullable private CoverageReport    textReport;
 
-    @NotNull private final Environment env;
+    @NotNull private final Environment      env;
+    @NotNull private final File             outputDir;
     @NotNull private final List<File>       filesDoDelete;
     @NotNull private final TestModuleHelper helper;
-    @NotNull private final File             outputDir;
-    @Nullable private CoverageReport        textReport;
 
     //~ Constructors .........................................................................................
 
@@ -98,7 +100,8 @@ public class CoverageBuilder
             args.add("-sp");
             args.add(makePath(helper.getSourcesToTest()));
             args.add("-cp");
-            args.add(makePath(Apb.applicationJarFile(), helper.getOutput()) + File.pathSeparator + makePath(cs));
+            args.add(makePath(Apb.applicationJarFile(), helper.getOutput()) + File.pathSeparator +
+                     makePath(cs));
             args.add(TESTRUNNER_MAIN);
         }
 
@@ -235,8 +238,11 @@ public class CoverageBuilder
                 ps.println("+" + p);
             }
 
-            ps.println("-apb.*");
-            ps.println("-junit.*");
+            // Exclusion set
+            Set<String> excludes = new LinkedHashSet<String>(coverage.excludes());
+            excludes.add("apb.*");
+            excludes.add("junit.*");
+            excludes.removeAll(coverage.includes());
 
             for (String p : coverage.excludes()) {
                 ps.println("-" + p);
