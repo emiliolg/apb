@@ -21,9 +21,9 @@ package apb.tasks;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Collection;
 
 import apb.utils.DirectoryScanner;
 
@@ -61,6 +61,7 @@ public abstract class FileTask
     {
         return including(Arrays.asList(patterns));
     }
+
     /**
      * Specify the list of files to include
      * @param patterns The patterns that define the list of files to include
@@ -79,6 +80,7 @@ public abstract class FileTask
     {
         return excluding(Arrays.asList(patterns));
     }
+
     /**
      * Specify the list of files to include
      * @param patterns The patterns that define the list of files to include
