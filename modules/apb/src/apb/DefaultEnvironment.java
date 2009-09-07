@@ -48,6 +48,7 @@ public abstract class DefaultEnvironment
      * The base proprty map
      */
     @NotNull protected final Map<String, String> properties;
+    @Nullable private File basedir;
 
     //~ Constructors .........................................................................................
 
@@ -250,9 +251,14 @@ public abstract class DefaultEnvironment
      */
     @NotNull public final File fileFromBase(@NotNull String name)
     {
-        final File child = new File(expand(name));
-        return FileUtils.normalizeFile(child.isAbsolute()
-                                       ? child : new File(getModuleHelper().getBaseDir(), child.getPath()));
+        final File file = new File(expand(name));
+        return fileFromBase(file);
+    }
+
+    @NotNull public File fileFromBase(@NotNull File file)
+    {
+        return FileUtils.normalizeFile(file.isAbsolute()
+                                       ? file : new File(getBaseDir(), file.getPath()));
     }
 
     /**
@@ -293,7 +299,10 @@ public abstract class DefaultEnvironment
      */
     @NotNull public File getBaseDir()
     {
-        return getModuleHelper().getBaseDir();
+        if (basedir == null) {
+            return new File(expand("$basedir"));
+        }
+        return basedir;
     }
 
     /**

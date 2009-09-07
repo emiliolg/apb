@@ -22,16 +22,22 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import apb.Apb;
+import apb.Environment;
+import apb.tasks.CoreTasks;
 import static apb.tasks.CoreTasks.delete;
+import static apb.tasks.CoreTasks.exec;
 import static apb.tests.utils.FileAssert.assertDoesNotExist;
 import static apb.tests.utils.FileAssert.assertExists;
+import junit.framework.TestCase;
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Sep 3, 2009
 // Time: 5:38:33 PM
 
 //
-public class DeleteTest
+public class ExecTest
     extends TaskTestCase
 {
     //~ Instance fields ......................................................................................
@@ -41,52 +47,29 @@ public class DeleteTest
 
     //~ Methods ..............................................................................................
 
-    public void testDirectory()
+    public void testRmDirectory()
         throws IOException
     {
         createFiles();
 
-        delete("$basedir/dir1").execute();
-        File dir = dir1;
-        assertDoesNotExist(dir);
+        exec("rm", "-rf", "$basedir/dir1").execute();
         assertExists(dir2);
-        delete(dir2).execute();
         assertDoesNotExist(dir1);
+        exec("rm", "-rf", "$basedir").execute();
         assertDoesNotExist(dir2);
+        assertDoesNotExist(basedir);
     }
-
-    public void testSingleFiles()
+    public void testExpr()
         throws IOException
     {
         createFiles();
 
-        delete("$basedir/dir1/A.java").execute();
-        delete("$basedir/dir1/B.java").execute();
-        assertDoesNotExist(new File(dir1, "A.java"));
-        assertDoesNotExist(new File(dir1, "B.java"));
-        final File file = new File(dir1, "C.java");
-
-        assertExists(file);
-
-        delete(file).execute();
-        assertDoesNotExist(file);
-    }
-
-    public void testPatternBased()
-        throws IOException
-    {
-        createFiles();
-        delete("$basedir/dir1").including("*.java").execute();
-
-        assertDoesNotExist(new File(dir1, "A.java"));
-        assertDoesNotExist(new File(dir1, "B.java"));
-        assertExists(new File(dir1, "a.txt"));
-    }
-
-    @Override protected void tearDown()
-        throws Exception
-    {
-        delete(basedir).execute();
+        exec("expr", "49", "/", "7").execute();
+        assertExists(dir2);
+        assertDoesNotExist(dir1);
+        exec("rm", "-rf", "$basedir").execute();
+        assertDoesNotExist(dir2);
+        assertDoesNotExist(basedir);
     }
 
     void createFiles()

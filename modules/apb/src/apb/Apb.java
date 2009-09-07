@@ -111,7 +111,12 @@ public class Apb
 
     public static Environment createBaseEnvironment()
     {
-        return createBaseEnvironment(new StandaloneLogger(), Collections.<String, String>emptyMap());
+        return createBaseEnvironment(Collections.<String, String>emptyMap());
+    }
+
+    public static Environment createBaseEnvironment(@NotNull final Map<String, String> ps)
+    {
+        return createBaseEnvironment(new StandaloneLogger(), ps);
     }
 
     public static Environment createBaseEnvironment(@NotNull ApbOptions options)

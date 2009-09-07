@@ -33,7 +33,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.Writer;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
@@ -50,7 +50,6 @@ import java.util.TreeSet;
 import apb.BuildException;
 import apb.Environment;
 import apb.Os;
-
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -177,17 +176,17 @@ public class FileUtils
         return result;
     }
 
-    public static File removePrefix(File filePrefix, File file)
+    public static String removePrefix(File filePrefix, File file)
     {
         String prefix = filePrefix.getAbsolutePath();
 
         String path = file.getAbsolutePath();
 
-        if (path.startsWith(prefix)) {
+        if (!path.startsWith(prefix)) {
             throw new IllegalStateException();
         }
 
-        return new File(path.substring(prefix.length() + 1));
+        return path.substring(prefix.length() + 1);
     }
 
     public static String makePath(File... files)
@@ -323,11 +322,12 @@ public class FileUtils
         throws IOException
     {
         BufferedReader reader = null;
-        Writer         writer = null;
+        PrintWriter         writer = null;
+
 
         try {
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(from), encoding));
-            writer = new OutputStreamWriter(createOutputStream(to, append), encoding);
+            writer = new PrintWriter(new OutputStreamWriter(createOutputStream(to, append), encoding));
 
             String line;
 
@@ -336,7 +336,7 @@ public class FileUtils
                     line = filter.filter(line);
                 }
 
-                writer.write(line);
+                writer.println(line);
             }
         }
         finally {
@@ -655,6 +655,42 @@ public class FileUtils
         }
 
         return p;
+    }
+
+    public static boolean equalsContent(File file1, File file2)
+    {
+        final boolean present1 = file1.exists();
+        final boolean present2 = file2.exists();
+        if (!present1 && !present2) {
+            return true;
+        }
+        if (present1 != present2)
+            return false;
+
+        try {
+            FileInputStream i1 = new FileInputStream(file1);
+            FileInputStream i2 = new FileInputStream(file2);
+            byte[]          buff1 = new byte[1024];
+            byte[]          buff2 = new byte[1024];
+            int             n;
+
+            while ((n = i1.read(buff1)) >= 0) {
+                if (i2.read(buff2) != n) {
+                    return false;
+                }
+
+                for (int i = 0; i < buff1.length; i++) {
+                    if (buff1[i] != buff2[i]) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+        catch (IOException e) {
+            return false;
+        }
     }
 
     static boolean isSymbolicLink(File file)

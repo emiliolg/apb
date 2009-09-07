@@ -17,6 +17,10 @@
 
 
 package apb.utils;
+
+import java.util.EnumSet;
+
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Jul 31, 2009
@@ -37,7 +41,7 @@ public enum DebugOption
         return super.toString().toLowerCase();
     }
 
-    public static DebugOption find(String name)
+    public static DebugOption find(@NotNull String name)
     {
         for (DebugOption option : values()) {
             if (option.toString().equalsIgnoreCase(name)) {
@@ -46,5 +50,22 @@ public enum DebugOption
         }
 
         return null;
+    }
+
+    public static EnumSet<DebugOption> findAll(@NotNull String names)
+    {
+        final EnumSet<DebugOption> result = EnumSet.noneOf(DebugOption.class);
+
+        if (!names.isEmpty()) {
+            for (String s : names.split(",")) {
+                DebugOption op = find(s);
+
+                if (op != null) {
+                    result.add(op);
+                }
+            }
+        }
+
+        return result;
     }
 }

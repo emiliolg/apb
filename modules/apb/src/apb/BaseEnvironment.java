@@ -57,15 +57,15 @@ final class BaseEnvironment
      */
     @Nullable File projectsHome;
 
+    /**
+     * The set of jars that comprise the extension class path
+     */
+    @NotNull private final Set<File> extClassPath;
+
     private boolean failOnError = true;
     private boolean forceBuild;
 
     private boolean nonRecursive;
-
-    /**
-     * Processing and messaging options
-     */
-    private boolean quiet;
 
     /**
      * Override properties are argument properties
@@ -74,9 +74,9 @@ final class BaseEnvironment
     @NotNull private final Map<String, String> overrideProperties;
 
     /**
-     * The set of jars that comprise the extension class path
+     * Processing and messaging options
      */
-    @NotNull private final Set<File> extClassPath;
+    private boolean quiet;
 
     //~ Constructors .........................................................................................
 
@@ -97,6 +97,7 @@ final class BaseEnvironment
         overrideProperties.putAll(override);
 
         extClassPath = loadExtensionsPath(properties);
+        initOptions();
     }
 
     //~ Methods ..............................................................................................
@@ -222,6 +223,11 @@ final class BaseEnvironment
         }
 
         return jars;
+    }
+
+    private void initOptions()
+    {
+        setDebugOptions(DebugOption.findAll(getProperty("debug", "")));
     }
 
     //~ Static fields/initializers ...........................................................................

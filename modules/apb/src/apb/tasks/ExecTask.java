@@ -64,6 +64,11 @@ public class ExecTask
         this.output = output;
     }
 
+    ExecTask(List<String> cmd) {
+        super(cmd);
+        output = null;
+    }
+
     //~ Methods ..............................................................................................
 
     public static List<String> executeTo(@NotNull Environment env, @NotNull List<String> cmd)

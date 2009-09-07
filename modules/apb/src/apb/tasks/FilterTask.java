@@ -20,117 +20,61 @@ package apb.tasks;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.Collections;
 
+import apb.Environment;
 import apb.Apb;
+
+import apb.metadata.ResourcesInfo;
 
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
 
-// User: emilio
-// Date: Sep 5, 2009
-// Time: 6:15:46 PM
-
-public class CopyTask
-    extends FileTask
+/**
+ * Fluent interface based Copy Task
+ */
+public class FilterTask
+    extends CopyTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull protected final File from;
-    @NotNull protected final File to;
+    @NotNull private String encoding = ResourcesInfo.DEFAULT_ENCODING;
 
     //~ Constructors .........................................................................................
 
-    protected CopyTask(@NotNull File from, @NotNull File to)
+    FilterTask(@NotNull File from, @NotNull File to)
     {
-        this.from = env.fileFromBase(from);
-        this.to = env.fileFromBase(to);
+        super(from, to);
+        excludes.addAll(ResourcesInfo.DEFAULT_DO_NOT_FILTER);
     }
 
     //~ Methods ..............................................................................................
 
     /**
-       * Execute the copy
-       */
-    public void execute()
+     * Specify the encoding to use when doing filtering
+     * If none is specfied UTF8 will be used
+     * @param enc The encoding to be used
+     */
+    @NotNull public CopyTask withEncoding(@NotNull String enc)
     {
-        /**
-         * If the source file/directory does not exists just skip the copy
-         */
-        if (!from.exists()) {
-            env.logInfo("Skip non existing from directory: %s\n", from.getPath());
-            return;
-        }
-
-        if (from.isDirectory()) {
-            copyFromDirectory(to);
-        }
-        else {
-            File dest = to.isDirectory() ? new File(to, from.getName()) : to;
-            copyFile(from, dest);
-        }
+        encoding = enc;
+        return this;
     }
 
+    @Override
     protected void copyFile(File source, File dest)
     {
         try {
-            logVerbose("Copy %s\n", source);
-            logVerbose("  to %s\n", dest);
-            FileUtils.copyFile(source, dest, false);
+            logVerbose("Filtering %s\n", source);
+            logVerbose("       to %s\n", dest);
+            final FileUtils.Filter f = new PropertyFilter(env);
+            FileUtils.copyFileFiltering(source, dest, false, encoding, Collections.singletonList(f));
         }
         catch (IOException e) {
             env.handle(e);
         }
     }
-
-    private void copyFromDirectory(@NotNull File target)
-    {
-        if (!target.exists() && !target.mkdirs()) {
-            env.handle("Cannot create resource output directory: " + target);
-            return;
-        }
-
-        if (env.isVerbose()) {
-            logVerbose("Copying resources from: %s\n", from);
-            logVerbose("                    to: %s\n", target);
-            logVerbose("              includes: %s\n", includes);
-
-            if (!excludes.isEmpty()) {
-                logVerbose("              excludes: %s\n", excludes);
-            }
-        }
-
-        Map<File, File> includedFiles = findFiles(from, target);
-
-        if (!includedFiles.isEmpty()) {
-            env.logInfo("Copying %2d resource%s\nto %s\n", includedFiles.size(),
-                        includedFiles.size() > 1 ? "s" : "", target);
-
-            for (Map.Entry<File, File> entry : includedFiles.entrySet()) {
-                copyFile(entry.getKey(), entry.getValue());
-            }
-        }
-    }
-
-    private Map<File, File> findFiles(File fromDirectory, File outputDirectory)
-    {
-        Map<File, File> files = new LinkedHashMap<File, File>();
-
-        for (String name : includedFiles(fromDirectory)) {
-            File source = new File(fromDirectory, name);
-            File target = new File(outputDirectory, name);
-
-            if (env.forceBuild() || !target.exists() || source.lastModified() > target.lastModified()) {
-                files.put(source, target);
-            }
-        }
-
-        return files;
-    }
-
-    //~ Inner Classes ........................................................................................
 
     public static class Builder
     {
@@ -161,7 +105,7 @@ public class CopyTask
         * @param to The File or directory to copy from
         * @throws IllegalArgumentException if trying to copy a directoy to a single file.
         */
-        @NotNull public CopyTask to(@NotNull String to)
+        @NotNull public FilterTask to(@NotNull String to)
         {
             return to(new File(Apb.getEnv().expand(to)));
         }
@@ -172,14 +116,32 @@ public class CopyTask
          * @param to The File or directory to copy from
          * @throws IllegalArgumentException if trying to copy a directoy to a signle file.
          */
-        @NotNull public CopyTask to(@NotNull File to)
+        @NotNull public FilterTask to(@NotNull File to)
         {
             if (from.isDirectory() && to.exists() && !to.isDirectory()) {
                 throw new IllegalArgumentException("Trying to copy directory '" + from.getPath() + "'" +
                                                    " to a file '" + to.getPath() + "'.");
             }
 
-            return new CopyTask(from, to);
+            return new FilterTask(from, to);
+        }
+    }
+
+    //~ Inner Classes ........................................................................................
+
+    private static class PropertyFilter
+        implements FileUtils.Filter
+    {
+        private final Environment env;
+
+        public PropertyFilter(Environment env)
+        {
+            this.env = env;
+        }
+
+        public String filter(String str)
+        {
+            return env.expand(str);
         }
     }
 }

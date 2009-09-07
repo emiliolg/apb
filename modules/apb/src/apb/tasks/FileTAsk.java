@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Collection;
 
 import apb.utils.DirectoryScanner;
 
@@ -58,7 +59,15 @@ public abstract class FileTask
      */
     @NotNull public FileTask including(@NotNull String... patterns)
     {
-        includes.addAll(Arrays.asList(patterns));
+        return including(Arrays.asList(patterns));
+    }
+    /**
+     * Specify the list of files to include
+     * @param patterns The patterns that define the list of files to include
+     */
+    @NotNull public FileTask including(@NotNull Collection<String> patterns)
+    {
+        includes.addAll(patterns);
         return this;
     }
 
@@ -68,7 +77,15 @@ public abstract class FileTask
      */
     @NotNull public FileTask excluding(@NotNull String... patterns)
     {
-        excludes.addAll(Arrays.asList(patterns));
+        return excluding(Arrays.asList(patterns));
+    }
+    /**
+     * Specify the list of files to include
+     * @param patterns The patterns that define the list of files to include
+     */
+    @NotNull public FileTask excluding(@NotNull Collection<String> patterns)
+    {
+        excludes.addAll(patterns);
         return this;
     }
 

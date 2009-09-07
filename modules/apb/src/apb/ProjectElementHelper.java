@@ -95,10 +95,10 @@ public abstract class ProjectElementHelper
         return element;
     }
 
-    @NotNull public final File getBaseDir()
-    {
-        return new File(element.basedir);
-    }
+//    @NotNull public final File getBaseDir()
+//    {
+//        return new File(element.basedir);
+//    }
 
     public final void setTopLevel(boolean b)
     {

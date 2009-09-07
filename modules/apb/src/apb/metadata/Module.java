@@ -24,12 +24,13 @@ import java.util.List;
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
 
-import apb.tasks.CopyTask;
 import apb.tasks.JarTask;
 import apb.tasks.JavacTask;
 import apb.tasks.JavadocTask;
 
 import org.jetbrains.annotations.NotNull;
+
+import static apb.tasks.CoreTasks.copy;
 
 /**
  * This class defines a Module for the building system
@@ -84,9 +85,19 @@ public class Module
     @BuildProperty public final CompileInfo compiler = new CompileInfo();
 
     /**
+     * The directory where the generated source files for this module are placed
+     */
+    @BuildProperty public String generatedSource = "output/$moduledir/gsrc";
+
+    /**
      * All the info for Javadoc
      */
     @BuildProperty public JavadocInfo javadoc = new JavadocInfo();
+
+    /**
+     * The directory for the output classes
+     */
+    @BuildProperty public String output = "output/$moduledir/classes";
 
     /**
      * All the info for the package (Jar,War, etc)
@@ -97,16 +108,6 @@ public class Module
      * All the info for processing resources
      */
     @BuildProperty public ResourcesInfo resources = new ResourcesInfo();
-
-    /**
-     * The directory where the generated source files for this module are placed
-     */
-    @BuildProperty public String generatedSource = "output/$moduledir/gsrc";
-
-    /**
-     * The directory for the output classes
-     */
-    @BuildProperty public String output = "output/$moduledir/classes";
 
     /**
      * The directory where the source files for this module are placed
@@ -148,7 +149,11 @@ public class Module
 
     public void resources()
     {
-        CopyTask.copyResources(getHelper());
+        copy(resources.dir).to(resources.output)  //
+                           .including(resources.includes())  //
+                           .excluding(resources.excludes())  //
+                           .execute();
+        // todo add filtered
     }
 
     public void compile()

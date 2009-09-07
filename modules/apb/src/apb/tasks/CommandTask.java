@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 import apb.Environment;
 import org.jetbrains.annotations.NotNull;
@@ -49,6 +50,16 @@ public abstract class CommandTask
     {
         super(env);
         this.cmd = cmd;
+        environment = new HashMap<String, String>();
+        currentDirectory = env.getBaseDir();
+    }
+    CommandTask(List<String> args)
+    {
+        cmd = new ArrayList<String>(args.size());
+        for (String arg : args) {
+            cmd.add(env.expand(arg));            
+        }
+
         environment = new HashMap<String, String>();
         currentDirectory = env.getBaseDir();
     }

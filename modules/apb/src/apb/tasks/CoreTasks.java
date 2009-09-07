@@ -34,6 +34,42 @@ public class CoreTasks
     //~ Methods ..............................................................................................
 
     /**
+     * Copy a given file
+     * @param from The File or Directory to copy from
+     */
+    @NotNull public static CopyTask.Builder copy(@NotNull String from)
+    {
+        return new CopyTask.Builder(from);
+    }
+
+    /**
+     * Copy a given file
+     * @param from The File or Directory to copy from
+     */
+    @NotNull public static CopyTask.Builder copy(@NotNull File from)
+    {
+        return new CopyTask.Builder(from);
+    }
+
+    /**
+     * Copy a given file doing filtering (keyword expansion)
+     * @param from The File or Directory to copy from
+     */
+    @NotNull public static FilterTask.Builder copyFiltering(@NotNull String from)
+    {
+        return new FilterTask.Builder(from);
+    }
+
+    /**
+     * Copy a given file doing filtering (keyword expansion)
+     * @param from The File or Directory to copy from
+     */
+    @NotNull public static FilterTask.Builder copyFiltering(@NotNull File from)
+    {
+        return new FilterTask.Builder(from);
+    }
+
+    /**
      * A convenience method to write a formatted string to the apb output as a log with INFO level.
      *
      * @param  format
@@ -80,46 +116,10 @@ public class CoreTasks
     }
 
     /**
-     * Copy a given file
-     * @param from The File or Directory to copy from
-     */
-    @NotNull public static Copy copy(@NotNull String from)
-    {
-        return copy(new File(from));
-    }
-
-    /**
-     * Copy a given file
-     * @param from The File or Directory to copy from
-     */
-    @NotNull public static Copy copy(@NotNull File from)
-    {
-        return new Copy(Apb.getEnv(), from, false);
-    }
-
-    /**
-     * Copy a given file doing filtering (keyword expansion)
-     * @param from The File or Directory to copy from
-     */
-    @NotNull public static Copy copyFiltering(@NotNull String from)
-    {
-        return copyFiltering(new File(from));
-    }
-
-    /**
-     * Copy a given file doing filtering (keyword expansion)
-     * @param from The File or Directory to copy from
-     */
-    @NotNull public static Copy copyFiltering(@NotNull File from)
-    {
-        return new Copy(Apb.getEnv(), from, true);
-    }
-
-    /**
      * Executes a system command.
      * @param args The command to execute
      */
-    @NotNull public static Exec exec(@NotNull String... args)
+    @NotNull public static ExecTask exec(@NotNull String... args)
     {
         return exec(Arrays.asList(args));
     }
@@ -128,14 +128,9 @@ public class CoreTasks
      * Executes a system command.
      * @param args The command to execute
      */
-    @NotNull public static Exec exec(@NotNull List<String> args)
+    @NotNull public static ExecTask exec(@NotNull List<String> args)
     {
-        return new Exec(args);
-    }
-
-    public static void main(String[] args)
-    {
-        copy("/x/dir").to("/y/dir").excluding("*.class").execute();
+        return new ExecTask(args);
     }
 
     //~ Inner Classes ........................................................................................
@@ -204,19 +199,4 @@ public class CoreTasks
         }
     }
 
-    static class Exec
-        extends Task
-    {
-        private List<String> args;
-
-        Exec(@NotNull List<String> args)
-        {
-            this.args = args;
-        }
-
-        @Override public void execute()
-        {
-            new ExecTask(env, args).execute();
-        }
-    }
 }
