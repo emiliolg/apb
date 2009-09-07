@@ -377,10 +377,14 @@ public class TestTask
     private int executeEachSuite(@NotNull File reportSpecsFile, @NotNull CoverageBuilder coverageBuilder)
         throws Exception
     {
-        ClassLoader cl = createClassLoader(classPath);
+
+        List<File> f = new ArrayList<File>(classPath);
+        f.add(getEnv().getModuleHelper().getOutput());
+        ClassLoader cl = createClassLoader(f);
 
         final Invocation  creator = testCreator();
         final Set<String> tests = listTests(cl, creator, moduleHelper.getOutput(), includes, excludes);
+        report = report.init(reportDir);
         report.startRun(tests.size());
 
         int result = TestRunner.OK;

@@ -19,12 +19,7 @@ package apb.testrunner;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import apb.testrunner.output.TestReport;
 
@@ -70,7 +65,7 @@ public class TestRunner
         throws TestSetFailedException
     {
         final TestSetCreator<?> testCreator = (TestSetCreator) creator.instantiate(testsClassLoader);
-        return loadTests(testsClassLoader, testCreator, basedir, includes, excludes).keySet();
+        return listTestsNames(testsClassLoader, testCreator, basedir, includes, excludes);
     }
 
     public static int worseResult(int r1, int r2)
@@ -135,6 +130,27 @@ public class TestRunner
     public boolean isVerbose()
     {
         return verbose;
+    }
+
+    private static <T> Set<String> listTestsNames(ClassLoader testsClassLoader, TestSetCreator<T> creator,
+                                                      File basedir, List<String> includes,
+                                                      List<String> excludes)
+        throws TestSetFailedException
+    {
+        Set<String> testSets = new HashSet<String>();
+
+        // Load tests
+        for (String file : collectTests(basedir, excludes, includes)) {
+            Class<T> testClass = loadTestClass(testsClassLoader, file, creator.getTestClass());
+
+            if (Modifier.isAbstract(testClass.getModifiers())) {
+                continue;
+            }
+
+            testSets.add(testClass.getName());
+        }
+
+        return testSets;
     }
 
     private static <T> Map<String, TestSet> loadTests(ClassLoader testsClassLoader, TestSetCreator<T> creator,

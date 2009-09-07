@@ -38,7 +38,6 @@ public abstract class BaseTestReport
     @Nullable protected transient OutputHandler out;
     protected File                              reportsDir;
     protected final boolean                     showOutput;
-    private OutputHandler                       outputHandler;
 
     //~ Constructors .........................................................................................
 
@@ -53,24 +52,23 @@ public abstract class BaseTestReport
     public void startRun(int n)
     {
         super.startRun(n);
-        outputHandler = OutputHandler.getInstance();
     }
 
     public void startSuite(@NotNull String suiteName)
     {
         super.startSuite(suiteName);
-        outputHandler.init(showOutput);
+        OutputHandler.getInstance().init(showOutput);
     }
 
     public void endSuite()
     {
         super.endSuite();
-        outputHandler.restore();
+        OutputHandler.getInstance().restore();
     }
 
     public void stopRun()
     {
-        OutputHandler.reset();
+        OutputHandler.getInstance().reset();
     }
 
     protected abstract void printOutput(String title, String content);
@@ -78,8 +76,8 @@ public abstract class BaseTestReport
     protected void appendOutAndErr()
     {
         if (showOutput) {
-            printOutput(SYSTEM_OUT, outputHandler.getOutput());
-            printOutput(SYSTEM_ERR, outputHandler.getError());
+            printOutput(SYSTEM_OUT, OutputHandler.getInstance().getOutput());
+            printOutput(SYSTEM_ERR, OutputHandler.getInstance().getError());
         }
     }
 
