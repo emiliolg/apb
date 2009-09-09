@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 package apb.tasks;
 
@@ -76,35 +74,56 @@ public class ExecTask
 
     public void execute()
     {
+        logCommand();
+
+        final Process p;
+
+        final Thread loggerThread;
+
         try {
-            logCommand();
-            Process p = createProcess();
+            p = createProcess();
 
             if (output == null) {
-                logStream(p.getInputStream());
+                loggerThread = null;
+                logStream(p.getInputStream(), false, false);
             }
             else {
-                logStream(p.getErrorStream());
+                loggerThread = logStream(p.getErrorStream(), true, true);
                 loadStream(p.getInputStream());
             }
-
-            try {
-                p.waitFor();
-            }
-            catch (InterruptedException e) {
-                env.handle(e);
-            }
-
-            exitValue = p.exitValue();
         }
         catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        try {
+            try {
+                p.waitFor();
+            }
+            finally {
+                if (loggerThread != null) {
+                    loggerThread.join();
+                }
+            }
+        }
+        catch (InterruptedException e) {
+            env.handle(e);
+        }
+
+        exitValue = p.exitValue();
     }
 
     public int getExitValue()
     {
         return exitValue;
+    }
+
+    private static Thread startJob(Runnable target)
+    {
+        final Thread thread = new Thread(target);
+        thread.setDaemon(true);
+        thread.start();
+        return thread;
     }
 
     private Process createProcess()
@@ -126,28 +145,57 @@ public class ExecTask
         return b.start();
     }
 
-    private void logStream(InputStream in)
+    @Nullable private Thread logStream(InputStream in, final boolean severe, final boolean background)
         throws IOException
     {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        final BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 
+        if (background) {
+            final Runnable target =
+                new Runnable() {
+                    public void run()
+                    {
+                        try {
+                            loggerLoop(reader, severe);
+                        }
+                        catch (IOException e) {
+                            env.logSevere(e.toString());
+                        }
+                    }
+                };
+
+            return startJob(target);
+        }
+
+        loggerLoop(reader, severe);
+        return null;
+    }
+
+    private void loggerLoop(BufferedReader reader, boolean severe)
+        throws IOException
+    {
         String line;
 
         while ((line = reader.readLine()) != null) {
-            env.logInfo("%s\n", line);
+            if (severe) {
+                env.logSevere("%s\n", line);
+            }
+            else {
+                env.logInfo("%s\n", line);
+            }
         }
     }
 
     private void loadStream(InputStream is)
         throws IOException
     {
-        if (output != null) {
-            BufferedReader out = new BufferedReader(new InputStreamReader(is));
-            String         line;
+        assert output != null;
+        final BufferedReader out = new BufferedReader(new InputStreamReader(is));
 
-            while ((line = out.readLine()) != null) {
-                output.add(line);
-            }
+        String line;
+
+        while ((line = out.readLine()) != null) {
+            output.add(line);
         }
     }
 
