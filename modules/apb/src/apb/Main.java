@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb;
 
 import java.util.Collections;
@@ -24,6 +22,7 @@ import java.util.List;
 import apb.index.ModuleInfo;
 
 import apb.utils.StandaloneEnv;
+
 import static apb.Messages.BUILD_COMPLETED;
 import static apb.Messages.BUILD_FAILED;
 
@@ -43,7 +42,11 @@ public class Main
             arguments = searchDefault(env, options);
         }
 
-        Main.execute(env, arguments);
+        final boolean ok = execute(env, arguments);
+
+        if (!ok) {
+            System.exit(1);
+        }
     }
 
     public static boolean execute(Environment env, String element, String command)
@@ -79,7 +82,7 @@ public class Main
         return result;
     }
 
-    private static void execute(Environment env, List<String> arguments)
+    private static boolean execute(Environment env, List<String> arguments)
         throws Throwable
     {
         env.resetClock();
@@ -120,6 +123,8 @@ public class Main
         else {
             env.logInfo(BUILD_FAILED);
         }
+
+        return ok;
     }
 
     private static String[] splitParts(String argument)
