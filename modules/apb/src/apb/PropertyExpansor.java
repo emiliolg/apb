@@ -16,7 +16,7 @@
 //
 
 
-package apb.utils;
+package apb;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -26,18 +26,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import apb.BuildException;
-import apb.Environment;
-import apb.PropertyException;
-
 import apb.metadata.BuildProperty;
+
+import apb.utils.DebugOption;
+import apb.utils.FileUtils;
+import apb.utils.NameUtils;
+import apb.utils.StringUtils;
+
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Mar 11, 2009
 // Time: 12:14:16 PM
 
 //
-public class PropertyExpansor
+class PropertyExpansor
 {
     //~ Methods ..............................................................................................
 
@@ -47,26 +50,64 @@ public class PropertyExpansor
      * So first the primitive fields are expanded and then the fields
      * with complex objects.
      *
-     * @param env
+     * @param helper
      * @param parent
      * @param object
      */
-    public static void expandProperties(Environment env, String parent, Object object)
+    static void expandProperties(ProjectElementHelper helper, String parent, Object object)
     {
         // Expand the top level
         // add other fields to the map
 
         Map<FieldHelper, Object> innerMap = new HashMap<FieldHelper, Object>();
 
-        for (FieldHelper field : publicAndDeclaredfields(env, parent, object)) {
+        for (FieldHelper field : publicAndDeclaredfields(helper, parent, object)) {
             field.expandProperty(object, innerMap);
         }
 
         // Expand the inner level
         for (Map.Entry<FieldHelper, Object> entry : innerMap.entrySet()) {
             final FieldHelper field = entry.getKey();
-            expandProperties(env, field.getCompoundName(), entry.getValue());
-            //field.setFieldValue(object, inner);
+            expandProperties(helper, field.getCompoundName(), entry.getValue());
+        }
+
+        if (StringUtils.isNotEmpty(parent)) {
+            putInfoObject(helper, parent, object);
+        }
+    }
+
+    @NotNull static <T> T retrieveInfoObject(ProjectElementHelper helper, String name, Class<T> type)
+    {
+        Object o = helper.infoMap.get(name);
+
+        if (o != null && !type.isInstance(o)) {
+            helper.logWarning("Info object '%s' is of type '%s' instead of '%s'", name,
+                              o.getClass().getName(), type.getName());
+            o = null;
+        }
+
+        if (o == null) {
+            o = createDefault(helper, name, type);
+        }
+
+        return type.cast(o);
+    }
+
+    /**
+     * Create a default Info object for that type
+     */
+    @NotNull private static <T> T createDefault(ProjectElementHelper helper, String name, Class<T> type)
+    {
+        try {
+            T result = type.newInstance();
+            expandProperties(helper, name, result);
+            return result;
+        }
+        catch (InstantiationException e) {
+            throw new BuildException(e);
+        }
+        catch (IllegalAccessException e) {
+            throw new BuildException(e);
         }
     }
 
@@ -95,6 +136,15 @@ public class PropertyExpansor
         if (!Modifier.isStatic(field.getModifiers())) {
             result.add(new FieldHelper(env, parent, field));
         }
+    }
+
+    private static void putInfoObject(ProjectElementHelper helper, String name, Object value)
+    {
+        if (helper.mustShow(DebugOption.PROPERTIES)) {
+            helper.logVerbose("Setting info object structure %s:%s\n", helper.getId(), name);
+        }
+
+        helper.infoMap.put(name, value);
     }
 
     //~ Static fields/initializers ...........................................................................

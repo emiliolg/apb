@@ -37,10 +37,11 @@ public class XjcTask
 {
     //~ Instance fields ......................................................................................
 
+    private boolean packageAnnotations;
+
     @NotNull private final List<File> externalBindings;
-    private boolean                   packageAnnotations;
     @NotNull private final String     schema;
-    @NotNull private final String           targetPackage;
+    @NotNull private final String     targetPackage;
 
     //~ Constructors .........................................................................................
 
@@ -118,12 +119,11 @@ public class XjcTask
         //If there is a jaxb xjc jar in ext, use that
         String jar = findJar();
 
-        final CommandTask command = jar == null ? new ExecTask(env, "xjc") : new JavaTask(env, true, jar);
-
-        command.addArguments("-extension");
+        List<String> args = new ArrayList<String>();
+        args.add("-extension");
 
         if (!packageAnnotations) {
-            command.addArguments("-npa");
+            args.add("-npa");
         }
 
         env.logInfo("Processing: %s\n", schemaFile);
@@ -133,21 +133,25 @@ public class XjcTask
         }
 
         if (!env.isVerbose()) {
-            command.addArguments("-quiet");
+            args.add("-quiet");
         }
 
-        command.addArguments("-d", env.fileFromGeneratedSource("").getPath());
+        args.add("-d");
+        args.add(env.fileFromGeneratedSource("").getPath());
 
         if (!targetPackage.isEmpty()) {
-            command.addArguments("-p", targetPackage);
+            args.add("-p");
+            args.add(targetPackage);
         }
 
         for (File binding : externalBindings) {
-            command.addArguments("-b", binding.getPath());
+            args.add("-b");
+            args.add(binding.getPath());
         }
 
-        command.addArguments(schemaFile.getPath());
+        args.add(schemaFile.getPath());
 
+        final ExecTask command = jar == null ? CoreTasks.exec("xjc", args) : CoreTasks.javaJar(jar, args);
         command.execute();
     }
 

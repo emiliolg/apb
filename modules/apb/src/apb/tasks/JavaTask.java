@@ -43,149 +43,83 @@ import static apb.utils.CollectionUtils.addIfNotNull;
 
 //
 public class JavaTask
-    extends CommandTask
+    extends ExecTask
 {
     //~ Instance fields ......................................................................................
 
     private final boolean executeJar;
-    private int           exitValue;
 
     /**
      * Max memory in megabytes used by the Java command
      */
-    private int                                memory = 256;
+    private int memory = 256;
+
+    @NotNull private final List<File>          classPath;
     @NotNull private final List<String>        javaArgs;
     @NotNull private final Map<String, String> properties;
-
-    @NotNull private String classpath = "";
-    private final String    jarOrClass;
+    private final String                       jarOrClass;
 
     //~ Constructors .........................................................................................
 
-    public JavaTask(@NotNull Environment env, @NotNull String className, String... arguments)
+    JavaTask(boolean executeJar, @NotNull String className, List<String> arguments)
     {
-        this(env, false, className);
-        addArguments(arguments);
-    }
-
-    public JavaTask(@NotNull Environment env, boolean executeJar, @NotNull String jarOrClass)
-    {
-        super(env, new ArrayList<String>());
+        super(FileUtils.findJavaExecutable("java"), arguments);
         this.executeJar = executeJar;
-        this.jarOrClass = jarOrClass;
+        jarOrClass = className;
         properties = new HashMap<String, String>();
         javaArgs = new ArrayList<String>();
         memory = 256;
+        classPath = new ArrayList<File>();
     }
 
     //~ Methods ..............................................................................................
 
-    public static void executeClass(@NotNull ModuleHelper helper, @NotNull String className,
-                                    @NotNull String... args)
+    public JavaTask withClassPath(@NotNull String... fileNames)
     {
-        JavaTask j = new JavaTask(helper, false, className);
-        j.addArguments(args);
-        j.setClasspath(helper);
-        j.execute();
-    }
-
-    public static void executeJar(@NotNull ModuleHelper helper, @NotNull String jarName,
-                                  @NotNull String... args)
-    {
-        JavaTask j = new JavaTask(helper, true, jarName);
-        j.addArguments(args);
-        j.setClasspath(helper);
-        j.execute();
-    }
-
-    public static List<File> fileList(Environment env, DependencyList dependencies)
-    {
-        List<File> result = new ArrayList<File>();
-
-        for (Dependency dependency : dependencies) {
-            if (dependency.isLibrary()) {
-                addIfNotNull(result, dependency.asLibrary().getArtifact(env, PackageType.JAR));
-            }
-            else if (dependency.isModule()) {
-                result.addAll(dependency.asModule().getHelper().deepClassPath(false, true));
-            }
+        for (String fileName : fileNames) {
+            classPath.add(env.fileFromBase(fileName));
         }
 
-        return result;
+        return this;
     }
 
-    public void setClasspath(@NotNull DependencyList dependencies)
+    public JavaTask withClassPath(@NotNull Dependency... dependencies)
     {
-        classpath = FileUtils.makePath(JavaTask.fileList(env, dependencies));
+        classPath.addAll(JavaTask.fileList(env, DependencyList.create(dependencies)));
+        return this;
     }
 
-    public void setClasspath(@NotNull String classpath)
+    public JavaTask withModuleClassPath(@NotNull ModuleHelper helper)
     {
-        this.classpath = classpath;
-    }
-
-    public void setClasspath(Dependency... dependencies)
-    {
-        setClasspath(DependencyList.create(dependencies));
-    }
-
-    public void setClasspath(ModuleHelper helper)
-    {
-        classpath = FileUtils.makePath(helper.runtimePath());
+        classPath.addAll(helper.runtimePath());
+        return this;
     }
 
     public void execute()
     {
-        List<String> args = new ArrayList<String>();
-
-        // add Java executable
-        args.add(FileUtils.findJavaExecutable("java", env));
-
-        // Memory
-
-        args.add("-Xmx" + memory + "m");
+        List<String> argList = new ArrayList<String>();
+        argList.add("-Xmx" + memory + "m");
 
         // Pass properties
         for (Map.Entry<String, String> entry : properties.entrySet()) {
-            args.add("-D" + entry.getKey() + "=" + entry.getValue());
+            argList.add("-D" + entry.getKey() + "=" + entry.getValue());
         }
 
-        args.addAll(javaArgs);
+        argList.addAll(javaArgs);
 
         // add classpath
-        if (!classpath.isEmpty()) {
-            args.add("-classpath");
-            args.add(classpath);
+        if (!classPath.isEmpty()) {
+            argList.add("-classpath");
+            argList.add(FileUtils.makePath(classPath));
         }
 
         if (executeJar) {
-            args.add("-jar");
+            argList.add("-jar");
         }
 
-        args.add(jarOrClass);
-        args.addAll(getArguments());
-        ExecTask task = new ExecTask(env, args);
-
-        task.setCurrentDirectory(getCurrentDirectory());
-
-        task.putAll(getEnvironment());
-        task.execute();
-        exitValue = task.getExitValue();
-    }
-
-    public int getExitValue()
-    {
-        return exitValue;
-    }
-
-    /**
-     * Set a property to be passed to the new java process
-     * @param key The property key
-     * @param value The property value
-     */
-    public void setProperty(String key, String value)
-    {
-        properties.put(key, value);
+        argList.add(jarOrClass);
+        insertArguments(argList);
+        super.execute();
     }
 
     /**
@@ -201,14 +135,55 @@ public class JavaTask
      * Set all properties to the ones specified
      * @param ps The set of properties
      */
-    public void setProperties(@NotNull Map<String, String> ps)
+    public JavaTask withProperties(@NotNull Map<String, String> ps)
     {
         properties.clear();
         properties.putAll(ps);
+        return this;
     }
 
-    public void setMemory(int memory)
+    /**
+     * Set the wnvironment to the one specified
+     * @param e The environment to be set
+     */
+    @Override public JavaTask withEnvironment(@NotNull Map<String, String> e)
     {
-        this.memory = memory;
+        return (JavaTask) super.withEnvironment(e);
+    }
+
+    /**
+     * Specify the max memory to be used
+     * @param mb The maximum number of megabytes to use
+     */
+    public JavaTask maxMemory(int mb)
+    {
+        memory = mb;
+        return this;
+    }
+
+    @Override public JavaTask outputTo(@NotNull List<String> list)
+    {
+        return (JavaTask) super.outputTo(list);
+    }
+
+    @Override public JavaTask onDir(@NotNull String directory)
+    {
+        return (JavaTask) super.onDir(directory);
+    }
+
+    private static List<File> fileList(Environment env, DependencyList dependencies)
+    {
+        List<File> result = new ArrayList<File>();
+
+        for (Dependency dependency : dependencies) {
+            if (dependency.isLibrary()) {
+                addIfNotNull(result, dependency.asLibrary().getArtifact(env, PackageType.JAR));
+            }
+            else if (dependency.isModule()) {
+                result.addAll(dependency.asModule().getHelper().deepClassPath(false, true));
+            }
+        }
+
+        return result;
     }
 }

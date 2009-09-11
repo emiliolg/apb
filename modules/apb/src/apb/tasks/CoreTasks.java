@@ -27,7 +27,11 @@ import apb.Environment;
 
 import apb.metadata.UpdatePolicy;
 
+import apb.utils.CollectionUtils;
+
 import org.jetbrains.annotations.NotNull;
+
+import static java.util.Arrays.asList;
 
 public class CoreTasks
 {
@@ -49,6 +53,16 @@ public class CoreTasks
     @NotNull public static CopyTask.Builder copy(@NotNull File from)
     {
         return new CopyTask.Builder(from);
+    }
+
+    /**
+     * Copy one or more filesets to the given file
+     * @param fileSets The FileSets to copy from
+     * @see apb.tasks.FileSet
+     */
+    @NotNull public static CopyTask.Builder copy(@NotNull FileSet... fileSets)
+    {
+        return new CopyTask.Builder(fileSets);
     }
 
     /**
@@ -94,7 +108,7 @@ public class CoreTasks
     @NotNull public static DeleteTask delete(@NotNull String name)
     {
         final Environment env = Apb.getEnv();
-        return new DeleteTask(new File(env.expand(name)));
+        return new DeleteTask(env.fileFromBase(name));
     }
 
     /**
@@ -104,6 +118,16 @@ public class CoreTasks
     @NotNull public static DeleteTask delete(@NotNull File file)
     {
         return new DeleteTask(file);
+    }
+
+    /**
+     * Delete one or more filesets
+     * @param fileSets The FileSets to delete
+     * @see apb.tasks.FileSet
+     */
+    @NotNull public static DeleteTask delete(@NotNull FileSet... fileSets)
+    {
+        return new DeleteTask(Arrays.asList(fileSets));
     }
 
     /**
@@ -119,18 +143,106 @@ public class CoreTasks
      * Executes a system command.
      * @param args The command to execute
      */
-    @NotNull public static ExecTask exec(@NotNull String... args)
+    @NotNull public static ExecTask exec(@NotNull String cmd, @NotNull String... args)
     {
-        return exec(Arrays.asList(args));
+        return exec(cmd, Arrays.asList(args));
     }
 
     /**
      * Executes a system command.
      * @param args The command to execute
      */
-    @NotNull public static ExecTask exec(@NotNull List<String> args)
+    @NotNull public static ExecTask exec(@NotNull String cmd, @NotNull List<String> args)
     {
-        return new ExecTask(args);
+        final Environment env = Apb.getEnv();
+        return new ExecTask(env.expand(cmd), CollectionUtils.expandAll(env, args));
+    }
+
+    /**
+     * Launches a java application
+     * @param className The class file to launch
+     * @param args Argument passed to the main function.
+     */
+    public static JavaTask java(@NotNull String className, @NotNull String... args)
+    {
+        return java(className, Arrays.asList(args));
+    }
+
+    /**
+     * Launches a java application
+     * @param className The class file to launch
+     * @param args Argument passed to the main function.
+     */
+    public static JavaTask java(@NotNull String className, @NotNull List<String> args)
+    {
+        final Environment env = Apb.getEnv();
+        return new JavaTask(false, className, CollectionUtils.expandAll(env, args));
+    }
+
+    /**
+     * Launches a java application based on a jar file
+     * @param jarName The jar to execute
+     * @param args Argument passed to the main function.
+     */
+    public static JavaTask javaJar(@NotNull String jarName, @NotNull String... args)
+    {
+        return javaJar(jarName, Arrays.asList(args));
+    }
+
+    /**
+     * Launches a java application
+     * @param jarName The jar to execute
+     * @param args Argument passed to the main function.
+     */
+    public static JavaTask javaJar(@NotNull String jarName, @NotNull List<String> args)
+    {
+        final Environment env = Apb.getEnv();
+        return new JavaTask(true, jarName, CollectionUtils.expandAll(env, args));
+    }
+
+    /**
+     * Compile the specified sources using javac
+     * @param sourceDirectory The directory  to scan for sources
+     */
+    public static JavacTask.Builder javac(@NotNull String sourceDirectory)
+    {
+        return new JavacTask.Builder(sourceDirectory);
+    }
+
+    /**
+     * Compile the specified sources using javac
+     * @param fileSets the filesets defining the file to be compiled
+     */
+    public static JavacTask.Builder javac(@NotNull FileSet... fileSets)
+    {
+        return javac(asList(fileSets));
+    }
+
+    /**
+     * Compile the specified sources using javac
+     * @param fileSets the filesets defining the file to be compiled
+     */
+    public static JavacTask.Builder javac(@NotNull List<FileSet> fileSets)
+    {
+        return new JavacTask.Builder(fileSets);
+    }
+
+    /**
+     * Create a jarfile
+     * @param jarFileName  The jarfile to be created
+     */
+    public static JarTask.Builder jar(@NotNull String jarFileName)
+    {
+        return new JarTask.Builder(jarFileName);
+    }
+
+    /**
+     * Create a jarfile
+     * @param jarFile  The jarfile to be created
+     */
+    public static JarTask.Builder jar(@NotNull File jarFile)
+    {
+        return new JarTask.Builder(jarFile);
     }
 
     //~ Inner Classes ........................................................................................
@@ -198,5 +310,4 @@ public class CoreTasks
             updatePolicy = policy;
         }
     }
-
 }

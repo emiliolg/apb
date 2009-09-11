@@ -21,9 +21,11 @@ package apb;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import apb.metadata.CompileInfo;
@@ -36,7 +38,8 @@ import apb.metadata.PackageType;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
 
-import apb.tasks.RemoveTask;
+import apb.tasks.FileSet;
+import apb.tasks.JarTask;
 
 import apb.utils.CollectionUtils;
 import apb.utils.DebugOption;
@@ -45,6 +48,8 @@ import apb.utils.IdentitySet;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.tasks.CoreTasks.*;
 
 import static apb.utils.CollectionUtils.addIfNotNull;
 //
@@ -58,15 +63,16 @@ public class ModuleHelper
 {
     //~ Instance fields ......................................................................................
 
-    @Nullable private File generatedSource;
-    @Nullable private File output;
-    @Nullable private File packageFile;
-    @Nullable private File source;
-    @Nullable private File sourcePackageFile;
+    @Nullable private File              generatedSource;
+    @Nullable private File              output;
+    @Nullable private File              packageFile;
+    @Nullable private File              source;
+    @Nullable private File              sourcePackageFile;
+    @Nullable private Iterable<Library> allLibraries;
 
     @Nullable private Iterable<ModuleHelper>     dependencies;
     @Nullable private Iterable<ModuleHelper>     directDependencies;
-    @Nullable private Iterable<Library>          localLibraries;
+    @Nullable private Iterable<Library>          libraries;
     @Nullable private Iterable<TestModuleHelper> testModules;
 
     //~ Constructors .........................................................................................
@@ -194,9 +200,9 @@ public class ModuleHelper
         return directDependencies;
     }
 
-    @NotNull public Iterable<Library> getLocalLibraries()
+    @NotNull public Iterable<Library> getLibraries()
     {
-        if (localLibraries == null) {
+        if (libraries == null) {
             List<Library> list = new ArrayList<Library>();
 
             for (Dependency dependency : getModule().dependencies()) {
@@ -205,10 +211,29 @@ public class ModuleHelper
                 }
             }
 
-            localLibraries = list;
+            libraries = list;
         }
 
-        return localLibraries;
+        return libraries;
+    }
+
+    @NotNull public Iterable<Library> getAllLibraries()
+    {
+        if (allLibraries == null) {
+            List<Library> list = new ArrayList<Library>();
+
+            for (Library library : getLibraries()) {
+                list.add(library);
+            }
+
+            for (Library l : getCompileInfo().extraLibraries()) {
+                list.add(l);
+            }
+
+            allLibraries = list;
+        }
+
+        return allLibraries;
     }
 
     @NotNull public Iterable<ModuleHelper> getDependencies()
@@ -267,7 +292,7 @@ public class ModuleHelper
         }
 
         // The classpath for libraries
-        for (Library library : getLocalLibraries()) {
+        for (Library library : getLibraries()) {
             addIfNotNull(result, library.getArtifact(this, PackageType.JAR));
         }
 
@@ -322,14 +347,14 @@ public class ModuleHelper
     {
         List<String> files = new ArrayList<String>();
 
-        // Make the files relative to the jarfile
-        File jarFileDir = getPackageFile().getParentFile();
+        if (getPackageInfo().addClassPath) {
+            for (File file : classPath(true, false, false)) {
+                files.add(file.getPath());
+            }
 
-        for (File file : classPath(true, false, false)) {
-            files.add(FileUtils.makeRelative(jarFileDir, file).getPath());
+            files.addAll(getPackageInfo().extraClassPathEntries());
         }
 
-        files.addAll(getPackageInfo().extraClassPathEntries());
         return files;
     }
 
@@ -340,9 +365,75 @@ public class ModuleHelper
 
     public void clean()
     {
-        RemoveTask.remove(this, getOutput());
-        RemoveTask.remove(this, getPackageFile());
-        RemoveTask.remove(this, getGeneratedSource());
+        delete(getOutput()).execute();
+        delete(getGeneratedSource()).execute();
+
+        if (hasPackage()) {
+            delete(getPackageFile()).execute();
+        }
+    }
+
+    public void createPackage()
+    {
+        final PackageInfo packageInfo = getPackageInfo();
+
+        if (hasPackage()) {
+            final List<Module> additionalDeps = modulesToPackage();
+
+            Map<String, Set<String>> services = mergeServices(additionalDeps);
+
+            JarTask jarTask =
+                jar(getPackageFile()).fromDir(getOutput())  //
+                                     .mainClass(packageInfo.mainClass)  //
+                                     .version(getModule().version)  //
+                                     .manifestAttributes(packageInfo.attributes())  //
+                                     .withClassPath(manifestClassPath())  //
+                                     .withServices(services).excluding(packageInfo.excludes());
+
+            // prepare dependencies included in package
+
+            if (!additionalDeps.isEmpty()) {
+                for (Module m : additionalDeps) {
+                    logVerbose("Adding module '%s'.\n", m.toString());
+                    jarTask.addDir(m.getHelper().getOutput());
+                }
+            }
+
+            // run task
+            jarTask.execute();
+
+            // generate sources jar
+            if (packageInfo.generateSourcesJar) {
+                jar(getSourcePackageFile()).fromDir(getSource())  //
+                                           .excluding(FileUtils.DEFAULT_EXCLUDES)  //
+                                           .execute();
+            }
+        }
+    }
+
+    public void compile()
+    {
+        CompileInfo   info = getCompileInfo();
+        List<FileSet> fileSets = getSourceFileSets(info);
+
+        javac(fileSets).to(getOutput())  //
+                       .withClassPath(compileClassPath())  //
+                       .sourceVersion(info.source)  //
+                       .targetVersion(info.target)  //
+                       .withAnnotations(info.annotationOptions())  //
+                       .withExtraLibraries(info.extraLibraries())  //
+                       .debug(info.debug)  //
+                       .deprecated(info.deprecated)  //
+                       .lint(info.lint)  //
+                       .showWarnings(info.warn)  //
+                       .failOnWarning(info.failOnWarning)  //
+                       .lintOptions(info.lintOptions)  //
+                       .trackUnusedDependencies(info.validateDependencies)  //
+                       .processing(info.getProcessingOption().paramValue())  //
+                       .usingDefaultFormatter(info.defaultErrorFormatter)  //
+                       .excludeFromWarning(info.warnExcludes())  //
+                       .useName(getName())  //
+                       .execute();
     }
 
     protected void build(ProjectBuilder pb, String commandName)
@@ -373,6 +464,87 @@ public class ModuleHelper
         return s.substring(s.charAt(0) == '-' ? 1 : 0, s.charAt(l - 1) == '-' ? l - 1 : l);
     }
 
+    private static void mergeServices(Map<String, Set<String>> mergedServices,
+                                      Map<String, Set<String>> services)
+    {
+        for (Map.Entry<String, Set<String>> e : services.entrySet()) {
+            String            service = e.getKey();
+            Set<String>       providers = e.getValue();
+            final Set<String> mergedProviders = mergedServices.get(service);
+
+            if (mergedProviders == null) {
+                mergedServices.put(service, new HashSet<String>(providers));
+            }
+            else {
+                mergedProviders.addAll(providers);
+            }
+        }
+    }
+
+    private List<FileSet> getSourceFileSets(CompileInfo info)
+    {
+        List<FileSet> fileSets = new ArrayList<FileSet>();
+
+        fileSets.add(FileSet.fromDir(getSource()).including(info.includes()).excluding(info.excludes()));
+
+        if (getGeneratedSource().exists()) {
+            fileSets.add(FileSet.fromDir(getGeneratedSource()));
+        }
+
+        return fileSets;
+    }
+
+    private Map<String, Set<String>> mergeServices(List<Module> additionalDeps)
+    {
+        final Map<String, Set<String>> services = getPackageInfo().services();
+
+        if (additionalDeps.isEmpty()) {
+            return services;
+        }
+
+        // add packaged dependencies
+        Map<String, Set<String>> mergedServices = new HashMap<String, Set<String>>();
+
+        for (Module m : additionalDeps) {
+            mergeServices(mergedServices, m.pkg.services());
+        }
+
+        mergeServices(mergedServices, services);
+
+        return mergedServices;
+    }
+
+    private List<Module> modulesToPackage()
+    {
+        List<Module>      result = new ArrayList<Module>();
+        final PackageInfo packageInfo = getPackageInfo();
+
+        switch (packageInfo.includeDependencies) {
+        case DIRECT:
+
+            for (ModuleHelper dep : getDirectDependencies()) {
+                result.add(dep.getModule());
+            }
+
+            break;
+        case ALL:
+
+            for (ModuleHelper dep : getDependencies()) {
+                result.add(dep.getModule());
+            }
+
+            break;
+        }
+
+        for (Dependency dep : packageInfo.additionalDependencies()) {
+            if (dep.isModule()) {
+                result.add(dep.asModule());
+            }
+        }
+
+        return result;
+    }
+
     private List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
     {
         List<File> result = new ArrayList<File>();
@@ -389,7 +561,7 @@ public class ModuleHelper
             }
         }
 
-        for (Library lib : getLocalLibraries()) {
+        for (Library lib : getLibraries()) {
             if (lib.mustInclude(compile)) {
                 addIfNotNull(result, lib.getArtifact(this, PackageType.JAR));
             }

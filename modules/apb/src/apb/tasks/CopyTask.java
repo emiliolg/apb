@@ -20,7 +20,8 @@ package apb.tasks;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedHashMap;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import apb.Apb;
@@ -28,25 +29,32 @@ import apb.Apb;
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static java.util.Collections.singletonList;
+
+import static apb.tasks.FileSet.fromDir;
+import static apb.tasks.FileSet.fromFile;
 
 // User: emilio
 // Date: Sep 5, 2009
 // Time: 6:15:46 PM
 
 public class CopyTask
-    extends FileTask
+    extends Task
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull protected final File from;
     @NotNull protected final File to;
+
+    @NotNull protected final List<FileSet> from;
 
     //~ Constructors .........................................................................................
 
-    protected CopyTask(@NotNull File from, @NotNull File to)
+    protected CopyTask(@NotNull List<FileSet> fileSets, @NotNull File to)
     {
-        this.from = env.fileFromBase(from);
-        this.to = env.fileFromBase(to);
+        from = fileSets;
+        this.to = to;
     }
 
     //~ Methods ..............................................................................................
@@ -56,85 +64,87 @@ public class CopyTask
        */
     public void execute()
     {
-        /**
-         * If the source file/directory does not exists just skip the copy
-         */
-        if (!from.exists()) {
-            env.logInfo("Skip non existing from directory: %s\n", from.getPath());
-            return;
-        }
+        final File source = extractSingleFile();
 
-        if (from.isDirectory()) {
-            copyFromDirectory(to);
+        if (source == null) {
+            copyToDirectory();
         }
         else {
-            File dest = to.isDirectory() ? new File(to, from.getName()) : to;
-            copyFile(from, dest);
+            final File dest = to.isDirectory() ? new File(to, source.getName()) : to;
+
+            if (env.forceBuild() || !dest.exists() || source.lastModified() > dest.lastModified()) {
+                copyFile(source, dest);
+            }
         }
     }
 
-    protected void copyFile(File source, File dest)
+    protected void doCopyFile(File source, File dest)
+        throws IOException
     {
-        try {
+        if (env.isVerbose()) {
             logVerbose("Copy %s\n", source);
             logVerbose("  to %s\n", dest);
-            FileUtils.copyFile(source, dest, false);
+        }
+
+        FileUtils.copyFile(source, dest, false);
+    }
+
+    @Nullable private File extractSingleFile()
+    {
+        if (from.size() != 1) {
+            return null;
+        }
+
+        FileSet fs = from.get(0);
+
+        if (!fs.isFile()) {
+            return null;
+        }
+
+        return new File(fs.getDir(), fs.list().get(0));
+    }
+
+    private void copyFile(File source, File dest)
+    {
+        try {
+            doCopyFile(source, dest);
         }
         catch (IOException e) {
             env.handle(e);
         }
     }
 
-    private void copyFromDirectory(@NotNull File target)
+    private void copyToDirectory()
     {
-        if (!target.exists() && !target.mkdirs()) {
-            env.handle("Cannot create resource output directory: " + target);
-            return;
-        }
+        Map<File, File> files = FileUtils.listAllMappingToTarget(from, to, true, true);
 
-        if (env.isVerbose()) {
-            logVerbose("Copying resources from: %s\n", from);
-            logVerbose("                    to: %s\n", target);
-            logVerbose("              includes: %s\n", includes);
+        /**
+         * If the source file/directories are empty or not existent just skip the copy
+         */
+        if (!files.isEmpty()) {
+            if (!to.exists() && !to.mkdirs()) {
+                env.handle("Cannot create output directory: " + to);
+            }
+            else {
+                env.logInfo("Copying %2d file%s\nto %s\n", files.size(), files.size() > 1 ? "s" : "", to);
 
-            if (!excludes.isEmpty()) {
-                logVerbose("              excludes: %s\n", excludes);
+                for (Map.Entry<File, File> entry : files.entrySet()) {
+                    copyFile(entry.getKey(), entry.getValue());
+                }
             }
         }
-
-        Map<File, File> includedFiles = findFiles(from, target);
-
-        if (!includedFiles.isEmpty()) {
-            env.logInfo("Copying %2d resource%s\nto %s\n", includedFiles.size(),
-                        includedFiles.size() > 1 ? "s" : "", target);
-
-            for (Map.Entry<File, File> entry : includedFiles.entrySet()) {
-                copyFile(entry.getKey(), entry.getValue());
-            }
-        }
-    }
-
-    private Map<File, File> findFiles(File fromDirectory, File outputDirectory)
-    {
-        Map<File, File> files = new LinkedHashMap<File, File>();
-
-        for (String name : includedFiles(fromDirectory)) {
-            File source = new File(fromDirectory, name);
-            File target = new File(outputDirectory, name);
-
-            if (env.forceBuild() || !target.exists() || source.lastModified() > target.lastModified()) {
-                files.put(source, target);
-            }
-        }
-
-        return files;
     }
 
     //~ Inner Classes ........................................................................................
 
     public static class Builder
     {
-        @NotNull private final File from;
+        @NotNull private final List<FileSet> from;
+
+        Builder(@NotNull FileSet... from)
+        {
+            this.from = Arrays.asList(from);
+        }
 
         /**
          * Private constructor called from factory methods
@@ -143,7 +153,7 @@ public class CopyTask
 
         Builder(@NotNull File from)
         {
-            this.from = from;
+            this.from = singletonList(from.isFile() ? fromFile(from) : fromDir(from));
         }
 
         /**
@@ -152,31 +162,29 @@ public class CopyTask
          */
         Builder(@NotNull String from)
         {
-            this(new File(Apb.getEnv().expand(from)));
+            this(Apb.getEnv().fileFromBase(from));
         }
 
         /**
         * Specify the target file or directory
-        * If not specified, then the file/s will be copied to the current module output
         * @param to The File or directory to copy from
         * @throws IllegalArgumentException if trying to copy a directoy to a single file.
         */
         @NotNull public CopyTask to(@NotNull String to)
         {
-            return to(new File(Apb.getEnv().expand(to)));
+            return to(Apb.getEnv().fileFromBase(to));
         }
 
         /**
          * Specify the target file or directory
-         * If not specified, then the file/s will be copied to the current module output
          * @param to The File or directory to copy from
          * @throws IllegalArgumentException if trying to copy a directoy to a signle file.
          */
         @NotNull public CopyTask to(@NotNull File to)
         {
-            if (from.isDirectory() && to.exists() && !to.isDirectory()) {
-                throw new IllegalArgumentException("Trying to copy directory '" + from.getPath() + "'" +
-                                                   " to a file '" + to.getPath() + "'.");
+            if (to.isFile() && (from.size() != 1 || !from.get(0).isFile())) {
+                throw new IllegalArgumentException("Trying to copy multiple files to a single file '" +
+                                                   to.getPath() + "'.");
             }
 
             return new CopyTask(from, to);

@@ -4,16 +4,7 @@
 
     <component name="NewModuleRootManager" inherit-compiler-report="false">
 
-        <exclude-report/>
-
         <orderEntry type="inheritedJdk"/>
-
-        <content url="file://$MODULE_DIR$">
-        </content>
-
-        <orderEntry type="sourceFolder" forTests="false"/>
-
-        <orderEntryProperties/>
 
     </component>
 

@@ -20,16 +20,23 @@ package apb.tasks;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
-import apb.Environment;
 import apb.Apb;
+import apb.Environment;
 
 import apb.metadata.ResourcesInfo;
 
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
+
+import static java.util.Collections.singletonList;
+
+import static apb.tasks.FileSet.fromDir;
+import static apb.tasks.FileSet.fromFile;
 
 /**
  * Fluent interface based Copy Task
@@ -43,10 +50,13 @@ public class FilterTask
 
     //~ Constructors .........................................................................................
 
-    FilterTask(@NotNull File from, @NotNull File to)
+    FilterTask(@NotNull List<FileSet> from, @NotNull File to)
     {
         super(from, to);
-        excludes.addAll(ResourcesInfo.DEFAULT_DO_NOT_FILTER);
+
+        for (FileSet fileSet : from) {
+            fileSet.excluding(ResourcesInfo.DEFAULT_DO_NOT_FILTER);
+        }
     }
 
     //~ Methods ..............................................................................................
@@ -62,23 +72,25 @@ public class FilterTask
         return this;
     }
 
-    @Override
-    protected void copyFile(File source, File dest)
+    @Override protected void doCopyFile(File source, File dest)
+        throws IOException
     {
-        try {
-            logVerbose("Filtering %s\n", source);
-            logVerbose("       to %s\n", dest);
-            final FileUtils.Filter f = new PropertyFilter(env);
-            FileUtils.copyFileFiltering(source, dest, false, encoding, Collections.singletonList(f));
-        }
-        catch (IOException e) {
-            env.handle(e);
-        }
+        logVerbose("Filtering %s\n", source);
+        logVerbose("       to %s\n", dest);
+        final FileUtils.Filter f = new PropertyFilter(env);
+        FileUtils.copyFileFiltering(source, dest, false, encoding, Collections.singletonList(f));
     }
+
+    //~ Inner Classes ........................................................................................
 
     public static class Builder
     {
-        @NotNull private final File from;
+        @NotNull private final List<FileSet> from;
+
+        Builder(@NotNull FileSet... from)
+        {
+            this.from = Arrays.asList(from);
+        }
 
         /**
          * Private constructor called from factory methods
@@ -87,7 +99,7 @@ public class FilterTask
 
         Builder(@NotNull File from)
         {
-            this.from = from;
+            this.from = singletonList(from.isDirectory() ? fromDir(from) : fromFile(from));
         }
 
         /**
@@ -96,7 +108,7 @@ public class FilterTask
          */
         Builder(@NotNull String from)
         {
-            this(new File(Apb.getEnv().expand(from)));
+            this(Apb.getEnv().fileFromBase(from));
         }
 
         /**
@@ -107,27 +119,19 @@ public class FilterTask
         */
         @NotNull public FilterTask to(@NotNull String to)
         {
-            return to(new File(Apb.getEnv().expand(to)));
+            return to(Apb.getEnv().fileFromBase(to));
         }
 
         /**
          * Specify the target file or directory
          * If not specified, then the file/s will be copied to the current module output
          * @param to The File or directory to copy from
-         * @throws IllegalArgumentException if trying to copy a directoy to a signle file.
          */
         @NotNull public FilterTask to(@NotNull File to)
         {
-            if (from.isDirectory() && to.exists() && !to.isDirectory()) {
-                throw new IllegalArgumentException("Trying to copy directory '" + from.getPath() + "'" +
-                                                   " to a file '" + to.getPath() + "'.");
-            }
-
             return new FilterTask(from, to);
         }
     }
-
-    //~ Inner Classes ........................................................................................
 
     private static class PropertyFilter
         implements FileUtils.Filter

@@ -16,18 +16,40 @@
 //
 
 
-package apb.metadata;
+package apb.tests.javas;
 
 import java.io.File;
+import java.io.IOException;
 
-import org.jetbrains.annotations.NotNull;
+import apb.utils.FileUtils;
 
 /**
- * A marker for modules that do not come from a source file
+ * A simple main to test the java task
  */
-public interface Synthetic
+//
+// User: emilio
+// Date: Sep 7, 2009
+// Time: 3:13:04 PM
+
+//
+public class Touch
 {
     //~ Methods ..............................................................................................
 
-    @NotNull File getProjectDirectory();
+    public static void main(String[] args)
+    {
+        if (args.length != 1) {
+            System.exit(1);
+        }
+
+        final File f = new File(args[0]);
+        final long ts = Long.parseLong(System.getProperty("timestamp"));
+
+        try {
+            FileUtils.touch(f, ts);
+        }
+        catch (IOException e) {
+            System.exit(1);
+        }
+    }
 }

@@ -22,7 +22,7 @@ import apb.metadata.BuildProperty;
 import libraries.Ant;
 
 public final class ApbAnt
-    extends DefaultModule
+    extends ApbModule
 {
     //~ Instance fields ......................................................................................
 

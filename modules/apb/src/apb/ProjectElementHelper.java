@@ -20,14 +20,14 @@ package apb;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
 import apb.metadata.ProjectElement;
-import apb.metadata.Synthetic;
 
 import apb.utils.FileUtils;
-import apb.utils.PropertyExpansor;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,8 +43,13 @@ public abstract class ProjectElementHelper
     //~ Instance fields ......................................................................................
 
     @NotNull protected final Set<Command> executedCommands;
-    private boolean                       initialized;
-    private boolean                       topLevel;
+
+    /**
+     * The Map for Info objects
+     */
+    @NotNull final Map<String, Object> infoMap;
+    private boolean                    initialized;
+    private boolean                    topLevel;
 
     @Nullable private CommandBuilder      commandBuilder;
     @NotNull private final File           projectDirectory;
@@ -56,18 +61,13 @@ public abstract class ProjectElementHelper
     protected ProjectElementHelper(@NotNull ProjectBuilder pb, @NotNull ProjectElement element)
     {
         super(pb.getBaseEnvironment());
+
         this.element = element;
         executedCommands = new HashSet<Command>();
+        infoMap = new TreeMap<String, Object>();
 
-        if (element instanceof Synthetic) {
-            projectDirectory = ((Synthetic) element).getProjectDirectory();
-            sourceFile = new File(projectDirectory, element.getClass().getSimpleName());
-        }
-        else {
-            sourceFile = pb.sourceFile(element);
-            projectDirectory = findProjectDir(element, sourceFile);
-        }
-
+        sourceFile = pb.sourceFile(element);
+        projectDirectory = findProjectDir(element, sourceFile);
         initialized = false;
     }
 
@@ -95,10 +95,10 @@ public abstract class ProjectElementHelper
         return element;
     }
 
-//    @NotNull public final File getBaseDir()
-//    {
-//        return new File(element.basedir);
-//    }
+    //    @NotNull public final File getBaseDir()
+    //    {
+    //        return new File(element.basedir);
+    //    }
 
     public final void setTopLevel(boolean b)
     {
@@ -181,6 +181,11 @@ public abstract class ProjectElementHelper
     @Override public int hashCode()
     {
         return getName().hashCode();
+    }
+
+    @NotNull public <T> T getInfoObject(@NotNull String name, @NotNull Class<T> type)
+    {
+        return PropertyExpansor.retrieveInfoObject(this, name, type);
     }
 
     protected abstract void build(ProjectBuilder pb, String commandName);

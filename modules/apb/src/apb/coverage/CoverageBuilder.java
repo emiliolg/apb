@@ -79,7 +79,7 @@ public class CoverageBuilder
         List<String> args = new ArrayList<String>();
         List<File>   cs = helper.getClassesToTest();
 
-        if (coverage.enable) {
+        if (isCoverageEnabled()) {
             args.add(env.isVerbose() ? "-verbose" : "-quiet");
 
             for (CoverageReport report : processReports()) {
@@ -110,7 +110,7 @@ public class CoverageBuilder
 
     public void stopRun()
     {
-        if (coverage.enable) {
+        if (isCoverageEnabled()) {
             final CoverageReport report = textReport;
 
             if (report != null) {
@@ -135,7 +135,12 @@ public class CoverageBuilder
 
     @NotNull public String runnerMainClass()
     {
-        return coverage.enable ? EMMARUN : TESTRUNNER_MAIN;
+        return isCoverageEnabled() ? EMMARUN : TESTRUNNER_MAIN;
+    }
+
+    private boolean isCoverageEnabled()
+    {
+        return coverage.enable && !helper.getModule().enableDebugger;
     }
 
     private String formatLine(EnumMap<CoverageReport.Column, Integer> coverageInfo)

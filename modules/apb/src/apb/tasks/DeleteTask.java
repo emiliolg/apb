@@ -19,21 +19,24 @@
 package apb.tasks;
 
 import java.io.File;
+import java.util.List;
 
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Sep 4, 2009
 // Time: 4:49:37 PM
 
 public class DeleteTask
-    extends FileTask
+    extends Task
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private File file;
+    @Nullable private File          file;
+    @Nullable private List<FileSet> fileSets;
 
     //~ Constructors .........................................................................................
 
@@ -42,19 +45,26 @@ public class DeleteTask
         this.file = file;
     }
 
+    DeleteTask(@NotNull List<FileSet> fileSets)
+    {
+        this.fileSets = fileSets;
+    }
+
     //~ Methods ..............................................................................................
 
     @Override public void execute()
     {
-        final boolean isDirectory = file.isDirectory() && includes.isEmpty() && excludes.isEmpty();
-        final boolean isPatternBased = !isDirectory && file.isDirectory();
-
-        if (isDirectory || file.exists()) {
-            boolean ok =
-                isDirectory ? removeDir(file) : isPatternBased ? removePattern(file) : removeFile(file);
+        if (fileSets != null) {
+            for (FileSet fileSet : fileSets) {
+                removePattern(fileSet);
+            }
+        }
+        else if (file != null) {
+            File    f = file;
+            boolean ok = f.isDirectory() ? removeDir(f) : removeFile(f);
 
             if (!ok) {
-                env.logWarning("Unable to delete " + file.getAbsolutePath());
+                env.logWarning("Unable to delete " + f.getAbsolutePath());
             }
         }
     }
@@ -97,17 +107,21 @@ public class DeleteTask
         return d.delete();
     }
 
-    private boolean removePattern(File d)
+    private boolean removePattern(FileSet d)
     {
-        env.logInfo("Deleting  : %s\n", d.getAbsolutePath());
-        env.logInfo("  includes: %s\n", includes);
+        final File dir = d.getDir();
+        env.logInfo("Deleting  : %s\n", dir);
 
-        if (!excludes.isEmpty()) {
-            env.logInfo("  excludes: %s\n", excludes);
+        if (!d.getIncludes().isEmpty()) {
+            env.logInfo("  includes: %s\n", d.getIncludes());
         }
 
-        for (String s : includedFiles(d)) {
-            File f = new File(d, s);
+        if (!d.getExcludes().isEmpty()) {
+            env.logInfo("  excludes: %s\n", d.getExcludes());
+        }
+
+        for (String name : d.list()) {
+            File f = new File(dir, name);
             logVerbose("Deleting: %s\n", f.getAbsolutePath());
 
             if (!f.delete()) {

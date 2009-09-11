@@ -24,8 +24,7 @@ import java.util.List;
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
 
-import apb.tasks.JarTask;
-import apb.tasks.JavacTask;
+import apb.tasks.FileSet;
 import apb.tasks.JavadocTask;
 
 import org.jetbrains.annotations.NotNull;
@@ -85,19 +84,9 @@ public class Module
     @BuildProperty public final CompileInfo compiler = new CompileInfo();
 
     /**
-     * The directory where the generated source files for this module are placed
-     */
-    @BuildProperty public String generatedSource = "output/$moduledir/gsrc";
-
-    /**
      * All the info for Javadoc
      */
     @BuildProperty public JavadocInfo javadoc = new JavadocInfo();
-
-    /**
-     * The directory for the output classes
-     */
-    @BuildProperty public String output = "output/$moduledir/classes";
 
     /**
      * All the info for the package (Jar,War, etc)
@@ -108,6 +97,16 @@ public class Module
      * All the info for processing resources
      */
     @BuildProperty public ResourcesInfo resources = new ResourcesInfo();
+
+    /**
+     * The directory where the generated source files for this module are placed
+     */
+    @BuildProperty public String generatedSource = "output/$moduledir/gsrc";
+
+    /**
+     * The directory for the output classes
+     */
+    @BuildProperty public String output = "output/$moduledir/classes";
 
     /**
      * The directory where the source files for this module are placed
@@ -149,16 +148,18 @@ public class Module
 
     public void resources()
     {
-        copy(resources.dir).to(resources.output)  //
-                           .including(resources.includes())  //
-                           .excluding(resources.excludes())  //
-                           .execute();
+        final FileSet fileSet =
+            FileSet.fromDir(resources.dir)  //
+                   .including(resources.includes())  //
+                   .excluding(resources.excludes());
+
+        copy(fileSet).to(resources.output).execute();
         // todo add filtered
     }
 
     public void compile()
     {
-        JavacTask.execute(getHelper());
+        getHelper().compile();
     }
 
     public void compileTests()
@@ -178,7 +179,7 @@ public class Module
 
     public void packageit()
     {
-        JarTask.execute(getHelper());
+        getHelper().createPackage();
     }
 
     @BuildTarget(description = "Generates the Standard Java Documentation (Javadoc) for the module.")

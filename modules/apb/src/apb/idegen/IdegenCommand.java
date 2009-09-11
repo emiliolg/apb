@@ -16,10 +16,7 @@
 //
 
 
-package apb.commands.idegen;
-
-import java.util.Arrays;
-import java.util.List;
+package apb.idegen;
 
 import apb.Command;
 
@@ -30,24 +27,13 @@ import org.jetbrains.annotations.NotNull;
 // Time: 5:42:56 PM
 
 //
-public abstract class Idegen
+public abstract class IdegenCommand
     extends Command
 {
     //~ Constructors .........................................................................................
 
-    public Idegen(@NotNull String name)
+    public IdegenCommand(@NotNull String name)
     {
         super("idegen", name, "Generate " + name + " project and module files.", true);
     }
-
-    //~ Methods ..............................................................................................
-
-    public List<String> getOptions()
-    {
-        return Arrays.asList(INCLUDE_EMPTY_DIRS + ": Include empty source directories. (default = false)");
-    }
-
-    //~ Static fields/initializers ...........................................................................
-
-    public static final String INCLUDE_EMPTY_DIRS = "idegen-include-empty-dirs";
 }

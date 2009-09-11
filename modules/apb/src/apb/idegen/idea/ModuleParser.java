@@ -16,7 +16,7 @@
 //
 
 
-package apb.commands.idegen.idea;
+package apb.idegen.idea;
 //
 // User: emilio
 // Date: Mar 30, 2009

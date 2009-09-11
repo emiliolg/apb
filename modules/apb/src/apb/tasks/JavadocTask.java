@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.tasks;
 
@@ -28,12 +31,17 @@ import java.util.Locale;
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.Proxy;
+
 import apb.metadata.JavadocInfo;
 import apb.metadata.ResourcesInfo;
+
 import apb.utils.FileUtils;
 import apb.utils.StringUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.tasks.CoreTasks.exec;
 //
 // User: emilio
 // Date: Oct 27, 2008
@@ -45,50 +53,51 @@ public class JavadocTask
 {
     //~ Instance fields ......................................................................................
 
-    /**
-     * A set of additional Javadoc Options separated by ':'
-     */
-    @NotNull private String additionalJavadocOptions = "";
-    private List<String>    additionalParams;
-    private List<String>    args;
-    private boolean         author;
-    @NotNull private String bottom = "";
-    @NotNull private String classPath;
-    private boolean         deprecated;
-    private boolean         deprecatedList;
+    private boolean author;
+    private boolean deprecated;
+    private boolean deprecatedList;
+    private boolean help;
+    private boolean index;
+    private boolean linkSource;
+    private boolean since;
+    private boolean splitindex;
+    private boolean tree;
+    private boolean use;
+    private boolean version;
 
-    @NotNull private String                  doclet = "";
-    @NotNull private String                  doctitle = "";
-    @NotNull private String                  encoding = "";
-    @NotNull private List<String>            excludes;
-    @NotNull private String                  footer = "";
-    @NotNull private List<JavadocInfo.Group> groups;
-    @NotNull private String                  header = "";
-    private boolean                          help;
-    private boolean                          index;
-    @NotNull private List<String>            links;
-    private boolean                          linkSource;
-
-    private Locale locale = null;
+    private File outputDirectory;
 
     /**
      * Max memory in megabytes
      */
-    private int                                    maxMemory = 256;
+    private int maxMemory = 256;
+
+    @NotNull private JavadocInfo.Visibility        visibility;
+    private List<String>                           additionalParams;
+    private List<String>                           args;
+    @NotNull private List<String>                  excludes;
+    @NotNull private List<JavadocInfo.Group>       groups;
+    @NotNull private List<String>                  links;
     @NotNull private List<JavadocInfo.OfflineLink> offlineLinks;
+    @NotNull private List<String>                  packages;
 
-    private File                  outputDirectory;
-    @NotNull private String       overview = "";
-    @NotNull private List<String> packages;
-    private boolean               since;
-    @NotNull private String       sourcePath;
-    private boolean               splitindex;
-    private boolean               tree;
-    private boolean               use;
-    private boolean               version;
+    private Locale locale = null;
 
-    @NotNull private JavadocInfo.Visibility visibility;
-    @NotNull private String                 windowTitle;
+    /**
+     * A set of additional Javadoc Options separated by ':'
+     */
+    @NotNull private String additionalJavadocOptions = "";
+    @NotNull private String bottom = "";
+    @NotNull private String classPath;
+
+    @NotNull private String doclet = "";
+    @NotNull private String doctitle = "";
+    @NotNull private String encoding = "";
+    @NotNull private String footer = "";
+    @NotNull private String header = "";
+    @NotNull private String overview = "";
+    @NotNull private String sourcePath;
+    @NotNull private String windowTitle;
 
     //~ Constructors .........................................................................................
 
@@ -113,7 +122,7 @@ public class JavadocTask
 
     public static void execute(ModuleHelper module)
     {
-        JavadocInfo  javadoc = module.getJavadocInfo();
+        JavadocInfo javadoc = module.getJavadocInfo();
 
         String sourcePath = module.getSource().getPath();
         String classPath = FileUtils.makePath(module.compileClassPath());
@@ -171,12 +180,6 @@ public class JavadocTask
 
         copyAllResources();
 
-        ExecTask execTask = new ExecTask(env, args);
-
-        args.add(FileUtils.findJavaExecutable("javadoc", env));
-
-        execTask.setCurrentDirectory(outputDirectory.getAbsolutePath());
-
         addMemoryArg(args, maxMemory);
         addProxyArg(args);
 
@@ -216,7 +219,8 @@ public class JavadocTask
             addStandardDocletOptions();
         }
 
-        execTask.execute();
+        final String javadoc = FileUtils.findJavaExecutable("javadoc");
+        exec(javadoc, args).onDir(outputDirectory.getAbsolutePath()).execute();
     }
 
     public Proxy getActiveProxy()
@@ -404,8 +408,7 @@ public class JavadocTask
         Proxy activeProxy = Proxy.getDefaultProxy(env);
 
         if (activeProxy != null && !activeProxy.getHost().isEmpty()) {
-            String protocol =
-                    activeProxy.getProtocol().isEmpty() ? "" : activeProxy.getProtocol() + ".";
+            String protocol = activeProxy.getProtocol().isEmpty() ? "" : activeProxy.getProtocol() + ".";
             cmd.add("-J-D" + protocol + "proxySet=true");
             cmd.add("-J-D" + protocol + "proxyHost=" + activeProxy.getHost());
 

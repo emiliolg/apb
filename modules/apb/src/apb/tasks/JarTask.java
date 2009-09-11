@@ -28,7 +28,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -44,17 +43,13 @@ import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import apb.Apb;
 import apb.BuildException;
-import apb.Environment;
 import apb.Messages;
-import apb.ModuleHelper;
-
-import apb.metadata.Dependency;
-import apb.metadata.Module;
-import apb.metadata.PackageInfo;
 
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
+import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -73,7 +68,7 @@ public class JarTask
     private final File    jarFile;
 
     private final int                         level = Deflater.DEFAULT_COMPRESSION;
-    private List<String>                      excludes, includes;
+    @NotNull private final List<String>       excludes, includes;
     private final List<File>                  sourceDir;
     @NotNull private Manifest                 manifest;
     @NotNull private Map<String, Set<String>> services;
@@ -82,13 +77,14 @@ public class JarTask
 
     //~ Constructors .........................................................................................
 
-    public JarTask(@NotNull Environment env, @NotNull File jarFile)
+    private JarTask(@NotNull File jarFile, @NotNull File source)
     {
-        super(env);
+        super(Apb.getEnv());
         this.jarFile = jarFile;
         sourceDir = new ArrayList<File>();
-        excludes = Collections.emptyList();
-        includes = Arrays.asList("**/**");
+        sourceDir.add(source);
+        excludes = new ArrayList<String>();
+        includes = new ArrayList<String>();
         services = Collections.emptyMap();
         manifest = new Manifest();
         manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
@@ -97,94 +93,59 @@ public class JarTask
 
     //~ Methods ..............................................................................................
 
-    public static void execute(@NotNull ModuleHelper module)
+    public JarTask version(@NotNull String version)
     {
-        final PackageInfo packageInfo = module.getPackageInfo();
+        setManifestAttribute(Attributes.Name.IMPLEMENTATION_VERSION, version);
+        return this;
+    }
 
-        if (module.hasPackage()) {
-            JarTask jarTask = new JarTask(module, module.getPackageFile());
-
-            // set output
-            jarTask.addDir(module.getOutput());
-
-            // set manifest attributes
-            final String mainClass = packageInfo.mainClass;
-
-            if (mainClass != null && !mainClass.isEmpty()) {
-                jarTask.setManifestAttribute(Attributes.Name.MAIN_CLASS, mainClass);
-            }
-
-            if (packageInfo.addClassPath) {
-                jarTask.setClassPath(module.manifestClassPath());
-            }
-
-            jarTask.setManifestAttribute(Attributes.Name.IMPLEMENTATION_VERSION, module.getModule().version);
-
-            jarTask.addManifestAttributes(packageInfo.attributes());
-
-            // prepare dependencies included in package
-            Iterable<ModuleHelper> includedDeps = null;
-
-            switch (packageInfo.getIncludeDependenciesMode()) {
-            case DIRECT_MODULES: {
-                includedDeps = module.getDirectDependencies();
-                break;
-            }
-            case DEEP_MODULES: {
-                includedDeps = module.getDependencies();
-                break;
-            }
-            }
-
-            if (includedDeps != null) {
-                for (ModuleHelper dep : includedDeps) {
-                    packageInfo.additionalDependencies().add(dep.getModule());
-                }
-            }
-
-            Map<String, Set<String>> services = packageInfo.services();
-
-            // add packaged dependencies
-            if (!packageInfo.additionalDependencies().isEmpty()) {
-                Map<String, Set<String>> mergedServices = new HashMap<String, Set<String>>();
-
-                for (Dependency d : packageInfo.additionalDependencies()) {
-                    if (d.isModule()) {
-                        Module depModule = d.asModule();
-                        module.logVerbose("Adding module '%s'.\n", d.toString());
-                        jarTask.addDir(depModule.getHelper().getOutput());
-
-                        mergedServices.putAll(depModule.pkg.services());
-                    }
-                    else if (d.isLibrary()) {
-                        module.logInfo("Library '%s' skipped. Libraries are not packaged as part of module jar.\n",
-                                       d.toString());
-                    }
-                }
-
-                // give priority to current module (do it last)
-                mergedServices.putAll(packageInfo.services());
-                services = mergedServices;
-
-                List<String> newExcludes = new ArrayList<String>(jarTask.excludes);
-                newExcludes.addAll(packageInfo.getExcludes());
-                jarTask.setExcludes(newExcludes);
-            }
-
-            // set SPI services
-            jarTask.setServices(services);
-
-            // run task
-            jarTask.execute();
-
-            // generate sources jar
-            if (packageInfo.generateSourcesJar) {
-                jarTask = new JarTask(module, module.getSourcePackageFile());
-                jarTask.addDir(module.getSource());
-                jarTask.setExcludes(FileUtils.DEFAULT_EXCLUDES);
-                jarTask.execute();
-            }
+    public JarTask mainClass(String className)
+    {
+        if (StringUtils.isNotEmpty(className)) {
+            setManifestAttribute(Attributes.Name.MAIN_CLASS, className);
         }
+
+        return this;
+    }
+
+    public JarTask withClassPath(@NotNull String... fileNames)
+    {
+        return withClassPath(Arrays.asList(fileNames));
+    }
+
+    public JarTask withClassPath(@NotNull List<String> fileNames)
+    {
+        if (!fileNames.isEmpty()) {
+            StringBuilder result = new StringBuilder();
+
+            for (String fileName : fileNames) {
+                if (result.length() != 0) {
+                    result.append(' ');
+                }
+
+                File   f = env.fileFromBase(fileName);
+                String entry = FileUtils.makeRelative(jarFile.getParentFile(), f).getPath();
+
+                if (File.separatorChar != '/') {
+                    entry = entry.replace(File.separatorChar, '/');
+                }
+
+                result.append(entry);
+            }
+
+            setManifestAttribute(Attributes.Name.CLASS_PATH, result.toString());
+        }
+
+        return this;
+    }
+
+    public JarTask manifestAttributes(Map<Attributes.Name, String> attributes)
+    {
+        for (Map.Entry<Attributes.Name, String> atts : attributes.entrySet()) {
+            setManifestAttribute(atts.getKey(), atts.getValue());
+        }
+
+        return this;
     }
 
     public void setManifestAttribute(String name, String value)
@@ -206,6 +167,10 @@ public class JarTask
 
     public void execute()
     {
+        if (includes.isEmpty()) {
+            includes.add("**/**");
+        }
+
         long                    jarTimeStamp = checkJarFile();
         Map<File, List<String>> files = new LinkedHashMap<File, List<String>>();
 
@@ -230,39 +195,39 @@ public class JarTask
         this.comment = comment;
     }
 
-    public void setExcludes(@NotNull List<String> patterns)
-    {
-        excludes = patterns;
-    }
-
-    public void setIncludes(@NotNull List<String> patterns)
-    {
-        includes = patterns;
-    }
-
-    public void addManifestAttributes(Map<Attributes.Name, String> attributes)
-    {
-        for (Map.Entry<Attributes.Name, String> atts : attributes.entrySet()) {
-            setManifestAttribute(atts.getKey(), atts.getValue());
-        }
-    }
-
-    public void setClassPath(final List<String> classPathEntries)
-    {
-        String result = FileUtils.makePathFromStrings(classPathEntries, " ");
-
-        if (File.separatorChar != '/') {
-            result = result.replace(File.separatorChar, '/');
-        }
-
-        setManifestAttribute(Attributes.Name.CLASS_PATH, result);
-    }
-
     public void addDir(@Nullable File file)
     {
         if (file != null) {
             sourceDir.add(file);
         }
+    }
+
+    public JarTask including(String... patterns)
+    {
+        return including(Arrays.asList(patterns));
+    }
+
+    public JarTask including(@NotNull List<String> ps)
+    {
+        includes.addAll(ps);
+        return this;
+    }
+
+    public JarTask excluding(String... patterns)
+    {
+        return excluding(Arrays.asList(patterns));
+    }
+
+    public JarTask excluding(@NotNull List<String> ps)
+    {
+        excludes.addAll(ps);
+        return this;
+    }
+
+    public JarTask withServices(@NotNull Map<String, Set<String>> svcs)
+    {
+        services = svcs;
+        return this;
     }
 
     /**
@@ -286,11 +251,6 @@ public class JarTask
         }
 
         return true;
-    }
-
-    private void setServices(@NotNull Map<String, Set<String>> services)
-    {
-        this.services = services;
     }
 
     private long checkJarFile()
@@ -465,4 +425,35 @@ public class JarTask
     //~ Static fields/initializers ...........................................................................
 
     private static final long EMPTY_CRC = new CRC32().getValue();
+
+    //~ Inner Classes ........................................................................................
+
+    public static class Builder
+    {
+        @NotNull private final File jarFile;
+
+        /**
+         * Private constructor called from factory methods
+         * @param jarFile The jarfile to be created
+         */
+
+        Builder(@NotNull File jarFile)
+        {
+            this.jarFile = jarFile;
+        }
+
+        /**
+         * Private constructor called from factory methods
+         * @param jarFile The jarfile to be created
+         */
+        Builder(@NotNull String jarFile)
+        {
+            this(Apb.getEnv().fileFromBase(jarFile));
+        }
+
+        public JarTask fromDir(@NotNull File sourceDirectory)
+        {
+            return new JarTask(jarFile, sourceDirectory);
+        }
+    }
 }

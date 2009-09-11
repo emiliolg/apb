@@ -16,7 +16,7 @@
 //
 
 
-package apb.commands.module;
+package apb.module;
 
 import java.io.File;
 

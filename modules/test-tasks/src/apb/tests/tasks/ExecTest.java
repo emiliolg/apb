@@ -18,19 +18,21 @@
 
 package apb.tests.tasks;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import apb.Apb;
-import apb.Environment;
-import apb.tasks.CoreTasks;
-import static apb.tasks.CoreTasks.delete;
+import apb.tasks.ExecTask;
+
 import static apb.tasks.CoreTasks.exec;
+
 import static apb.tests.utils.FileAssert.assertDoesNotExist;
 import static apb.tests.utils.FileAssert.assertExists;
-import junit.framework.TestCase;
-import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Sep 3, 2009
@@ -42,8 +44,8 @@ public class ExecTest
 {
     //~ Instance fields ......................................................................................
 
-    private File          dir1;
-    private File          dir2;
+    private File dir1;
+    private File dir2;
 
     //~ Methods ..............................................................................................
 
@@ -52,24 +54,75 @@ public class ExecTest
     {
         createFiles();
 
-        exec("rm", "-rf", "$basedir/dir1").execute();
+        exec("rm", "-rf", "dir1").onDir("$basedir").execute();
         assertExists(dir2);
         assertDoesNotExist(dir1);
         exec("rm", "-rf", "$basedir").execute();
         assertDoesNotExist(dir2);
         assertDoesNotExist(basedir);
     }
+
     public void testExpr()
         throws IOException
     {
-        createFiles();
+        // Using outputTo
+        List<String> output = new ArrayList<String>();
+        exec("expr", "49", "/", "7").outputTo(output).execute();
+        assertEquals("7", output.get(0));
 
-        exec("expr", "49", "/", "7").execute();
-        assertExists(dir2);
-        assertDoesNotExist(dir1);
-        exec("rm", "-rf", "$basedir").execute();
-        assertDoesNotExist(dir2);
-        assertDoesNotExist(basedir);
+        // Checking the standard output
+        String result = invokeExec("expr", "49", "+", "7");
+
+        // keep lastLine
+        if (result.endsWith("\n")) {
+            result = result.substring(0, result.length() - 1);
+        }
+
+        result = result.substring(result.lastIndexOf('\n') + 1);
+        assertEquals("56", result);
+    }
+
+    public void testTest()
+        throws IOException
+    {
+        ExecTask t = exec("test", "10", "-gt", "7");
+        t.execute();
+        assertEquals(0, t.getExitValue());
+
+        t = exec("test", "10", "-gt", "17");
+        t.execute();
+        assertEquals(1, t.getExitValue());
+    }
+
+    public void testEnv()
+        throws IOException
+    {
+        List<String>        output = new ArrayList<String>();
+        Map<String, String> e = new HashMap<String, String>();
+        e.put("AA", "aa");
+        e.put("BB", "bb");
+        exec("env").withEnvironment(e).outputTo(output).execute();
+
+        assertTrue(output.contains("AA=aa"));
+        assertTrue(output.contains("BB=bb"));
+    }
+
+    static String invokeExec(String cmd, String... args)
+    {
+        ByteArrayOutputStream b = new ByteArrayOutputStream();
+        PrintStream           prev = System.out;
+
+        try {
+            PrintStream p = new PrintStream(b);
+            System.setOut(p);
+            exec(cmd, args).execute();
+            p.close();
+        }
+        finally {
+            System.setOut(prev);
+        }
+
+        return b.toString();
     }
 
     void createFiles()

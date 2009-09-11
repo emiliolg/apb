@@ -41,15 +41,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import apb.Apb;
 import apb.BuildException;
-import apb.Environment;
 import apb.Os;
+
+import apb.tasks.FileSet;
+
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -131,7 +136,7 @@ public class FileUtils
                 throw new IllegalStateException(file + " not in any source directory.");
             }
 
-            File target = new File(targetPrefix + changeExtension(path.substring(prefixLen), targetExt));
+            File target = changeExtension(new File(targetPrefix, path.substring(prefixLen)), targetExt);
 
             final long targetMod;
 
@@ -145,15 +150,15 @@ public class FileUtils
 
     /**
      * Change a filename extension to a new one
-     * @param fileName  The filename to change the extension
-     * @param ext the new extension
-     * @return the filename with a new extension
+     * @param file
+     *@param ext the new extension  @return the filename with a new extension
      */
-    @NotNull public static String changeExtension(@NotNull String fileName, @NotNull String ext)
+    @NotNull public static File changeExtension(@NotNull File file, @NotNull String ext)
     {
-        int    dot = fileName.lastIndexOf('.');
-        String baseName = dot == -1 ? fileName : fileName.substring(0, dot);
-        return baseName + (ext.charAt(0) == '.' ? ext : '.' + ext);
+        String name = file.getName();
+        int    dot = name.lastIndexOf('.');
+        String baseName = dot == -1 ? name : name.substring(0, dot);
+        return new File(file.getParentFile(), baseName + (ext.charAt(0) == '.' ? ext : '.' + ext));
     }
 
     public static List<File> removePrefix(List<File> filePrefixes, List<File> files)
@@ -322,8 +327,7 @@ public class FileUtils
         throws IOException
     {
         BufferedReader reader = null;
-        PrintWriter         writer = null;
-
+        PrintWriter    writer = null;
 
         try {
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(from), encoding));
@@ -516,7 +520,7 @@ public class FileUtils
         return os.isWindows() || os.isOs2() ? cmd + ".exe" : cmd;
     }
 
-    public static String findJavaExecutable(@NotNull final String cmd, @NotNull final Environment env)
+    public static String findJavaExecutable(@NotNull final String cmd)
     {
         final String javaCmd = addExecutableExtension(cmd);
 
@@ -532,19 +536,19 @@ public class FileUtils
         if (result == null) {
             // Try with environment JAVA_HOME
             if (JAVA_HOME == null) {
-                env.logInfo("JAVA_HOME environment variable not set.\n");
+                Apb.getEnv().logInfo("JAVA_HOME environment variable not set.\n");
             }
             else {
                 result = findCmdInDir(new File(JAVA_HOME), cmd);
 
                 if (result == null) {
-                    env.logInfo("Invalid value for JAVA_HOME environment variable: %s\n", JAVA_HOME);
+                    Apb.getEnv().logInfo("Invalid value for JAVA_HOME environment variable: %s\n", JAVA_HOME);
                 }
             }
         }
 
         if (result == null) {
-            env.logInfo("Looking for '%s' in the PATH.\n", cmd);
+            Apb.getEnv().logInfo("Looking for '%s' in the PATH.\n", cmd);
             result = javaCmd;
         }
 
@@ -661,11 +665,14 @@ public class FileUtils
     {
         final boolean present1 = file1.exists();
         final boolean present2 = file2.exists();
+
         if (!present1 && !present2) {
             return true;
         }
-        if (present1 != present2)
+
+        if (present1 != present2) {
             return false;
+        }
 
         try {
             FileInputStream i1 = new FileInputStream(file1);
@@ -691,6 +698,52 @@ public class FileUtils
         catch (IOException e) {
             return false;
         }
+    }
+
+    public static void touch(@NotNull File f, long time)
+        throws IOException
+    {
+        if (!f.createNewFile() && f.isDirectory()) {
+            for (File childFile : f.listFiles()) {
+                touch(childFile, time);
+            }
+        }
+
+        f.setLastModified(time);
+    }
+
+    /**
+     * An utility method to list all files from a group of FileSets,
+     * returning a map of each file mapped to a target directory
+     * @param filesets The filesets to be listed
+     * @param target The target directory to map the original file
+     * @param checkTimestamp Wheter to check the timestamp of the target file before adding it to the map or not.print an info message if any fileset is empty
+     * @param logEmpty Wheter to print an info message if any fileset is empty
+     */
+    public static Map<File, File> listAllMappingToTarget(List<FileSet> filesets, File target,
+                                                         boolean checkTimestamp, boolean logEmpty)
+    {
+        Map<File, File> result = new LinkedHashMap<File, File>();
+
+        for (FileSet fileset : filesets) {
+            final List<String> fileNames = fileset.list();
+
+            if (!fileNames.isEmpty()) {
+                for (String f : fileNames) {
+                    final File source = new File(fileset.getDir(), f);
+                    final File dest = new File(target, f);
+
+                    if (!checkTimestamp || !dest.exists() || source.lastModified() > dest.lastModified()) {
+                        result.put(source, dest);
+                    }
+                }
+            }
+            else if (logEmpty) {
+                Apb.getEnv().logInfo("Skipping empty directory: %s\n", fileset.getDir().getPath());
+            }
+        }
+
+        return result;
     }
 
     static boolean isSymbolicLink(File file)

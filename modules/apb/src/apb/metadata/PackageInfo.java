@@ -19,6 +19,7 @@
 package apb.metadata;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,14 +41,24 @@ public class PackageInfo
     @BuildProperty public boolean addClassPath;
 
     /**
-     * The directory for the package.
-     */
-    @BuildProperty public String dir = "lib";
-
-    /**
      * Whether to generate a jar with the sources or not.
      */
     @BuildProperty public boolean generateSourcesJar;
+
+    /**
+     * Indicates whether dependencies must be included in package.
+     */
+    public IncludeDependencies includeDependencies = IncludeDependencies.NONE;
+
+    /**
+     * The packaging type for the module
+     */
+    public PackageType type = PackageType.JAR;
+
+    /**
+     * The directory for the package.
+     */
+    @BuildProperty public String dir = "lib";
 
     /**
      * The main class of the package
@@ -60,14 +71,15 @@ public class PackageInfo
     @BuildProperty public String name = "${group}-${moduleid}-${version}";
 
     /**
-     * The packaging type for the module
+     * Additional dependencies added into the package.
+     * Libraries are not included in module package. Specified library dependencies will be ignored.
      */
-    public PackageType type = PackageType.JAR;
+    private final DependencyList additionalDependencies = new DependencyList();
 
     /**
-     * Additional attribute for the package manifest
+     * Excluded patterns specifying files that must not be included in package.
      */
-    private final Map<Attributes.Name, String> attributes = new HashMap<Attributes.Name, String>();
+    private List<String> excludes = new ArrayList<String>();
 
     /**
      * Extra entries to add to the manifest Class-Path
@@ -75,21 +87,9 @@ public class PackageInfo
     private final List<String> extraClassPathEntries = new ArrayList<String>();
 
     /**
-     * Additional dependencies added into the package.
-     * Libraries are not included in module package. Specified library dependencies will be ignored.
+     * Additional attribute for the package manifest
      */
-    private final DependencyList additionalDependencies = new DependencyList();
-
-    /**
-     * Indicates whether dependencies must be included in package.
-     */
-    private IncludeDependenciesMode includeDependenciesMode = IncludeDependenciesMode.NONE;
-
-
-    /**
-     * Excluded patterns specifying files that must not be included in package.
-     */
-    private List<String> excludes = new ArrayList<String>();
+    private final Map<Attributes.Name, String> attributes = new HashMap<Attributes.Name, String>();
 
     /**
      * Services defined in the package
@@ -113,21 +113,18 @@ public class PackageInfo
         return additionalDependencies;
     }
 
-
-    public IncludeDependenciesMode getIncludeDependenciesMode() {
-        return includeDependenciesMode;
-    }
-
-    public void setIncludeDependenciesMode(IncludeDependenciesMode includeDependenciesMode) {
-        this.includeDependenciesMode = includeDependenciesMode;
-    }
-
-    public List<String> getExcludes() {
+    public List<String> excludes()
+    {
         return excludes;
     }
 
-    public void setExcludes(List<String> excludes) {
-        this.excludes = excludes;
+    /**
+     * Method used to set excludes to define the list of files to be excluded
+     * @param patterns The list of patterns to be excluded
+     */
+    public void excludes(String... patterns)
+    {
+        excludes.addAll(Arrays.asList(patterns));
     }
 
     public List<String> extraClassPathEntries()
@@ -192,29 +189,15 @@ public class PackageInfo
         attributes.put(new Attributes.Name(attName), attValue);
     }
 
-    public enum IncludeDependenciesMode {
-        /**
-         * No module dependencies are included in jar.
-         */
-        NONE,
-
-        /**
-         * Only direct module dependencies are included in jar.
-         */
-        DIRECT_MODULES,
-
-        /**
-         * Recursive module dependencies are included in jar.
-         */
-        DEEP_MODULES
-    }
+    //~ Enums ................................................................................................
 
     /**
-     * Method used to set dependencies to be added to the package
-     * @param dependencyList The list of dependencies to be added to the package
-    public final void includeDependencies(Dependency... dependencyList)
+     * Indicates wheter to include direct dependencies, all of them or none packaged inside the jar
+     */
+    public enum IncludeDependencies
     {
-        includeDependencies.addAll(asList(dependencyList));
+        NONE,
+        DIRECT,
+        ALL
     }
-    */
 }

@@ -16,29 +16,20 @@
 //
 
 
-package apb.commands.idegen;
 
-import apb.metadata.ProjectElement;
-//
-// User: emilio
-// Date: Mar 18, 2009
-// Time: 4:11:52 PM
+import apb.metadata.Module;
 
-//
-public class Eclipse
-    extends Idegen
+public class ApbModule
+    extends Module
 {
-    //~ Constructors .........................................................................................
+    //~ Instance initializers ................................................................................
 
-    public Eclipse()
     {
-        super("eclipse");
-    }
+        version = "0.9.11";
 
-    //~ Methods ..............................................................................................
+        compiler.lint = true;
+        compiler.failOnWarning = true;
 
-    public void invoke(ProjectElement projectElement)
-    {
-        System.out.println("Not yet implemented");
+        pkg.dir = "../lib";
     }
 }

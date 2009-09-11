@@ -57,6 +57,9 @@ import org.jetbrains.annotations.Nullable;
 
 import static java.io.File.pathSeparator;
 
+import static apb.tasks.CoreTasks.delete;
+import static apb.tasks.CoreTasks.java;
+
 import static apb.testrunner.TestRunner.listTests;
 import static apb.testrunner.TestRunner.worseResult;
 
@@ -204,8 +207,7 @@ public class TestTask
 
     public static void cleanReports(TestModuleHelper module)
     {
-        RemoveTask.remove(module, module.getReportsDir());
-        RemoveTask.remove(module, module.getCoverageDir());
+        delete(FileSet.fromDir(module.getReportsDir()), FileSet.fromDir(module.getCoverageDir())).execute();
     }
 
     public void setReport(@NotNull List<TestReport> testReports)
@@ -305,7 +307,7 @@ public class TestTask
 
     private boolean isCoverageEnabled()
     {
-        return coverage.enable;
+        return coverage.enable && !enableDebugger;
     }
 
     @NotNull private Invocation testCreator()
@@ -379,34 +381,12 @@ public class TestTask
     }
 
     private int invokeRunner(@NotNull Invocation creator, @NotNull File reportSpecsFile,
-                             @NotNull CoverageBuilder coverageBuilder, @Nullable String suite,
-                             @NotNull String groups)
+                             @NotNull CoverageBuilder cb, @Nullable String suite, @NotNull String groups)
     {
-        // Create Java Command
+        // Create Arguments for Java Command
         List<String> args = new ArrayList<String>();
 
-        JavaTask java = new JavaTask(env, false, coverageBuilder.runnerMainClass());
-
-        java.setClasspath(runnerClassPath());
-
-        args.addAll(coverageBuilder.addCommandLineArguments());
-
-        // Memory
-        java.setMemory(moduleHelper.getMemory());
-        // Pass environment variables
-
-        java.putAll(moduleHelper.getEnvironmentVariables());
-
-        // Add properties
-        java.setProperties(properties);
-
-        if (enableDebugger) {
-            for (String arg : DEBUG_ARGUMENTS) {
-                java.addJavaArg(arg);
-            }
-        }
-
-        java.setCurrentDirectory(moduleHelper.getWorkingDirectory());
+        args.addAll(cb.addCommandLineArguments());
 
         // testrunner arguments
         if (env.isVerbose()) {
@@ -453,13 +433,37 @@ public class TestTask
 
         // Add the test directory
         args.add(moduleHelper.getOutput().getAbsolutePath());
+        escapeDollars(args);
 
-        java.addArguments(args);
+        // Execute  the java command
+        JavaTask java =
+            java(cb.runnerMainClass(), args).withClassPath(runnerClassPath())  //
+                                            .maxMemory(moduleHelper.getMemory())  //
+                                            .withProperties(properties)  //
+                                            .withEnvironment(moduleHelper.getEnvironmentVariables())  //
+                                            .onDir(moduleHelper.getModule().workingDirectory);
 
-        // Execute
+        if (enableDebugger) {
+            for (String arg : DEBUG_ARGUMENTS) {
+                java.addJavaArg(arg);
+            }
+        }
+
         java.execute();
 
         return java.getExitValue();
+    }
+
+    /**
+     * Escape $ in args to prevent property expansion
+     * @param args
+     */
+    private void escapeDollars(List<String> args)
+    {
+        for (int i = 0; i < args.size(); i++) {
+            String arg = args.get(i);
+            args.set(i, arg.replace("$", "\\$"));
+        }
     }
 
     private String runnerClassPath()

@@ -35,10 +35,15 @@ public class LocalLibrary
 
     @NotNull public final String  path;
     @Nullable public final String runtimePath;
-    private final boolean               optional;
+    private final boolean         optional;
     @Nullable private String      sourcesPath;
 
     //~ Constructors .........................................................................................
+
+    public LocalLibrary(@NotNull String path, boolean optional)
+    {
+        this(path, null, optional);
+    }
 
     protected LocalLibrary(@NotNull String path)
     {
@@ -48,11 +53,6 @@ public class LocalLibrary
     protected LocalLibrary(@NotNull String path, String runtimePath)
     {
         this(path, runtimePath, false);
-    }
-
-    protected LocalLibrary(@NotNull String path, boolean optional)
-    {
-        this(path, null, optional);
     }
 
     protected LocalLibrary(@NotNull String path, String runtimePath, boolean optional)

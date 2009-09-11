@@ -19,10 +19,12 @@
 package apb.tests.tasks;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 
+import apb.tasks.FileSet;
+
 import static apb.tasks.CoreTasks.delete;
+
 import static apb.tests.utils.FileAssert.assertDoesNotExist;
 import static apb.tests.utils.FileAssert.assertExists;
 //
@@ -36,8 +38,8 @@ public class DeleteTest
 {
     //~ Instance fields ......................................................................................
 
-    private File          dir1;
-    private File          dir2;
+    private File dir1;
+    private File dir2;
 
     //~ Methods ..............................................................................................
 
@@ -76,7 +78,7 @@ public class DeleteTest
         throws IOException
     {
         createFiles();
-        delete("$basedir/dir1").including("*.java").execute();
+        delete(FileSet.fromDir("$basedir/dir1").including("*.java")).execute();
 
         assertDoesNotExist(new File(dir1, "A.java"));
         assertDoesNotExist(new File(dir1, "B.java"));

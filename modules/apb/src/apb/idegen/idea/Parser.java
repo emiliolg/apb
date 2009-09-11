@@ -16,7 +16,7 @@
 //
 
 
-package apb.commands.idegen.idea;
+package apb.idegen.idea;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,18 +43,18 @@ public abstract class Parser
 {
     //~ Instance fields ......................................................................................
 
-    protected final Map<String, ModuleParser> allModules;
-    protected File[]                          classPath;
-    protected final List<ModuleParser>        modules;
-
     protected final File sourceDir;
 
-    protected final File sourceFile;
-    boolean              excludeJars;
-    private boolean      alreadyParsed;
-    private boolean      includeSource;
-    private String       name;
-    private final Parser parent;
+    protected final File               sourceFile;
+    protected File[]                   classPath;
+    protected final List<ModuleParser> modules;
+
+    protected final Map<String, ModuleParser> allModules;
+    boolean                                   excludeJars;
+    private boolean                           alreadyParsed;
+    private boolean                           includeSource;
+    private final Parser                      parent;
+    private String                            name;
 
     //~ Constructors .........................................................................................
 

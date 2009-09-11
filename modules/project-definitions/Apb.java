@@ -23,7 +23,7 @@ import libraries.Asm;
 import libraries.Junit3;
 
 public final class Apb
-    extends DefaultModule
+    extends ApbModule
 {
     //~ Static fields/initializers ...........................................................................
 
@@ -40,8 +40,8 @@ public final class Apb
         pkg.addClassPath = true;
         pkg.generateSourcesJar = true;
 
-        pkg.services("apb.Command", "apb.commands.idegen.Idea", "apb.commands.idegen.Eclipse");
-        pkg.services("apb.Command", "apb.commands.module.Clone");
+        pkg.services("apb.Command", "apb.idegen.Idea", "apb.idegen.Eclipse");
+        pkg.services("apb.Command", "apb.module.Clone");
         pkg.services("apb.testrunner.TestSetCreator", "apb.testrunner.JunitTestSetCreator");
         pkg.services("javax.annotation.processing.Processor", "apb.processors.NotNullProcessor");
 

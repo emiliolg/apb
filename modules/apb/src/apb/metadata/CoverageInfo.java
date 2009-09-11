@@ -58,7 +58,7 @@ public class CoverageInfo
     /**
      * The output directory for reports
      */
-    public String output = "$moduledir/output/coverage";
+    public String output = "output/$moduledir/coverage";
 
     /**
      * Coverage reports

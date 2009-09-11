@@ -19,12 +19,15 @@
 package apb.tests.tasks;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+
+import apb.tasks.FileSet;
+
+import apb.tests.utils.FileAssert;
 
 import static apb.tasks.CoreTasks.copy;
 import static apb.tasks.CoreTasks.copyFiltering;
-import apb.tests.utils.FileAssert;
+
 import static apb.tests.utils.FileAssert.*;
 //
 // User: emilio
@@ -33,10 +36,11 @@ import static apb.tests.utils.FileAssert.*;
 
 //
 public class CopyTest
-        extends TaskTestCase {
+    extends TaskTestCase
+{
     //~ Instance fields ......................................................................................
 
-    private File          dir1, dir2;
+    private File dir1, dir2;
 
     //~ Methods ..............................................................................................
 
@@ -69,12 +73,18 @@ public class CopyTest
         assertEqualsFiles(file1, file2);
         mkdir("dir2");
         copy("$basedir/dir1/A.java").to("$basedir/dir2").execute();
-    }                                                                     
+    }
 
     public void testPatternBased()
         throws IOException
     {
-        copy("$basedir/dir1").to("$basedir/dir2").including("*.java").excluding("**/C.java").execute();
+        final FileSet fileSet =
+            FileSet.fromDir("$basedir/dir1")  //
+                   .including("*.java")  //
+                   .excluding("**/C.java");
+
+        copy(fileSet).to("$basedir/dir2")  //
+                     .execute();
 
         FileAssert.assertEqualsFiles(new File(dir1, "A.java"), new File(dir2, "A.java"));
         FileAssert.assertEqualsFiles(new File(dir1, "B.java"), new File(dir2, "B.java"));
@@ -98,7 +108,9 @@ public class CopyTest
         //delete(basedir).execute();
     }
 
-    @Override protected void setUp() throws IOException {
+    @Override protected void setUp()
+        throws IOException
+    {
         super.setUp();
         env.putProperty("l", "line");
 

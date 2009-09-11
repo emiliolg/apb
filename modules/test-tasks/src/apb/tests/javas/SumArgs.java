@@ -16,31 +16,30 @@
 //
 
 
-package apb.commands.idegen;
+package apb.tests.javas;
 
-import apb.metadata.ProjectElement;
-
-import apb.tasks.IdeaTask;
+/**
+ * A simple main to test the java task
+ */
 //
 // User: emilio
-// Date: Mar 18, 2009
-// Time: 4:11:52 PM
+// Date: Sep 7, 2009
+// Time: 3:13:04 PM
 
 //
-public class Idea
-    extends Idegen
+public class SumArgs
 {
-    //~ Constructors .........................................................................................
-
-    public Idea()
-    {
-        super("idea");
-    }
-
     //~ Methods ..............................................................................................
 
-    public void invoke(ProjectElement projectElement)
+    public static void main(String[] args)
     {
-        IdeaTask.execute(projectElement.getHelper());
+        int result = 0;
+
+        for (String arg : args) {
+            result += Integer.parseInt(arg);
+        }
+
+        System.out.println(result);
+        System.exit(result == 0 ? 0 : result > 0 ? 1 : 2);
     }
 }

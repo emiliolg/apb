@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +15,8 @@
 // limitations under the License
 //
 
-package apb.commands.idegen.idea;
+
+package apb.idegen.idea;
 
 import java.io.File;
 import java.util.HashSet;
@@ -31,9 +33,9 @@ public class Library
 {
     //~ Instance fields ......................................................................................
 
-    private final String name;
-
     private final Set<File> paths;
+
+    private final String name;
 
     //~ Constructors .........................................................................................
 

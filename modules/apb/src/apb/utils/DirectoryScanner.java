@@ -37,13 +37,14 @@ public class DirectoryScanner
 {
     //~ Instance fields ......................................................................................
 
-    private final File baseDir;
-    private final boolean    caseSensitive = true;
+    private final boolean caseSensitive = true;
 
-    private boolean      everythingIncluded;
+    private boolean       everythingIncluded;
+    private final boolean followSymlinks;
+
+    private final File         baseDir;
     private final List<String> excludes;
-    private List<String> filesIncluded;
-    private final boolean      followSymlinks = true;
+    private List<String>       filesIncluded;
     private final List<String> includes;
 
     //~ Constructors .........................................................................................
@@ -51,16 +52,19 @@ public class DirectoryScanner
     public DirectoryScanner(@NotNull File baseDir, @NotNull Collection<String> includes,
                             @NotNull Collection<String> excludes)
     {
+        this(baseDir, includes, excludes, true);
+    }
+
+    public DirectoryScanner(@NotNull File baseDir, @NotNull Collection<String> includes,
+                            @NotNull Collection<String> excludes, boolean followSymlinks)
+    {
         this.baseDir = baseDir;
         this.includes = StringUtils.normalizePaths(includes);
         this.excludes = StringUtils.normalizePaths(excludes);
         this.excludes.addAll(StringUtils.normalizePaths(FileUtils.DEFAULT_EXCLUDES));
+        this.followSymlinks = followSymlinks;
 
-        if (!baseDir.isDirectory()) {
-            if (!baseDir.exists()) {
-                throw new IllegalStateException("baseDir " + baseDir + " does not exist");
-            }
-
+        if (baseDir.isFile()) {
             throw new IllegalStateException("baseDir " + baseDir + " is not a directory");
         }
     }
@@ -76,7 +80,11 @@ public class DirectoryScanner
         throws IllegalStateException, IOException
     {
         filesIncluded = new ArrayList<String>();
-        scandir(baseDir, "");
+
+        if (baseDir.exists()) {
+            scandir(baseDir, "");
+        }
+
         return filesIncluded;
     }
 
@@ -87,6 +95,10 @@ public class DirectoryScanner
 
     boolean couldHoldIncluded(String name)
     {
+        if (includes.isEmpty()) {
+            return true;
+        }
+
         for (String include : includes) {
             if (StringUtils.matchPatternStart(include, name, caseSensitive)) {
                 return true;
@@ -98,6 +110,10 @@ public class DirectoryScanner
 
     boolean isIncluded(String name)
     {
+        if (includes.isEmpty()) {
+            return true;
+        }
+
         for (String include : includes) {
             if (StringUtils.matchPath(include, name, caseSensitive)) {
                 return true;

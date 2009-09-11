@@ -45,9 +45,10 @@ public abstract class DefaultEnvironment
     @NotNull protected final Logger logger;
 
     /**
-     * The base proprty map
+     * The base property map
      */
     @NotNull protected final Map<String, String> properties;
+
     @Nullable private File basedir;
 
     //~ Constructors .........................................................................................
@@ -69,7 +70,7 @@ public abstract class DefaultEnvironment
     public final void putProperty(@NotNull String name, @NotNull String value)
     {
         if (mustShow(DebugOption.PROPERTIES)) {
-            logVerbose("Setting property %s.%s=%s\n", getId(), name, value);
+            logVerbose("Setting property %s:%s=%s\n", getId(), name, value);
         }
 
         properties.put(name, value);
@@ -257,8 +258,7 @@ public abstract class DefaultEnvironment
 
     @NotNull public File fileFromBase(@NotNull File file)
     {
-        return FileUtils.normalizeFile(file.isAbsolute()
-                                       ? file : new File(getBaseDir(), file.getPath()));
+        return FileUtils.normalizeFile(file.isAbsolute() ? file : new File(getBaseDir(), file.getPath()));
     }
 
     /**
@@ -300,8 +300,9 @@ public abstract class DefaultEnvironment
     @NotNull public File getBaseDir()
     {
         if (basedir == null) {
-            return new File(expand("$basedir"));
+            basedir = new File(expand("$basedir"));
         }
+
         return basedir;
     }
 

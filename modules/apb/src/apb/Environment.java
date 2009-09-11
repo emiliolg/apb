@@ -196,6 +196,7 @@ public interface Environment
      * @return A file whose path is relative to the basedir.
      */
     @NotNull File fileFromBase(@NotNull String name);
+
     /**
      * Returns a File object whose path is relative to the basedir
      * @param file The (Usually relative to the basedir) file name.

@@ -18,14 +18,20 @@
 
 package apb.utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import apb.Environment;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 /**
  * Some utility Collection Methods
@@ -58,10 +64,10 @@ public class CollectionUtils
     public static <T> List<T> optionalSingleton(@Nullable T element)
     {
         if (element == null) {
-            return Collections.emptyList();
+            return emptyList();
         }
         else {
-            return Collections.singletonList(element);
+            return singletonList(element);
         }
     }
 
@@ -77,5 +83,21 @@ public class CollectionUtils
         for (T t : source) {
             target.add(t);
         }
+    }
+
+    public static List<String> expandAll(Environment env, List<String> args)
+    {
+        List<String> cmd = new ArrayList<String>(args.size());
+
+        for (String arg : args) {
+            cmd.add(env.expand(arg));
+        }
+
+        return cmd;
+    }
+
+    public static List<String> expandAll(@NotNull Environment env, @NotNull String... patterns)
+    {
+        return expandAll(env, asList(patterns));
     }
 }

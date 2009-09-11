@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import static java.util.Arrays.asList;
 
@@ -63,6 +62,17 @@ public class CompileInfo
     @BuildProperty public boolean lint = false;
 
     /**
+     * Wheter to validate that all dependencies are being used
+     * If it's true and there are some unused dependencies it will fail with the list of unused ones
+     */
+    @BuildProperty public boolean validateDependencies = false;
+
+    /**
+     * Generate warnings
+     */
+    @BuildProperty public boolean warn = true;
+
+    /**
      * Enable specific warnings (Comma separated list) :
      * {all,cast,deprecation,divzero,empty,unchecked,fallthrough,path,serial,finally,overrides,
      * -cast,-deprecation,-divzero,-empty,-unchecked,-fallthrough,-path,-serial,-finally,-overrides,none}
@@ -77,22 +87,6 @@ public class CompileInfo
      * Generate class files for specific VM version
      */
     @BuildProperty public String target = "";
-
-    /**
-     * Wheter to validate that all dependencies are being used
-     * If it's true and there are some unused dependencies it will fail with the list of unused ones
-     */
-    @BuildProperty public boolean validateDependencies = false;
-
-    /**
-     * Generate warnings
-     */
-    @BuildProperty public boolean warn = true;
-
-    /**
-     * Options to pass to the annotation processor
-     */
-    private final Map<String, String> annotationOptions = new HashMap<String, String>();
 
     /**
      * The list of files to exclude from compilation.
@@ -115,6 +109,11 @@ public class CompileInfo
      * Do not generate warnings for the following list of files
      */
     private final List<String> warnExcludes = new ArrayList<String>();
+
+    /**
+     * Options to pass to the annotation processor
+     */
+    private final Map<String, String> annotationOptions = new HashMap<String, String>();
 
     /**
      * Controls whether annotation processing and/or compilation is done.
@@ -190,21 +189,27 @@ public class CompileInfo
         annotationOptions.put(key, value);
     }
 
-    public ProcessingOption getProcessingOption() {
+    public ProcessingOption getProcessingOption()
+    {
         return processingOption;
     }
 
-    public void setProcessingOption(@NotNull ProcessingOption processingOption) {
+    public void setProcessingOption(@NotNull ProcessingOption processingOption)
+    {
         this.processingOption = processingOption;
     }
 
-    public enum ProcessingOption {
+    //~ Enums ................................................................................................
+
+    public enum ProcessingOption
+    {
         /**
          * Both compilation and annotation processing are performed.
          */
         DEFAULT {
-            public String paramValue() {
-                return null;
+            public String paramValue()
+            {
+                return "";
             }
         },
 
@@ -212,7 +217,8 @@ public class CompileInfo
          * No annotation processing takes place.
          */
         NONE {
-            public String paramValue() {
+            public String paramValue()
+            {
                 return "none";
             }
         },
@@ -221,11 +227,12 @@ public class CompileInfo
          * Only annotation processing is done.
          */
         ONLY {
-            public String paramValue() {
+            public String paramValue()
+            {
                 return "only";
             }
         };
-        
+
         public abstract String paramValue();
     }
 }

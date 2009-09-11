@@ -18,12 +18,12 @@
 
 
 public final class ApbInstaller
-    extends DefaultModule
+    extends ApbModule
 {
     //~ Instance initializers ................................................................................
 
     {
-	dependencies(new Apb(), new ApbAnt());
+        dependencies(new Apb(), new ApbAnt());
         description = "APB Installer";
 
         resources.dir = "../";
