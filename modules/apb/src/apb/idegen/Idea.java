@@ -18,14 +18,13 @@
 
 package apb.idegen;
 
+import java.io.File;
+
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
 import apb.TestModuleHelper;
 
 import apb.metadata.ProjectElement;
-
-import static apb.idegen.IdegenTask.ModuleBuilder.forModule;
-import static apb.idegen.IdegenTask.ProjectBuilder.forProject;
 //
 // User: emilio
 // Date: Mar 18, 2009
@@ -48,34 +47,36 @@ public class Idea
     {
         final ProjectElementHelper helper = element.getHelper();
         IdeaInfo                   info = helper.getInfoObject("idegen", IdeaInfo.class);
+        File                       dir = helper.fileFromBase(info.dir);
 
         if (helper instanceof ModuleHelper) {
             final ModuleHelper mod = (ModuleHelper) helper;
 
-            createTask(mod, info).withPackageType(mod.getPackageType()).execute();
+            createTask(mod, dir, info).withPackageType(mod.getPackageType()).execute();
 
             for (TestModuleHelper testModule : mod.getTestModules()) {
-                createTask(testModule, info).testModule(true).execute();
+                createTask(testModule, dir, info).testModule(true).execute();
             }
         }
 
         if (helper.isTopLevel()) {
-            forProject(helper).on(info.dir)  //
+            IdegenTask.generateProject(helper.getId(), helper.getProjectDirectory()).on(dir)  //
+                              .usingModules(helper.listAllModules())  //
                               .usingTemplate(info.projectTemplate)  //
                               .ifOlder(helper.lastModified())  //
                               .execute();
         }
     }
 
-    private IdegenTask.Module createTask(ModuleHelper mod, IdeaInfo info)
+    private IdegenTask.Module createTask(ModuleHelper mod, File dir, IdeaInfo info)
     {
-        return forModule(mod).on(info.dir)  //
-                             .usingSources(mod.getSourceDirs())  //
-                             .usingOutput(mod.getOutput())  //
-                             .includeEmptyDirs(info.includeEmptyDirs)  //
-                             .usingTemplate(info.moduleTemplate)  //
-                             .usingModules(mod.getDirectDependencies())  //
-                             .usingLibraries(mod.getAllLibraries())  //
-                             .ifOlder(mod.lastModified());
+        return IdegenTask.generateModule(mod.getId()).on(dir)  //
+                                     .usingSources(mod.getSourceDirs())  //
+                                     .usingOutput(mod.getOutput())  //
+                                     .includeEmptyDirs(info.includeEmptyDirs)  //
+                                     .usingTemplate(info.moduleTemplate)  //
+                                     .usingModules(mod.getDirectDependencies())  //
+                                     .usingLibraries(mod.getAllLibraries())  //
+                                     .ifOlder(mod.lastModified());
     }
 }

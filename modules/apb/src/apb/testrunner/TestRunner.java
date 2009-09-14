@@ -202,7 +202,11 @@ public class TestRunner
             DirectoryScanner scanner = new DirectoryScanner(basedir, includes, excludes);
 
             try {
-                return scanner.scan();
+                for (String s : scanner.scan()) {
+                    if (s.endsWith(".class"))
+                        result.add(s);
+                }
+
             }
             catch (IOException e) {
                 throw new TestSetFailedException(e);

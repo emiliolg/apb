@@ -73,6 +73,16 @@ public class TestModule
     public boolean classPathInSystemClassloader = false;
 
     /**
+     *  Info for coverage
+     */
+    @BuildProperty public CoverageInfo coverage = new CoverageInfo();
+
+    /**
+     * A custom creator classname
+     */
+    public String customCreator = null;
+
+    /**
      * Whether to enable assertions when running the tests
      */
     public boolean enableAssertions = true;
@@ -103,24 +113,22 @@ public class TestModule
     public boolean forkPerSuite = false;
 
     /**
-     *  Info for coverage
-     */
-    public CoverageInfo coverage = new CoverageInfo();
-
-    /**
      * Max. memory allocate for the tests (in megabytes).
      */
-    public int memory = 256;
-
-    /**
-     * A custom creator classname
-     */
-    public String customCreator = null;
+    @BuildProperty public int memory = 256;
 
     /**
       * The directory to generate the reports output
       */
     @BuildProperty public final String reportsDir = "output/$moduledir/reports";
+
+    @BuildProperty(description = "The name of a specified test to be run.")
+    public String runOnly = "";
+
+    /**
+     * The type of runner for the test
+     */
+    public final TestType testType = TestType.JUNIT;
 
     /**
      * Working directory for running the tests
@@ -128,9 +136,9 @@ public class TestModule
     @BuildProperty public final String workingDirectory = "output/$moduledir";
 
     /**
-     * The type of runner for the test
+     * Environment variables to be set when running the tests
      */
-    public final TestType testType = TestType.JUNIT;
+    private final Map<String, String> environment = new HashMap<String, String>();
 
     /**
      * The list of tests files to exclude.
@@ -149,6 +157,16 @@ public class TestModule
     private final List<String> includes = new ArrayList<String>();
 
     /**
+     * The module being tested
+     */
+    private Module moduleToTest;
+
+    /**
+     * Properties to be set when running the tests
+     */
+    private final Map<String, String> properties = new HashMap<String, String>();
+
+    /**
      * test reports
      */
     private final List<TestReport> reports = new ArrayList<TestReport>();
@@ -157,21 +175,6 @@ public class TestModule
      * The list of properties to copy from the apb to the test to be run
      */
     private final List<String> useProperties = new ArrayList<String>();
-
-    /**
-     * Environment variables to be set when running the tests
-     */
-    private final Map<String, String> environment = new HashMap<String, String>();
-
-    /**
-     * Properties to be set when running the tests
-     */
-    private final Map<String, String> properties = new HashMap<String, String>();
-
-    /**
-     * The module being tested
-     */
-    private Module moduleToTest;
 
     //~ Methods ..............................................................................................
 

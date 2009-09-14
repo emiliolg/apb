@@ -92,14 +92,6 @@ public class JavaTest
         assertEquals(ts / 1000, f.lastModified() / 1000);
     }
 
-    @Override protected void setUp()
-        throws IOException
-    {
-        super.setUp();
-        env.putProperty("source", env.expand("$basedir/../../../test-tasks/src"));
-        env.putProperty("lib", env.expand("$basedir/../../../../lib"));
-    }
-
     private static String makeClassName(String classFile)
     {
         return classFile.replace('/', '.');

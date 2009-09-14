@@ -59,7 +59,7 @@ public class ResourcesInfo
     /**
      * The list of files to exclude.
      */
-    private final List<String> excludes = new ArrayList<String>();
+    private final List<String> excludes = new ArrayList<String>(CompileInfo.DEFAULT_SOURCES);
 
     /**
      * The list of files to be included in filtering

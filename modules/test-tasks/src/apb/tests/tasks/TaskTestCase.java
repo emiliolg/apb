@@ -58,6 +58,7 @@ public abstract class TaskTestCase
 
     @NotNull protected File        basedir;
     @NotNull protected Environment env;
+    @NotNull protected File datadir;
 
     //~ Methods ..............................................................................................
 
@@ -69,6 +70,7 @@ public abstract class TaskTestCase
         props.put("basedir", path);
         props.put("color", Boolean.FALSE.toString());
         props.put("debug", "task_info");
+
         env = Apb.createBaseEnvironment(props);
 
         if (basedir.exists()) {
@@ -78,6 +80,9 @@ public abstract class TaskTestCase
         if (!basedir.mkdirs()) {
             throw new IOException("Cannot create temporary directory: '" + path + "' for tests.");
         }
+
+        env.putProperty("lib", env.expand("$moduledir/../../lib"));
+        datadir = new File(env.expand("$moduledir/data"));
     }
 
     protected void createFile(File dir, String file, String[] data)
@@ -91,5 +96,9 @@ public abstract class TaskTestCase
         }
 
         w.close();
+    }
+
+    protected File dataFile(String name) {
+        return new File(datadir, name);
     }
 }

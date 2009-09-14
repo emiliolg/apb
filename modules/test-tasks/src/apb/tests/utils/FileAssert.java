@@ -32,15 +32,15 @@ public class FileAssert {
         Assert.assertTrue("File: '" + file.getAbsolutePath() + " does not exist.", file.exists());
     }
 
-    public static void assertEqualsDirs(File dir, File targetDir) {
+    public static void assertDirEquals(File dir, File targetDir) {
         File[] l = dir.listFiles();
         for (File file1 : l) {
             final File file2 = new File(targetDir, FileUtils.removePrefix(dir, file1));
-            assertEqualsFiles(file1, file2);
+            assertFileEquals(file1, file2);
         }
     }
 
-    public static void assertEqualsFiles(File file1, File file2) {
+    public static void assertFileEquals(File file1, File file2) {
         assertExists(file2);
         final String msg = String.format("File content differs between '%s' and '%s'", file1, file2);
         Assert.assertTrue(msg, FileUtils.equalsContent(file1, file2));

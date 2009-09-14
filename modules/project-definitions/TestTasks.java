@@ -17,8 +17,9 @@
 
 
 
-import apb.metadata.TestModule;
 import apb.coverage.CoverageReport;
+
+import apb.metadata.TestModule;
 
 public class TestTasks
     extends TestModule
@@ -30,9 +31,13 @@ public class TestTasks
     //~ Instance initializers ................................................................................
 
     {
-                coverage.enable = true;
-                // Explicitily include apb. (It will be excluded by default otherwise)
-                coverage.includes("apb.*");
-                coverage.reports(CoverageReport.HTML);
+        coverage.enable = true;
+
+        // Explicitily include apb. (It will be excluded by default otherwise)
+        coverage.includes("apb.*");
+        coverage.reports(CoverageReport.HTML);
+        setProperty("moduledir", "$basedir/$moduledir");
+        setProperty("source", "$basedir/$source");
+
     }
 }

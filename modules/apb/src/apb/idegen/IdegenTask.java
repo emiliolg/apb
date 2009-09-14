@@ -23,11 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.Collection;
 
 import apb.Apb;
 import apb.Environment;
 import apb.ModuleHelper;
-import apb.ProjectElementHelper;
 
 import apb.metadata.Library;
 import apb.metadata.PackageType;
@@ -45,11 +45,11 @@ public abstract class IdegenTask
     //~ Instance fields ......................................................................................
 
     @NotNull protected Environment env;
-    @NotNull protected final File  modulesHome;
-    @Nullable protected File       template;
-    protected long                 lastModified;
 
     @NotNull protected final String id;
+    protected long                  lastModified;
+    @NotNull protected final File   modulesHome;
+    @Nullable protected File        template;
 
     //~ Constructors .........................................................................................
 
@@ -64,6 +64,21 @@ public abstract class IdegenTask
     //~ Methods ..............................................................................................
 
     public abstract void execute();
+
+    public static ModuleBuilder generateModule(final String moduleId)
+    {
+        final ModuleBuilder result = new ModuleBuilder();
+        result.id = moduleId;
+        return result;
+    }
+
+    public static ProjectBuilder generateProject(final String projectId, final File projectDirectory)
+    {
+        final ProjectBuilder result = new ProjectBuilder();
+        result.projectId = projectId;
+        result.projectDirectory = projectDirectory;
+        return result;
+    }
 
     public IdegenTask ifOlder(long timeStamp)
     {
@@ -90,14 +105,14 @@ public abstract class IdegenTask
     public abstract static class Module
         extends IdegenTask
     {
-        protected boolean                     testModule;
-        @Nullable protected File              output;
         @NotNull protected final List<String> excludes;
 
         @NotNull protected final List<Library>      libraries;
         @NotNull protected final List<ModuleHelper> moduleDependencies;
-        @NotNull protected final List<File>         sourceDirs;
+        @Nullable protected File                    output;
         @NotNull protected PackageType              packageType;
+        @NotNull protected final List<File>         sourceDirs;
+        protected boolean                           testModule;
         boolean                                     includeEmptyDirs;
 
         public Module(String id, File modulesHome)
@@ -177,18 +192,22 @@ public abstract class IdegenTask
     public abstract static class Project
         extends IdegenTask
     {
-        @NotNull protected final File        projectDirectory;
+        @NotNull protected String            jdkName;
         @NotNull protected final Set<String> modules;
+        @NotNull protected final File        projectDirectory;
 
-        @NotNull protected String jdkName;
-
-        public Project(@NotNull String id, @NotNull File modulesHome, File projectDirectory,
-                       Set<String> modules)
+        public Project(@NotNull String id, @NotNull File modulesHome, File projectDirectory)
         {
             super(id, modulesHome);
             jdkName = "";
             this.projectDirectory = projectDirectory;
-            this.modules = modules;
+            modules = new TreeSet<String>();
+        }
+
+        public Project usingModules(@NotNull Collection<String> moduleIds)
+        {
+            modules.addAll(moduleIds);
+            return this;
         }
 
         @Override public Project usingTemplate(@NotNull String t)
@@ -210,42 +229,22 @@ public abstract class IdegenTask
 
     public static class ModuleBuilder
     {
-        private ModuleHelper module;
+        @NotNull private String id;
 
-        public static ModuleBuilder forModule(ModuleHelper element)
+        public Module on(File dir)
         {
-            final ModuleBuilder result = new ModuleBuilder();
-            result.module = element;
-            return result;
-        }
-
-        public Module on(String dir)
-        {
-            return new IdeaTask.Module(module.getId(), module.fileFromBase(dir));
+            return new IdeaTask.Module(id, dir);
         }
     }
 
-    static class ProjectBuilder
+    public static class ProjectBuilder
     {
-        private ProjectElementHelper element;
+        @NotNull private File   projectDirectory;
+        @NotNull private String projectId;
 
-        public static ProjectBuilder forProject(ProjectElementHelper element)
+        public Project on(File dir)
         {
-            final ProjectBuilder result = new ProjectBuilder();
-            result.element = element;
-            return result;
-        }
-
-        public Project on(String dir)
-        {
-            Set<String> elements = new TreeSet<String>();
-
-            for (ModuleHelper mod : element.listAllModules()) {
-                elements.add(mod.getId());
-            }
-
-            return new IdeaTask.Project(element.getId(), element.fileFromBase(dir),
-                                        element.getProjectDirectory(), elements);
+            return new IdeaTask.Project(projectId, dir, projectDirectory);
         }
     }
 }

@@ -21,14 +21,12 @@ package apb.tests.tasks;
 import java.io.File;
 import java.io.IOException;
 
-import apb.tasks.FileSet;
-
-import apb.tests.utils.FileAssert;
-
 import static apb.tasks.CoreTasks.copy;
 import static apb.tasks.CoreTasks.copyFiltering;
-
-import static apb.tests.utils.FileAssert.*;
+import apb.tasks.FileSet;
+import apb.tests.utils.FileAssert;
+import static apb.tests.utils.FileAssert.assertDoesNotExist;
+import static apb.tests.utils.FileAssert.assertDirEquals;
 //
 // User: emilio
 // Date: Sep 3, 2009
@@ -54,14 +52,14 @@ public class CopyTest
         assertDoesNotExist(dir3);
 
         copy("dir1").to("$basedir/dir2").execute();
-        assertEqualsDirs(dir1, dir2);
+        assertDirEquals(dir1, dir2);
 
         // Copy again (Must skip copy)
         copy("dir1").to("$basedir/dir2").execute();
-        assertEqualsDirs(dir1, dir2);
+        assertDirEquals(dir1, dir2);
 
         copy(dir2).to(dir3).execute();
-        assertEqualsDirs(dir2, dir3);
+        assertDirEquals(dir2, dir3);
     }
 
     public void testFile()
@@ -70,9 +68,10 @@ public class CopyTest
         final File file1 = new File(dir1, "A.java");
         final File file2 = new File(dir1, "A2.java");
         copy("$basedir/dir1/A.java").to("$basedir/dir1/A2.java").execute();
-        assertEqualsFiles(file1, file2);
+        FileAssert.assertFileEquals(file1, file2);
         mkdir("dir2");
         copy("$basedir/dir1/A.java").to("$basedir/dir2").execute();
+        FileAssert.assertFileEquals(file1, new File(dir2, "A.java"));
     }
 
     public void testPatternBased()
@@ -86,8 +85,8 @@ public class CopyTest
         copy(fileSet).to("$basedir/dir2")  //
                      .execute();
 
-        FileAssert.assertEqualsFiles(new File(dir1, "A.java"), new File(dir2, "A.java"));
-        FileAssert.assertEqualsFiles(new File(dir1, "B.java"), new File(dir2, "B.java"));
+        FileAssert.assertFileEquals(new File(dir1, "A.java"), new File(dir2, "A.java"));
+        FileAssert.assertFileEquals(new File(dir1, "B.java"), new File(dir2, "B.java"));
         assertDoesNotExist(new File(dir2, "C.java"));
         assertDoesNotExist(new File(dir2, "a.txt"));
     }
@@ -98,8 +97,8 @@ public class CopyTest
         createFile(dir1, "c.txt", DATA1);
         copyFiltering("$basedir/dir1").to("$basedir/dir2").execute();
 
-        assertEqualsFiles(new File(dir1, "a.txt"), new File(dir2, "a.txt"));
-        assertEqualsFiles(new File(dir1, "a.txt"), new File(dir2, "c.txt"));
+        FileAssert.assertFileEquals(new File(dir1, "a.txt"), new File(dir2, "a.txt"));
+        FileAssert.assertFileEquals(new File(dir1, "a.txt"), new File(dir2, "c.txt"));
     }
 
     @Override protected void tearDown()

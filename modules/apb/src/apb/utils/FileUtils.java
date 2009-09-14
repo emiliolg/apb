@@ -239,7 +239,7 @@ public class FileUtils
         return result.toString();
     }
 
-    public static File makeRelative(@NotNull File baseDir, @NotNull File file)
+    @NotNull public static File makeRelative(@NotNull File baseDir, @NotNull File file)
     {
         List<String> base = getAbsoluteParts(baseDir);
         List<String> f = getAbsoluteParts(file);
@@ -263,7 +263,7 @@ public class FileUtils
             result = new File(result, f.get(j));
         }
 
-        return result;
+        return result == null ? new File(".") : result;
     }
 
     public static List<String> getAbsoluteParts(File file)

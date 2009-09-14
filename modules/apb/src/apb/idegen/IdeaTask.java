@@ -188,10 +188,9 @@ public class IdeaTask
     public static class Project
         extends IdegenTask.Project
     {
-        Project(@NotNull String id, @NotNull final File modulesHome, @NotNull File projectDirectory,
-                @NotNull Set<String> modules)
+        Project(@NotNull String id, @NotNull final File modulesHome, @NotNull File projectDirectory)
         {
-            super(id, modulesHome, projectDirectory, modules);
+            super(id, modulesHome, projectDirectory);
         }
 
         public void execute()

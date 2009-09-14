@@ -103,7 +103,7 @@ public class CompileInfo
      * The list of files to compile.
      *
      */
-    private final List<String> includes = new ArrayList<String>(asList("**/*.java"));
+    private final List<String> includes = new ArrayList<String>(DEFAULT_SOURCES);
 
     /**
      * Do not generate warnings for the following list of files
@@ -119,6 +119,7 @@ public class CompileInfo
      * Controls whether annotation processing and/or compilation is done.
      */
     private ProcessingOption processingOption = ProcessingOption.DEFAULT;
+    static final List<String> DEFAULT_SOURCES = asList("**/*.java");
 
     //~ Methods ..............................................................................................
 

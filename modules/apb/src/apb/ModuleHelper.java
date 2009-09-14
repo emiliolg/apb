@@ -23,10 +23,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import apb.metadata.CompileInfo;
 import apb.metadata.Dependency;
@@ -37,21 +37,15 @@ import apb.metadata.PackageInfo;
 import apb.metadata.PackageType;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
-
+import static apb.tasks.CoreTasks.*;
 import apb.tasks.FileSet;
 import apb.tasks.JarTask;
-
-import apb.utils.CollectionUtils;
+import static apb.utils.CollectionUtils.addIfNotNull;
 import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static apb.tasks.CoreTasks.*;
-
-import static apb.utils.CollectionUtils.addIfNotNull;
 //
 // User: emilio
 // Date: Sep 15, 2008
@@ -323,17 +317,21 @@ public class ModuleHelper
         return trimDashes(getModule().pkg.name);
     }
 
-    public Set<ModuleHelper> listAllModules()
+    public Set<String> listAllModules()
     {
-        Set<ModuleHelper> result = new LinkedHashSet<ModuleHelper>();
+        Set<String> result = new TreeSet<String>();
 
         for (ModuleHelper mod : getDependencies()) {
-            result.add(mod);
-            CollectionUtils.addAll(result, mod.getTestModules());
+            result.add(mod.getId());
+            for (TestModuleHelper t : mod.getTestModules()) {
+                result.add(t.getId());
+            }
         }
 
-        result.add(this);
-        CollectionUtils.addAll(result, getTestModules());
+        result.add(getId());
+        for (TestModuleHelper t : getTestModules()) {
+            result.add(t.getId());
+        }
 
         return result;
     }

@@ -18,12 +18,11 @@
 
 package apb;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import apb.metadata.Project;
 import apb.metadata.ProjectElement;
-
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -51,9 +50,9 @@ public class ProjectHelper
         return (Project) getElement();
     }
 
-    public Set<ModuleHelper> listAllModules()
+    public Set<String> listAllModules()
     {
-        Set<ModuleHelper> result = new LinkedHashSet<ModuleHelper>();
+        Set<String> result = new TreeSet<String>();
 
         for (ProjectElement e : getProject().components()) {
             result.addAll(e.getHelper().listAllModules());

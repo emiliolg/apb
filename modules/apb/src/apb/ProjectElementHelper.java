@@ -73,7 +73,7 @@ public abstract class ProjectElementHelper
 
     //~ Methods ..............................................................................................
 
-    public abstract Set<ModuleHelper> listAllModules();
+    public abstract Set<String> listAllModules();
 
     public final String toString()
     {

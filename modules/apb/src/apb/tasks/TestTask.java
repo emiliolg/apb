@@ -65,6 +65,7 @@ import static apb.testrunner.TestRunner.worseResult;
 
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
+import static apb.utils.StringUtils.isNotEmpty;
 import static apb.utils.StringUtils.makeString;
 //
 // User: emilio
@@ -85,8 +86,19 @@ public class TestTask
     /**
      * Run EACH test suite in an independent (fork'ed) process
      */
-    boolean         forkPerSuite;
-    private boolean classPathInSystemClassloader;
+    boolean forkPerSuite;
+
+    /**
+     * The classes to be tested
+     */
+    @NotNull private final List<File> classesToTest;
+
+    /**
+     * The classpath for the tests
+     */
+    @NotNull private Collection<File>   classPath;
+    private boolean                     classPathInSystemClassloader;
+    @NotNull private final CoverageInfo coverage;
 
     /**
      * Enable assertions when running the tests
@@ -99,6 +111,11 @@ public class TestTask
     private boolean enableDebugger;
 
     /**
+     * The list of tests to exclude
+     */
+    @NotNull private List<String> excludes;
+
+    /**
      * Fail if no tests are found
      */
     private boolean failIfEmpty;
@@ -109,42 +126,26 @@ public class TestTask
     private boolean failOnError;
 
     /**
-     * The classpath for the tests
-     */
-    @NotNull private Collection<File>   classPath;
-    @NotNull private final CoverageInfo coverage;
-    @Nullable private File              reportDir;
-
-    /**
-     * The classes to be tested
-     */
-    @NotNull private final List<File> classesToTest;
-
-    /**
-     * The list of tests to exclude
-     */
-    @NotNull private List<String> excludes;
-
-    /**
      * The list of tests to include
      */
     @NotNull private List<String> includes;
 
     /**
-     * The list of test groups to execute
+     * The test module helper
      */
-    @NotNull private final List<String> testGroups;
+    private TestModuleHelper moduleHelper;
 
     /**
      * List of System properties to pass to the tests.
      */
     @NotNull private Map<String, String> properties;
+    @NotNull private TestReport          report;
+    @Nullable private File               reportDir;
 
     /**
-     * The test module helper
+     * The list of test groups to execute
      */
-    private TestModuleHelper    moduleHelper;
-    @NotNull private TestReport report;
+    @NotNull private final List<String> testGroups;
 
     //~ Constructors .........................................................................................
 
@@ -172,7 +173,10 @@ public class TestTask
         failIfEmpty = testModule.failIfEmpty;
         failOnError = testModule.failOnError;
 
-        if (testModule.includes().isEmpty()) {
+        if (isNotEmpty(testModule.runOnly)) {
+            setTests(testModule.runOnly);
+        }
+        else if (testModule.includes().isEmpty()) {
             includes = TestModule.DEFAULT_INCLUDES;
             testModule.excludes().addAll(TestModule.DEFAULT_EXCLUDES);
             excludes = testModule.excludes();
@@ -231,8 +235,10 @@ public class TestTask
         includes = new ArrayList<String>();
 
         for (String t : tests) {
-            t = t.replace('.', '/');
-            includes.add("**/" + t + ".class");
+            if (isNotEmpty(t)) {
+                t = t.replace('.', '/');
+                includes.add("**/" + t + ".class");
+            }
         }
     }
 
