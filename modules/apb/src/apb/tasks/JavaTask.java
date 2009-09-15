@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb.tasks;
 
 import java.io.File;
@@ -27,11 +25,14 @@ import java.util.Map;
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.ProjectElementHelper;
+
 import apb.metadata.Dependency;
 import apb.metadata.DependencyList;
 import apb.metadata.PackageType;
-import static apb.utils.CollectionUtils.addIfNotNull;
+
+import apb.utils.CollectionUtils;
 import apb.utils.FileUtils;
+
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -44,17 +45,20 @@ public class JavaTask
 {
     //~ Instance fields ......................................................................................
 
+    private boolean assertionsEnabled;
+
     @NotNull private String             classpath = "";
-    private boolean                     executeJar;
+    private final boolean               executeJar;
     private int                         exitValue;
-    private String                      jarOrClass;
-    @NotNull private final List<String> javaArgs;
+    private final String                jarOrClass;
+    @NotNull private final List<String> javaArgs = new ArrayList<String>();
 
     /**
      * Max memory in megabytes used by the Java command
      */
-    private int                                memory = 256;
-    @NotNull private final Map<String, String> properties;
+    private int memory = 256;
+
+    @NotNull private final Map<String, String> properties = new HashMap<String, String>();
 
     //~ Constructors .........................................................................................
 
@@ -69,9 +73,6 @@ public class JavaTask
         super(env, new ArrayList<String>());
         this.executeJar = executeJar;
         this.jarOrClass = jarOrClass;
-        properties = new HashMap<String, String>();
-        javaArgs = new ArrayList<String>();
-        memory = 256;
 
         // By default use the classpath of the current module if it is active
         ProjectElementHelper mod = env.getCurrent();
@@ -108,7 +109,8 @@ public class JavaTask
 
         for (Dependency dependency : dependencies) {
             if (dependency.isLibrary()) {
-                addIfNotNull(result, dependency.asLibrary().getArtifact(env, PackageType.JAR));
+                CollectionUtils.addIfNotNull(result,
+                                             dependency.asLibrary().getArtifact(env, PackageType.JAR));
             }
             else if (dependency.isModule()) {
                 final ModuleHelper module = (ModuleHelper) env.getHelper(dependency.asModule());
@@ -121,7 +123,7 @@ public class JavaTask
 
     public void setClasspath(@NotNull DependencyList dependencies)
     {
-        classpath = FileUtils.makePath(JavaTask.fileList(env, dependencies));
+        classpath = FileUtils.makePath(fileList(env, dependencies));
     }
 
     public void setClasspath(@NotNull String classpath)
@@ -146,13 +148,16 @@ public class JavaTask
         // add Java executable
         args.add(FileUtils.findJavaExecutable("java", env));
 
-        // Memory
+        if (assertionsEnabled) {
+            args.add("-ea");
+        }
 
-        args.add("-Xmx" + memory + "m");
+        // Memory
+        args.add("-Xmx" + memory + 'm');
 
         // Pass properties
         for (Map.Entry<String, String> entry : properties.entrySet()) {
-            args.add("-D" + entry.getKey() + "=" + entry.getValue());
+            args.add("-D" + entry.getKey() + '=' + entry.getValue());
         }
 
         args.addAll(javaArgs);
@@ -176,6 +181,11 @@ public class JavaTask
         task.putAll(getEnvironment());
         task.execute();
         exitValue = task.getExitValue();
+    }
+
+    public void assertionsEnabled(boolean value)
+    {
+        assertionsEnabled = value;
     }
 
     public int getExitValue()
@@ -216,5 +226,4 @@ public class JavaTask
     {
         this.memory = memory;
     }
-
 }
