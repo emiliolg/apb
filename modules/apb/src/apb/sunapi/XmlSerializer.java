@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +14,15 @@
 // limitations under the License
 //
 
-
 package apb.sunapi;
 
-import java.io.IOException;
 import java.io.Writer;
 
-import com.sun.org.apache.xml.internal.serialize.OutputFormat;
-import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
-
 import org.w3c.dom.Document;
+import org.w3c.dom.ls.DOMImplementationLS;
+import org.w3c.dom.ls.LSException;
+import org.w3c.dom.ls.LSOutput;
+import org.w3c.dom.ls.LSSerializer;
 //
 // User: emilio
 // Date: Jul 27, 2009
@@ -33,13 +31,24 @@ import org.w3c.dom.Document;
 //
 public class XmlSerializer
 {
+    //~ Constructors .........................................................................................
+
+    private XmlSerializer() {}
+
     //~ Methods ..............................................................................................
 
     public static void serialize(Document document, Writer output)
-        throws IOException
+        throws LSException
     {
-        final OutputFormat  format = new OutputFormat(document, apb.utils.Constants.UTF8, true);
-        final XMLSerializer serializer = new XMLSerializer(output, format);
-        serializer.serialize(document);
+        final DOMImplementationLS ls =
+            (DOMImplementationLS) document.getImplementation().getFeature("LS", "3.0");
+
+        final LSOutput out = ls.createLSOutput();
+        out.setCharacterStream(output);
+
+        final LSSerializer serializer = ls.createLSSerializer();
+
+        serializer.getDomConfig().setParameter("format-pretty-print", true);
+        serializer.write(document, out);
     }
 }

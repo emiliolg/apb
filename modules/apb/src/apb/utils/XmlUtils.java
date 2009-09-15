@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +14,11 @@
 // limitations under the License
 //
 
-
 package apb.utils;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.io.Writer;
 
 import apb.sunapi.XmlSerializer;
@@ -39,15 +38,25 @@ import org.w3c.dom.Text;
 //
 public class XmlUtils
 {
+    //~ Constructors .........................................................................................
+
+    private XmlUtils() {}
+
     //~ Methods ..............................................................................................
 
     public static void writeDocument(@NotNull Document document, @NotNull File file)
     {
         try {
-            Writer output = new BufferedWriter(FileUtils.createWriter(file));
-            XmlSerializer.serialize(document, output);
+            final Writer output = new BufferedWriter(FileUtils.createWriter(file));
+
+            try {
+                XmlSerializer.serialize(document, output);
+            }
+            finally {
+                output.close();
+            }
         }
-        catch (Exception e) {
+        catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
