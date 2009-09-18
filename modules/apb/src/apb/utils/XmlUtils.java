@@ -21,8 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 
-import apb.sunapi.XmlSerializer;
-
 import org.jetbrains.annotations.NotNull;
 
 import org.w3c.dom.Document;
@@ -30,6 +28,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+import org.w3c.dom.ls.DOMImplementationLS;
+import org.w3c.dom.ls.LSException;
+import org.w3c.dom.ls.LSOutput;
+import org.w3c.dom.ls.LSSerializer;
 //
 // User: emilio
 // Date: Dec 19, 2008
@@ -50,7 +52,7 @@ public class XmlUtils
             final Writer output = new BufferedWriter(FileUtils.createWriter(file));
 
             try {
-                XmlSerializer.serialize(document, output);
+                serialize(document, output);
             }
             finally {
                 output.close();
@@ -95,5 +97,20 @@ public class XmlUtils
         Text text = document.createTextNode(content);
         name.appendChild(text);
         parent.appendChild(name);
+    }
+
+    private static void serialize(Document document, Writer output)
+        throws LSException
+    {
+        final DOMImplementationLS ls =
+            (DOMImplementationLS) document.getImplementation().getFeature("LS", "3.0");
+
+        final LSOutput out = ls.createLSOutput();
+        out.setCharacterStream(output);
+
+        final LSSerializer serializer = ls.createLSSerializer();
+
+        serializer.getDomConfig().setParameter("format-pretty-print", true);
+        serializer.write(document, out);
     }
 }
