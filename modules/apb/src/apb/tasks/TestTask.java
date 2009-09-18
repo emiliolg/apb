@@ -400,7 +400,8 @@ public class TestTask
         List<String> args = new ArrayList<String>();
 
         JavaTask java = new JavaTask(env, false, coverageBuilder.runnerMainClass());
-        java.assertionsEnabled(true);
+        // enable assertions
+        java.addJavaArg("-ea");
         java.setClasspath(runnerClassPath());
 
         args.addAll(coverageBuilder.addCommandLineArguments());

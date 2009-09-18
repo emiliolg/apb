@@ -45,8 +45,6 @@ public class JavaTask
 {
     //~ Instance fields ......................................................................................
 
-    private boolean assertionsEnabled;
-
     @NotNull private String             classpath = "";
     private final boolean               executeJar;
     private int                         exitValue;
@@ -148,10 +146,6 @@ public class JavaTask
         // add Java executable
         args.add(FileUtils.findJavaExecutable("java", env));
 
-        if (assertionsEnabled) {
-            args.add("-ea");
-        }
-
         // Memory
         args.add("-Xmx" + memory + 'm');
 
@@ -181,11 +175,6 @@ public class JavaTask
         task.putAll(getEnvironment());
         task.execute();
         exitValue = task.getExitValue();
-    }
-
-    public void assertionsEnabled(boolean value)
-    {
-        assertionsEnabled = value;
     }
 
     public int getExitValue()
