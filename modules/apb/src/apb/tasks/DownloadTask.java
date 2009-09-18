@@ -31,6 +31,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
+import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 
@@ -52,9 +53,9 @@ public class DownloadTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private File    dest;
-    @Nullable private String password;
-    @Nullable private String user;
+    @NotNull private File   dest;
+    @NotNull private String password;
+    @NotNull private String user;
 
     @NotNull private UpdatePolicy updatePolicy;
     @NotNull private URL          source;
@@ -65,16 +66,16 @@ public class DownloadTask
 
     /**
      * Construct a DownloadTask to download from a specified URL (from) to a specified local file (to)
-     * @param env The Environment
      * @param from A URL to download from
      * @param to The destination file to place the downloaded file
      */
-    public DownloadTask(@NotNull Environment env, @NotNull String from, @NotNull String to)
+    private DownloadTask(@NotNull URL from, @NotNull File to)
     {
-        super(env);
         updatePolicy = UpdatePolicy.DAILY;
-        setSource(from);
-        setDest(to);
+        source = from;
+        dest = to;
+        password = "";
+        user = "";
     }
 
     //~ Methods ..............................................................................................
@@ -101,60 +102,32 @@ public class DownloadTask
      *      <td> Check the source every 30 minutes
      * </table>
      * </p>
-     * @param updatePolicy The update policy to be used.
+     * @param policy The update policy to be used.
      */
-    public void setUpdatePolicy(@NotNull UpdatePolicy updatePolicy)
+    public DownloadTask withUpdatePolicy(@NotNull UpdatePolicy policy)
     {
-        this.updatePolicy = updatePolicy;
-    }
-
-    /**
-     * Set the source URL for the download
-     * @param from The URL to download the file form
-     */
-    public void setSource(@NotNull String from)
-    {
-        try {
-            source = new URL(from);
-        }
-        catch (MalformedURLException e) {
-            throw new BuildException(e);
-        }
+        updatePolicy = policy;
+        return this;
     }
 
     /**
      * Set the user when using http basic authentication
-     * @param user The username
+     * @param u The username
      */
-    public void setUser(@NotNull String user)
+    public DownloadTask withUser(@NotNull String u)
     {
-        this.user = user;
+        user = u;
+        return this;
     }
 
     /**
      * Set the password when using http basic authentication
-     * @param password The password in cleartext.
+     * @param p The password in cleartext.
      */
-    public void setPassword(@NotNull String password)
+    public DownloadTask withPassword(@NotNull String p)
     {
-        this.password = password;
-    }
-
-    /**
-     * Set the destination file
-     * @param to The path of the destination file
-     */
-    public void setDest(@NotNull String to)
-    {
-        dest = new File(to);
-
-        if (dest.isDirectory()) {
-            throw new BuildException("The specified destination is a directory");
-        }
-
-        if (!dest.canWrite() && dest.exists()) {
-            throw new BuildException("Can't write to " + dest.getAbsolutePath());
-        }
+        password = p;
+        return this;
     }
 
     /**
@@ -345,7 +318,7 @@ public class DownloadTask
             c = source.openConnection();
 
             // prepare Java 1.1 style credentials
-            if (user != null || password != null) {
+            if (!user.isEmpty() || !password.isEmpty()) {
                 String encoding = StringUtils.encodeBase64(user + ":" + password);
                 c.setRequestProperty("Authorization", "Basic " + encoding);
             }
@@ -363,6 +336,52 @@ public class DownloadTask
     private static final int  BUFFER_SIZE = 100 * 1024;
 
     //~ Inner Classes ........................................................................................
+
+    public static class Builder
+    {
+        @NotNull private URL url;
+
+        Builder(@NotNull String from)
+        {
+            try {
+                url = new URL(from);
+            }
+            catch (MalformedURLException e) {
+                throw new BuildException(e);
+            }
+        }
+
+        Builder(@NotNull URL from)
+        {
+            url = from;
+        }
+
+        /**
+        * Specify the target file or directory
+        * @param to The File or directory to copy to
+        */
+        @NotNull public DownloadTask to(@NotNull String to)
+        {
+            return to(Apb.getEnv().fileFromBase(to));
+        }
+
+        /**
+        * Specify the target file or directory
+        * @param to The File or directory to copy to
+        */
+        @NotNull public DownloadTask to(@NotNull File to)
+        {
+            if (to.isDirectory()) {
+                throw new BuildException("The specified destination is a directory");
+            }
+
+            if (!to.canWrite() && to.exists()) {
+                throw new BuildException("Can't write to " + to.getAbsolutePath());
+            }
+
+            return new DownloadTask(url, to);
+        }
+    }
 
     private static class DownloadProgress
     {

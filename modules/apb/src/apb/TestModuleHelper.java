@@ -21,16 +21,23 @@ package apb;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import apb.metadata.CoverageInfo;
+import apb.coverage.CoverageBuilder;
+
 import apb.metadata.Module;
 import apb.metadata.TestModule;
 
+import apb.tasks.CoreTasks;
+import apb.tasks.FileSet;
+
+import apb.testrunner.TestLauncher;
 import apb.testrunner.output.TestReport;
+import apb.testrunner.output.TestReportBroadcaster;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static java.util.Arrays.asList;
 //
 // User: emilio
 // Date: Dec 2, 2008
@@ -60,11 +67,6 @@ public class TestModuleHelper
         return (TestModule) super.getModule();
     }
 
-    public CoverageInfo getCoverageInfo()
-    {
-        return getModule().coverage;
-    }
-
     @NotNull public ModuleHelper getModuleToTest()
     {
         Module m = getModule().getModuleToTest();
@@ -88,11 +90,6 @@ public class TestModuleHelper
         }
 
         return workingDirectory;
-    }
-
-    public List<TestReport> getReports()
-    {
-        return getModule().reports();
     }
 
     @NotNull public File getReportsDir()
@@ -120,7 +117,7 @@ public class TestModuleHelper
 
     public boolean isCoverageEnabled()
     {
-        return getCoverageInfo().enable;
+        return getModule().coverage.enable;
     }
 
     public List<File> getSourcesToTest()
@@ -128,19 +125,33 @@ public class TestModuleHelper
         return getModuleToTest().getSourceDirs();
     }
 
-    public int getMemory()
+    public void runTests(String... groups)
     {
-        return getModule().memory;
+        if (groups.length > 0) {
+            putProperty("tests.groups", groups[0]);
+        }
+
+        List<String> testGroups = groups.length == 0 ? getModule().groups() : asList(groups);
+
+        final CoverageBuilder coverageBuilder = new CoverageBuilder(this);
+        TestLauncher          testLauncher =
+            new TestLauncher(getModule(), getOutput(), testGroups, buildReports(), getReportsDir(),
+                             deepClassPath(true, false), getClassesToTest(), coverageBuilder);
+        testLauncher.execute();
     }
 
-    public Map<String, String> getEnvironmentVariables()
+    public void cleanTestReports()
     {
-        return getModule().environment();
+        CoreTasks.delete(FileSet.fromDir(getReportsDir()), FileSet.fromDir(getCoverageDir())).execute();
     }
 
-    public String getCreatorClass()
+    private TestReport buildReports()
     {
-        final TestModule m = getModule();
-        return m.testType.creatorClass(m.customCreator);
+        List<TestReport.Builder> testReports = getModule().reports();
+
+        return testReports.isEmpty()
+               ? TestReport.SIMPLE.build(this)
+               : testReports.size() == 1 ? testReports.get(0).build(this)
+                                         : new TestReportBroadcaster(this, testReports);
     }
 }

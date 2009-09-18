@@ -24,12 +24,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-import apb.Environment;
-import apb.ModuleHelper;
+import apb.Apb;
 import apb.Proxy;
 
 import apb.metadata.JavadocInfo;
@@ -39,9 +37,11 @@ import apb.utils.FileUtils;
 import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import static apb.tasks.CoreTasks.exec;
+
+import static apb.utils.CollectionUtils.filesFromBase;
+import static apb.utils.FileUtils.makePath;
 //
 // User: emilio
 // Date: Oct 27, 2008
@@ -72,23 +72,22 @@ public class JavadocTask
      */
     private int maxMemory = 256;
 
-    @NotNull private JavadocInfo.Visibility        visibility;
-    private List<String>                           additionalParams;
-    private List<String>                           args;
-    @NotNull private List<String>                  excludes;
-    @NotNull private List<JavadocInfo.Group>       groups;
-    @NotNull private List<String>                  links;
-    @NotNull private List<JavadocInfo.OfflineLink> offlineLinks;
-    @NotNull private List<String>                  packages;
+    @NotNull private JavadocInfo.Visibility visibility;
+
+    //
+    @NotNull private final List<String>                  additionalOptions;
+    @NotNull private final List<String>                  args;
+    @NotNull private final List<String>                  excludes;
+    @NotNull private final List<JavadocInfo.Group>       groups;
+    @NotNull private final List<String>                  links;
+    @NotNull private final List<JavadocInfo.OfflineLink> offlineLinks;
+    @NotNull private final List<String>                  packages;
+    @NotNull private final List<File>                    sourcePath;
 
     private Locale locale = null;
 
-    /**
-     * A set of additional Javadoc Options separated by ':'
-     */
-    @NotNull private String additionalJavadocOptions = "";
     @NotNull private String bottom = "";
-    @NotNull private String classPath;
+    @NotNull private String classPath = "";
 
     @NotNull private String doclet = "";
     @NotNull private String doctitle = "";
@@ -96,82 +95,213 @@ public class JavadocTask
     @NotNull private String footer = "";
     @NotNull private String header = "";
     @NotNull private String overview = "";
-    @NotNull private String sourcePath;
-    @NotNull private String windowTitle;
+    @NotNull private String windowTitle = "";
 
     //~ Constructors .........................................................................................
 
-    public JavadocTask(@NotNull Environment env, @NotNull File outputDir, @NotNull String classPath,
-                       @NotNull String sourcePath)
+    public JavadocTask(@NotNull List<File> sourceDirs, @NotNull File outputDir)
     {
-        super(env);
-        this.sourcePath = sourcePath;
-        this.classPath = classPath;
+        super(Apb.getEnv());
+        sourcePath = sourceDirs;
         outputDirectory = outputDir;
         encoding = ResourcesInfo.DEFAULT_ENCODING;
         visibility = JavadocInfo.Visibility.PROTECTED;
-        packages = Collections.emptyList();
-        additionalParams = Collections.emptyList();
+
+        additionalOptions = new ArrayList<String>();
         args = new ArrayList<String>();
-        links = Collections.emptyList();
-        offlineLinks = Collections.emptyList();
-        groups = Collections.emptyList();
+        links = new ArrayList<String>();
+        offlineLinks = new ArrayList<JavadocInfo.OfflineLink>();
+        groups = new ArrayList<JavadocInfo.Group>();
+        excludes = new ArrayList<String>();
+        packages = new ArrayList<String>();
     }
 
     //~ Methods ..............................................................................................
 
-    public static void execute(ModuleHelper module)
-    {
-        JavadocInfo javadoc = module.getJavadocInfo();
-
-        String sourcePath = module.getSource().getPath();
-        String classPath = FileUtils.makePath(module.compileClassPath());
-
-        JavadocTask t = new JavadocTask(module, module.fileFromBase(javadoc.output), classPath, sourcePath);
-
-        t.initParameters(javadoc);
-
-        t.execute();
-    }
-
-    public void setMaxMemory(int memory)
+    public JavadocTask maxMemory(int memory)
     {
         maxMemory = memory;
+        return this;
     }
 
-    public void setExcludes(@NotNull List<String> excludes)
-    {
-        this.excludes = excludes;
-    }
-
-    public void setEncoding(@NotNull String value)
+    public JavadocTask withEncoding(@NotNull String value)
     {
         encoding = value;
+        return this;
     }
 
-    public void setLocale(@NotNull Locale locale)
+    public JavadocTask withLocale(@NotNull Locale l)
     {
-        this.locale = locale;
+        locale = l;
+        return this;
     }
 
-    public void setOverview(@Nullable File file)
+    public JavadocTask withOverview(@NotNull String overviewFile)
     {
-        if (file != null) {
-            if (!file.exists()) {
-                env.handle("Not existing overview file: " + file);
+        overview = "";
+
+        if (!overview.isEmpty()) {
+            File f = env.fileFromBase(overviewFile);
+
+            if (!f.exists()) {
+                env.handle("Not existing overview file: " + f);
             }
             else {
-                overview = file.getPath();
+                overview = f.getPath();
             }
         }
-        else {
-            overview = "";
-        }
+
+        return this;
     }
 
-    public void setVisibility(@NotNull JavadocInfo.Visibility level)
+    public JavadocTask withVisibility(@NotNull JavadocInfo.Visibility level)
     {
         visibility = level;
+        return this;
+    }
+
+    public JavadocTask including(@NotNull List<String> packageList)
+    {
+        packages.addAll(packageList);
+        return this;
+    }
+
+    public JavadocTask excluding(@NotNull List<String> list)
+    {
+        excludes.addAll(list);
+        return this;
+    }
+
+    public JavadocTask additionalOptions(List<String> list)
+    {
+        additionalOptions.addAll(list);
+        return this;
+    }
+
+    public JavadocTask usingDoclet(@NotNull String s)
+    {
+        doclet = s;
+        return this;
+    }
+
+    public JavadocTask withTitle(@NotNull String s)
+    {
+        doctitle = env.expand(s);
+        return this;
+    }
+
+    public JavadocTask withHeader(@NotNull String s)
+    {
+        header = env.expand(s);
+        return this;
+    }
+
+    public JavadocTask withFooter(@NotNull String s)
+    {
+        footer = env.expand(s);
+        return this;
+    }
+
+    public JavadocTask withBottom(@NotNull String s)
+    {
+        bottom = env.expand(s);
+        return this;
+    }
+
+    public JavadocTask withWindowTitle(@NotNull String s)
+    {
+        windowTitle = env.expand(s);
+        return this;
+    }
+
+    public JavadocTask withLinks(@NotNull List<String> list)
+    {
+        links.addAll(list);
+        return this;
+    }
+
+    public JavadocTask withOfflineLinks(@NotNull List<JavadocInfo.OfflineLink> linkList)
+    {
+        offlineLinks.addAll(linkList);
+        return this;
+    }
+
+    public JavadocTask withGroups(@NotNull List<JavadocInfo.Group> list)
+    {
+        groups.addAll(list);
+        return this;
+    }
+
+    public JavadocTask withClassPath(List<File> files)
+    {
+        classPath = makePath(files);
+        return this;
+    }
+
+    public JavadocTask includeAuthorInfo(boolean b)
+    {
+        author = b;
+        return this;
+    }
+
+    public JavadocTask includeDeprecatedInfo(boolean b)
+    {
+        deprecated = b;
+        return this;
+    }
+
+    public JavadocTask includeVersionInfo(boolean b)
+    {
+        version = b;
+        return this;
+    }
+
+    public JavadocTask includeSinceInfo(boolean b)
+    {
+        since = b;
+        return this;
+    }
+
+    public JavadocTask includeHelpLinks(boolean b)
+    {
+        help = b;
+        return this;
+    }
+
+    public JavadocTask generateIndex(boolean b)
+    {
+        index = b;
+        return this;
+    }
+
+    public JavadocTask generateHtmlSource(boolean b)
+    {
+        linkSource = b;
+        return this;
+    }
+
+    public JavadocTask generateClassHierarchy(boolean b)
+    {
+        tree = b;
+        return this;
+    }
+
+    public JavadocTask generateDeprecatedList(boolean b)
+    {
+        deprecatedList = b;
+        return this;
+    }
+
+    public JavadocTask splitIndexPerLetter(boolean b)
+    {
+        splitindex = b;
+        return this;
+    }
+
+    public JavadocTask createUsePages(boolean b)
+    {
+        use = b;
+        return this;
     }
 
     public void execute()
@@ -183,15 +313,13 @@ public class JavadocTask
         addMemoryArg(args, maxMemory);
         addProxyArg(args);
 
-        if (!additionalJavadocOptions.isEmpty()) {
-            args.addAll(Arrays.asList(additionalJavadocOptions.split(":")));
-        }
-
         if (locale != null) {
             addArgument("-locale", locale.toString());
         }
 
-        addArgument("-classpath", classPath);
+        if (!classPath.isEmpty()) {
+            addArgument("-classpath", classPath);
+        }
 
         addArgument("-doclet", doclet);
 
@@ -199,7 +327,7 @@ public class JavadocTask
 
         args.add("-" + visibility.toString().toLowerCase());
 
-        addArgument("-sourcepath", sourcePath);
+        addArgument("-sourcepath", FileUtils.makePath(sourcePath));
 
         args.add("-subpackages");
         args.add(FileUtils.makePathFromStrings(packages.isEmpty() ? collectPackages() : packages));
@@ -209,10 +337,12 @@ public class JavadocTask
             args.add(FileUtils.makePathFromStrings(excludes));
         }
 
-        args.add(env.isVerbose() ? "-verbose" : "-quiet");
+        if (!env.isVerbose()) {
+            args.add("-quiet");
+        }
 
-        if (!additionalParams.isEmpty()) {
-            args.addAll(additionalParams);
+        if (!additionalOptions.isEmpty()) {
+            args.addAll(additionalOptions);
         }
 
         if (doclet.isEmpty()) {
@@ -223,77 +353,12 @@ public class JavadocTask
         exec(javadoc, args).onDir(outputDirectory.getAbsolutePath()).execute();
     }
 
-    public Proxy getActiveProxy()
-    {
-        return null;
-    }
-
-    public void setAdditionalJavadocOptions(@NotNull String additionalJavadocOptions)
-    {
-        this.additionalJavadocOptions = additionalJavadocOptions;
-    }
-
-    public void setAdditionalParams(List<String> additionalParams)
-    {
-        this.additionalParams = additionalParams;
-    }
-
-    public void setPackages(@NotNull List<String> packages)
-    {
-        this.packages = packages;
-    }
-
-    public void setDoclet(@NotNull String doclet)
-    {
-        this.doclet = doclet;
-    }
-
-    public void setDoctitle(@NotNull String doctitle)
-    {
-        this.doctitle = doctitle;
-    }
-
-    public void setHeader(@NotNull String header)
-    {
-        this.header = header;
-    }
-
-    public void setFooter(@NotNull String footer)
-    {
-        this.footer = footer;
-    }
-
-    public void setBottom(@NotNull String bottom)
-    {
-        this.bottom = bottom;
-    }
-
-    public void setWindowTitle(@NotNull String value)
-    {
-        windowTitle = value;
-    }
-
-    public void setLinks(@NotNull List<String> value)
-    {
-        links = value;
-    }
-
-    public void setOfflineLinks(@NotNull List<JavadocInfo.OfflineLink> offlineLinks)
-    {
-        this.offlineLinks = offlineLinks;
-    }
-
-    public void setGroups(@NotNull List<JavadocInfo.Group> groupList)
-    {
-        groups = groupList;
-    }
-
     private List<String> collectPackages()
     {
         final List<String> result = new ArrayList<String>();
 
-        for (String source : sourcePath.split(":")) {
-            new File(source).listFiles(new FileFilter() {
+        for (File source : sourcePath) {
+            source.listFiles(new FileFilter() {
                     public boolean accept(File file)
                     {
                         if (file.isDirectory()) {
@@ -430,38 +495,59 @@ public class JavadocTask
         }
     }
 
-    private void initParameters(JavadocInfo info)
+    //~ Inner Classes ........................................................................................
+
+    public static class Builder
     {
-        setEncoding(info.encoding);
+        @NotNull private final List<File> sourceDirs;
 
-        setOverview(info.overview.isEmpty() ? null : env.fileFromBase(info.overview));
+        /**
+         * Private constructor called from factory methods
+         * @param sourceDirs The directories containing source classes to document
+         */
+        Builder(@NotNull String... sourceDirs)
+        {
+            this(filesFromBase(Apb.getEnv(), sourceDirs));
+        }
 
-        setVisibility(info.visibility);
-        setPackages(info.includes());
-        setExcludes(info.excludes());
-        setDoclet(info.doclet);
-        setLocale(info.locale);
-        setMaxMemory(info.memory);
-        setDoctitle(env.expand(info.title));
-        setHeader(env.expand(info.header));
-        setFooter(env.expand(info.footer));
-        setBottom(env.expand(info.bottom));
-        setWindowTitle(env.expand(info.windowTitle));
+        /**
+         * Private constructor called from factory methods
+         * @param sourceDirs The directories containing source classes to document
+         */
+        Builder(@NotNull List<File> sourceDirs)
+        {
+            this.sourceDirs = sourceDirs;
+        }
 
-        setLinks(info.links());
-        setOfflineLinks(info.offlineLinks());
-        setGroups(info.groups());
+        /**
+        * Specify the target(output) directory.
+        * That is the directory where "html" files will be placed
+        * @param target The output directory
+        * @throws IllegalArgumentException if file exists and it is not a directory.
+        */
+        @NotNull public JavadocTask to(@NotNull String target)
+        {
+            return to(Apb.getEnv().fileFromBase(target));
+        }
 
-        splitindex = info.splitIndex;
-        use = info.use;
-        version = info.version;
-        author = info.author;
-        deprecated = info.deprecated;
-        deprecatedList = info.deprecatedList;
-        since = info.since;
-        tree = info.tree;
-        index = info.index;
-        help = info.help;
-        linkSource = info.linkSource;
+        /**
+        * Specify the target(output) directory.
+        * That is the directory where ".html" files will be placed
+        * @param target The output directory
+         * @throws IllegalArgumentException if file exists and it is not a directory.
+         */
+        @NotNull public JavadocTask to(@NotNull File target)
+        {
+            if (target.exists()) {
+                if (!target.isDirectory()) {
+                    throw new IllegalArgumentException(target.getPath() + " is not a directory");
+                }
+            }
+            else if (!target.mkdirs()) {
+                throw new IllegalArgumentException("Can not create directory: " + target.getPath());
+            }
+
+            return new JavadocTask(sourceDirs, target);
+        }
     }
 }

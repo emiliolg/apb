@@ -176,13 +176,7 @@ public class JarTask
 
         for (File dir : sourceDir) {
             DirectoryScanner scanner = new DirectoryScanner(dir, includes, excludes);
-
-            try {
-                files.put(dir, scanner.scan());
-            }
-            catch (IOException e) {
-                env.handle(e);
-            }
+            files.put(dir, scanner.scan());
         }
 
         if (!uptodate(jarTimeStamp, files)) {

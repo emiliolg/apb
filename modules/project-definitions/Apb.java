@@ -45,7 +45,7 @@ public final class Apb
         pkg.services("apb.testrunner.TestSetCreator", "apb.testrunner.JunitTestSetCreator");
         pkg.services("javax.annotation.processing.Processor", "apb.processors.NotNullProcessor");
 
-        javadoc.deprecatedList = false;
+        javadoc.generateDeprecatedList = false;
         javadoc.links("http://java.sun.com/javase/6/docs/api");
 
         compiler.warnExcludes("apb/sunapi/*");

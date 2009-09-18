@@ -29,6 +29,8 @@ import java.util.Map;
 
 import apb.tasks.ExecTask;
 
+import static java.util.Arrays.asList;
+
 import static apb.tasks.CoreTasks.exec;
 
 import static apb.tests.utils.FileAssert.assertDoesNotExist;
@@ -57,9 +59,48 @@ public class ExecTest
         exec("rm", "-rf", "dir1").onDir("$basedir").execute();
         assertExists(dir2);
         assertDoesNotExist(dir1);
-        exec("rm", "-rf", "$basedir").execute();
+        exec("rm", "-rf", "$basedir").call();
         assertDoesNotExist(dir2);
         assertDoesNotExist(basedir);
+    }
+
+    public void testRmIfReq()
+        throws IOException
+    {
+        createFiles();
+
+        exec("rm", "-rf", "dir1").onDir("$basedir")  //
+                                 .executeIfRequired(dataPath("."),
+                                                    asList("dir1/- Not there -", "dir1/A.java",
+                                                           "dir1/B.java"));
+        assertDoesNotExist(dir1);
+
+        createFiles();
+        exec("rm", "-rf", "dir1").onDir("$basedir")  //
+                                 .executeIfRequired("dir1/B.java", asList("dir1/A.java"));
+        assertExists(dir1);
+
+        exec("rm", "-rf", "dir1").onDir("$basedir")  //
+                                 .executeIfRequired("dir2", "dir1", "A", "B", asList("A.java"));
+        assertExists(dir1);
+
+        exec("rm", "-rf", "dir1").onDir("$basedir")  //
+                                 .executeIfRequired(dataPath("- Not There -"), asList("dir1/A.java"));
+        assertDoesNotExist(dir1);
+
+        createFiles();
+        exec("rm", "-rf", "dir1").onDir("$basedir")  //
+                                 .executeIfRequired("dir2", "dir1", "java", "txt",
+                                                    asList("A.java", "C.java"));
+
+        assertDoesNotExist(dir1);
+
+        createFiles();
+        exec("rm", "-rf", "dir1").onDir("$basedir")  //
+                                 .executeIfRequired(dataPath("."), "dir1", "java", "txt",
+                                                    asList("A.java", "B.java"));
+
+        assertDoesNotExist(dir1);
     }
 
     public void testExpr()

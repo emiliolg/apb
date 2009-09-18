@@ -19,7 +19,6 @@
 package apb.utils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -77,7 +76,6 @@ public class DirectoryScanner
     }
 
     public List<String> scan()
-        throws IllegalStateException, IOException
     {
         filesIncluded = new ArrayList<String>();
 
@@ -135,7 +133,6 @@ public class DirectoryScanner
     }
 
     private static List<String> filterSymbolicLinks(File dir, String relativePath, final List<String> files)
-        throws IOException
     {
         List<String> result = new ArrayList<String>();
 
@@ -155,7 +152,6 @@ public class DirectoryScanner
     }
 
     private void scandir(File dir, String relativePath)
-        throws IOException
     {
         List<String> files = listFiles(dir);
 

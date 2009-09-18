@@ -23,14 +23,14 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Source;
 import javax.xml.transform.Templates;
@@ -41,99 +41,57 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import apb.Environment;
+import apb.Apb;
+import apb.BuildException;
 
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import org.xml.sax.SAXException;
+import static java.util.Collections.singletonList;
+
+import static apb.tasks.FileSet.fromDir;
+import static apb.tasks.FileSet.fromFile;
+
+import static apb.utils.FileUtils.createOutputStream;
 
 public class XsltTask
-    extends Task
-            //implements ErrorListener
-
+    extends CopyTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final TransformerFactory factory;
+    @NotNull private final File styleFile;
 
-    private File                               inputFile;
-    private File                               outputFile;
     @NotNull private final Map<String, String> outputProperties;
     @NotNull private final Map<String, String> params;
-    private InputStream                        style;
-    private String                             styleName;
+    @NotNull private String                    useExtension;
+
+    @NotNull private final TransformerFactory factory;
 
     //~ Constructors .........................................................................................
 
-    public XsltTask(@NotNull Environment env)
+    private XsltTask(@NotNull List<FileSet> fileSets, @NotNull File to, @NotNull File style)
     {
-        super(env);
+        super(fileSets, to);
         factory = TransformerFactory.newInstance();
         outputProperties = new HashMap<String, String>();
         params = new HashMap<String, String>();
+        styleFile = style;
+        useExtension = "";
     }
 
     //~ Methods ..............................................................................................
 
     /**
-     * Process the given input file using the specified styleFileName
-     * @param inputFileName The name of the input file to process
-     * given either relative to the source directory of the project or as an absolute path
-     * @param styleFileName The name of the stylesheet to use
-     * given either relative to the project's source dir or as an absolute path.
-     * @param outputFileName The name of the output file to produce
-     * given either relative to the generate source directory of the project or as an absolute path
+     * Specify the desired file extension to be used for the targets.
+     * If not specified the extension from the source will be used when the destination is a directory
+     * @param ext The desired extension to be used
      */
-
-    public void process(@NotNull String inputFileName, @NotNull String styleFileName,
-                        @NotNull String outputFileName)
+    public XsltTask usingExtension(@NotNull String ext)
     {
-        setStyleFileName(styleFileName);
-        setInputFile(inputFileName);
-        setOutputFile(outputFileName);
-        execute();
-    }
-
-    public void process(@NotNull String inputFileName, @NotNull InputStream stream,
-                        @NotNull String outputFileName)
-    {
-        setStyle(stream);
-        setInputFile(inputFileName);
-        setOutputFile(outputFileName);
-        execute();
-    }
-
-    /**
-     * Execute the task
-     */
-    public void execute()
-    {
-        if (inputFile == null || outputFile == null || style == null) {
-            env.handle("Must set input, output & style files");
-        }
-
-        final long inputMod = inputFile.lastModified();
-
-        if (inputMod == 0) {
-            env.handle("input file " + inputFile.getPath() + " does not exist!");
-        }
-
-        if (env.forceBuild() || inputMod > outputFile.lastModified()) {
-            final File outdir = outputFile.getParentFile();
-
-            if (!outdir.exists() && !outdir.mkdirs()) {
-                env.handle("Cannot create output directory: " + outdir);
-            }
-
-            try {
-                transform(inputFile, outputFile);
-            }
-            catch (Exception e) {
-                env.handle(e);
-            }
-        }
+        useExtension = ext;
+        return this;
     }
 
     /**
@@ -141,9 +99,10 @@ public class XsltTask
      * @param name Name of the XSL parameter
      * @param value Text value to be placed into the param.
      */
-    public void addParam(@NotNull String name, @NotNull String value)
+    public XsltTask withParameter(@NotNull String name, @NotNull String value)
     {
         params.put(name, value);
+        return this;
     }
 
     /**
@@ -152,68 +111,32 @@ public class XsltTask
      * @param name The name of the property
      * @param value The value of the property
      */
-    public void addOutputProperty(@NotNull String name, @NotNull String value)
+    public XsltTask withOutputProperty(@NotNull String name, @NotNull String value)
     {
         outputProperties.put(name, value);
+        return this;
     }
 
-    /**
-    * The name of the input file to process
-    * Given either relative to the source directory of the project or as an absolute path
-    * @param inputFileName
-    */
-    public void setInputFile(@NotNull String inputFileName)
+    @Override protected void doCopyFile(File source, File dest)
+        throws IOException
     {
-        inputFile = env.fileFromSource(inputFileName);
-    }
-
-    /**
-    * The name of the output file to produce
-    * Given either relative to the generate source directory of the project or as an absolute path
-    * @param outputFileName
-    */
-    public void setOutputFile(@NotNull String outputFileName)
-    {
-        outputFile = env.fileFromGeneratedSource(outputFileName);
-    }
-
-    /**
-     * The name of the stylesheet to use.
-     * Given either relative to the project's source dir or as an absolute path.
-     * @param styleFileName The name of the stylesheet to use.
-     */
-    public void setStyleFileName(@NotNull String styleFileName)
-    {
-        styleName = styleFileName;
-
-        try {
-            style = new FileInputStream(env.fileFromSource(styleFileName));
+        if (!useExtension.isEmpty()) {
+            dest = FileUtils.changeExtension(dest, useExtension);
         }
-        catch (FileNotFoundException e) {
-            env.handle(e);
-        }
-    }
 
-    /**
-     * The InputStream of the stylesheet to use.
-     * @param style The InputStream of the stylesheet to use.
-     */
-    public void setStyle(@NotNull InputStream style)
-    {
-        this.style = style;
+        transform(source, dest);
     }
 
     private void transform(File infile, File outfile)
-        throws Exception
+        throws IOException
     {
-        final Transformer transformer = createTransformer();
-
         InputStream  fis = null;
         OutputStream fos = null;
 
         try {
+            final Transformer transformer = createTransformer();
             fis = new BufferedInputStream(new FileInputStream(infile));
-            fos = new BufferedOutputStream(new FileOutputStream(outfile));
+            fos = new BufferedOutputStream(createOutputStream(outfile, false));
             StreamResult res = new StreamResult(fos);
             Source       src = new StreamSource(fis);
 
@@ -222,16 +145,16 @@ public class XsltTask
             if (env.isVerbose()) {
                 logVerbose("Processing :'%s'\n", infile);
                 logVerbose("        to :'%s'\n", outfile);
-
-                if (styleName != null) {
-                    logVerbose("using xslt :'%s'\n", styleName);
-                }
+                logVerbose("using xslt :'%s'\n", styleFile);
             }
             else {
                 env.logInfo("Processing 1 file.\n");
             }
 
             transformer.transform(src, res);
+        }
+        catch (TransformerException e) {
+            throw new BuildException(e);
         }
         finally {
             FileUtils.close(fis);
@@ -240,7 +163,8 @@ public class XsltTask
     }
 
     private Transformer createTransformer()
-        throws TransformerConfigurationException {
+        throws TransformerConfigurationException
+    {
         Templates templates = readTemplates();
 
         Transformer transformer = templates.newTransformer();
@@ -266,13 +190,17 @@ public class XsltTask
     }
 
     private Templates readTemplates()
-        throws TransformerConfigurationException {
+        throws TransformerConfigurationException
+    {
         InputStream xslStream = null;
 
         try {
-            xslStream = new BufferedInputStream(style);
+            xslStream = new BufferedInputStream(new FileInputStream(styleFile));
             Source src = new StreamSource(xslStream);
             return factory.newTemplates(src);
+        }
+        catch (FileNotFoundException e) {
+            throw new BuildException(e);
         }
         finally {
             FileUtils.close(xslStream);
@@ -280,6 +208,92 @@ public class XsltTask
     }
 
     //~ Inner Classes ........................................................................................
+
+    public static class Builder
+    {
+        @Nullable private File               to;
+        @NotNull private final List<FileSet> from;
+
+        Builder(@NotNull FileSet... from)
+        {
+            this.from = Arrays.asList(from);
+        }
+
+        /**
+         * Private constructor called from factory methods
+         * @param from The source to transform. It can be a file or a directory
+         */
+
+        Builder(@NotNull File from)
+        {
+            this.from = singletonList(from.isFile() ? fromFile(from) : fromDir(from));
+        }
+
+        /**
+         * Private constructor called from factory methods
+         * @param from The source to transform. It can be a file or a directory
+         */
+        Builder(@NotNull String from)
+        {
+            this(Apb.getEnv().fileFromBase(from));
+        }
+
+        /**
+        * Specify the target file or directory
+        * @param fileName The File or directory to transform to
+        * @throws IllegalArgumentException if trying to copy a directoy to a single file.
+        */
+        @NotNull public Builder to(@NotNull String fileName)
+        {
+            return to(Apb.getEnv().fileFromBase(fileName));
+        }
+
+        /**
+         * Specify the target file or directory
+         * @param file The File or directory to transform to
+         * @throws IllegalArgumentException if trying to copy a directoy to a signle file.
+         */
+        @NotNull public Builder to(@NotNull File file)
+        {
+            if (file.isFile() && (from.size() != 1 || !from.get(0).isFile())) {
+                throw new IllegalArgumentException("Trying to transform multiple files to a single file '" +
+                                                   file.getPath() + "'.");
+            }
+
+            to = file;
+            return this;
+        }
+
+        /**
+         * Specify the name of the stylesheet to use
+         * @param fileName the name of the stylesheet to use
+         * @throws IllegalStateException if {@link #to} was not invoked before
+         */
+        @NotNull public XsltTask usingStyle(@NotNull String fileName)
+        {
+            return usingStyle(Apb.getEnv().fileFromBase(fileName));
+        }
+
+        /**
+         * Specify a file to be used as a stylesheet
+         * @param file a file to be used as a stylesheet
+         * @throws IllegalStateException if {@link #to} was not invoked before
+         */
+        @NotNull public XsltTask usingStyle(@NotNull File file)
+        {
+            final File target = to;
+
+            if (target == null) {
+                throw new IllegalStateException("Must invoked 'to' method to specify the output file or directory");
+            }
+
+            if (!file.exists()) {
+                throw new BuildException(new FileNotFoundException(file.getPath()));
+            }
+
+            return new XsltTask(from, target, file);
+        }
+    }
 
     private class XsltErrorListener
         implements ErrorListener

@@ -30,6 +30,8 @@ import apb.tasks.JavaTask;
 
 import apb.tests.utils.FileAssert;
 
+import static java.util.Arrays.asList;
+
 import static apb.tasks.CoreTasks.*;
 //
 // User: emilio
@@ -76,7 +78,7 @@ public class JavaTest
         jar(TOUCH_JAR).fromDir(basedir)  //
                       .including(TOUCH + ".class")  //
                       .mainClass(makeClassName(TOUCH))  //
-                      .withClassPath("$lib/apb.jar")  //
+                      .withClassPath(asList("$lib/apb.jar"))  //
                       .execute();
 
         FileAssert.assertExists(new File(basedir, TOUCH_JAR));
@@ -108,6 +110,7 @@ public class JavaTest
                                                                     .deprecated(true)  //
                                                                     .trackUnusedDependencies(true)  //
                                                                     .failOnWarning(true)  //
+                                                                    .showWarnings(true)  //
                                                                     .execute();
 
         FileAssert.assertExists(new File(basedir, TOUCH + ".class"));

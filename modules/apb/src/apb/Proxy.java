@@ -28,10 +28,11 @@ public class Proxy
 {
     //~ Instance fields ......................................................................................
 
+    private final int port;
+
     @NotNull private final String host;
     @NotNull private final String nonProxyHosts;
     @NotNull private final String password;
-    private final int                   port;
     @NotNull private final String protocol;
     @NotNull private final String username;
 
@@ -52,11 +53,11 @@ public class Proxy
 
     public static Proxy getDefaultProxy(Environment env)
     {
-        String host = env.getProperty("proxy.host", "");
+        String host = env.getProperty(PROXY_HOST, "");
         int    port;
 
         try {
-            port = Integer.parseInt(env.getProperty("proxy.port", "-1"));
+            port = Integer.parseInt(env.getProperty(PROXY_PORT, "-1"));
         }
         catch (NumberFormatException e) {
             port = -1;
@@ -66,9 +67,9 @@ public class Proxy
 
         if (!host.isEmpty() && port != -1) {
             proxy =
-                new Proxy(host, port, env.getProperty("proxy.nonProxyHosts", ""),
-                          env.getProperty("proxy.user", ""), env.getProperty("proxy.password", ""),
-                          env.getProperty("proxy.protocol", ""));
+                new Proxy(host, port, env.getProperty(PROXY_NON_PROXY_HOSTS, ""),
+                          env.getProperty(PROXY_USER, ""), env.getProperty(PROXY_PASSWORD, ""),
+                          env.getProperty(PROXY_PROTOCOL, ""));
         }
 
         return proxy;
@@ -103,4 +104,16 @@ public class Proxy
     {
         return password;
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final String  PROXY_HOST = "proxy.host";
+    private static final String  PROXY_PORT = "proxy.port";
+    private static final String  PROXY_NON_PROXY_HOSTS = "proxy.nonProxyHosts";
+    private static final String  PROXY_USER = "proxy.user";
+    private static final String  PROXY_PASSWORD = "proxy.password";
+    private static final String  PROXY_PROTOCOL = "proxy.protocol";
+    public static final String[] PROXY_PROPERTIES = {
+            PROXY_HOST, PROXY_PORT, PROXY_NON_PROXY_HOSTS, PROXY_PASSWORD, PROXY_PROTOCOL, PROXY_USER
+        };
 }

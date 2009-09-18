@@ -738,18 +738,19 @@ public class FileUtils
                     }
                 }
             }
-            else if (logEmpty) {
-                Apb.getEnv().logInfo("Skipping empty directory: %s\n", fileset.getDir().getPath());
-            }
         }
 
         return result;
     }
 
     static boolean isSymbolicLink(File file)
-        throws IOException
     {
-        return !file.getAbsolutePath().equals(file.getCanonicalPath());
+        try {
+            return !file.getAbsolutePath().equals(file.getCanonicalPath());
+        }
+        catch (IOException e) {
+            return true;
+        }
     }
 
     private static boolean alreadyProcesses(File f, Set<File> files)

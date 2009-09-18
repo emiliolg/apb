@@ -16,56 +16,38 @@
 //
 
 
-package apb.idegen.idea;
+package apb.tasks;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
 
-import apb.utils.FileUtils;
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
-// Date: Mar 30, 2009
-// Time: 3:35:17 PM
+// Date: Sep 4, 2009
+// Time: 4:49:37 PM
 
-//
-public class Library
+public class MkdirTask
+    extends Task
 {
     //~ Instance fields ......................................................................................
 
-    private final Set<File> paths;
-
-    private final String name;
+    @NotNull private File file;
 
     //~ Constructors .........................................................................................
 
-    public Library(String libraryName)
+    MkdirTask(@NotNull File file)
     {
-        name = libraryName == null ? "##local" : libraryName;
-        paths = new HashSet<File>();
+        this.file = file;
     }
 
     //~ Methods ..............................................................................................
 
-    public String getName()
+    @Override public void execute()
     {
-        return name;
-    }
-
-    public Set<File> getPaths()
-    {
-        return paths;
-    }
-
-    public void add(File path)
-    {
-        if (path != null) {
-            paths.add(FileUtils.normalizeFile(path));
+        if (!file.exists()) {
+            if (!file.mkdirs()) {
+                env.logWarning("Unable to create directory: " + file.getAbsolutePath());
+            }
         }
-    }
-
-    @Override public String toString()
-    {
-        return name;
     }
 }

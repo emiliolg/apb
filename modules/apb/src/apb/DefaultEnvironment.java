@@ -19,6 +19,9 @@
 package apb;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -50,6 +53,12 @@ public abstract class DefaultEnvironment
     @NotNull protected final Map<String, String> properties;
 
     @Nullable private File basedir;
+
+    /**
+     * The list of jars that comprise the extension class path
+     * It is initialized in a lazy way
+     */
+    @Nullable private List<File> extClassPath;
 
     //~ Constructors .........................................................................................
 
@@ -201,6 +210,28 @@ public abstract class DefaultEnvironment
     }
 
     /**
+     * Get the Extension Jars to be searched when we compile definitions
+     * @return the extension Jars to be searched when we compiled definitions
+     */
+    @NotNull public Collection<File> getExtClassPath()
+    {
+        if (extClassPath == null) {
+            final ArrayList<File> files = new ArrayList<File>();
+            String                path = getProperty(EXT_PATH_PROPERTY, "");
+
+            if (!path.isEmpty()) {
+                for (String p : path.split(File.pathSeparator)) {
+                    files.addAll(FileUtils.listAllFilesWithExt(new File(p), ".jar"));
+                }
+            }
+
+            extClassPath = files;
+        }
+
+        return extClassPath;
+    }
+
+    /**
      * Return the value of the specified boolean property
      * @param id The property to search
      * @param defaultValue The default value
@@ -327,6 +358,16 @@ public abstract class DefaultEnvironment
     }
 
     @Nullable protected String retrieveProperty(@NotNull String id)
+    {
+        return retrieveLocalProperty(id);
+    }
+
+    /**
+     * Get a property defined in THIS environment (Not inherited)
+     * @param id The property name
+     * @return The propertu value
+     */
+    @Nullable String retrieveLocalProperty(String id)
     {
         return properties.get(id);
     }

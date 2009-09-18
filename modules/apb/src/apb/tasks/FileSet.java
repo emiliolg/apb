@@ -19,7 +19,6 @@
 package apb.tasks;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,7 +29,7 @@ import apb.utils.DirectoryScanner;
 
 import org.jetbrains.annotations.NotNull;
 
-import static java.util.Collections.emptyList;
+import static java.util.Arrays.asList;
 
 import static apb.utils.CollectionUtils.expandAll;
 //
@@ -110,8 +109,7 @@ public class FileSet
      */
     public FileSet including(@NotNull String... patterns)
     {
-        includes.addAll(expandAll(Apb.getEnv(), patterns));
-        return this;
+        return including(asList(patterns));
     }
 
     /**
@@ -132,8 +130,7 @@ public class FileSet
      */
     public FileSet excluding(@NotNull String... patterns)
     {
-        excludes.addAll(expandAll(Apb.getEnv(), patterns));
-        return this;
+        return excluding(asList(patterns));
     }
 
     /**
@@ -150,9 +147,10 @@ public class FileSet
     /**
      * Shall symbolic links be followed? Defaults to true
      */
-    public void followSymbolicLinks(boolean b)
+    public FileSet followSymbolicLinks(boolean b)
     {
         followSymLinks = b;
+        return this;
     }
 
     /**
@@ -163,13 +161,7 @@ public class FileSet
     {
         DirectoryScanner scanner = new DirectoryScanner(dir, includes, excludes, followSymLinks);
 
-        try {
-            return scanner.scan();
-        }
-        catch (IOException e) {
-            Apb.getEnv().handle(e);
-            return emptyList();
-        }
+        return scanner.scan();
     }
 
     /**
@@ -266,9 +258,14 @@ public class FileSet
             return Collections.singletonList(name);
         }
 
-        @Override public void followSymbolicLinks(boolean b)
+        @Override public FileSet followSymbolicLinks(boolean b)
         {
             throw unsupported();
+        }
+
+        @Override public String toString()
+        {
+            return new File(getDir(), name).getPath();
         }
 
         private UnsupportedOperationException unsupported()

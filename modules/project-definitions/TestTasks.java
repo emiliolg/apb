@@ -36,8 +36,8 @@ public class TestTasks
         // Explicitily include apb. (It will be excluded by default otherwise)
         coverage.includes("apb.*");
         coverage.reports(CoverageReport.HTML);
+
         setProperty("moduledir", "$basedir/$moduledir");
         setProperty("source", "$basedir/$source");
-
     }
 }

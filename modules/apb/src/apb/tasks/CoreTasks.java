@@ -19,13 +19,12 @@
 package apb.tasks;
 
 import java.io.File;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 
 import apb.Apb;
 import apb.Environment;
-
-import apb.metadata.UpdatePolicy;
 
 import apb.utils.CollectionUtils;
 
@@ -132,11 +131,20 @@ public class CoreTasks
 
     /**
      * Downloads a remote file
-     * @param url The File or Directory to copy from
+     * @param url The URL to download from
      */
-    @NotNull public static Download download(@NotNull String url)
+    @NotNull public static DownloadTask.Builder download(@NotNull String url)
     {
-        return new Download(url);
+        return new DownloadTask.Builder(url);
+    }
+
+    /**
+     * Downloads a remote file
+     * @param url The URL to download from
+     */
+    @NotNull public static DownloadTask.Builder download(@NotNull URL url)
+    {
+        return new DownloadTask.Builder(url);
     }
 
     /**
@@ -245,69 +253,65 @@ public class CoreTasks
         return new JarTask.Builder(jarFile);
     }
 
-    //~ Inner Classes ........................................................................................
-
-    //
-
-    static class Download
-        extends Task
+    public static JavadocTask.Builder javadoc(String... sources)
     {
-        @NotNull private String target;
-        @NotNull private String url;
-        private UpdatePolicy    updatePolicy;
+        return new JavadocTask.Builder(sources);
+    }
 
-        Download(@NotNull String url)
-        {
-            this.url = url;
-            updatePolicy = UpdatePolicy.DAILY;
-        }
+    /**
+     * Creates a directory
+     * @param name The Directory to be created
+     *             Properties in the name will be expanded.
+     */
+    @NotNull public static MkdirTask mkdir(@NotNull String name)
+    {
+        return mkdir(Apb.getEnv().fileFromBase(name));
+    }
 
-        @Override public void execute()
-        {
-            final DownloadTask task = new DownloadTask(env, url, target);
-            task.setUpdatePolicy(updatePolicy);
-            task.execute();
-        }
+    /**
+     * Creates a directory
+     * @param file The Directory to be created
+     */
+    @NotNull public static MkdirTask mkdir(@NotNull File file)
+    {
+        return new MkdirTask(file);
+    }
 
-        /**
-         * Specify the target file or directory
-         * If not specified, then the file/s will be copied to the current module output
-         * @param to The File or directory to copy from
-         * @throws IllegalArgumentException if trying to copy a directoy to a single file.
-         */
-        @NotNull public Download to(@NotNull String to)
-        {
-            target = to;
-            return this;
-        }
+    /**
+     * Transform a file using XSLT
+     * @param from The File or Directory to transform
+     */
+    @NotNull public static XsltTask.Builder xslt(@NotNull String from)
+    {
+        return new XsltTask.Builder(from);
+    }
 
-        /**
-         * Define the update policy that specified the frecuency used to check if the source has been updated
-         * <p>
-         * Examples:
-         * <table>
-         * <tr>
-         *      <td><code>UpdatePolicy.ALWAYS</code>
-         *      <td> Check every time the task is executed
-         * <tr>
-         *      <td><code>UpdatePolicy.NEVER</code>
-         *      <td> Only downloads the file if it does not exist
-         * <tr>
-         *      <td><code>UpdatePolicy.DAILY</code>
-         *      <td> Check the source if the local file is older than a day.
-         * <tr>
-         *      <td><code>UpdatePolicy.every(6)</code>
-         *      <td> Check the source every 6 hours
-         * <tr>
-         *      <td><code>UpdatePolicy.every(0.5)</code>
-         *      <td> Check the source every 30 minutes
-         * </table>
-         * </p>
-         * @param policy The update policy to be used.
-         */
-        public void withUpdatePolicy(@NotNull UpdatePolicy policy)
-        {
-            updatePolicy = policy;
-        }
+    /**
+     * Transform a file using XSLT
+     * @param from The File or Directory to transform
+     */
+    @NotNull public static XsltTask.Builder xslt(@NotNull File from)
+    {
+        return new XsltTask.Builder(from);
+    }
+
+    /**
+     * Transform one or more filesets to the given directory
+     * @param fileSets The FileSets to transform
+     * @see apb.tasks.FileSet
+     */
+    @NotNull public static XsltTask.Builder xslt(@NotNull FileSet... fileSets)
+    {
+        return new XsltTask.Builder(fileSets);
+    }
+
+    public static XjcTask.Builder xjc(@NotNull String schema)
+    {
+        return new XjcTask.Builder(schema);
+    }
+
+    public static XjcTask.Builder xjc(@NotNull File schema)
+    {
+        return new XjcTask.Builder(schema);
     }
 }

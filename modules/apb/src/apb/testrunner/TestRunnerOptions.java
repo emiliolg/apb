@@ -44,21 +44,22 @@ class TestRunnerOptions
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private File                   basedir;
-    private final Option<String>            classpath;
+    @NotNull private File                         basedir;
+    private final Option<String>                  classpath;
     private final Option<String>                  creator;
-    private final Option<String>            excludes;
-    @NotNull private final TestSetCreator.Factory factory;
-    private final Option<Boolean>           failEmpty;
-    private final Option<String>            includes;
+    private final Option<String>                  excludes;
+    private final Option<Boolean>                 failEmpty;
+    private final Option<String>                  includes;
     private final Option<String>                  output;
-    private final Option<Boolean>           quiet;
+    private final Option<Boolean>                 quiet;
     private final Option<String>                  reports;
     private final Option<String>                  reportSpecs;
-    private final Option<String>            suite;
+    private final Option<String>                  singleTest;
+    private final Option<String>                  suite;
     private final Option<String>                  testGroups;
-    private final Option<String>            type;
-    private final Option<Boolean>           verbose;
+    private final Option<String>                  type;
+    private final Option<Boolean>                 verbose;
+    @NotNull private final TestSetCreator.Factory factory;
 
     //~ Constructors .........................................................................................
 
@@ -83,6 +84,7 @@ class TestRunnerOptions
         reportSpecs = addOption("report-specs-file", Messages.REPORT_SPEC_FILE, "<file name>");
         output = addOption('o', "output", Messages.OUTPUT_FOR_REPORTS, "<directory>");
         creator = addOption("creator", "A class defining a creator for a test type.", "<class>");
+        singleTest = addOption("single-test", "Define a single test to be run.", "<test-name>");
 
         for (String testType : factory.names()) {
             type.addValidValue(testType);
@@ -176,6 +178,11 @@ class TestRunnerOptions
         }
 
         return result;
+    }
+
+    public String getSingleTest()
+    {
+        return singleTest.getValue();
     }
 
     @NotNull public List<String> getTestGroups()

@@ -19,8 +19,8 @@
 package apb.tests.tasks;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,13 +56,17 @@ public abstract class TaskTestCase
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull protected File        basedir;
     @NotNull protected Environment env;
+
+    @NotNull protected File basedir;
     @NotNull protected File datadir;
+    @NotNull protected File lib;
 
     //~ Methods ..............................................................................................
 
-    @Override protected void setUp() throws IOException {
+    @Override protected void setUp()
+        throws IOException
+    {
         basedir = new File("tmp");
         final String path = basedir.getAbsolutePath();
 
@@ -81,7 +85,8 @@ public abstract class TaskTestCase
             throw new IOException("Cannot create temporary directory: '" + path + "' for tests.");
         }
 
-        env.putProperty("lib", env.expand("$moduledir/../../lib"));
+        lib = env.fileFromBase("$moduledir/../../lib");
+        env.putProperty("lib", lib.getPath());
         datadir = new File(env.expand("$moduledir/data"));
     }
 
@@ -98,7 +103,19 @@ public abstract class TaskTestCase
         w.close();
     }
 
-    protected File dataFile(String name) {
+    protected File dataFile(String name)
+    {
         return new File(datadir, name);
+    }
+
+    protected String dataPath(String name)
+    {
+        return dataFile(name).getAbsolutePath();
+    }
+
+    // truncate to seconds
+    protected long currentTime()
+    {
+        return System.currentTimeMillis() / 1000 * 1000;
     }
 }

@@ -21,12 +21,15 @@ package apb.tests.tasks;
 import java.io.File;
 import java.io.IOException;
 
+import apb.tasks.FileSet;
+
+import apb.tests.utils.FileAssert;
+
 import static apb.tasks.CoreTasks.copy;
 import static apb.tasks.CoreTasks.copyFiltering;
-import apb.tasks.FileSet;
-import apb.tests.utils.FileAssert;
-import static apb.tests.utils.FileAssert.assertDoesNotExist;
+
 import static apb.tests.utils.FileAssert.assertDirEquals;
+import static apb.tests.utils.FileAssert.assertDoesNotExist;
 //
 // User: emilio
 // Date: Sep 3, 2009
@@ -71,6 +74,18 @@ public class CopyTest
         FileAssert.assertFileEquals(file1, file2);
         mkdir("dir2");
         copy("$basedir/dir1/A.java").to("$basedir/dir2").execute();
+        FileAssert.assertFileEquals(file1, new File(dir2, "A.java"));
+    }
+
+    public void testSimpleFileSet()
+        throws IOException
+    {
+        final File file1 = new File(dir1, "A.java");
+        final File file2 = new File(dir1, "A2.java");
+        copy(FileSet.fromFile("$basedir/dir1/A.java")).to("$basedir/dir1/A2.java").execute();
+        FileAssert.assertFileEquals(file1, file2);
+        mkdir("dir2");
+        copy(FileSet.fromFile(file1)).to("$basedir/dir2").execute();
         FileAssert.assertFileEquals(file1, new File(dir2, "A.java"));
     }
 

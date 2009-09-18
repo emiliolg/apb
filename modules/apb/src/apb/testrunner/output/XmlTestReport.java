@@ -1,31 +1,59 @@
+
+
+// Copyright 2008-2009 Emilio Lopez-Gabeiras
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License
+//
+
+
 package apb.testrunner.output;
 
 import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.TimeZone;
-import java.util.Date;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.jetbrains.annotations.NotNull;
-import org.w3c.dom.Element;
-import org.w3c.dom.Text;
-import org.w3c.dom.Document;
+import apb.Environment;
+
 import apb.utils.StringUtils;
 import apb.utils.XmlUtils;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Text;
 //
 // User: emilio
 // Date: Jun 23, 2009
 // Time: 7:08:04 PM
 
 //
-public class XmlTestReport extends BaseTestReport {
+public class XmlTestReport
+    extends BaseTestReport
+{
+    //~ Instance fields ......................................................................................
+
     final String ATTR_CLASSNAME = "classname";
     final String ATTR_FAILURES = "failures";
     final String ATTR_MESSAGE = "message";
@@ -41,34 +69,40 @@ public class XmlTestReport extends BaseTestReport {
     final String TESTCASE = "testcase";
     final String TESTSUITE = "testsuite";
     final String TIMESTAMP = "timestamp";
+
     /**
      * The XML document.
      */
     private Document doc;
-    /**
-     * tests that failed.
-     */
-    private final Set<String> failedTests = new HashSet<String>();
+
     /**
      * The wrapper for the whole testsuite.
      */
     private Element rootElement;
+
     /**
      * Element for the current test.
      */
     private final Map<CharSequence, Element> testElements = new HashMap<CharSequence, Element>();
+
     /**
      * Timing helper.
      */
     private final Map<String, Long> testStarts = new HashMap<String, Long>();
-    private static final String DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
-    private static final long serialVersionUID = 7656301463663508457L;
-    /** constant for unnnamed testsuites/cases */
-    private static final String UNKNOWN = "unknown";
 
-    public XmlTestReport(boolean showOutput, @NotNull String fileName) {
+    /**
+     * tests that failed.
+     */
+    private final Set<String> failedTests = new HashSet<String>();
+
+    //~ Constructors .........................................................................................
+
+    public XmlTestReport(boolean showOutput, @NotNull String fileName)
+    {
         super(showOutput, fileName);
     }
+
+    //~ Methods ..............................................................................................
 
     public void startSuite(@NotNull String suiteName)
     {
@@ -211,7 +245,7 @@ public class XmlTestReport extends BaseTestReport {
         nested.setAttribute(ATTR_TYPE, t.getClass().getName());
 
         String strace = StringUtils.getStackTrace(t);
-        Text trace = doc.createTextNode(strace);
+        Text   trace = doc.createTextNode(strace);
         nested.appendChild(trace);
     }
 
@@ -221,6 +255,42 @@ public class XmlTestReport extends BaseTestReport {
 
         if (suite != null) {
             XmlUtils.writeDocument(document, reportFile(suite, ".xml"));
+        }
+    }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final String DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
+    private static final long   serialVersionUID = 7656301463663508457L;
+
+    /** constant for unnnamed testsuites/cases */
+    private static final String UNKNOWN = "unknown";
+
+    //~ Inner Classes ........................................................................................
+
+    public static class Builder
+        implements TestReport.Builder
+    {
+        @Nullable private Boolean showOutput;
+        @NotNull private String   output = "test-output";
+
+        public Builder showOutput(boolean b)
+        {
+            showOutput = b;
+            return this;
+        }
+
+        @NotNull public TestReport build(@NotNull Environment env)
+        {
+            boolean show =
+                showOutput == null ? env.getBooleanProperty(SHOW_OUTPUT_PROPERTY, false) : showOutput;
+            return new XmlTestReport(show, output);
+        }
+
+        public TestReport.Builder to(@NotNull String outputFileName)
+        {
+            output = outputFileName;
+            return this;
         }
     }
 }

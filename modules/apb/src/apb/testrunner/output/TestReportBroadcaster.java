@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,12 +13,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.testrunner.output;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import apb.Environment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -38,6 +43,16 @@ public class TestReportBroadcaster
     {
         super();
         this.reports = reports;
+    }
+
+    public TestReportBroadcaster(@NotNull Environment env, @NotNull List<Builder> builders)
+    {
+        super();
+        reports = new ArrayList<TestReport>(builders.size());
+
+        for (Builder builder : builders) {
+            reports.add(builder.build(env));
+        }
     }
 
     //~ Methods ..............................................................................................
@@ -107,13 +122,13 @@ public class TestReportBroadcaster
         }
     }
 
-    @Override
-    public void skip() {
-        super.skip();    
+    @Override public void skip()
+    {
+        super.skip();
+
         for (TestReport report : reports) {
             report.skip();
         }
-
     }
 
     public void failure(@NotNull Throwable t)

@@ -25,8 +25,6 @@ import java.util.Map;
 
 import apb.TestModuleHelper;
 
-import apb.tasks.TestTask;
-
 import apb.testrunner.output.TestReport;
 
 import org.jetbrains.annotations.NotNull;
@@ -73,16 +71,6 @@ public class TestModule
     public boolean classPathInSystemClassloader = false;
 
     /**
-     *  Info for coverage
-     */
-    @BuildProperty public CoverageInfo coverage = new CoverageInfo();
-
-    /**
-     * A custom creator classname
-     */
-    public String customCreator = null;
-
-    /**
      * Whether to enable assertions when running the tests
      */
     public boolean enableAssertions = true;
@@ -113,9 +101,24 @@ public class TestModule
     public boolean forkPerSuite = false;
 
     /**
+     * Wheter to show output in reports or not
+     */
+    @BuildProperty public boolean showOutput = false;
+
+    /**
+     *  Info for coverage
+     */
+    @BuildProperty public CoverageInfo coverage = new CoverageInfo();
+
+    /**
      * Max. memory allocate for the tests (in megabytes).
      */
     @BuildProperty public int memory = 256;
+
+    /**
+     * A custom creator classname
+     */
+    public String customCreator = null;
 
     /**
       * The directory to generate the reports output
@@ -126,19 +129,14 @@ public class TestModule
     public String runOnly = "";
 
     /**
-     * The type of runner for the test
-     */
-    public final TestType testType = TestType.JUNIT;
-
-    /**
      * Working directory for running the tests
      */
     @BuildProperty public final String workingDirectory = "output/$moduledir";
 
     /**
-     * Environment variables to be set when running the tests
+     * The type of runner for the test
      */
-    private final Map<String, String> environment = new HashMap<String, String>();
+    public final TestType testType = TestType.JUNIT;
 
     /**
      * The list of tests files to exclude.
@@ -157,9 +155,19 @@ public class TestModule
     private final List<String> includes = new ArrayList<String>();
 
     /**
-     * The module being tested
+     * test reports
      */
-    private Module moduleToTest;
+    private final List<TestReport.Builder> reports = new ArrayList<TestReport.Builder>();
+
+    /**
+     * The list of properties to copy from the apb to the test to be run
+     */
+    private final List<String> useProperties = new ArrayList<String>();
+
+    /**
+     * Environment variables to be set when running the tests
+     */
+    private final Map<String, String> environment = new HashMap<String, String>();
 
     /**
      * Properties to be set when running the tests
@@ -167,14 +175,9 @@ public class TestModule
     private final Map<String, String> properties = new HashMap<String, String>();
 
     /**
-     * test reports
+     * The module being tested
      */
-    private final List<TestReport> reports = new ArrayList<TestReport>();
-
-    /**
-     * The list of properties to copy from the apb to the test to be run
-     */
-    private final List<String> useProperties = new ArrayList<String>();
+    private Module moduleToTest;
 
     //~ Methods ..............................................................................................
 
@@ -193,7 +196,7 @@ public class TestModule
         return groups;
     }
 
-    public List<TestReport> reports()
+    public List<TestReport.Builder> reports()
     {
         return reports;
     }
@@ -217,7 +220,7 @@ public class TestModule
      * Method used to set the Reports to be generated when running the test.
      * @param report The Report generators to be used
      */
-    public void reports(TestReport... report)
+    public void reports(TestReport.Builder... report)
     {
         reports.addAll(asList(report));
     }
@@ -287,7 +290,7 @@ public class TestModule
                 )
     public void run()
     {
-        TestTask.execute(getHelper());
+        getHelper().runTests();
     }
 
     /**
@@ -299,9 +302,7 @@ public class TestModule
                 )
     public void runMinimal()
     {
-        getHelper().putProperty("tests.groups", "minimal");
-
-        TestTask.execute(getHelper());
+        getHelper().runTests("minimal");
     }
 
     @NotNull @Override public TestModuleHelper getHelper()
@@ -312,7 +313,7 @@ public class TestModule
     @Override public void clean()
     {
         super.clean();
-        TestTask.cleanReports(getHelper());
+        getHelper().cleanTestReports();
     }
 
     public Module getModuleToTest()

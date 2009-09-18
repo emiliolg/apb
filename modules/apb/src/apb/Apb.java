@@ -135,6 +135,7 @@ public class Apb
     {
         final BaseEnvironment env = new BaseEnvironment(logger, ps);
         setCurrentEnv(env);
+        initProxies(env);
         return env;
     }
 

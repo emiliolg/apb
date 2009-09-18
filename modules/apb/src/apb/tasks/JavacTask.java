@@ -494,7 +494,7 @@ public class JavacTask
 
             // If not includes specified add all java file
             for (FileSet fileSet : fileSets) {
-                if (fileSet.getIncludes().isEmpty()) {
+                if (!fileSet.isFile() && fileSet.getIncludes().isEmpty()) {
                     fileSet.including("**/*.java");
                 }
             }

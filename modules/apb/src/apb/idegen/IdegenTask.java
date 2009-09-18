@@ -20,12 +20,13 @@ package apb.idegen;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.Collection;
 
 import apb.Apb;
+import apb.BuildException;
 import apb.Environment;
 import apb.ModuleHelper;
 
@@ -34,6 +35,8 @@ import apb.metadata.PackageType;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static java.util.Arrays.asList;
 //
 // User: emilio
 // Date: Sep 11, 2009
@@ -45,11 +48,11 @@ public abstract class IdegenTask
     //~ Instance fields ......................................................................................
 
     @NotNull protected Environment env;
+    @NotNull protected final File  modulesHome;
+    @Nullable protected File       template;
+    protected long                 lastModified;
 
     @NotNull protected final String id;
-    protected long                  lastModified;
-    @NotNull protected final File   modulesHome;
-    @Nullable protected File        template;
 
     //~ Constructors .........................................................................................
 
@@ -88,7 +91,19 @@ public abstract class IdegenTask
 
     public IdegenTask usingTemplate(@NotNull String t)
     {
-        template = t.isEmpty() ? null : env.fileFromBase(t);
+        if (t.isEmpty()) {
+            template = null;
+        }
+        else {
+            final File file = env.fileFromBase(t);
+
+            if (!file.exists()) {
+                throw new BuildException("Cannot find tempate file '" + file.getPath() + "'");
+            }
+
+            template = file;
+        }
+
         return this;
     }
 
@@ -105,15 +120,15 @@ public abstract class IdegenTask
     public abstract static class Module
         extends IdegenTask
     {
+        protected boolean                     testModule;
+        @Nullable protected File              output;
         @NotNull protected final List<String> excludes;
 
-        @NotNull protected final List<Library>      libraries;
-        @NotNull protected final List<ModuleHelper> moduleDependencies;
-        @Nullable protected File                    output;
-        @NotNull protected PackageType              packageType;
-        @NotNull protected final List<File>         sourceDirs;
-        protected boolean                           testModule;
-        boolean                                     includeEmptyDirs;
+        @NotNull protected final List<Library> libraries;
+        @NotNull protected final List<String>  moduleDependencies;
+        @NotNull protected final List<File>    sourceDirs;
+        @NotNull protected PackageType         packageType;
+        boolean                                includeEmptyDirs;
 
         public Module(String id, File modulesHome)
         {
@@ -124,7 +139,7 @@ public abstract class IdegenTask
             libraries = new ArrayList<Library>();
             sourceDirs = new ArrayList<File>();
 
-            moduleDependencies = new ArrayList<ModuleHelper>();
+            moduleDependencies = new ArrayList<String>();
         }
 
         public abstract void execute();
@@ -181,9 +196,18 @@ public abstract class IdegenTask
             return this;
         }
 
+        public Module usingModules(String... modules)
+        {
+            moduleDependencies.addAll(asList(modules));
+            return this;
+        }
+
         public Module usingModules(Iterable<ModuleHelper> modules)
         {
-            apb.utils.CollectionUtils.addAll(moduleDependencies, modules);
+            for (ModuleHelper module : modules) {
+                moduleDependencies.add(module.getId());
+            }
+
             return this;
         }
     }
@@ -192,9 +216,9 @@ public abstract class IdegenTask
     public abstract static class Project
         extends IdegenTask
     {
-        @NotNull protected String            jdkName;
-        @NotNull protected final Set<String> modules;
         @NotNull protected final File        projectDirectory;
+        @NotNull protected final Set<String> modules;
+        @NotNull protected String            jdkName;
 
         public Project(@NotNull String id, @NotNull File modulesHome, File projectDirectory)
         {

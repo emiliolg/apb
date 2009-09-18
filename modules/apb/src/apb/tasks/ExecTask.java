@@ -37,7 +37,7 @@ import org.jetbrains.annotations.Nullable;
 
 //
 public class ExecTask
-    extends Task
+    extends ConditionalTask
 {
     //~ Instance fields ......................................................................................
 

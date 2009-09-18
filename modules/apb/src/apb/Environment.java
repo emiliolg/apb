@@ -32,6 +32,10 @@ import org.jetbrains.annotations.Nullable;
 
 public interface Environment
 {
+    //~ Instance fields ......................................................................................
+
+    String EXT_PATH_PROPERTY = "ext.path";
+
     //~ Methods ..............................................................................................
 
     /**

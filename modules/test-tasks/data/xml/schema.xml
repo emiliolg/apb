@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Schema version="5.1" table-prefix="bam_">
+
+    <table name="OUs">
+        <field name="ouIn" type="DECIMAL" size="10" notnull="true"/>
+        <field name="parentIn" type="DECIMAL" size="10" notnull="true"/>
+        <field name="name" type="NSTRING" size="255" notnull="true"/>
+        <field name="fullPathName" type="NSTRING" size="512" notnull="true"/>
+        <primarykey fields="ouIn"/>
+    </table>
+    <table name="Roles">
+	<field name="roleIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="roleId" type="NSTRING" size="255" notnull="true"/>
+	<primarykey fields="roleIn"/>
+    </table>
+    <table name="Participants">
+	<field name="participantIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="participantId" type="NSTRING" size="255" notnull="true"/>
+	<field name="ouIn" type="DECIMAL" size="10" notnull="true"/>
+        <field name="displayName" type="NSTRING" size="255" notnull="false"/>
+	<primarykey fields="participantIn"/>
+        <foreignkey>
+            <field name="ouIn" referencedTable="OUs" referencedField="ouIn"/>
+        </foreignkey>
+    </table>
+    <table name="Processes">
+	<field name="ouIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="processIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="processId" type="NSTRING" size="255" notnull="true"/>
+        <field name="label" type="NSTRING" size="255" notnull="false"/>
+	<primarykey fields="processIn"/>
+        <foreignkey>
+            <field name="ouIn" referencedTable="OUs" referencedField="ouIn"/>
+        </foreignkey>
+    </table>
+    <table name="Activities">
+	<field name="activityIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="activityId" type="NSTRING" size="255" notnull="true"/>
+	<field name="processIn" type="DECIMAL" size="10" notnull="true"/>
+        <field name="label" type="NSTRING" size="255" notnull="false"/>
+	<primarykey fields="activityIn"/>
+        <foreignkey>
+            <field name="processIn" referencedTable="Processes" referencedField="processIn"/>
+        </foreignkey>
+    </table>
+    <table name="Workload">
+	<field name="snapshotTime" type="TIMESTAMP" notnull="true"/>
+	<field name="activityIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="roleIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="participantIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="origActivityIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="waitActivityIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="quantity" type="DECIMAL" size="10" notnull="true"/>
+	<field name="avgTimeTask" type="DECIMAL" size="10" notnull="true"/>
+	<field name="avgTimeProcess" type="DECIMAL" size="10" notnull="true"/>
+        <field name="meanTimeTask" type="DECIMAL" size="10" notnull="true"/>
+	<field name="meanTimeProcess" type="DECIMAL" size="10" notnull="true"/>
+        <foreignkey>
+            <field name="activityIn" referencedTable="Activities" referencedField="activityIn"/>
+        </foreignkey>
+        <foreignkey>
+            <field name="waitActivityIn" referencedTable="Activities" referencedField="activityIn"/>
+        </foreignkey>
+        <foreignkey>
+            <field name="origActivityIn" referencedTable="Activities" referencedField="activityIn"/>
+        </foreignkey>
+        <foreignkey>
+            <field name="roleIn" referencedTable="Roles" referencedField="roleIn"/>
+        </foreignkey>
+        <foreignkey>
+            <field name="participantIn" referencedTable="Participants" referencedField="participantIn"/>
+        </foreignkey>
+    </table>
+    <table name="TaskPerformance">
+	<field name="activityIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="roleIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="participantIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="completionDate" type="TIMESTAMP" notnull="true"/>
+	<field name="taskTime" type="DECIMAL" size="10" notnull="true"/>
+    <field name="idleTime" type="DECIMAL" size="10" notnull="false"/>
+        <foreignkey>
+            <field name="activityIn" referencedTable="Activities" referencedField="activityIn"/>
+        </foreignkey>
+        <foreignkey>
+            <field name="roleIn" referencedTable="Roles" referencedField="roleIn"/>
+        </foreignkey>
+        <foreignkey>
+            <field name="participantIn" referencedTable="Participants" referencedField="participantIn"/>
+        </foreignkey>
+    </table>
+    <table name="ProcessPerformance">
+	<field name="processIn" type="DECIMAL" size="10" notnull="true"/>
+	<field name="completionDate" type="TIMESTAMP" notnull="true"/>
+	<field name="taskTime" type="DECIMAL" size="10" notnull="true"/>
+        <foreignkey>
+            <field name="processIn" referencedTable="Processes" referencedField="processIn"/>
+        </foreignkey>
+    </table>
+    <table name="Checkpoints">
+	<field name="engineId" type="NSTRING" size="255" notnull="true"/>
+        <field name="loadTime" type="TIMESTAMP" notnull="true"/>
+	<field name="status" type="DECIMAL" size="10" notnull="true"/>
+    </table>
+
+    <table name="LastSnapshot">
+        <field name="updaterId" type="NSTRING" size="255" notnull="true"/>
+        <field name="lastSnapshotTime" type="TIMESTAMP" notnull="true"/>
+        <primarykey fields="updaterId"/>
+    </table>
+
+    <table name="migration" delete="false">
+        <field name="build" type="INTEGER" notnull="true"/>
+        <field name="description" type="NSTRING" size="255" />
+        <primarykey fields="build" />
+        <init class="oracle.bpm.analyzer.migration.BamMigrationTableInitializer"/>
+    </table>
+        
+</Schema>

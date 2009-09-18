@@ -21,10 +21,12 @@ package apb.tests.tasks;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import static java.util.Arrays.asList;
+
+import apb.metadata.PackageType;
 
 import apb.tests.utils.FileAssert;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import static apb.idegen.IdegenTask.generateModule;
@@ -42,52 +44,85 @@ public class IdeaTest
     public void testSimpleIml()
         throws IOException
     {
-        final long       ts = System.currentTimeMillis();
-        final List<File> sources = asList(env.fileFromBase("$source"), env.fileFromBase("empty"));
-        generateModule("simple").on(basedir).usingSources(sources).execute();
-        final File iml = new File(basedir, SIMPLE_IML);
-        FileAssert.assertFileEquals(iml, dataFile(SIMPLE_IML));
+        final long ts = currentTime();
 
-        generateModule("simple").on(basedir).usingSources(sources).ifOlder(ts).execute();
+        final List<File> sources = asList(env.fileFromBase("$source"), env.fileFromBase("empty"));
+
+        genIml(sources);
+        genIml(sources);
+
+        generateModule(SIMPLE).on(basedir).usingSources(sources).ifOlder(ts).execute();
     }
 
     public void testSimpleIpr()
         throws IOException
     {
-        final long         ts = System.currentTimeMillis();
-        final List<String> modules = singletonList("simple");
-        generateProject("simple", basedir).on(basedir).usingModules(modules).execute();
-        final File ipr = new File(basedir, SIMPLE_IPR);
-        FileAssert.assertExists(ipr);
-        FileAssert.assertFileEquals(ipr, dataFile(SIMPLE_IPR));
+        final long ts = currentTime();
 
-        generateProject("simple", basedir).on(basedir)  //
-                                          .usingModules(modules)  //
-                                          .ifOlder(ts)  //
-                                          .useJdk("1.6")  //
-                                          .execute();
+        genIpr();
+
+        genIpr();
+
+        generateProject(SIMPLE, basedir).on(basedir)  //
+                                        .usingModules(singletonList(SIMPLE))  //
+                                        .ifOlder(ts)  //
+                                        .useJdk("1.6")  //
+                                        .execute();
     }
 
     public void testTemplates()
         throws IOException
     {
-        final long         ts = System.currentTimeMillis();
         final List<File> sources = singletonList(env.fileFromBase("$source"));
 
-        generateModule("template.module1").on(basedir).usingSources(sources).execute();
-        //final File iml = new File(basedir, "template.module1.iml");
-        generateModule("template.module2").on(basedir).usingSources(sources).execute();
-        //final File iml = new File(basedir, "template.module2.iml");
+        generateModule(MOD1).on(basedir)  //
+                            .usingTemplate("$moduledir/data/template.iml").usingSources(sources).execute();
 
-        final List<String> modules = singletonList("simple");
-        generateProject("template.project", basedir).on(basedir)      //
-                .usingModules(asList("template.module1")) //
-                .execute();
+        verify(MOD1 + IML);
+        generateModule(MOD2).on(basedir)  //
+                            .usingModules(MOD1)  //
+                            .usingSources(sources)  //
+                            .execute();
+        verify(MOD2 + IML);
 
+        generateProject(PROJ1, basedir).on(basedir)  //
+                                       .usingTemplate("$moduledir/data/template.ipr")
+                                       .usingModules(asList(MOD1, MOD2))  //
+                                       .useJdk("1.5")  //
+                                       .execute();
+        verify(PROJ1 + IPR);
+    }
+
+    private void genIml(List<File> sources)
+    {
+        generateModule(SIMPLE).on(basedir)  //
+                              .usingSources(sources).usingOutput(env.fileFromBase("output"))  //
+                              .withPackageType(PackageType.JAR)  //
+                              .execute();
+        verify(SIMPLE + IML);
+    }
+
+    private void genIpr()
+    {
+        generateProject(SIMPLE, basedir).on(basedir)  //
+                                        .usingModules(singletonList(SIMPLE))  //
+                                        .useJdk("1.6")  //
+                                        .execute();
+        verify(SIMPLE + IPR);
+    }
+
+    private void verify(String file)
+    {
+        final File iml = new File(basedir, file);
+        FileAssert.assertFileEquals(iml, dataFile(file));
     }
 
     //~ Static fields/initializers ...........................................................................
 
-    private static final String SIMPLE_IML = "simple.iml";
-    private static final String SIMPLE_IPR = "simple.ipr";
+    private static final String SIMPLE = "simple";
+    private static final String IML = ".iml";
+    private static final String IPR = ".ipr";
+    private static final String MOD1 = "template.module1";
+    private static final String MOD2 = "template.module2";
+    private static final String PROJ1 = "template.project";
 }

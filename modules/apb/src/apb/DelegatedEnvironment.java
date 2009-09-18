@@ -47,11 +47,6 @@ public abstract class DelegatedEnvironment
 
     //~ Methods ..............................................................................................
 
-    public Collection<File> getExtClassPath()
-    {
-        return parent.getExtClassPath();
-    }
-
     @Override public boolean isFailOnError()
     {
         return parent.isFailOnError();
@@ -105,9 +100,17 @@ public abstract class DelegatedEnvironment
         return parent.mustShow(option);
     }
 
+    @NotNull @Override public Collection<File> getExtClassPath()
+    {
+        // Optimization to use parent extClassPath if the property was not present in this environment.
+
+        return retrieveLocalProperty(EXT_PATH_PROPERTY) != null ? super.getExtClassPath()
+                                                                : parent.getExtClassPath();
+    }
+
     @Nullable protected String retrieveProperty(@NotNull String id)
     {
-        String result = super.retrieveProperty(id);
+        String result = retrieveLocalProperty(id);
         return result == null ? parent.getOptionalProperty(id) : result;
     }
 }

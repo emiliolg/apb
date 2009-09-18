@@ -25,7 +25,6 @@ import apb.ModuleHelper;
 import apb.ProjectBuilder;
 
 import apb.tasks.FileSet;
-import apb.tasks.JavadocTask;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -185,7 +184,7 @@ public class Module
     @BuildTarget(description = "Generates the Standard Java Documentation (Javadoc) for the module.")
     public void javadoc()
     {
-        JavadocTask.execute(getHelper());
+        getHelper().generateJavadoc();
     }
 
     @NotNull public Module asModule()

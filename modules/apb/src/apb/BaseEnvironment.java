@@ -19,19 +19,17 @@
 package apb;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.EnumSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
-import apb.utils.CollectionUtils;
 import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.utils.CollectionUtils.copyProperties;
 
 /**
  * This class represents an Environment that includes common services like:
@@ -57,26 +55,21 @@ final class BaseEnvironment
      */
     @Nullable File projectsHome;
 
-    /**
-     * The set of jars that comprise the extension class path
-     */
-    @NotNull private final Set<File> extClassPath;
-
     private boolean failOnError = true;
     private boolean forceBuild;
 
     private boolean nonRecursive;
 
     /**
+     * Processing and messaging options
+     */
+    private boolean quiet;
+
+    /**
      * Override properties are argument properties
      * They take preference over the properties defined in project elements
      */
     @NotNull private final Map<String, String> overrideProperties;
-
-    /**
-     * Processing and messaging options
-     */
-    private boolean quiet;
 
     //~ Constructors .........................................................................................
 
@@ -89,27 +82,19 @@ final class BaseEnvironment
         super(logger);
         debugOptions = EnumSet.noneOf(DebugOption.class);
 
-        CollectionUtils.copyProperties(properties, FileUtils.userProperties());
+        // Base User properties
+        copyProperties(properties, FileUtils.userProperties());
 
-        // Read System Properties
+        // Properties defined in the environment & in the command line
+
         overrideProperties = new TreeMap<String, String>();
-        CollectionUtils.copyProperties(overrideProperties, System.getProperties());
+        loadSystemProperties(overrideProperties);
         overrideProperties.putAll(override);
 
-        extClassPath = loadExtensionsPath(properties);
         initOptions();
     }
 
     //~ Methods ..............................................................................................
-
-    /**
-     * Get the Extension Jars to be searched when we compile definitions
-     * @return the extension Jars to be searched when we compiled definitions
-     */
-    @NotNull public Collection<File> getExtClassPath()
-    {
-        return extClassPath;
-    }
 
     /**
      * Returns true if log level is quiet
@@ -204,25 +189,26 @@ final class BaseEnvironment
         logger.setLevel(Logger.Level.VERBOSE);
     }
 
-    private static Set<File> loadExtensionsPath(Map<String, String> baseProperties)
+    private static void loadSystemProperties(Map<String, String> overrideProperties)
     {
-        String path = System.getenv("APB_EXT_PATH");
+        for (String entry : apbEnvironmentVariables) {
+            String ename = entry;
+            String pname = entry;
+            int    colon = entry.indexOf(':');
 
-        String path2 = baseProperties.get("ext.path");
+            if (colon != -1) {
+                ename = entry.substring(0, colon);
+                pname = entry.substring(colon + 1);
+            }
 
-        if (path2 != null) {
-            path = path == null ? path2 : path + File.pathSeparator + path2;
-        }
+            String value = System.getenv(ename);
 
-        Set<File> jars = new LinkedHashSet<File>();
-
-        if (path != null) {
-            for (String p : path.split(File.pathSeparator)) {
-                jars.addAll(FileUtils.listAllFilesWithExt(new File(p), ".jar"));
+            if (value != null) {
+                overrideProperties.put(pname, value);
             }
         }
 
-        return jars;
+        copyProperties(overrideProperties, System.getProperties());
     }
 
     private void initOptions()
@@ -231,6 +217,8 @@ final class BaseEnvironment
     }
 
     //~ Static fields/initializers ...........................................................................
+
+    private static String[] apbEnvironmentVariables = { "APB_EXT_PATH:ext.path" };
 
     static final String GROUP_PROP_KEY = "group";
     static final String VERSION_PROP_KEY = "version";

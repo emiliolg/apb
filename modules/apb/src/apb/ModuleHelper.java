@@ -37,15 +37,20 @@ import apb.metadata.PackageInfo;
 import apb.metadata.PackageType;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
-import static apb.tasks.CoreTasks.*;
+
 import apb.tasks.FileSet;
 import apb.tasks.JarTask;
-import static apb.utils.CollectionUtils.addIfNotNull;
+
 import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.tasks.CoreTasks.*;
+
+import static apb.utils.CollectionUtils.addIfNotNull;
 //
 // User: emilio
 // Date: Sep 15, 2008
@@ -323,12 +328,14 @@ public class ModuleHelper
 
         for (ModuleHelper mod : getDependencies()) {
             result.add(mod.getId());
+
             for (TestModuleHelper t : mod.getTestModules()) {
                 result.add(t.getId());
             }
         }
 
         result.add(getId());
+
         for (TestModuleHelper t : getTestModules()) {
             result.add(t.getId());
         }
@@ -432,6 +439,43 @@ public class ModuleHelper
                        .excludeFromWarning(info.warnExcludes())  //
                        .useName(getName())  //
                        .execute();
+    }
+
+    public void generateJavadoc()
+    {
+        JavadocInfo info = getJavadocInfo();
+
+        javadoc(getModule().source).to(info.output)  //
+                                   .maxMemory(info.memory)  //
+                                   .withClassPath(compileClassPath())  //
+                                   .withEncoding(info.encoding)  //
+                                   .withVisibility(info.visibility)  //
+                                   .withLocale(info.locale)  //
+                                   .withOverview(info.overview)  //
+                                   .withTitle(info.title)  //
+                                   .withHeader(info.header)  //
+                                   .withFooter(info.footer)  //
+                                   .withBottom(info.bottom)  //
+                                   .withWindowTitle(info.windowTitle)  //
+                                   .withLinks(info.links())  //
+                                   .withOfflineLinks(info.offlineLinks())  //
+                                   .withGroups(info.groups())  //
+                                   .includeAuthorInfo(info.author)  //
+                                   .includeDeprecatedInfo(info.deprecated)  //
+                                   .includeVersionInfo(info.version)  //
+                                   .includeSinceInfo(info.since)  //
+                                   .includeHelpLinks(info.help)  //
+                                   .additionalOptions(info.additionalOptions())  //
+                                   .splitIndexPerLetter(info.splitIndexPerLetter)  //
+                                   .generateIndex(info.index)  //
+                                   .generateHtmlSource(info.linkSource)  //
+                                   .generateClassHierarchy(info.tree)  //
+                                   .generateDeprecatedList(info.generateDeprecatedList)  //
+                                   .createUsePages(info.use)  //
+                                   .usingDoclet(info.doclet)  //
+                                   .including(info.includes())  //
+                                   .excluding(info.excludes())  //
+                                   .execute();
     }
 
     protected void build(ProjectBuilder pb, String commandName)

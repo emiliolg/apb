@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +15,10 @@
 // limitations under the License
 //
 
+
 package apb.testrunner;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,14 +43,15 @@ public class TestRunner
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final File basedir;
+    private boolean failEmpty;
+    private boolean verbose;
 
-    @NotNull private final List<String>       excludes;
-    private boolean                     failEmpty;
-    @NotNull private final List<String>       includes;
-    @NotNull private final File               outputDir;
+    @NotNull private final File basedir;
+    @NotNull private final File outputDir;
+
+    @NotNull private final List<String> excludes;
+    @NotNull private final List<String> includes;
     @NotNull private final List<String> testGroups;
-    private boolean                     verbose;
 
     //~ Constructors .........................................................................................
 
@@ -66,11 +68,11 @@ public class TestRunner
     //~ Methods ..............................................................................................
 
     public static Set<String> listTests(ClassLoader testsClassLoader, Invocation creator, File basedir,
-                                        List<String> includes, List<String> excludes)
+                                        List<String> includes, List<String> excludes, String singleTest)
         throws TestSetFailedException
     {
         final TestSetCreator<?> testCreator = (TestSetCreator) creator.instantiate(testsClassLoader);
-        return loadTests(testsClassLoader, testCreator, basedir, includes, excludes).keySet();
+        return loadTests(testsClassLoader, testCreator, basedir, includes, excludes, singleTest).keySet();
     }
 
     public static int worseResult(int r1, int r2)
@@ -78,17 +80,19 @@ public class TestRunner
         return Math.min(r1, r2);
     }
 
-    public int run(Invocation creator, TestReport report, ClassLoader testsClassLoader)
+    public int run(Invocation creator, TestReport report, ClassLoader testsClassLoader, String singleTest)
         throws TestSetFailedException
     {
-        return run((TestSetCreator<?>) creator.instantiate(testsClassLoader), report, testsClassLoader);
+        return run((TestSetCreator<?>) creator.instantiate(testsClassLoader), report, testsClassLoader,
+                   singleTest);
     }
 
-    public int run(TestSetCreator<?> creator, TestReport report, ClassLoader testsClassLoader)
+    public int run(TestSetCreator<?> creator, TestReport report, ClassLoader testsClassLoader,
+                   String singleTest)
         throws TestSetFailedException
     {
         final Collection<TestSet> tests =
-            loadTests(testsClassLoader, creator, basedir, includes, excludes).values();
+            loadTests(testsClassLoader, creator, basedir, includes, excludes, singleTest).values();
 
         report = report.init(outputDir);
         report.startRun(tests.size());
@@ -109,11 +113,11 @@ public class TestRunner
     }
 
     public int runOne(String suite, TestSetCreator<?> creator, ClassLoader testsClassLoader,
-                      TestReport report)
+                      TestReport report, String singleTest)
         throws TestSetFailedException
     {
         report = report.init(outputDir);
-        TestSet<?> testSet = loadTest(testsClassLoader, creator, suite);
+        TestSet<?> testSet = loadTest(testsClassLoader, creator, suite, singleTest);
 
         if (testSet != null) {
             testSet.run(testsClassLoader, report, testGroups);
@@ -139,14 +143,14 @@ public class TestRunner
 
     private static <T> Map<String, TestSet> loadTests(ClassLoader testsClassLoader, TestSetCreator<T> creator,
                                                       File basedir, List<String> includes,
-                                                      List<String> excludes)
+                                                      List<String> excludes, String singleTest)
         throws TestSetFailedException
     {
         Map<String, TestSet> testSets = new HashMap<String, TestSet>();
 
         // Load tests
         for (String file : collectTests(basedir, excludes, includes)) {
-            TestSet<T> testSet = loadTest(testsClassLoader, creator, file);
+            TestSet<T> testSet = loadTest(testsClassLoader, creator, file, singleTest);
 
             if (testSet != null) {
                 if (testSets.containsKey(testSet.getName())) {
@@ -161,7 +165,7 @@ public class TestRunner
     }
 
     @Nullable private static <T> TestSet<T> loadTest(ClassLoader testsClassLoader, TestSetCreator<T> creator,
-                                                     String suite)
+                                                     String suite, String singleTest)
         throws TestSetFailedException
     {
         final Class<T> testClass = loadTestClass(testsClassLoader, suite, creator.getTestClass());
@@ -170,7 +174,7 @@ public class TestRunner
             return null;
         }
 
-        return creator.createTestSet(testClass);
+        return creator.createTestSet(testClass, singleTest);
     }
 
     @SuppressWarnings("unchecked")
@@ -201,15 +205,10 @@ public class TestRunner
         if (basedir.exists()) {
             DirectoryScanner scanner = new DirectoryScanner(basedir, includes, excludes);
 
-            try {
-                for (String s : scanner.scan()) {
-                    if (s.endsWith(".class"))
-                        result.add(s);
+            for (String s : scanner.scan()) {
+                if (s.endsWith(".class")) {
+                    result.add(s);
                 }
-
-            }
-            catch (IOException e) {
-                throw new TestSetFailedException(e);
             }
         }
 

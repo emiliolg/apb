@@ -53,23 +53,29 @@ public class CoverageBuilder
 {
     //~ Instance fields ......................................................................................
 
+    private boolean coverageEnabled;
+
     @NotNull private final CoverageInfo coverage;
     @Nullable private CoverageReport    textReport;
 
-    @NotNull private final Environment      env;
-    @NotNull private final File             outputDir;
-    @NotNull private final List<File>       filesDoDelete;
-    @NotNull private final TestModuleHelper helper;
+    @NotNull private final Environment env;
+    @NotNull private final File        outputDir;
+    @NotNull private final File        testClasses;
+    private List<File>                 classesToTest;
+    @NotNull private final List<File>  filesDoDelete;
+    private List<File>                 sourcesToTest;
 
     //~ Constructors .........................................................................................
 
-    public CoverageBuilder(@NotNull Environment env, @NotNull TestModuleHelper helper)
+    public CoverageBuilder(@NotNull TestModuleHelper helper)
     {
-        this.env = env;
-        this.helper = helper;
-        coverage = helper.getCoverageInfo();
+        env = helper;
+        testClasses = helper.getOutput();
+        coverage = helper.getModule().coverage;
         filesDoDelete = new ArrayList<File>();
         outputDir = helper.getCoverageDir();
+        sourcesToTest = helper.getSourcesToTest();
+        classesToTest = helper.getClassesToTest();
     }
 
     //~ Methods ..............................................................................................
@@ -77,9 +83,8 @@ public class CoverageBuilder
     @NotNull public List<String> addCommandLineArguments()
     {
         List<String> args = new ArrayList<String>();
-        List<File>   cs = helper.getClassesToTest();
 
-        if (isCoverageEnabled()) {
+        if (coverageEnabled) {
             args.add(env.isVerbose() ? "-verbose" : "-quiet");
 
             for (CoverageReport report : processReports()) {
@@ -98,10 +103,10 @@ public class CoverageBuilder
             args.add("-ix");
             args.add("@" + exclusionFileForTests());
             args.add("-sp");
-            args.add(makePath(helper.getSourcesToTest()));
+            args.add(makePath(sourcesToTest));
             args.add("-cp");
-            args.add(makePath(Apb.applicationJarFile(), helper.getOutput()) + File.pathSeparator +
-                     makePath(cs));
+            args.add(makePath(Apb.applicationJarFile(), testClasses) + File.pathSeparator +
+                     makePath(classesToTest));
             args.add(TESTRUNNER_MAIN);
         }
 
@@ -110,7 +115,7 @@ public class CoverageBuilder
 
     public void stopRun()
     {
-        if (isCoverageEnabled()) {
+        if (coverageEnabled) {
             final CoverageReport report = textReport;
 
             if (report != null) {
@@ -135,12 +140,12 @@ public class CoverageBuilder
 
     @NotNull public String runnerMainClass()
     {
-        return isCoverageEnabled() ? EMMARUN : TESTRUNNER_MAIN;
+        return coverageEnabled ? EMMARUN : TESTRUNNER_MAIN;
     }
 
-    private boolean isCoverageEnabled()
+    public void setEnabled(boolean b)
     {
-        return coverage.enable && !helper.getModule().enableDebugger;
+        coverageEnabled = b;
     }
 
     private String formatLine(EnumMap<CoverageReport.Column, Integer> coverageInfo)
@@ -233,7 +238,7 @@ public class CoverageBuilder
 
     @NotNull private String exclusionFileForTests()
     {
-        File testsDir = helper.getOutput();
+        File testsDir = testClasses;
 
         try {
             File        exclusionFile = createTempFile();

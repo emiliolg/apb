@@ -18,6 +18,7 @@
 
 package apb.utils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -99,5 +100,16 @@ public class CollectionUtils
     public static List<String> expandAll(@NotNull Environment env, @NotNull String... patterns)
     {
         return expandAll(env, asList(patterns));
+    }
+
+    public static List<File> filesFromBase(@NotNull Environment env, @NotNull String... fileNames)
+    {
+        List<File> files = new ArrayList<File>(fileNames.length);
+
+        for (String arg : fileNames) {
+            files.add(env.fileFromBase(arg));
+        }
+
+        return files;
     }
 }

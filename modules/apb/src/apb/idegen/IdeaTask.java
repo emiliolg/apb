@@ -522,7 +522,7 @@ public class IdeaTask
 
             if (o != null) {
                 findElement(component, OUTPUT_FOLDER).setAttribute(URL_ATTRIBUTE, relativeUrl("file", o));
-                createElement(component, EXCLUDE_OUTPUT);
+                findElement(component, EXCLUDE_OUTPUT);
             }
         }
 
@@ -670,14 +670,13 @@ public class IdeaTask
 
             // First check and add dependencies from other modules
 
-            for (ModuleHelper mod : moduleDependencies) {
-                final String nm = mod.getId();
-                Element      d = modulesByName.get(nm);
+            for (String mod : moduleDependencies) {
+                Element d = modulesByName.get(mod);
 
                 if (d == null) {
                     d = createElement(component, MODULE_ENTRY);
                     d.setAttribute(TYPE_ATTRIBUTE, MODULE_TYPE);
-                    d.setAttribute(MODULE_NAME_ATTRIBUTE, nm);
+                    d.setAttribute(MODULE_NAME_ATTRIBUTE, mod);
                 }
             }
 

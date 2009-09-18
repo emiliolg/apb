@@ -22,7 +22,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import apb.Environment;
+import apb.Apb;
+import apb.BuildException;
 
 import apb.utils.FileUtils;
 
@@ -37,53 +38,73 @@ public class XjcTask
 {
     //~ Instance fields ......................................................................................
 
-    private boolean packageAnnotations;
+    private boolean             packageAnnotations;
+    private boolean             timestamp;
+    @NotNull private final File schema;
+    @NotNull private final File targetDir;
 
     @NotNull private final List<File> externalBindings;
-    @NotNull private final String     schema;
     @NotNull private final String     targetPackage;
 
     //~ Constructors .........................................................................................
 
     /**
      * Construt the XML Binding Compiler Task
-     * @param env The apb Environment
-     * @param schema  The xml schema to generate the java bindings for, relative the source folder
-     * @param targetPackage specifies the target package
+     * @param schemaFile  The xml schema to generate the java bindings for, relative the source folder
+     * @param target The directory where generated files will be placed
+     * @param pkg specifies the target package
      */
-    public XjcTask(@NotNull Environment env, @NotNull String schema, @NotNull String targetPackage)
+    private XjcTask(@NotNull File schemaFile, @NotNull File target, @NotNull String pkg)
     {
-        super(env);
-        this.schema = schema;
+        super();
+        schema = schemaFile;
+        targetDir = target;
+        targetPackage = pkg.trim();
         externalBindings = new ArrayList<File>();
         packageAnnotations = true;
-        this.targetPackage = targetPackage.trim();
+        timestamp = true;
     }
 
     //~ Methods ..............................................................................................
 
     /**
      * Specify an external binding file
+     */
+    public XjcTask withBinding(@NotNull String bindingFileName)
+    {
+        return withBinding(env.fileFromBase(bindingFileName));
+    }
+
+    /**
+     * Specify an external binding file
      * @param bindingFile The binding file
      */
-    public void addBinding(@NotNull String bindingFile)
+    public XjcTask withBinding(@NotNull File bindingFile)
     {
-        File f = env.fileFromSource(bindingFile);
+        if (!bindingFile.exists()) {
+            throw new BuildException("Non existent binding: " + bindingFile);
+        }
 
-        if (f.exists()) {
-            externalBindings.add(f);
-        }
-        else {
-            env.handle("Non existent binding: " + f);
-        }
+        externalBindings.add(bindingFile);
+        return this;
     }
 
     /**
      * Wheter to generate  package level annotations (package-info.java)
      */
-    public void setPackageAnnotations(boolean b)
+    public XjcTask usePackageAnnotations(boolean b)
     {
         packageAnnotations = b;
+        return this;
+    }
+
+    /**
+     *  Wether to generate a file header with timestamp info or not
+     */
+    public XjcTask useTimestamp(boolean b)
+    {
+        timestamp = b;
+        return this;
     }
 
     /**
@@ -91,28 +112,21 @@ public class XjcTask
      */
     public void execute()
     {
-        final File schemaFile = env.fileFromSource(schema);
-
-        if (!schemaFile.exists()) {
-            env.handle("Non existent schema: " + schemaFile);
-        }
-
-        final File targetDir = env.fileFromGeneratedSource(targetPackage.replace('.', '/'));
-
-        if (mustBuild(targetDir, schemaFile)) {
-            execute(targetDir, schemaFile);
+        if (mustBuild()) {
+            run();
         }
     }
 
-    private boolean mustBuild(@NotNull final File targetDir, @NotNull final File schemaFile)
+    private boolean mustBuild()
     {
         final long ts;
+        File       dir = new File(targetDir, targetPackage.replace('.', File.separatorChar));
 
-        return env.forceBuild() || (ts = targetDir.lastModified()) == 0 || schemaFile.lastModified() > ts ||
+        return env.forceBuild() || (ts = dir.lastModified()) == 0 || schema.lastModified() > ts ||
                FileUtils.uptodate(externalBindings, ts);
     }
 
-    private void execute(@NotNull final File targetDir, @NotNull final File schemaFile)
+    private void run()
     {
         targetDir.mkdirs();
 
@@ -126,7 +140,7 @@ public class XjcTask
             args.add("-npa");
         }
 
-        env.logInfo("Processing: %s\n", schemaFile);
+        env.logInfo("Processing: %s\n", schema);
 
         if (jar != null) {
             env.logInfo("Using     : %s\n", jar);
@@ -136,8 +150,12 @@ public class XjcTask
             args.add("-quiet");
         }
 
+        if (!timestamp) {
+            args.add("-no-header");
+        }
+
         args.add("-d");
-        args.add(env.fileFromGeneratedSource("").getPath());
+        args.add(targetDir.getPath());
 
         if (!targetPackage.isEmpty()) {
             args.add("-p");
@@ -149,7 +167,7 @@ public class XjcTask
             args.add(binding.getPath());
         }
 
-        args.add(schemaFile.getPath());
+        args.add(schema.getPath());
 
         final ExecTask command = jar == null ? CoreTasks.exec("xjc", args) : CoreTasks.javaJar(jar, args);
         command.execute();
@@ -169,4 +187,74 @@ public class XjcTask
     //~ Static fields/initializers ...........................................................................
 
     private static final String JAXB_XJC_JAR_FILENAME = "jaxb-xjc.jar";
+
+    //~ Inner Classes ........................................................................................
+
+    public static class Builder
+    {
+        @NotNull private final File from;
+        @Nullable private File      to;
+
+        /**
+         * Private constructor called from factory methods
+         * @param schema The Schema to generate files from.
+         */
+
+        Builder(@NotNull File schema)
+        {
+            from = schema;
+
+            if (!schema.exists()) {
+                throw new BuildException("Non existent schema: " + schema);
+            }
+        }
+
+        /**
+         * Private constructor called from factory methods
+         * @param schema The Schema to generate files from.
+         */
+        Builder(@NotNull String schema)
+        {
+            this(Apb.getEnv().fileFromBase(schema));
+        }
+
+        /**
+         * Specify the target file where sources will be generated
+         * @param dirName The directory where to place generated files
+         */
+        @NotNull public Builder to(@NotNull String dirName)
+        {
+            return to(Apb.getEnv().fileFromBase(dirName));
+        }
+
+        /**
+         * Specify the target file where sources will be generated
+         * @param dir The directory where to place generated files
+         */
+        @NotNull public Builder to(@NotNull File dir)
+        {
+            if (dir.isFile()) {
+                throw new BuildException("Not a directory: '" + dir.getPath() + "'.");
+            }
+
+            to = dir;
+            return this;
+        }
+
+        /**
+         * Specify the name of the package to for generated classes
+         * @param packageName the name of the stylesheet to use
+         * @throws IllegalStateException if {@link #to} was not invoked before
+         */
+        @NotNull public XjcTask usingPackage(@NotNull String packageName)
+        {
+            final File target = to;
+
+            if (target == null) {
+                throw new IllegalStateException("Must invoked 'to' method to specify the output file or directory");
+            }
+
+            return new XjcTask(from, target, packageName);
+        }
+    }
 }

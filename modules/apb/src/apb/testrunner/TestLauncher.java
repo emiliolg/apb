@@ -16,7 +16,7 @@
 //
 
 
-package apb.tasks;
+package apb.testrunner;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -37,18 +38,16 @@ import java.util.Set;
 import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
-import apb.TestModuleHelper;
+import apb.Proxy;
 
 import apb.coverage.CoverageBuilder;
 
 import apb.metadata.CoverageInfo;
 import apb.metadata.TestModule;
 
-import apb.testrunner.Invocation;
-import apb.testrunner.TestRunner;
-import apb.testrunner.output.SimpleReport;
+import apb.tasks.JavaTask;
+
 import apb.testrunner.output.TestReport;
-import apb.testrunner.output.TestReportBroadcaster;
 
 import apb.utils.FileUtils;
 
@@ -56,8 +55,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static java.io.File.pathSeparator;
+import static java.lang.Character.isLowerCase;
+import static java.util.Arrays.asList;
 
-import static apb.tasks.CoreTasks.delete;
 import static apb.tasks.CoreTasks.java;
 
 import static apb.testrunner.TestRunner.listTests;
@@ -73,8 +73,7 @@ import static apb.utils.StringUtils.makeString;
 // Time: 5:37:49 PM
 
 //
-public class TestTask
-    extends Task
+public class TestLauncher
 {
     //~ Instance fields ......................................................................................
 
@@ -86,19 +85,8 @@ public class TestTask
     /**
      * Run EACH test suite in an independent (fork'ed) process
      */
-    boolean forkPerSuite;
-
-    /**
-     * The classes to be tested
-     */
-    @NotNull private final List<File> classesToTest;
-
-    /**
-     * The classpath for the tests
-     */
-    @NotNull private Collection<File>   classPath;
-    private boolean                     classPathInSystemClassloader;
-    @NotNull private final CoverageInfo coverage;
+    boolean         forkPerSuite;
+    private boolean classPathInSystemClassloader;
 
     /**
      * Enable assertions when running the tests
@@ -111,11 +99,6 @@ public class TestTask
     private boolean enableDebugger;
 
     /**
-     * The list of tests to exclude
-     */
-    @NotNull private List<String> excludes;
-
-    /**
      * Fail if no tests are found
      */
     private boolean failIfEmpty;
@@ -123,7 +106,18 @@ public class TestTask
     /**
      * Fail the build when a test fails
      */
-    private boolean failOnError;
+    private boolean                        failOnError;
+    @NotNull private final CoverageBuilder coverageBuilder;
+    @NotNull private final CoverageInfo    coverage;
+    @NotNull private final Environment     env;
+    @Nullable private File                 reportDir;
+    @NotNull private final File            testClasses;
+    private final int                      maxMemory;
+
+    /**
+     * The list of tests to exclude
+     */
+    @NotNull private List<String> excludes;
 
     /**
      * The list of tests to include
@@ -131,50 +125,58 @@ public class TestTask
     @NotNull private List<String> includes;
 
     /**
-     * The test module helper
+     * The list of test groups to execute
      */
-    private TestModuleHelper moduleHelper;
+    @NotNull private final List<String> testGroups;
+    private final Map<String, String>   environmentVariables;
 
     /**
      * List of System properties to pass to the tests.
      */
     @NotNull private Map<String, String> properties;
-    @NotNull private TestReport          report;
-    @Nullable private File               reportDir;
 
     /**
-     * The list of test groups to execute
+     * The classes to be tested
      */
-    @NotNull private final List<String> testGroups;
+    @NotNull private final Set<File> classesToTest;
+
+    /**
+     * The classpath for the tests
+     */
+    @NotNull private Set<File> classPath;
+    private final String       creatorClass;
+
+    /**
+     * To be able to run a simple TestCase
+     */
+    private String       singleTest;
+    private final String workingDirectory;
+
+    @NotNull private final TestReport report;
 
     //~ Constructors .........................................................................................
 
-    public TestTask(@NotNull TestModuleHelper module)
+    public TestLauncher(final TestModule testModule, @NotNull final File testClasses, List<String> testGroups,
+                        final TestReport reports, File reportsDir, Collection<File> classPath,
+                        Collection<File> classesToTest, final CoverageBuilder coverageBuilder)
     {
-        super(module);
-        report = new SimpleReport(true, true);
-        moduleHelper = module;
-        classPath = moduleHelper.deepClassPath(true, false);
+        env = Apb.getEnv();
+        this.classPath = new LinkedHashSet<File>(classPath);
+        this.classesToTest = new LinkedHashSet<File>(classesToTest);
+        this.classPath.removeAll(classesToTest);
 
-        classesToTest = moduleHelper.getClassesToTest();
-        classPath.removeAll(classesToTest);
+        reportDir = reportsDir;
+        report = reports;
 
-        coverage = moduleHelper.getCoverageInfo();
-
-        if (!moduleHelper.getReports().isEmpty()) {
-            reportDir = moduleHelper.getReportsDir();
-        }
-
-        setReport(moduleHelper.getReports());
-
-        TestModule testModule = moduleHelper.getModule();
+        coverage = testModule.coverage;
         fork = testModule.fork;
         forkPerSuite = testModule.forkPerSuite;
         failIfEmpty = testModule.failIfEmpty;
         failOnError = testModule.failOnError;
+        this.testClasses = testClasses;
 
         if (isNotEmpty(testModule.runOnly)) {
-            setTests(testModule.runOnly);
+            setSingleTest(testModule.runOnly);
         }
         else if (testModule.includes().isEmpty()) {
             includes = TestModule.DEFAULT_INCLUDES;
@@ -186,10 +188,9 @@ public class TestTask
             excludes = testModule.excludes();
         }
 
-        final String groups = moduleHelper.getProperty("tests.groups", "");
-        testGroups = groups.isEmpty() ? testModule.groups() : Arrays.asList(groups.split(","));
+        this.testGroups = testGroups;
 
-        properties = expandProperties(module, testModule.properties(), testModule.useProperties());
+        properties = expandProperties(env, testModule.properties(), testModule.useProperties());
         enableAssertions = testModule.enableAssertions;
 
         enableDebugger = testModule.enableDebugger;
@@ -199,48 +200,15 @@ public class TestTask
         }
 
         classPathInSystemClassloader = testModule.classPathInSystemClassloader;
+        this.coverageBuilder = coverageBuilder;
+        this.coverageBuilder.setEnabled(isCoverageEnabled());
+        maxMemory = testModule.memory;
+        environmentVariables = testModule.environment();
+        workingDirectory = testModule.workingDirectory;
+        creatorClass = testModule.testType.creatorClass(testModule.customCreator);
     }
 
     //~ Methods ..............................................................................................
-
-    public static void execute(TestModuleHelper module)
-    {
-        TestTask task = new TestTask(module);
-        task.execute();
-    }
-
-    public static void cleanReports(TestModuleHelper module)
-    {
-        delete(FileSet.fromDir(module.getReportsDir()), FileSet.fromDir(module.getCoverageDir())).execute();
-    }
-
-    public void setReport(@NotNull List<TestReport> testReports)
-    {
-        if (testReports.size() == 1) {
-            report = testReports.get(0);
-        }
-        else if (!testReports.isEmpty()) {
-            report = new TestReportBroadcaster(testReports);
-        }
-    }
-
-    /**
-     * Set to execute specific tests
-     *
-     * @param tests The tests to be executed
-     */
-    public void setTests(String... tests)
-    {
-        excludes = Collections.emptyList();
-        includes = new ArrayList<String>();
-
-        for (String t : tests) {
-            if (isNotEmpty(t)) {
-                t = t.replace('.', '/');
-                includes.add("**/" + t + ".class");
-            }
-        }
-    }
 
     public void execute()
     {
@@ -269,14 +237,9 @@ public class TestTask
         }
     }
 
-    public boolean isClassPathInSystemClassloader()
-    {
-        return classPathInSystemClassloader;
-    }
-
-    protected static Map<String, String> expandProperties(final Environment         env,
-                                                          final Map<String, String> properties,
-                                                          List<String>              useProperties)
+    private static Map<String, String> expandProperties(final Environment         env,
+                                                        final Map<String, String> properties,
+                                                        List<String>              useProperties)
     {
         Map<String, String> result = new HashMap<String, String>();
 
@@ -284,7 +247,10 @@ public class TestTask
             result.put(e.getKey(), env.expand(e.getValue()));
         }
 
-        for (String prop : useProperties) {
+        List<String> inherit = new ArrayList<String>(useProperties);
+        inherit.addAll(asList(Proxy.PROXY_PROPERTIES));
+
+        for (String prop : inherit) {
             if (env.hasProperty(prop)) {
                 result.put(prop, env.getProperty(prop));
             }
@@ -293,21 +259,51 @@ public class TestTask
         return result;
     }
 
+    /**
+     * Set to execute specific tests
+     *
+     * @param tests The tests to be executed
+     */
+    private void setTests(String... tests)
+    {
+        excludes = Collections.emptyList();
+        includes = new ArrayList<String>();
+
+        for (String t : tests) {
+            if (isNotEmpty(t)) {
+                t = t.replace('.', '/');
+                includes.add("**/" + t + ".class");
+            }
+        }
+    }
+
+    private void setSingleTest(String s)
+    {
+        final int dot = s.lastIndexOf('.');
+
+        if (dot != -1 && isLowerCase(s.charAt(dot + 1))) {
+            singleTest = s.substring(dot + 1);
+            s = s.substring(0, dot);
+        }
+
+        setTests(s);
+    }
+
     private void showClassPath()
     {
-        logVerbose("Test Classpath: \n");
+        env.logVerbose("Test Classpath: \n");
 
         for (File file : classPath) {
-            logVerbose("                %s\n", file);
+            env.logVerbose("                %s\n", file);
         }
     }
 
     private void showProperties()
     {
-        logVerbose("Properties: \n");
+        env.logVerbose("Properties: \n");
 
         for (Map.Entry<String, String> e : properties.entrySet()) {
-            logVerbose("         %s='%s'\n", e.getKey(), e.getValue());
+            env.logVerbose("         %s='%s'\n", e.getKey(), e.getValue());
         }
     }
 
@@ -319,7 +315,7 @@ public class TestTask
     @NotNull private Invocation testCreator()
         throws Exception
     {
-        return new Invocation(moduleHelper.getCreatorClass());
+        return new Invocation(creatorClass);
     }
 
     private ClassLoader createClassLoader(Collection<File> classPathUrls)
@@ -336,17 +332,13 @@ public class TestTask
 
     private int executeOutOfProcess()
     {
-        File            reportSpecsFile = null;
-        CoverageBuilder coverageBuilder = null;
+        File reportSpecsFile = null;
 
         try {
             reportSpecsFile = reportSpecs();
-            coverageBuilder = new CoverageBuilder(env, moduleHelper);
-
             return forkPerSuite
-                   ? executeEachSuite(reportSpecsFile, coverageBuilder)
-                   : invokeRunner(testCreator(), reportSpecsFile, coverageBuilder, null,
-                                  makeString(testGroups, ':'));
+                   ? executeEachSuite(reportSpecsFile)
+                   : invokeRunner(testCreator(), reportSpecsFile, null, makeString(testGroups, ':'));
         }
         catch (Exception e) {
             throw new BuildException(e);
@@ -356,21 +348,19 @@ public class TestTask
                 reportSpecsFile.delete();
             }
 
-            if (coverageBuilder != null) {
-                coverageBuilder.stopRun();
-            }
+            coverageBuilder.stopRun();
         }
     }
 
-    private int executeEachSuite(@NotNull File reportSpecsFile, @NotNull CoverageBuilder coverageBuilder)
+    private int executeEachSuite(@NotNull File reportSpecsFile)
         throws Exception
     {
         List<File> cp = new ArrayList<File>(classPath);
-        cp.add(moduleHelper.getOutput());
+        cp.add(testClasses);
         ClassLoader cl = createClassLoader(cp);
 
         final Invocation  creator = testCreator();
-        final Set<String> tests = listTests(cl, creator, moduleHelper.getOutput(), includes, excludes);
+        final Set<String> tests = listTests(cl, creator, testClasses, includes, excludes, singleTest);
         report.startRun(tests.size());
 
         int result = TestRunner.OK;
@@ -378,8 +368,7 @@ public class TestTask
         for (String testSet : tests) {
             result =
                 worseResult(result,
-                            invokeRunner(creator, reportSpecsFile, coverageBuilder, testSet,
-                                         makeString(testGroups, ':')));
+                            invokeRunner(creator, reportSpecsFile, testSet, makeString(testGroups, ':')));
         }
 
         report.stopRun();
@@ -387,12 +376,12 @@ public class TestTask
     }
 
     private int invokeRunner(@NotNull Invocation creator, @NotNull File reportSpecsFile,
-                             @NotNull CoverageBuilder cb, @Nullable String suite, @NotNull String groups)
+                             @Nullable String suite, @NotNull String groups)
     {
         // Create Arguments for Java Command
         List<String> args = new ArrayList<String>();
 
-        args.addAll(cb.addCommandLineArguments());
+        args.addAll(coverageBuilder.addCommandLineArguments());
 
         // testrunner arguments
         if (env.isVerbose()) {
@@ -419,6 +408,11 @@ public class TestTask
             args.add(suite.replace('.', '/'));
         }
 
+        if (isNotEmpty(singleTest)) {
+            args.add("--single-test");
+            args.add(singleTest);
+        }
+
         if (!groups.isEmpty()) {
             args.add("-g");
             args.add(groups);
@@ -438,16 +432,16 @@ public class TestTask
         args.add(reportSpecsFile.getAbsolutePath());
 
         // Add the test directory
-        args.add(moduleHelper.getOutput().getAbsolutePath());
+        args.add(testClasses.getAbsolutePath());
         escapeDollars(args);
 
         // Execute  the java command
         JavaTask java =
-            java(cb.runnerMainClass(), args).withClassPath(runnerClassPath())  //
-                                            .maxMemory(moduleHelper.getMemory())  //
-                                            .withProperties(properties)  //
-                                            .withEnvironment(moduleHelper.getEnvironmentVariables())  //
-                                            .onDir(moduleHelper.getModule().workingDirectory);
+            java(coverageBuilder.runnerMainClass(), args).withClassPath(runnerClassPath())  //
+                                                         .maxMemory(maxMemory)  //
+                                                         .withProperties(properties)  //
+                                                         .withEnvironment(environmentVariables)  //
+                                                         .onDir(workingDirectory);
 
         if (enableDebugger) {
             for (String arg : DEBUG_ARGUMENTS) {
@@ -482,7 +476,7 @@ public class TestTask
             path.add(new File(appJar.getParent(), "emma.jar"));
             path.addAll(classPath);
         }
-        else if (isClassPathInSystemClassloader()) {
+        else if (classPathInSystemClassloader) {
             path.addAll(classPath);
         }
         else {
@@ -522,10 +516,9 @@ public class TestTask
         }
 
         try {
-            TestRunner        runner =
-                new TestRunner(moduleHelper.getOutput(), reportDir, includes, excludes, testGroups);
+            TestRunner        runner = new TestRunner(testClasses, reportDir, includes, excludes, testGroups);
             final ClassLoader loader = createClassLoader(classPath);
-            runner.run(testCreator(), report, loader);
+            runner.run(testCreator(), report, loader, singleTest);
         }
         catch (Exception e) {
             env.handle(e);
