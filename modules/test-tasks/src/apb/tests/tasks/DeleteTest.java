@@ -21,6 +21,7 @@ package apb.tests.tasks;
 import java.io.File;
 import java.io.IOException;
 
+import apb.tasks.CoreTasks;
 import apb.tasks.FileSet;
 
 import static apb.tasks.CoreTasks.delete;
@@ -112,9 +113,8 @@ public class DeleteTest
 
     private File mkdir(String name)
     {
-        File result = new File(basedir, name);
-        result.mkdir();
-        return result;
+        CoreTasks.mkdir(name).execute();
+        return new File(basedir, name);
     }
 
     //~ Static fields/initializers ...........................................................................

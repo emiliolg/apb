@@ -53,10 +53,7 @@ public class XjcTest
     public void testJar()
         throws IOException
     {
-        env.putProperty(Environment.EXT_PATH_PROPERTY, env.expand("$basedir/lib"));
-        mkdir("lib").execute();
-        copy(dataFile("jaxb/lib/jaxb-xjc.jar")).to("lib")  //
-                                               .execute();
+        env.putProperty(Environment.EXT_PATH_PROPERTY, dataPath("jaxb/lib"));
 
         final File schema = new File(dataFile(SCHEMADIR), "po.xsd");
         xjc(schema.getPath()).to(SRCDIR)  //

@@ -27,6 +27,7 @@ import java.util.Map;
 
 import apb.tasks.FileSet;
 import apb.tasks.JavaTask;
+import apb.tasks.NotNullInstrumentTask;
 
 import apb.tests.utils.FileAssert;
 
@@ -48,6 +49,7 @@ public class JavaTest
         throws IOException
     {
         javac(FileSet.fromDir("$source").including(SUM_ARGS + ".java")).to("$basedir").execute();
+        NotNullInstrumentTask.process(env);
         FileAssert.assertExists(new File(basedir, SUM_ARGS + ".class"));
 
         List<String> output = new ArrayList<String>();

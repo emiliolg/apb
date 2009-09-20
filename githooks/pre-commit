@@ -3,7 +3,7 @@ echo "Pre-commit checks..."
 #
 # Get the list of files from the stage area
 #
-FILES=$(git diff --cached --diff-filter=AM --name-only HEAD | grep -e ".java\$")
+FILES=$(git diff --cached --diff-filter=AM --name-only HEAD | grep -e ".java\$" | grep -v /data/)
 
 if [ -n "$FILES" ]
 then

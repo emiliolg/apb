@@ -27,6 +27,7 @@ import apb.tests.utils.FileAssert;
 
 import static apb.tasks.CoreTasks.copy;
 import static apb.tasks.CoreTasks.copyFiltering;
+import static apb.tasks.CoreTasks.mkdir;
 
 import static apb.tests.utils.FileAssert.assertDirEquals;
 import static apb.tests.utils.FileAssert.assertDoesNotExist;
@@ -72,7 +73,7 @@ public class CopyTest
         final File file2 = new File(dir1, "A2.java");
         copy("$basedir/dir1/A.java").to("$basedir/dir1/A2.java").execute();
         FileAssert.assertFileEquals(file1, file2);
-        mkdir("dir2");
+        mkdir("dir2").execute();
         copy("$basedir/dir1/A.java").to("$basedir/dir2").execute();
         FileAssert.assertFileEquals(file1, new File(dir2, "A.java"));
     }
@@ -84,7 +85,7 @@ public class CopyTest
         final File file2 = new File(dir1, "A2.java");
         copy(FileSet.fromFile("$basedir/dir1/A.java")).to("$basedir/dir1/A2.java").execute();
         FileAssert.assertFileEquals(file1, file2);
-        mkdir("dir2");
+        mkdir("dir2").execute();
         copy(FileSet.fromFile(file1)).to("$basedir/dir2").execute();
         FileAssert.assertFileEquals(file1, new File(dir2, "A.java"));
     }
@@ -128,7 +129,8 @@ public class CopyTest
         super.setUp();
         env.putProperty("l", "line");
 
-        dir1 = mkdir("dir1");
+        mkdir("dir1").execute();
+        dir1 = new File(basedir, "dir1");
         addFiles(dir1, "A.java", "B.java", "C.java");
         addFiles(dir1, "a.txt", "b.txt");
 
@@ -141,13 +143,6 @@ public class CopyTest
         for (String file : files) {
             createFile(dir, file, DATA);
         }
-    }
-
-    private File mkdir(String name)
-    {
-        File result = new File(basedir, name);
-        result.mkdir();
-        return result;
     }
 
     //~ Static fields/initializers ...........................................................................

@@ -269,7 +269,7 @@ public class CoreTasks
     }
 
     /**
-     * Creates a directory
+     * CIdereates a directory
      * @param file The Directory to be created
      */
     @NotNull public static MkdirTask mkdir(@NotNull File file)
