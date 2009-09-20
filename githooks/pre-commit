@@ -1,0 +1,13 @@
+echo "Pre-commit checks..."
+
+#
+# Get the list of files from the stage area
+#
+FILES=$(git diff --cached --diff-filter=AM --name-only HEAD | grep -e ".java\$")
+
+if [ -n "$FILES" ]
+then
+   jalopy --force $FILES -c data/jalopyCodeConvention.xml || exit 1
+# add again the formatted files
+   git add $FILES
+fi
