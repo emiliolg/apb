@@ -23,15 +23,9 @@ import java.io.IOException;
 
 import apb.BuildException;
 
-import apb.tasks.FileSet;
-
 import apb.tests.utils.FileAssert;
 
 import static apb.tasks.CoreTasks.javac;
-//
-// User: emilio
-// Date: Sep 3, 2009
-// Time: 5:38:33 PM
 
 //
 public class JavacTest
@@ -65,15 +59,16 @@ public class JavacTest
 
     private void compile(final String lintOptions)
     {
-        javac(FileSet.fromFile(dataFile("src/Hello.java"))).to("$basedir")  //
-                                                           .lint(true)  //
-                                                           .lintOptions(lintOptions)  //
-                                                           .debug(true)  //
-                                                           .sourceVersion("1.6")  //
-                                                           .targetVersion("1.6")  //
-                                                           .deprecated(true)  //
-                                                           .trackUnusedDependencies(true)  //
-                                                           .failOnWarning(true)  //
-                                                           .execute();
+        javac(dataPath("src/hello")).to("$basedir")  //
+                                    .withClassPath("$lib/apb.jar")  //
+                                    .lint(true)  //
+                                    .lintOptions(lintOptions)  //
+                                    .debug(true)  //
+                                    .sourceVersion("1.6")  //
+                                    .targetVersion("1.6")  //
+                                    .deprecated(true)  //
+                                    .trackUnusedDependencies(true)  //
+                                    .failOnWarning(true)  //
+                                    .execute();
     }
 }

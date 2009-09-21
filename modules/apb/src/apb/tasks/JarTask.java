@@ -64,16 +64,16 @@ public class JarTask
 {
     //~ Instance fields ......................................................................................
 
-    private final boolean doCompress = true;
-    private final File    jarFile;
+    private String comment;
+
+    private final boolean               doCompress = true;
+    @NotNull private final List<String> excludes, includes;
+    private final File                  jarFile;
 
     private final int                         level = Deflater.DEFAULT_COMPRESSION;
-    @NotNull private final List<String>       excludes, includes;
-    private final List<File>                  sourceDir;
     @NotNull private Manifest                 manifest;
     @NotNull private Map<String, Set<String>> services;
-
-    private String comment;
+    private final List<File>                  sourceDir;
 
     //~ Constructors .........................................................................................
 
@@ -434,15 +434,6 @@ public class JarTask
         Builder(@NotNull File jarFile)
         {
             this.jarFile = jarFile;
-        }
-
-        /**
-         * Private constructor called from factory methods
-         * @param jarFile The jarfile to be created
-         */
-        Builder(@NotNull String jarFile)
-        {
-            this(Apb.getEnv().fileFromBase(jarFile));
         }
 
         public JarTask fromDir(@NotNull File sourceDirectory)

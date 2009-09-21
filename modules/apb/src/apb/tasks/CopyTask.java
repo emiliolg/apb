@@ -45,9 +45,9 @@ public class CopyTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull protected final File to;
-
     @NotNull protected final List<FileSet> from;
+
+    @NotNull protected final File to;
 
     //~ Constructors .........................................................................................
 
@@ -154,15 +154,6 @@ public class CopyTask
         Builder(@NotNull File from)
         {
             this.from = singletonList(from.isFile() ? fromFile(from) : fromDir(from));
-        }
-
-        /**
-         * Private constructor called from factory methods
-         * @param from The source to copy from. It can be a file or a directory
-         */
-        Builder(@NotNull String from)
-        {
-            this(Apb.getEnv().fileFromBase(from));
         }
 
         /**

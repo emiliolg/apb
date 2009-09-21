@@ -49,7 +49,6 @@ public class JavaTest
         throws IOException
     {
         javac(FileSet.fromDir("$source").including(SUM_ARGS + ".java")).to("$basedir").execute();
-        NotNullInstrumentTask.process(env);
         FileAssert.assertExists(new File(basedir, SUM_ARGS + ".class"));
 
         List<String> output = new ArrayList<String>();
@@ -68,6 +67,28 @@ public class JavaTest
 
         assertEquals("-2", output.get(0));
         assertEquals(2, j.getExitValue());
+    }
+
+    public void testNotNull()
+        throws IOException
+    {
+        NotNullInstrumentTask t = new NotNullInstrumentTask(env);
+        String                p = t.getClassesProperty();
+
+        final FileSet set = FileSet.fromDir("$source").including(SUM_ARGS + ".java");
+        javac(set).to("$basedir")  //
+                  .withAnnotationOptions(NotNullInstrumentTask.CLASSES_PROPERTY, p)  //
+                  .execute();
+        t.execute();
+
+        FileAssert.assertExists(new File(basedir, SUM_ARGS + ".class"));
+
+        List<String> output = new ArrayList<String>();
+        JavaTask     j = java(makeClassName(SUM_ARGS), "1", "2", "3").outputTo(output);
+        j.execute();
+
+        assertEquals("6", output.get(0));
+        assertEquals(1, j.getExitValue());
     }
 
     public void testTouch()

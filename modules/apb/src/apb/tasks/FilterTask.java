@@ -103,15 +103,6 @@ public class FilterTask
         }
 
         /**
-         * Private constructor called from factory methods
-         * @param from The source to copy from. It can be a file or a directory
-         */
-        Builder(@NotNull String from)
-        {
-            this(Apb.getEnv().fileFromBase(from));
-        }
-
-        /**
         * Specify the target file or directory
         * If not specified, then the file/s will be copied to the current module output
         * @param to The File or directory to copy from

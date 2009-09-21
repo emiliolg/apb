@@ -62,16 +62,17 @@ public class ModuleHelper
 {
     //~ Instance fields ......................................................................................
 
-    @Nullable private File              generatedSource;
-    @Nullable private File              output;
-    @Nullable private File              packageFile;
-    @Nullable private File              source;
-    @Nullable private File              sourcePackageFile;
     @Nullable private Iterable<Library> allLibraries;
 
-    @Nullable private Iterable<ModuleHelper>     dependencies;
-    @Nullable private Iterable<ModuleHelper>     directDependencies;
+    @Nullable private Iterable<ModuleHelper> dependencies;
+    @Nullable private Iterable<ModuleHelper> directDependencies;
+
+    @Nullable private File                       generatedSource;
     @Nullable private Iterable<Library>          libraries;
+    @Nullable private File                       output;
+    @Nullable private File                       packageFile;
+    @Nullable private File                       source;
+    @Nullable private File                       sourcePackageFile;
     @Nullable private Iterable<TestModuleHelper> testModules;
 
     //~ Constructors .........................................................................................
@@ -425,7 +426,7 @@ public class ModuleHelper
                        .withClassPath(compileClassPath())  //
                        .sourceVersion(info.source)  //
                        .targetVersion(info.target)  //
-                       .withAnnotations(info.annotationOptions())  //
+                       .withAnnotationOptions(info.annotationOptions())  //
                        .withExtraLibraries(info.extraLibraries())  //
                        .debug(info.debug)  //
                        .deprecated(info.deprecated)  //

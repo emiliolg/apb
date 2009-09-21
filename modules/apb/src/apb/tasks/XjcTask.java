@@ -38,13 +38,13 @@ public class XjcTask
 {
     //~ Instance fields ......................................................................................
 
-    private boolean             packageAnnotations;
-    private boolean             timestamp;
-    @NotNull private final File schema;
-    @NotNull private final File targetDir;
-
     @NotNull private final List<File> externalBindings;
-    @NotNull private final String     targetPackage;
+
+    private boolean               packageAnnotations;
+    @NotNull private final File   schema;
+    @NotNull private final File   targetDir;
+    @NotNull private final String targetPackage;
+    private boolean               timestamp;
 
     //~ Constructors .........................................................................................
 
@@ -207,15 +207,6 @@ public class XjcTask
             if (!schema.exists()) {
                 throw new BuildException("Non existent schema: " + schema);
             }
-        }
-
-        /**
-         * Private constructor called from factory methods
-         * @param schema The Schema to generate files from.
-         */
-        Builder(@NotNull String schema)
-        {
-            this(Apb.getEnv().fileFromBase(schema));
         }
 
         /**

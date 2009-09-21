@@ -42,7 +42,7 @@ public class CoreTasks
      */
     @NotNull public static CopyTask.Builder copy(@NotNull String from)
     {
-        return new CopyTask.Builder(from);
+        return copy(Apb.getEnv().fileFromBase(from));
     }
 
     /**
@@ -70,7 +70,7 @@ public class CoreTasks
      */
     @NotNull public static FilterTask.Builder copyFiltering(@NotNull String from)
     {
-        return new FilterTask.Builder(from);
+        return copyFiltering(Apb.getEnv().fileFromBase(from));
     }
 
     /**
@@ -106,8 +106,7 @@ public class CoreTasks
      */
     @NotNull public static DeleteTask delete(@NotNull String name)
     {
-        final Environment env = Apb.getEnv();
-        return new DeleteTask(env.fileFromBase(name));
+        return delete(Apb.getEnv().fileFromBase(name));
     }
 
     /**
@@ -241,7 +240,7 @@ public class CoreTasks
      */
     public static JarTask.Builder jar(@NotNull String jarFileName)
     {
-        return new JarTask.Builder(jarFileName);
+        return jar(Apb.getEnv().fileFromBase(jarFileName));
     }
 
     /**
@@ -283,7 +282,7 @@ public class CoreTasks
      */
     @NotNull public static XsltTask.Builder xslt(@NotNull String from)
     {
-        return new XsltTask.Builder(from);
+        return xslt(Apb.getEnv().fileFromBase(from));
     }
 
     /**
@@ -307,7 +306,7 @@ public class CoreTasks
 
     public static XjcTask.Builder xjc(@NotNull String schema)
     {
-        return new XjcTask.Builder(schema);
+        return xjc(Apb.getEnv().fileFromBase(schema));
     }
 
     public static XjcTask.Builder xjc(@NotNull File schema)

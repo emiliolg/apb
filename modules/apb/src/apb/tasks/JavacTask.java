@@ -55,27 +55,27 @@ public class JavacTask
 {
     //~ Instance fields ......................................................................................
 
-    private boolean            debug;
-    private boolean            deprecated;
-    private boolean            failOnWarning;
-    private boolean            lint;
-    private boolean            trackUnusedDependencies;
-    private boolean            warn;
-    private DiagnosticReporter reporter;
-
-    @NotNull private final File          targetDir;
-    @NotNull private final List<File>    classPath;
-    @NotNull private final List<File>    extraLibraries;
-    @NotNull private final List<FileSet> fileSets;
-    @NotNull private final List<File>    sourceDirs;
-
     @NotNull private final Map<String, String> annnotationOptions;
+    @NotNull private final List<File>          classPath;
 
-    @NotNull private String lintOptions;
-    @NotNull private String name;
-    @NotNull private String processing;
-    @NotNull private String source;
-    @NotNull private String target;
+    private boolean                      debug;
+    private boolean                      deprecated;
+    @NotNull private final List<File>    extraLibraries;
+    private boolean                      failOnWarning;
+    @NotNull private final List<FileSet> fileSets;
+    private boolean                      lint;
+
+    @NotNull private String           lintOptions;
+    @NotNull private String           name;
+    @NotNull private String           processing;
+    private DiagnosticReporter        reporter;
+    @NotNull private String           source;
+    @NotNull private final List<File> sourceDirs;
+    @NotNull private String           target;
+
+    @NotNull private final File targetDir;
+    private boolean             trackUnusedDependencies;
+    private boolean             warn;
 
     //~ Constructors .........................................................................................
 
@@ -121,9 +121,15 @@ public class JavacTask
         return this;
     }
 
-    public JavacTask withAnnotations(Map<String, String> map)
+    public JavacTask withAnnotationOptions(Map<String, String> map)
     {
         annnotationOptions.putAll(map);
+        return this;
+    }
+
+    public JavacTask withAnnotationOptions(@NotNull String key, @NotNull String value)
+    {
+        annnotationOptions.put(key, value);
         return this;
     }
 

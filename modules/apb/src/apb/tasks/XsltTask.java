@@ -61,13 +61,13 @@ public class XsltTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final File styleFile;
+    @NotNull private final TransformerFactory factory;
 
     @NotNull private final Map<String, String> outputProperties;
     @NotNull private final Map<String, String> params;
-    @NotNull private String                    useExtension;
 
-    @NotNull private final TransformerFactory factory;
+    @NotNull private final File styleFile;
+    @NotNull private String     useExtension;
 
     //~ Constructors .........................................................................................
 
@@ -211,8 +211,8 @@ public class XsltTask
 
     public static class Builder
     {
-        @Nullable private File               to;
         @NotNull private final List<FileSet> from;
+        @Nullable private File               to;
 
         Builder(@NotNull FileSet... from)
         {
@@ -227,15 +227,6 @@ public class XsltTask
         Builder(@NotNull File from)
         {
             this.from = singletonList(from.isFile() ? fromFile(from) : fromDir(from));
-        }
-
-        /**
-         * Private constructor called from factory methods
-         * @param from The source to transform. It can be a file or a directory
-         */
-        Builder(@NotNull String from)
-        {
-            this(Apb.getEnv().fileFromBase(from));
         }
 
         /**

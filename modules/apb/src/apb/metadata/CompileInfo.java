@@ -57,20 +57,14 @@ public class CompileInfo
     @BuildProperty public boolean failOnWarning = false;
 
     /**
+     * Instrument 'not null´  annotations
+     */
+    @BuildProperty public boolean instrumentNotNull = false;
+
+    /**
      * Whether to enable recommended warnings
      */
     @BuildProperty public boolean lint = false;
-
-    /**
-     * Wheter to validate that all dependencies are being used
-     * If it's true and there are some unused dependencies it will fail with the list of unused ones
-     */
-    @BuildProperty public boolean validateDependencies = false;
-
-    /**
-     * Generate warnings
-     */
-    @BuildProperty public boolean warn = true;
 
     /**
      * Enable specific warnings (Comma separated list) :
@@ -87,6 +81,22 @@ public class CompileInfo
      * Generate class files for specific VM version
      */
     @BuildProperty public String target = "";
+
+    /**
+     * Wheter to validate that all dependencies are being used
+     * If it's true and there are some unused dependencies it will fail with the list of unused ones
+     */
+    @BuildProperty public boolean validateDependencies = false;
+
+    /**
+     * Generate warnings
+     */
+    @BuildProperty public boolean warn = true;
+
+    /**
+     * Options to pass to the annotation processor
+     */
+    private final Map<String, String> annotationOptions = new HashMap<String, String>();
 
     /**
      * The list of files to exclude from compilation.
@@ -106,20 +116,14 @@ public class CompileInfo
     private final List<String> includes = new ArrayList<String>(DEFAULT_SOURCES);
 
     /**
-     * Do not generate warnings for the following list of files
-     */
-    private final List<String> warnExcludes = new ArrayList<String>();
-
-    /**
-     * Options to pass to the annotation processor
-     */
-    private final Map<String, String> annotationOptions = new HashMap<String, String>();
-
-    /**
      * Controls whether annotation processing and/or compilation is done.
      */
     private ProcessingOption processingOption = ProcessingOption.DEFAULT;
-    static final List<String> DEFAULT_SOURCES = asList("**/*.java");
+
+    /**
+     * Do not generate warnings for the following list of files
+     */
+    private final List<String> warnExcludes = new ArrayList<String>();
 
     //~ Methods ..............................................................................................
 
@@ -199,6 +203,10 @@ public class CompileInfo
     {
         this.processingOption = processingOption;
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    static final List<String> DEFAULT_SOURCES = asList("**/*.java");
 
     //~ Enums ................................................................................................
 
