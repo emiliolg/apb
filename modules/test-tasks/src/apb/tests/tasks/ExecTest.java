@@ -29,12 +29,14 @@ import java.util.Map;
 
 import apb.tasks.ExecTask;
 
+import apb.tests.testutils.FileAssert;
+
 import static java.util.Arrays.asList;
 
 import static apb.tasks.CoreTasks.exec;
 
-import static apb.tests.utils.FileAssert.assertDoesNotExist;
-import static apb.tests.utils.FileAssert.assertExists;
+import static apb.tests.testutils.FileAssert.assertDoesNotExist;
+import static apb.tests.testutils.FileAssert.assertExists;
 //
 // User: emilio
 // Date: Sep 3, 2009
@@ -67,6 +69,7 @@ public class ExecTest
     public void testRmIfReq()
         throws IOException
     {
+        env.putProperty("source", "$module-source");
         createFiles();
 
         exec("rm", "-rf", "dir1").onDir("$basedir")  //
@@ -181,7 +184,7 @@ public class ExecTest
         throws IOException
     {
         for (String file : files) {
-            createFile(dir, file, DATA);
+            FileAssert.createFile(dir, file, DATA);
         }
     }
 

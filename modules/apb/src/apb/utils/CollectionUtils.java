@@ -21,6 +21,7 @@ package apb.utils;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -112,4 +113,76 @@ public class CollectionUtils
 
         return files;
     }
+
+    /**
+     * Create a string with the elements separated by the indicated character
+     * @param collection
+     * @param sep
+     * @return A String with the elements of the Iterable separated by the specified separator
+     */
+    @NotNull public static String listToString(@Nullable Iterable<String> collection, @NotNull String sep)
+    {
+        StringBuilder result = new StringBuilder();
+
+        if (collection != null) {
+            for (String s : collection) {
+                if (result.length() > 0) {
+                    result.append(sep);
+                }
+
+                result.append(s);
+            }
+        }
+
+        return result.toString();
+    }
+
+    /**
+     * Create a string with the elements separated by the indicated character
+     * @param collection
+     * @return A String with the elements of the Iterable separated by ','
+     */
+    @NotNull public static String listToString(@Nullable Iterable<String> collection)
+    {
+        return listToString(collection, DEFAULT_SEP);
+    }
+
+    /**
+     * Splits this string around matches of the given regular expression.
+     *
+     * @param  string
+     *          The string to be splitted
+     * @param  sep
+     *         the delimiting regular expression
+     *
+     * @return  the list of strings computed by splitting this string
+     *          around matches of the given regular expression
+     *
+     */
+    @NotNull public static List<String> stringToList(@Nullable String string, @NotNull String sep)
+    {
+        if (string == null || string.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return asList(string.split(sep));
+    }
+
+    /**
+     * Splits this string around matches of ','
+     *
+     * @param  string
+     *          The string to be splitted
+     * @return  the list of strings computed
+     *
+     */
+
+    @NotNull public static List<String> stringToList(@Nullable final String string)
+    {
+        return stringToList(string, DEFAULT_SEP);
+    }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final String DEFAULT_SEP = ",";
 }

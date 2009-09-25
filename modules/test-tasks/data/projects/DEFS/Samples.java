@@ -17,24 +17,14 @@
 
 
 
-import java.util.ArrayList;
-import java.util.List;
+import apb.metadata.Project;
 
-//
-/**
- * A simple class to test some warnings
- */
-public class Hello
+public class Samples
+    extends Project
 {
-    //~ Methods ..............................................................................................
+    //~ Instance initializers ................................................................................
 
-    public static void main(String[] args)
     {
-        a.add(args[0]);
-        a.add(args[1]);
+        components(new HelloWorld(), new Math(), new PlayWithMath());
     }
-
-    //~ Static fields/initializers ...........................................................................
-
-    static List a = new ArrayList();
 }

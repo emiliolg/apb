@@ -29,7 +29,7 @@ import apb.tasks.FileSet;
 import apb.tasks.JavaTask;
 import apb.tasks.NotNullInstrumentTask;
 
-import apb.tests.utils.FileAssert;
+import apb.tests.testutils.FileAssert;
 
 import static java.util.Arrays.asList;
 
@@ -48,7 +48,9 @@ public class JavaTest
     public void testSum()
         throws IOException
     {
-        javac(FileSet.fromDir("$source").including(SUM_ARGS + ".java")).to("$basedir").execute();
+        javac(FileSet.fromDir("$module-src").including(SUM_ARGS + ".java")).to("$basedir")  //
+                                                                           .withClassPath("$apb-jar")  //
+                                                                           .execute();
         FileAssert.assertExists(new File(basedir, SUM_ARGS + ".class"));
 
         List<String> output = new ArrayList<String>();
@@ -72,23 +74,23 @@ public class JavaTest
     public void testNotNull()
         throws IOException
     {
-        NotNullInstrumentTask t = new NotNullInstrumentTask(env);
-        String                p = t.getClassesProperty();
+        String p = NotNullInstrumentTask.getClassesProperty();
 
-        final FileSet set = FileSet.fromDir("$source").including(SUM_ARGS + ".java");
+        final FileSet set = FileSet.fromDir("$module-src").including(SUM_ARGS + ".java");
         javac(set).to("$basedir")  //
+                  .withClassPath("$apb-jar")  //
                   .withAnnotationOptions(NotNullInstrumentTask.CLASSES_PROPERTY, p)  //
                   .execute();
-        t.execute();
+        NotNullInstrumentTask.process(env);
 
         FileAssert.assertExists(new File(basedir, SUM_ARGS + ".class"));
 
         List<String> output = new ArrayList<String>();
-        JavaTask     j = java(makeClassName(SUM_ARGS), "1", "2", "3").outputTo(output);
+        JavaTask     j =
+            java(makeClassName(SUM_ARGS), "1", "2", "null").outputTo(output).redirectErrorStream(true);
         j.execute();
 
-        assertEquals("6", output.get(0));
-        assertEquals(1, j.getExitValue());
+        assertTrue("Exception not thrown", output.get(0).contains("IllegalArgumentException"));
     }
 
     public void testTouch()
@@ -101,7 +103,7 @@ public class JavaTest
         jar(TOUCH_JAR).fromDir(basedir)  //
                       .including(TOUCH + ".class")  //
                       .mainClass(makeClassName(TOUCH))  //
-                      .withClassPath(asList("$lib/apb.jar"))  //
+                      .withClassPath(asList("$apb-jar"))  //
                       .execute();
 
         FileAssert.assertExists(new File(basedir, TOUCH_JAR));
@@ -110,7 +112,7 @@ public class JavaTest
         Map<String, String> ps = new HashMap<String, String>();
         ps.put("timestamp", String.valueOf(ts));
         javaJar(TOUCH_JAR, "$basedir/f1").withProperties(ps)  //
-                                         .withClassPath("$basedir", "$lib/apb.jar")  //
+                                         .withClassPath("$basedir", "$apb-jar")  //
                                          .execute();
 
         File f = new File(basedir, "f1");
@@ -124,17 +126,17 @@ public class JavaTest
 
     private void compile()
     {
-        javac(FileSet.fromDir("$source").including(TOUCH + ".java")).to("$basedir")  //
-                                                                    .withClassPath("$basedir", "$lib/apb.jar")  //
-                                                                    .lint(true)  //
-                                                                    .debug(true)  //
-                                                                    .sourceVersion("1.5")  //
-                                                                    .targetVersion("1.5")  //
-                                                                    .deprecated(true)  //
-                                                                    .trackUnusedDependencies(true)  //
-                                                                    .failOnWarning(true)  //
-                                                                    .showWarnings(true)  //
-                                                                    .execute();
+        javac(FileSet.fromDir("$module-src").including(TOUCH + ".java")).to("$basedir")  //
+                                                                        .withClassPath("$basedir", "$apb-jar")  //
+                                                                        .lint(true)  //
+                                                                        .debug(true)  //
+                                                                        .sourceVersion("1.5")  //
+                                                                        .targetVersion("1.5")  //
+                                                                        .deprecated(true)  //
+                                                                        .trackUnusedDependencies(true)  //
+                                                                        .failOnWarning(true)  //
+                                                                        .showWarnings(true)  //
+                                                                        .execute();
 
         FileAssert.assertExists(new File(basedir, TOUCH + ".class"));
     }

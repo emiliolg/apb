@@ -24,7 +24,7 @@ import java.util.List;
 
 import apb.metadata.JavadocInfo;
 
-import apb.tests.utils.FileAssert;
+import apb.tests.testutils.FileAssert;
 
 import static java.util.Arrays.asList;
 
@@ -48,12 +48,12 @@ public class JavadocTest
     public void test1()
         throws IOException
     {
-        javadoc("$source").to("$basedir/javadoc")  //
-                          .withGroups(asList(new JavadocInfo.Group("Tests", "apb.tests.utils",
-                                                                   "apb.tests.tasks")))  //
-                          .withClassPath(classpath)  //
-                          .includeDeprecatedInfo(false)  //
-                          .additionalOptions(asList("-notimestamp")).execute();
+        javadoc("$module-src").to("$basedir/javadoc")  //
+                              .withGroups(asList(new JavadocInfo.Group("Tests", "apb.tests.testutils",
+                                                                       "apb.tests.tasks")))  //
+                              .withClassPath(classpath)  //
+                              .includeDeprecatedInfo(false)  //
+                              .additionalOptions(asList("-notimestamp")).execute();
         FileAssert.assertFileEquals(new File(javadocDir, OVERVIEW_SUMMARY), dataFile(OVERVIEW_SUMMARY));
         FileAssert.assertExists(new File(javadocDir, "apb/tests/javas/SumArgs.html"));
         FileAssert.assertDoesNotExist(new File(javadocDir, "apb/tests/tasks/class-use/CopyTest.html"));
@@ -62,30 +62,30 @@ public class JavadocTest
     public void test2()
         throws IOException
     {
-        javadoc("$source").to("$basedir/javadoc")  //
-                          .including(asList("apb.tests.utils", "apb.tests.tasks"))  //
-                          .excluding(asList("apb.tests.javas"))  //
-                          .createUsePages(true)  //
-                          .generateHtmlSource(true)  //
-                          .generateIndex(true)  //
-                          .generateDeprecatedList(true)  //
-                          .generateClassHierarchy(true)  //
-                          .withHeader("Example Header")  //
-                          .withFooter("Example Footer")  //
-                          .withBottom("Example Bottom")  //
-                          .withVisibility(JavadocInfo.Visibility.PACKAGE)  //
-                          .withTitle("Example Title")  //
-                          .withWindowTitle("Example Window Title")  //
-                          .splitIndexPerLetter(false)  //
-                          .includeAuthorInfo(true)  //
-                          .includeSinceInfo(true)  //
-                          .includeHelpLinks(true)  //
-                          .includeDeprecatedInfo(true)  //
-                          .includeVersionInfo(true)  //
-                          .maxMemory(128)  //
-                          .withClassPath(classpath)  //
-                          .withOverview("")  //
-                          .additionalOptions(asList("-notimestamp")).execute();
+        javadoc("$module-src").to("$basedir/javadoc")  //
+                              .including(asList("apb.tests.testutils", "apb.tests.tasks"))  //
+                              .excluding(asList("apb.tests.javas"))  //
+                              .createUsePages(true)  //
+                              .generateHtmlSource(true)  //
+                              .generateIndex(true)  //
+                              .generateDeprecatedList(true)  //
+                              .generateClassHierarchy(true)  //
+                              .withHeader("Example Header")  //
+                              .withFooter("Example Footer")  //
+                              .withBottom("Example Bottom")  //
+                              .withVisibility(JavadocInfo.Visibility.PACKAGE)  //
+                              .withTitle("Example Title")  //
+                              .withWindowTitle("Example Window Title")  //
+                              .splitIndexPerLetter(false)  //
+                              .includeAuthorInfo(true)  //
+                              .includeSinceInfo(true)  //
+                              .includeHelpLinks(true)  //
+                              .includeDeprecatedInfo(true)  //
+                              .includeVersionInfo(true)  //
+                              .maxMemory(128)  //
+                              .withClassPath(classpath)  //
+                              .withOverview("")  //
+                              .additionalOptions(asList("-notimestamp")).execute();
 
         FileAssert.assertDoesNotExist(new File(javadocDir, "apb/tests/javas/SumArgs.html"));
         FileAssert.assertExists(new File(javadocDir, "apb/tests/tasks/class-use/CopyTest.html"));
@@ -98,7 +98,8 @@ public class JavadocTest
         super.setUp();
         javadocDir = new File(basedir, "javadoc");
 
-        classpath = asList(new File(lib, "apb.jar"), new File(lib, "junit-3.8.2.jar"));
+        final File apbJar = new File("$apb-jar");
+        classpath = asList(apbJar, new File(apbJar.getParentFile(), "junit-3.8.2.jar"));
     }
 
     //~ Static fields/initializers ...........................................................................

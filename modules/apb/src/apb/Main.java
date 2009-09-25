@@ -32,6 +32,8 @@ import apb.index.ModuleInfo;
 
 import apb.utils.FileUtils;
 
+import static java.util.Arrays.asList;
+
 import static apb.Messages.BUILD_COMPLETED;
 import static apb.Messages.BUILD_FAILED;
 
@@ -43,7 +45,7 @@ public class Main
         throws Throwable
     {
         checkEnvironment();
-        ApbOptions   options = new ApbOptions(args);
+        ApbOptions   options = new ApbOptions(asList(args));
         List<String> arguments = options.parse();
 
         Environment env = Apb.createBaseEnvironment(options);
@@ -113,6 +115,7 @@ public class Main
         }
         else {
             options.printHelp();
+            System.exit(0);
             result = Collections.emptyList();
         }
 

@@ -55,27 +55,27 @@ public class JavacTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final Map<String, String> annnotationOptions;
-    @NotNull private final List<File>          classPath;
+    private boolean            debug;
+    private boolean            deprecated;
+    private boolean            failOnWarning;
+    private boolean            lint;
+    private boolean            trackUnusedDependencies;
+    private boolean            warn;
+    private DiagnosticReporter reporter;
 
-    private boolean                      debug;
-    private boolean                      deprecated;
+    @NotNull private final File          targetDir;
+    @NotNull private final List<File>    classPath;
     @NotNull private final List<File>    extraLibraries;
-    private boolean                      failOnWarning;
     @NotNull private final List<FileSet> fileSets;
-    private boolean                      lint;
+    @NotNull private final List<File>    sourceDirs;
 
-    @NotNull private String           lintOptions;
-    @NotNull private String           name;
-    @NotNull private String           processing;
-    private DiagnosticReporter        reporter;
-    @NotNull private String           source;
-    @NotNull private final List<File> sourceDirs;
-    @NotNull private String           target;
+    @NotNull private final Map<String, String> annnotationOptions;
 
-    @NotNull private final File targetDir;
-    private boolean             trackUnusedDependencies;
-    private boolean             warn;
+    @NotNull private String lintOptions;
+    @NotNull private String name;
+    @NotNull private String processing;
+    @NotNull private String source;
+    @NotNull private String target;
 
     //~ Constructors .........................................................................................
 
@@ -409,6 +409,18 @@ public class JavacTask
         return this;
     }
 
+    private static void validateDir(File dir)
+    {
+        if (dir.exists()) {
+            if (!dir.isDirectory()) {
+                throw new IllegalArgumentException(dir.getPath() + " is not a directory");
+            }
+        }
+        else if (!dir.mkdirs()) {
+            throw new IllegalArgumentException("Can not create directory: " + dir.getPath());
+        }
+    }
+
     private List<File> filterByTimeStamp()
     {
         List<File> result = new ArrayList<File>();
@@ -422,6 +434,8 @@ public class JavacTask
                 Apb.getEnv().logInfo("Skipping empty directory: %s\n", sourceDir.getPath());
             }
             else {
+                validateDir(targetDir);
+
                 sourceDirs.add(sourceDir);
 
                 for (String f : fileNames) {
@@ -489,15 +503,6 @@ public class JavacTask
          */
         @NotNull public JavacTask to(@NotNull File target)
         {
-            if (target.exists()) {
-                if (!target.isDirectory()) {
-                    throw new IllegalArgumentException(target.getPath() + " is not a directory");
-                }
-            }
-            else if (!target.mkdirs()) {
-                throw new IllegalArgumentException("Can not create directory: " + target.getPath());
-            }
-
             // If not includes specified add all java file
             for (FileSet fileSet : fileSets) {
                 if (!fileSet.isFile() && fileSet.getIncludes().isEmpty()) {

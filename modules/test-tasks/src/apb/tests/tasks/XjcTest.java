@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import apb.Environment;
 
-import apb.tests.utils.FileAssert;
+import apb.tests.testutils.FileAssert;
 
 import static apb.tasks.CoreTasks.*;
 //

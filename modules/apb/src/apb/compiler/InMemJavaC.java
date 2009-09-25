@@ -138,7 +138,6 @@ public class InMemJavaC
         Class<?> clazz = classesByFile.get(source);
 
         if (clazz == null) {
-            env.logVerbose("Loading: %s\n", source);
             clazz = compileToClass(sourcePath, source);
             classesByFile.put(source, clazz);
         }

@@ -56,6 +56,8 @@ import apb.Os;
 import apb.tasks.FileSet;
 
 import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.StringUtils.isEmpty;
 //
 // User: emilio
 // Date: Sep 8, 2008
@@ -112,40 +114,43 @@ public class FileUtils
         return result;
     }
 
-    public static List<File> filterByTimestamp(final List<File> files, final List<File> sourceDirs,
-                                               final File targetDir, final String targetExt)
+    /** Check that all files in the directory are older than
+    * the timestamp specified as a parameter
+    * @param dir The directory where to check files
+    * @param timestamp The reference timestamp
+    * @return true if all files are older thatn the specified timestamp, false otherwise
+    */
+    public static boolean uptodate(@NotNull File dir, long timestamp)
     {
-        String       targetPrefix = targetDir.getAbsolutePath();
-        List<String> sourcePrefixes = absolutePaths(sourceDirs);
+        return uptodate(dir, "", timestamp);
+    }
 
-        List<File> result = new ArrayList<File>();
-
-        for (File file : files) {
-            String path = file.getAbsolutePath();
-
-            int prefixLen = -1;
-
-            for (String prefix : sourcePrefixes) {
-                if (path.startsWith(prefix)) {
-                    prefixLen = prefix.length();
-                    break;
+    /**
+     * Check that all files in the directory finishing with the given extension are older than
+     * the timestamp specified as a parameter
+     * @param dir The directory where to check files
+     * @param ext The extension to be checked to verify that files should be included in the check
+     * @param timestamp The reference timestamp
+     * @return true if all files are older thatn the specified timestamp, false otherwise
+     */
+    public static boolean uptodate(@NotNull File dir, String ext, long timestamp)
+    {
+        if (dir.exists()) {
+            for (File file : dir.listFiles()) {
+                if (file.isDirectory()) {
+                    if (!uptodate(file, ext, timestamp)) {
+                        return false;
+                    }
                 }
-            }
-
-            if (prefixLen == -1) {
-                throw new IllegalStateException(file + " not in any source directory.");
-            }
-
-            File target = changeExtension(new File(targetPrefix, path.substring(prefixLen)), targetExt);
-
-            final long targetMod;
-
-            if ((targetMod = target.lastModified()) == 0 || file.lastModified() > targetMod) {
-                result.add(file);
+                else if (isEmpty(ext) || file.getName().endsWith(ext)) {
+                    if (file.lastModified() > timestamp) {
+                        return false;
+                    }
+                }
             }
         }
 
-        return result;
+        return true;
     }
 
     /**
@@ -582,17 +587,17 @@ public class FileUtils
      * Returns true if any of the files is newer than <code>targetTime</code>
      * @param files to iterate
      * @param targetTime threshold modification time
-     * @return <code>true</code> is any file newer than <code>targetTime</code>, <code>false</code> otherwise
+     * @return <code>true</code> is all files are older than <code>targetTime</code>, <code>false</code> otherwise
      */
     public static boolean uptodate(Iterable<File> files, long targetTime)
     {
         for (File file : files) {
             if (file.lastModified() > targetTime) {
-                return true;
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     public static String getCurrentWorkingDirectory()
@@ -718,10 +723,9 @@ public class FileUtils
      * @param filesets The filesets to be listed
      * @param target The target directory to map the original file
      * @param checkTimestamp Wheter to check the timestamp of the target file before adding it to the map or not.print an info message if any fileset is empty
-     * @param logEmpty Wheter to print an info message if any fileset is empty
      */
     public static Map<File, File> listAllMappingToTarget(List<FileSet> filesets, File target,
-                                                         boolean checkTimestamp, boolean logEmpty)
+                                                         boolean checkTimestamp)
     {
         Map<File, File> result = new LinkedHashMap<File, File>();
 

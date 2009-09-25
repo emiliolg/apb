@@ -79,7 +79,7 @@ public class StandaloneLogger
 
     protected String header()
     {
-        final String str = ProjectBuilder.makeStandardHeader();
+        final String str = Apb.makeStandardHeader();
         return color && !str.isEmpty() ? ColorUtils.colorize(ColorUtils.GREEN, str) : str;
     }
 }

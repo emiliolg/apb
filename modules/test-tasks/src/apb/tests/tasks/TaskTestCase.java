@@ -19,7 +19,6 @@
 package apb.tests.tasks;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,7 +59,6 @@ public abstract class TaskTestCase
 
     @NotNull protected File basedir;
     @NotNull protected File datadir;
-    @NotNull protected File lib;
 
     //~ Methods ..............................................................................................
 
@@ -85,22 +83,7 @@ public abstract class TaskTestCase
             throw new IOException("Cannot create temporary directory: '" + path + "' for tests.");
         }
 
-        lib = env.fileFromBase("$moduledir/../../lib");
-        env.putProperty("lib", lib.getPath());
-        datadir = new File(env.expand("$moduledir/data"));
-    }
-
-    protected void createFile(File dir, String file, String[] data)
-        throws IOException
-    {
-        File       f = new File(dir, file);
-        FileWriter w = new FileWriter(f);
-
-        for (String s : data) {
-            w.write(s + "\n");
-        }
-
-        w.close();
+        datadir = new File(env.expand("$datadir"));
     }
 
     protected File dataFile(String name)

@@ -55,6 +55,7 @@ public class DefinitionsIndex
     //~ Instance fields ......................................................................................
 
     @NotNull private final Collection<ModuleInfo> modules;
+    private final File                            definitionsDir;
     @NotNull private final Map<File, ModulesInfo> mdir;
 
     @NotNull private final String[] excludeDirs;
@@ -72,6 +73,8 @@ public class DefinitionsIndex
         }
 
         excludeDirs = excludes.split(",");
+        final String d = e.getProperty("definitions.dir", "");
+        definitionsDir = d.isEmpty() ? new File(FileUtils.getApbDir(), DEFINITIONS_IDX) : new File(d);
         loadCache(e, projectPath);
     }
 
@@ -117,10 +120,27 @@ public class DefinitionsIndex
         return result;
     }
 
+    @Override public String toString()
+    {
+        StringBuilder result = new StringBuilder();
+        result.append("[");
+
+        for (ModuleInfo info : this) {
+            if (result.length() > 1) {
+                result.append(", ");
+            }
+
+            result.append(String.valueOf(info));
+        }
+
+        result.append("]");
+        return result.toString();
+    }
+
     private void storeEntries()
     {
         try {
-            File       modulesDir = getModulesDirFile();
+            File       modulesDir = getDefinitionsDir();
             final File dir = modulesDir.getParentFile();
 
             if (!dir.exists() && !dir.mkdirs()) {
@@ -212,14 +232,14 @@ public class DefinitionsIndex
             });
     }
 
-    @NotNull private File getModulesDirFile()
+    @NotNull private File getDefinitionsDir()
     {
-        return new File(FileUtils.getApbDir(), DEFINITIONS_IDX);
+        return definitionsDir;
     }
 
     private void loadEntries()
     {
-        File modulesDir = getModulesDirFile();
+        File modulesDir = getDefinitionsDir();
 
         try {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream(modulesDir));

@@ -25,12 +25,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import apb.Environment;
 
-import apb.processors.NotNullProcessor;
+import apb.utils.CollectionUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -43,19 +42,16 @@ import org.objectweb.asm.MethodAdapter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Type;
 
+import static apb.utils.CollectionUtils.stringToList;
+
 public class NotNullInstrumentTask
     extends Task
 {
-    //~ Instance fields ......................................................................................
-
-    @NotNull private final String classesProperty;
-
     //~ Constructors .........................................................................................
 
     public NotNullInstrumentTask(Environment env)
     {
         super(env);
-        classesProperty = ":" + Thread.currentThread().getId();
     }
 
     //~ Methods ..............................................................................................
@@ -66,18 +62,28 @@ public class NotNullInstrumentTask
         task.execute();
     }
 
-    public void execute()
+    @NotNull public static String getClassesProperty()
     {
-        final Collection<String> classesPaths = NotNullProcessor.getClassesToProcess();
+        return CLASSES_PROPERTY + ":" + Thread.currentThread().getId();
+    }
 
-        for (final String classPath : classesPaths) {
-            instrumentClass(classPath);
+    public static void setClassesToProcess(Iterable<String> fileNames)
+    {
+        if (fileNames != null) {
+            System.setProperty(getClassesProperty(),
+                               CollectionUtils.listToString(fileNames, CLASSES_PROPERTY));
         }
     }
 
-    @NotNull public String getClassesProperty()
+    public void execute()
     {
-        return classesProperty;
+        String       classesProperty = getClassesProperty();
+        final String classes = System.getProperty(classesProperty);
+        System.setProperty(classesProperty, "");
+
+        for (final String classPath : stringToList(classes)) {
+            instrumentClass(classPath);
+        }
     }
 
     private void instrumentClass(final String classPath)
@@ -129,11 +135,11 @@ class NotNullClassInstrumenter
 {
     //~ Instance fields ......................................................................................
 
-    private String className;
-
     private boolean isModified;
     private boolean isNotStaticInner;
-    private String  mySuperName;
+
+    private String className;
+    private String mySuperName;
 
     //~ Constructors .........................................................................................
 

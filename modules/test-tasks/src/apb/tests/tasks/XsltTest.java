@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import apb.tasks.FileSet;
 
-import apb.tests.utils.FileAssert;
+import apb.tests.testutils.FileAssert;
 
 import static apb.tasks.CoreTasks.xslt;
 //

@@ -38,27 +38,32 @@ public class CoverageInfo
      * will be consider for coverage analysis but also all modules
      * that this module depends on.
      */
+    @BuildProperty(description = "Consider all dependant modules for coverage analysis")
     public boolean deep = false;
 
     /**
      * Output coverage data for future analysis
      */
+    @BuildProperty(description = "Output coverage data for future analysis")
     public boolean dumpData = true;
 
     /**
      * Whether to enable coverage processing
      */
+    @BuildProperty(description = "Enable coverage processing")
     public boolean enable = false;
 
     /**
      * Ensure a minimun level of coverage in % (0% = Do not fail)
      */
+    @BuildProperty(description = "Ensure a minimun level of coverage in % (0% = Do not fail)")
     public int ensure = 0;
 
     /**
      * The output directory for reports
      */
-    public String output = "output/$moduledir/coverage";
+    @BuildProperty(description = "Coverage Reports directory")
+    public String output = "$output-base/coverage";
 
     /**
      * Coverage reports

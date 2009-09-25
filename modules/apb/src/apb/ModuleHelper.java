@@ -62,17 +62,17 @@ public class ModuleHelper
 {
     //~ Instance fields ......................................................................................
 
+    @Nullable private File generatedSource;
+    @Nullable private File output;
+    @Nullable private File packageFile;
+    @Nullable private File source;
+    @Nullable private File sourcePackageFile;
+
     @Nullable private Iterable<Library> allLibraries;
 
-    @Nullable private Iterable<ModuleHelper> dependencies;
-    @Nullable private Iterable<ModuleHelper> directDependencies;
-
-    @Nullable private File                       generatedSource;
+    @Nullable private Iterable<ModuleHelper>     dependencies;
+    @Nullable private Iterable<ModuleHelper>     directDependencies;
     @Nullable private Iterable<Library>          libraries;
-    @Nullable private File                       output;
-    @Nullable private File                       packageFile;
-    @Nullable private File                       source;
-    @Nullable private File                       sourcePackageFile;
     @Nullable private Iterable<TestModuleHelper> testModules;
 
     //~ Constructors .........................................................................................
@@ -376,6 +376,10 @@ public class ModuleHelper
 
         if (hasPackage()) {
             delete(getPackageFile()).execute();
+
+            if (getPackageInfo().generateSourcesJar) {
+                delete(getSourcePackageFile()).execute();
+            }
         }
     }
 

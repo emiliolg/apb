@@ -22,10 +22,10 @@ import java.io.File;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import apb.testrunner.output.TestReport;
 
@@ -146,7 +146,7 @@ public class TestRunner
                                                       List<String> excludes, String singleTest)
         throws TestSetFailedException
     {
-        Map<String, TestSet> testSets = new HashMap<String, TestSet>();
+        Map<String, TestSet> testSets = new TreeMap<String, TestSet>();
 
         // Load tests
         for (String file : collectTests(basedir, excludes, includes)) {

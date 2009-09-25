@@ -24,7 +24,7 @@ import java.util.List;
 
 import apb.metadata.PackageType;
 
-import apb.tests.utils.FileAssert;
+import apb.tests.testutils.FileAssert;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -46,7 +46,7 @@ public class IdeaTest
     {
         final long ts = currentTime();
 
-        final List<File> sources = asList(env.fileFromBase("$source"), env.fileFromBase("empty"));
+        final List<File> sources = asList(env.fileFromBase("$module-src"), env.fileFromBase("empty"));
 
         genIml(sources);
         genIml(sources);
@@ -73,10 +73,10 @@ public class IdeaTest
     public void testTemplates()
         throws IOException
     {
-        final List<File> sources = singletonList(env.fileFromBase("$source"));
+        final List<File> sources = singletonList(env.fileFromBase("$module-src"));
 
         generateModule(MOD1).on(basedir)  //
-                            .usingTemplate("$moduledir/data/template.iml").usingSources(sources).execute();
+                            .usingTemplate("$datadir/template.iml").usingSources(sources).execute();
 
         verify(MOD1 + IML);
         generateModule(MOD2).on(basedir)  //
@@ -86,7 +86,7 @@ public class IdeaTest
         verify(MOD2 + IML);
 
         generateProject(PROJ1, basedir).on(basedir)  //
-                                       .usingTemplate("$moduledir/data/template.ipr")
+                                       .usingTemplate("$datadir/template.ipr")
                                        .usingModules(asList(MOD1, MOD2))  //
                                        .useJdk("1.5")  //
                                        .execute();

@@ -71,6 +71,11 @@ final class BaseEnvironment
      */
     @NotNull private final Map<String, String> overrideProperties;
 
+    /**
+     * The current ProjectBuilder
+     */
+    private ProjectBuilder currentProjectBuilder;
+
     //~ Constructors .........................................................................................
 
     /**
@@ -187,6 +192,16 @@ final class BaseEnvironment
     protected void setVerbose()
     {
         logger.setLevel(Logger.Level.VERBOSE);
+    }
+
+    void register(ProjectBuilder pb)
+    {
+        currentProjectBuilder = pb;
+    }
+
+    ProjectBuilder getCurrentProjectBuilder()
+    {
+        return currentProjectBuilder;
     }
 
     private static void loadSystemProperties(Map<String, String> overrideProperties)

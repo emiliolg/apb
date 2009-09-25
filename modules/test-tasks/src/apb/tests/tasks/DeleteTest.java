@@ -24,10 +24,12 @@ import java.io.IOException;
 import apb.tasks.CoreTasks;
 import apb.tasks.FileSet;
 
+import apb.tests.testutils.FileAssert;
+
 import static apb.tasks.CoreTasks.delete;
 
-import static apb.tests.utils.FileAssert.assertDoesNotExist;
-import static apb.tests.utils.FileAssert.assertExists;
+import static apb.tests.testutils.FileAssert.assertDoesNotExist;
+import static apb.tests.testutils.FileAssert.assertExists;
 //
 // User: emilio
 // Date: Sep 3, 2009
@@ -107,7 +109,7 @@ public class DeleteTest
         throws IOException
     {
         for (String file : files) {
-            createFile(dir, file, DATA);
+            FileAssert.createFile(dir, file, DATA);
         }
     }
 

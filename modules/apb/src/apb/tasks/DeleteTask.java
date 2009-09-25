@@ -56,12 +56,24 @@ public class DeleteTask
     {
         if (fileSets != null) {
             for (FileSet fileSet : fileSets) {
-                removePattern(fileSet);
+                if (fileSet.getIncludes().isEmpty() && fileSet.getExcludes().isEmpty()) {
+                    removeDir(fileSet.getDir());
+                }
+                else {
+                    removePattern(fileSet);
+                }
             }
         }
         else if (file != null) {
             File    f = file;
-            boolean ok = f.isDirectory() ? removeDir(f) : removeFile(f);
+            boolean ok = true;
+
+            if (f.isDirectory()) {
+                ok = removeDir(f);
+            }
+            else if (f.isFile()) {
+                ok = removeFile(f);
+            }
 
             if (!ok) {
                 env.logWarning("Unable to delete " + f.getAbsolutePath());

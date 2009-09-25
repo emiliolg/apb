@@ -35,9 +35,14 @@ public class TestTasks
 
         // Explicitily include apb. (It will be excluded by default otherwise)
         coverage.includes("apb.*");
+        coverage.excludes("apb.tests.javas.*", "apb.tests.utils.*", "apb.tests.testutils.*",
+                          "apb.tests.tasks.*", "apb.tests.build.*");
         coverage.reports(CoverageReport.HTML);
 
-        setProperty("moduledir", "$basedir/$moduledir");
-        setProperty("source", "$basedir/$source");
+        setenv("APB_PROJECT_PATH", "");
+
+        setProperty("datadir", "$basedir/$moduledir/data");
+        setProperty("apb-jar", "$basedir/../lib/apb.jar");
+        setProperty("module-src", "$basedir/$source");
     }
 }

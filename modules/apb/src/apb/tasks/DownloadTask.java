@@ -319,7 +319,7 @@ public class DownloadTask
 
             // prepare Java 1.1 style credentials
             if (!user.isEmpty() || !password.isEmpty()) {
-                String encoding = StringUtils.encodeBase64(user + ":" + password);
+                String encoding = StringUtils.encodeBase64((user + ":" + password).getBytes());
                 c.setRequestProperty("Authorization", "Basic " + encoding);
             }
 

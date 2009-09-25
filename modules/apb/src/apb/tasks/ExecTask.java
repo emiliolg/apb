@@ -41,6 +41,8 @@ public class ExecTask
 {
     //~ Instance fields ......................................................................................
 
+    private boolean redirectErrorStream;
+
     @NotNull private File currentDirectory;
 
     private int                                exitValue;
@@ -75,8 +77,11 @@ public class ExecTask
                 logStream(p.getInputStream());
             }
             else {
-                logStream(p.getErrorStream());
                 loadStream(p.getInputStream());
+            }
+
+            if (!redirectErrorStream) {
+                logStream(p.getErrorStream());
             }
 
             try {
@@ -125,6 +130,15 @@ public class ExecTask
         return this;
     }
 
+    /**
+     * Wheter to redirect the standard error of the command to the same output of the standard output or not
+     */
+    public ExecTask redirectErrorStream(boolean b)
+    {
+        redirectErrorStream = b;
+        return this;
+    }
+
     protected void insertArguments(List<String> argList)
     {
         args.addAll(0, argList);
@@ -145,7 +159,7 @@ public class ExecTask
 
         b.directory(currentDirectory);
 
-        if (output == null) {
+        if (redirectErrorStream) {
             b.redirectErrorStream(true);
         }
 

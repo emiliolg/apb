@@ -18,6 +18,8 @@
 
 package apb.tests.javas;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * A simple main to test the java task
  */
@@ -27,6 +29,7 @@ package apb.tests.javas;
 // Time: 3:13:04 PM
 
 //
+@SuppressWarnings("ConstantConditions")
 public class SumArgs
 {
     //~ Methods ..............................................................................................
@@ -36,10 +39,15 @@ public class SumArgs
         int result = 0;
 
         for (String arg : args) {
-            result += Integer.parseInt(arg);
+            result += toInt("null".equals(arg) ? null : arg);
         }
 
         System.out.println(result);
         System.exit(result == 0 ? 0 : result > 0 ? 1 : 2);
+    }
+
+    private static int toInt(@NotNull String s)
+    {
+        return s == null ? 0 : Integer.parseInt(s);
     }
 }

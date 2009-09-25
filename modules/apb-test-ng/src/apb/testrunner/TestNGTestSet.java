@@ -22,14 +22,14 @@ import java.util.List;
 
 import apb.testrunner.output.TestReport;
 
-import apb.utils.StringUtils;
-
 import org.jetbrains.annotations.NotNull;
 
 import org.testng.ITestContext;
 import org.testng.ITestListener;
 import org.testng.ITestResult;
 import org.testng.TestNG;
+
+import static apb.utils.CollectionUtils.listToString;
 //
 // User: emilio
 // Date: May 15, 2009
@@ -59,7 +59,7 @@ public class TestNGTestSet
         throws TestSetFailedException
     {
         TestNG tng = new TestNG(true);
-        tng.setGroups(StringUtils.makeString(testGroups, ','));
+        tng.setGroups(listToString(testGroups));
 
         if (!singleTest.isEmpty()) {
             tng.setDefaultTestName(singleTest);

@@ -66,14 +66,14 @@ public class TestModule
     //~ Instance fields ......................................................................................
 
     /**
-     * Wheter the dependencies classpath is included in the system classoader.
+     * Wheter the dependencies classpath is included in the system classloader.
      */
-    public boolean classPathInSystemClassloader = false;
+    @BuildProperty public boolean classPathInSystemClassloader = false;
 
     /**
      * Whether to enable assertions when running the tests
      */
-    public boolean enableAssertions = true;
+    @BuildProperty public boolean enableAssertions = true;
 
     /**
      * Enable the java debugger in the forked process
@@ -83,22 +83,22 @@ public class TestModule
     /**
      * Fail if no tests are found
      */
-    public boolean failIfEmpty = false;
+    @BuildProperty public boolean failIfEmpty = false;
 
     /**
      * Fail the build when a test fails
      */
-    public boolean failOnError = false;
+    @BuildProperty public boolean failOnError = false;
 
     /**
      *  Whether to fork a new process to run the tests or not.
      */
-    public boolean fork = true;
+    @BuildProperty public boolean fork = true;
 
     /**
      *  Whether to fork a new process for EACH test suite.
      */
-    public boolean forkPerSuite = false;
+    @BuildProperty public boolean forkPerSuite = false;
 
     /**
      * Wheter to show output in reports or not
@@ -118,12 +118,12 @@ public class TestModule
     /**
      * A custom creator classname
      */
-    public String customCreator = null;
+    @BuildProperty public String customCreator = null;
 
     /**
       * The directory to generate the reports output
       */
-    @BuildProperty public final String reportsDir = "output/$moduledir/reports";
+    @BuildProperty public final String reportsDir = "$output-base/reports";
 
     @BuildProperty(description = "The name of a specified test to be run.")
     public String runOnly = "";
@@ -131,7 +131,7 @@ public class TestModule
     /**
      * Working directory for running the tests
      */
-    @BuildProperty public final String workingDirectory = "output/$moduledir";
+    @BuildProperty public final String workingDirectory = "$output-base";
 
     /**
      * The type of runner for the test

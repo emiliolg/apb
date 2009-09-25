@@ -100,7 +100,11 @@ public class JUnitTestReport
         throws IOException
     {
         final File reportFile = new File(reportsDir, AGGREGATED_FILE);
+
         //reportFile.deleteOnExit();
+        if (!reportsDir.exists()) {
+            reportsDir.mkdirs();
+        }
 
         PrintStream fos = new PrintStream(reportFile, UTF8);
 
@@ -114,7 +118,6 @@ public class JUnitTestReport
         fos.println("</testsuites>");
 
         fos.close();
-
         return reportFile;
     }
 

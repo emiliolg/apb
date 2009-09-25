@@ -25,6 +25,8 @@ import java.util.List;
 
 import apb.tasks.FileSet;
 
+import apb.tests.testutils.FileAssert;
+
 import static java.util.Arrays.asList;
 //
 // User: emilio
@@ -168,7 +170,7 @@ public class FileSetTest
         throws IOException
     {
         for (String file : files) {
-            createFile(dir, file, DATA);
+            FileAssert.createFile(dir, file, DATA);
         }
     }
 

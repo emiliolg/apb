@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import apb.BuildException;
 
-import apb.tests.utils.FileAssert;
+import apb.tests.testutils.FileAssert;
 
 import static apb.tasks.CoreTasks.javac;
 
@@ -60,7 +60,6 @@ public class JavacTest
     private void compile(final String lintOptions)
     {
         javac(dataPath("src/hello")).to("$basedir")  //
-                                    .withClassPath("$lib/apb.jar")  //
                                     .lint(true)  //
                                     .lintOptions(lintOptions)  //
                                     .debug(true)  //

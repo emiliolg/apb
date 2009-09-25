@@ -45,9 +45,9 @@ public class CopyTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull protected final List<FileSet> from;
-
     @NotNull protected final File to;
+
+    @NotNull protected final List<FileSet> from;
 
     //~ Constructors .........................................................................................
 
@@ -116,7 +116,7 @@ public class CopyTask
 
     private void copyToDirectory()
     {
-        Map<File, File> files = FileUtils.listAllMappingToTarget(from, to, true, true);
+        Map<File, File> files = FileUtils.listAllMappingToTarget(from, to, true);
 
         /**
          * If the source file/directories are empty or not existent just skip the copy

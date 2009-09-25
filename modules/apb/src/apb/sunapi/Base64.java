@@ -31,4 +31,9 @@ public class Base64
     {
         return com.sun.org.apache.xerces.internal.impl.dv.util.Base64.encode(data);
     }
+
+    public static byte[] decode(String encodedString)
+    {
+        return com.sun.org.apache.xerces.internal.impl.dv.util.Base64.decode(encodedString);
+    }
 }

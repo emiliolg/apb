@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import apb.metadata.UpdatePolicy;
 
-import apb.tests.utils.FileAssert;
+import apb.tests.testutils.FileAssert;
 
 import static apb.tasks.CoreTasks.download;
 //
@@ -61,7 +61,7 @@ public class DownloadTest
                                       .withPassword("")  //
                                       .execute();
 
-        assertEquals(ts, to.lastModified());
+        assertTrue(ts <= to.lastModified());
     }
 
     public void testRemote()

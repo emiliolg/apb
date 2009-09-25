@@ -23,6 +23,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import apb.index.DefinitionsIndex;
+
 import apb.utils.DebugOption;
 import apb.utils.OptionParser;
 
@@ -54,7 +56,7 @@ class ApbOptions
 
     //~ Constructors .........................................................................................
 
-    public ApbOptions(String[] ops)
+    public ApbOptions(List<String> ops)
     {
         super(ops, "apb");
         showStackTrace = addBooleanOption('s', "show-stack-trace", SHOW_STACK_TRACE);
@@ -131,7 +133,7 @@ class ApbOptions
         return showStackTrace.getValue();
     }
 
-    protected void printVersion()
+    public void printVersion()
     {
         final Package pkg = ApbOptions.class.getPackage();
         final String  version = pkg.getImplementationVersion();
@@ -140,8 +142,6 @@ class ApbOptions
         err.printf("%-10s: %s %s on %s\n", "OS", getProperty("os.name"), getProperty("os.version"),
                    getProperty("os.arch"));
         err.printf("%-10s: %dM\n", "Memory", Runtime.getRuntime().maxMemory() / MB);
-
-        System.exit(0);
     }
 
     EnumSet<DebugOption> debugOptions()
@@ -174,9 +174,12 @@ class ApbOptions
     private void doCompletion()
     {
         if (arguments.size() >= 3 && "--complete".equals(arguments.get(0))) {
-            OptionCompletion op = new OptionCompletion(options);
+            final DefinitionsIndex index =
+                new DefinitionsIndex(Apb.createBaseEnvironment(), Apb.loadProjectPath());
+            OptionCompletion       op = new OptionCompletion(options, index);
 
-            op.execute(arguments);
+            System.out.println(op.execute(arguments));
+            System.exit(0);
         }
     }
 

@@ -63,7 +63,7 @@ class TestRunnerOptions
 
     //~ Constructors .........................................................................................
 
-    TestRunnerOptions(String[] ops)
+    TestRunnerOptions(List<String> ops)
     {
         super(ops, "testrunner");
         factory = new TestSetCreator.Factory();
@@ -109,6 +109,7 @@ class TestRunnerOptions
 
         if (result.isEmpty()) {
             printHelp();
+            System.exit(0);
         }
 
         // Initialize base dir
@@ -200,10 +201,9 @@ class TestRunnerOptions
         return reportSpecs.getValue();
     }
 
-    protected void printVersion()
+    public void printVersion()
     {
         System.err.println(getAppName() + " version: 1.0");
-        System.exit(0);
     }
 
     File getBaseDir()

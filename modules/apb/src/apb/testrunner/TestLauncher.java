@@ -63,10 +63,10 @@ import static apb.tasks.CoreTasks.java;
 import static apb.testrunner.TestRunner.listTests;
 import static apb.testrunner.TestRunner.worseResult;
 
+import static apb.utils.CollectionUtils.listToString;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
 import static apb.utils.StringUtils.isNotEmpty;
-import static apb.utils.StringUtils.makeString;
 //
 // User: emilio
 // Date: Nov 5, 2008
@@ -149,8 +149,8 @@ public class TestLauncher
     /**
      * To be able to run a simple TestCase
      */
-    private String       singleTest;
-    private final String workingDirectory;
+    @NotNull private String singleTest;
+    private final String    workingDirectory;
 
     @NotNull private final TestReport report;
 
@@ -174,6 +174,7 @@ public class TestLauncher
         failIfEmpty = testModule.failIfEmpty;
         failOnError = testModule.failOnError;
         this.testClasses = testClasses;
+        singleTest = "";
 
         if (isNotEmpty(testModule.runOnly)) {
             setSingleTest(testModule.runOnly);
@@ -277,7 +278,7 @@ public class TestLauncher
         }
     }
 
-    private void setSingleTest(String s)
+    private void setSingleTest(@NotNull String s)
     {
         final int dot = s.lastIndexOf('.');
 
@@ -321,7 +322,9 @@ public class TestLauncher
     private ClassLoader createClassLoader(Collection<File> classPathUrls)
     {
         try {
-            ClassLoader classLoader = new URLClassLoader(FileUtils.toURLArray(classPathUrls));
+            ClassLoader classLoader =
+                new URLClassLoader(FileUtils.toURLArray(classPathUrls),
+                                   Thread.currentThread().getContextClassLoader());
             classLoader.setDefaultAssertionStatus(enableAssertions);
             return classLoader;
         }
@@ -338,7 +341,7 @@ public class TestLauncher
             reportSpecsFile = reportSpecs();
             return forkPerSuite
                    ? executeEachSuite(reportSpecsFile)
-                   : invokeRunner(testCreator(), reportSpecsFile, null, makeString(testGroups, ':'));
+                   : invokeRunner(testCreator(), reportSpecsFile, null, listToString(testGroups, ":"));
         }
         catch (Exception e) {
             throw new BuildException(e);
@@ -368,7 +371,7 @@ public class TestLauncher
         for (String testSet : tests) {
             result =
                 worseResult(result,
-                            invokeRunner(creator, reportSpecsFile, testSet, makeString(testGroups, ':')));
+                            invokeRunner(creator, reportSpecsFile, testSet, listToString(testGroups, ":")));
         }
 
         report.stopRun();
@@ -518,7 +521,7 @@ public class TestLauncher
         try {
             TestRunner        runner = new TestRunner(testClasses, reportDir, includes, excludes, testGroups);
             final ClassLoader loader = createClassLoader(classPath);
-            runner.run(testCreator(), report, loader, singleTest);
+            return runner.run(testCreator(), report, loader, singleTest);
         }
         catch (Exception e) {
             env.handle(e);

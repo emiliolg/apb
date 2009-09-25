@@ -16,9 +16,11 @@
 //
 
 
-package apb.tests.utils;
+package apb.tests.testutils;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -86,8 +88,22 @@ public class FileAssert
     {
         assertExists(file2);
         final String msg =
-            String.format("File content differs between '%s'.\n" + "                         and '%s'.",
-                          file1.getAbsolutePath(), file2.getAbsolutePath());
+            String.format("File content differs between '%s'.\n" +  //
+                          "                         and '%s'.", file1.getAbsolutePath(),
+                          file2.getAbsolutePath());
         Assert.assertTrue(msg, FileUtils.equalsContent(file1, file2));
+    }
+
+    public static void createFile(File dir, String file, String[] data)
+        throws IOException
+    {
+        File       f = new File(dir, file);
+        FileWriter w = new FileWriter(f);
+
+        for (String s : data) {
+            w.write(s + "\n");
+        }
+
+        w.close();
     }
 }

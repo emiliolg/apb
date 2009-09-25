@@ -116,7 +116,6 @@ public class SimpleReport
     public synchronized void failure(@NotNull Throwable t)
     {
         super.failure(t);
-        endTest();
 
         final List<Failure> fs = failures == null ? (failures = new ArrayList<Failure>()) : failures;
         fs.add(new Failure(getCurrentTest(), t));
@@ -228,7 +227,7 @@ public class SimpleReport
             return new SimpleReport(show, showDetail, output);
         }
 
-        public TestReport.Builder to(@NotNull String outputFileName)
+        public Builder to(@NotNull String outputFileName)
         {
             output = outputFileName;
             return this;

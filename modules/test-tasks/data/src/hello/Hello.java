@@ -19,7 +19,6 @@
 
 import java.util.ArrayList;
 import java.util.List;
-import org.jetbrains.annotations.*;
 
 //
 /**
@@ -29,7 +28,7 @@ public class Hello
 {
     //~ Methods ..............................................................................................
 
-    public static void main(@NotNull String[] args)
+    public static void main(String[] args)
     {
         a.add(args[0]);
         a.add(args[1]);

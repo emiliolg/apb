@@ -38,13 +38,13 @@ public class XjcTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final List<File> externalBindings;
+    private boolean             packageAnnotations;
+    private boolean             timestamp;
+    @NotNull private final File schema;
+    @NotNull private final File targetDir;
 
-    private boolean               packageAnnotations;
-    @NotNull private final File   schema;
-    @NotNull private final File   targetDir;
-    @NotNull private final String targetPackage;
-    private boolean               timestamp;
+    @NotNull private final List<File> externalBindings;
+    @NotNull private final String     targetPackage;
 
     //~ Constructors .........................................................................................
 
@@ -123,7 +123,7 @@ public class XjcTask
         File       dir = new File(targetDir, targetPackage.replace('.', File.separatorChar));
 
         return env.forceBuild() || (ts = dir.lastModified()) == 0 || schema.lastModified() > ts ||
-               FileUtils.uptodate(externalBindings, ts);
+               !FileUtils.uptodate(externalBindings, ts);
     }
 
     private void run()

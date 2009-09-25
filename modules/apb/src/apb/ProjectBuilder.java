@@ -107,8 +107,11 @@ public class ProjectBuilder
         this.projectPath = projectPath;
         contextStack = new LinkedList<Context>();
         currentName = "";
-        instance = this;
         track = env.mustShow(DebugOption.TRACK);
+
+        if (env instanceof DefaultEnvironment) {
+            ((DefaultEnvironment) env).register(this);
+        }
     }
 
     //~ Methods ..............................................................................................
@@ -120,11 +123,6 @@ public class ProjectBuilder
         for (Module module : modules) {
             pb.build(module.getHelper(), command);
         }
-    }
-
-    public static String makeStandardHeader()
-    {
-        return instance == null ? "" : instance.standardHeader();
     }
 
     // @Todo create an accesor
@@ -240,49 +238,7 @@ public class ProjectBuilder
         Apb.setCurrentEnv(prev);
     }
 
-    @NotNull private static ProjectBuilder getInstance()
-    {
-        if (instance == null) {
-            throw new IllegalStateException();
-        }
-
-        return instance;
-    }
-
-    private ProjectElementHelper createHelper(ProjectElement element)
-    {
-        ProjectElementHelper result;
-
-        if (element instanceof TestModule) {
-            result = new TestModuleHelper(this, (TestModule) element);
-        }
-        else if (element instanceof Module) {
-            result = new ModuleHelper(this, (Module) element);
-        }
-        else {
-            result = new ProjectHelper(this, (Project) element);
-        }
-
-        return result;
-    }
-
-    private void initHelpers()
-    {
-        final Set<ProjectElementHelper> processed = new HashSet<ProjectElementHelper>();
-        final Set<ProjectElementHelper> hs = new HashSet<ProjectElementHelper>(helpers.values());
-
-        while (!hs.isEmpty()) {
-            for (ProjectElementHelper helper : hs) {
-                helper.init();
-                processed.add(helper);
-            }
-
-            hs.addAll(helpers.values());
-            hs.removeAll(processed);
-        }
-    }
-
-    private String standardHeader()
+    String standardHeader()
     {
         StringBuilder result = new StringBuilder();
 
@@ -320,6 +276,50 @@ public class ProjectBuilder
         }
 
         return result.toString();
+    }
+
+    @NotNull private static ProjectBuilder getInstance()
+    {
+        ProjectBuilder result = Apb.getCurrentProjectBuilder();
+
+        if (result == null) {
+            throw new IllegalStateException();
+        }
+
+        return result;
+    }
+
+    private ProjectElementHelper createHelper(ProjectElement element)
+    {
+        ProjectElementHelper result;
+
+        if (element instanceof TestModule) {
+            result = new TestModuleHelper(this, (TestModule) element);
+        }
+        else if (element instanceof Module) {
+            result = new ModuleHelper(this, (Module) element);
+        }
+        else {
+            result = new ProjectHelper(this, (Project) element);
+        }
+
+        return result;
+    }
+
+    private void initHelpers()
+    {
+        final Set<ProjectElementHelper> processed = new HashSet<ProjectElementHelper>();
+        final Set<ProjectElementHelper> hs = new HashSet<ProjectElementHelper>(helpers.values());
+
+        while (!hs.isEmpty()) {
+            for (ProjectElementHelper helper : hs) {
+                helper.init();
+                processed.add(helper);
+            }
+
+            hs.addAll(helpers.values());
+            hs.removeAll(processed);
+        }
     }
 
     private ProjectElementHelper loadProjectElement(Environment env, @NotNull File projectDirectory,
@@ -440,8 +440,6 @@ public class ProjectBuilder
     //~ Static fields/initializers ...........................................................................
 
     public static final int HEADER_LENGTH = 30;
-
-    private static ProjectBuilder instance;
 
     public static final String PROJECTS_HOME_PROP_KEY = "projects-home";
     private static final long  MB = (1024 * 1024);

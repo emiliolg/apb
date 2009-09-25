@@ -363,6 +363,17 @@ public abstract class DefaultEnvironment
     }
 
     /**
+     * Package private method. Register the current Project builder
+     * @param pb
+     */
+    abstract void register(ProjectBuilder pb);
+
+    /**
+     * Package private method. Return the current Project builder
+     */
+    abstract ProjectBuilder getCurrentProjectBuilder();
+
+    /**
      * Get a property defined in THIS environment (Not inherited)
      * @param id The property name
      * @return The propertu value

@@ -253,18 +253,6 @@ public class CommandBuilder
             }
         }
 
-        //    private boolean checkTarget(Environment env) {
-        //        boolean result = true;
-        //        final BuildTarget t = method.getAnnotation(BuildTarget.class);
-        //        if (!t.target().isEmpty() && !t.source().isEmpty()) {
-        //            File source = env.fileFromBase(t.source());
-        //            File target = env.fileFromBase(t.target());
-        //            result = source.lastModified() >= target.lastModified();
-        //        }
-        //        return result;
-        //
-        //    }
-
         void solveDirectDependencies(Map<String, InstanceCommand> commandsMap)
         {
             final BuildTarget target = method.getAnnotation(BuildTarget.class);

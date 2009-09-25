@@ -151,6 +151,11 @@ public class JavaTask
         return (JavaTask) super.withEnvironment(e);
     }
 
+    @Override public JavaTask redirectErrorStream(boolean b)
+    {
+        return (JavaTask) super.redirectErrorStream(b);
+    }
+
     /**
      * Specify the max memory to be used
      * @param mb The maximum number of megabytes to use

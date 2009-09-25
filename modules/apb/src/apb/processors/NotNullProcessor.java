@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,18 +38,14 @@ import javax.lang.model.util.Elements;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 
+import apb.tasks.NotNullInstrumentTask;
+
 @SupportedAnnotationTypes({ "org.jetbrains.annotations.NotNull" })
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class NotNullProcessor
     extends AbstractProcessor
 {
     //~ Methods ..............................................................................................
-
-    public static Collection<String> getClassesToProcess()
-    {
-        Collection<String> result = annotatedFiles.get();
-        return result != null ? result : Collections.<String>emptySet();
-    }
 
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv)
     {
@@ -115,7 +110,7 @@ public class NotNullProcessor
                 }
             }
 
-            annotatedFiles.set(fileNames);
+            NotNullInstrumentTask.setClassesToProcess(fileNames);
         }
     }
 

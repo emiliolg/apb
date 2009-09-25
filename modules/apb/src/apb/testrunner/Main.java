@@ -38,6 +38,8 @@ import apb.utils.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static java.util.Arrays.asList;
+
 import static apb.utils.StringUtils.isEmpty;
 //
 // User: emilio
@@ -54,7 +56,7 @@ public class Main
     {
         Apb.createBaseEnvironment();
 
-        TestRunnerOptions options = new TestRunnerOptions(args);
+        TestRunnerOptions options = new TestRunnerOptions(asList(args));
         options.parse();
 
         TestRunner runner =

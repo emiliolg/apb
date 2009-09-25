@@ -18,8 +18,8 @@
 
 package apb.ant;
 
+import apb.Apb;
 import apb.Logger;
-import apb.ProjectBuilder;
 
 import apb.utils.StringUtils;
 
@@ -51,7 +51,7 @@ class AntLogger
     @Override public void log(Level level, String msg, Object... args)
     {
         int l = convertLevel(level);
-        msg = StringUtils.appendIndenting(ProjectBuilder.makeStandardHeader() + ' ', msg);
+        msg = StringUtils.appendIndenting(Apb.makeStandardHeader() + ' ', msg);
         antTask.log(args.length == 0 ? msg : String.format(msg, args), l);
     }
 

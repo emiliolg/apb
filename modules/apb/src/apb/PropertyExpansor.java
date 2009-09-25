@@ -34,6 +34,8 @@ import apb.utils.NameUtils;
 import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.StringUtils.isNotEmpty;
 //
 // User: emilio
 // Date: Mar 11, 2009
@@ -182,6 +184,11 @@ class PropertyExpansor
             return result != 0 ? result : field.getName().compareTo(o.field.getName());
         }
 
+        @Override public String toString()
+        {
+            return getCompoundName();
+        }
+
         Object getFieldValue(Object object)
         {
             Object fieldValue;
@@ -210,8 +217,14 @@ class PropertyExpansor
 
         String getCompoundName()
         {
-            final String id = NameUtils.idFromMember(field);
-            return parent.isEmpty() ? id : parent + "." + id;
+            StringBuilder result = new StringBuilder();
+
+            if (isNotEmpty(parent)) {
+                result.append(parent).append('.');
+            }
+
+            result.append(NameUtils.idFromMember(field));
+            return result.toString();
         }
 
         boolean isProperty()

@@ -42,6 +42,7 @@ import static apb.tasks.CoreTasks.exec;
 
 import static apb.utils.CollectionUtils.filesFromBase;
 import static apb.utils.FileUtils.makePath;
+import static apb.utils.StringUtils.nChars;
 //
 // User: emilio
 // Date: Oct 27, 2008
@@ -82,7 +83,7 @@ public class JavadocTask
     @NotNull private final List<String>                  links;
     @NotNull private final List<JavadocInfo.OfflineLink> offlineLinks;
     @NotNull private final List<String>                  packages;
-    @NotNull private final List<File>                    sourcePath;
+    @NotNull private final List<File>                    sourcesDir;
 
     private Locale locale = null;
 
@@ -102,7 +103,7 @@ public class JavadocTask
     public JavadocTask(@NotNull List<File> sourceDirs, @NotNull File outputDir)
     {
         super(Apb.getEnv());
-        sourcePath = sourceDirs;
+        sourcesDir = sourceDirs;
         outputDirectory = outputDir;
         encoding = ResourcesInfo.DEFAULT_ENCODING;
         visibility = JavadocInfo.Visibility.PROTECTED;
@@ -306,7 +307,58 @@ public class JavadocTask
 
     public void execute()
     {
-        FileUtils.validateDirectory(outputDirectory);
+        List<File> sources = new ArrayList<File>();
+
+        for (File file : sourcesDir) {
+            if (file.exists()) {
+                sources.add(file);
+            }
+            else {
+                env.logInfo("Skipping empty directory: %s\n", file.getPath());
+            }
+        }
+
+        if (!sources.isEmpty()) {
+            final List<String> subpackages = packages.isEmpty() ? collectPackages() : packages;
+
+            if (!subpackages.isEmpty()) {
+                FileUtils.validateDirectory(outputDirectory);
+
+                if (!uptodate(sources)) {
+                    run(sources, subpackages);
+                }
+            }
+        }
+    }
+
+    private boolean uptodate(List<File> sources)
+    {
+        if (env.forceBuild()) {
+            return false;
+        }
+
+        long target = new File(outputDirectory, "index.html").lastModified();
+
+        if (target == 0) {
+            return false;
+        }
+
+        for (File source : sources) {
+            if (!FileUtils.uptodate(source, ".java", target)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void run(final List<File> sources, final List<String> subpackages)
+    {
+        for (int i = 0; i < sources.size(); i++) {
+            File         file = sources.get(i);
+            final String msg = (i == 0 ? GENERATING_DOC : nChars(GENERATING_DOC.length(), ' ')) + "%s\n";
+            env.logInfo(msg, file.getPath());
+        }
 
         copyAllResources();
 
@@ -327,10 +379,10 @@ public class JavadocTask
 
         args.add("-" + visibility.toString().toLowerCase());
 
-        addArgument("-sourcepath", FileUtils.makePath(sourcePath));
+        addArgument("-sourcepath", makePath(sources));
 
         args.add("-subpackages");
-        args.add(FileUtils.makePathFromStrings(packages.isEmpty() ? collectPackages() : packages));
+        args.add(FileUtils.makePathFromStrings(subpackages));
 
         if (!excludes.isEmpty()) {
             args.add("-exclude");
@@ -357,7 +409,7 @@ public class JavadocTask
     {
         final List<String> result = new ArrayList<String>();
 
-        for (File source : sourcePath) {
+        for (File source : sourcesDir) {
             source.listFiles(new FileFilter() {
                     public boolean accept(File file)
                     {
@@ -494,6 +546,10 @@ public class JavadocTask
             }
         }
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final String GENERATING_DOC = "Generating documentation for: ";
 
     //~ Inner Classes ........................................................................................
 

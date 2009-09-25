@@ -113,4 +113,23 @@ public abstract class DelegatedEnvironment
         String result = retrieveLocalProperty(id);
         return result == null ? parent.getOptionalProperty(id) : result;
     }
+
+    final void register(ProjectBuilder pb)
+    {
+        getBaseEnv().register(pb);
+    }
+
+    final ProjectBuilder getCurrentProjectBuilder()
+    {
+        return getBaseEnv().getCurrentProjectBuilder();
+    }
+
+    @NotNull private DefaultEnvironment getBaseEnv()
+    {
+        if (parent instanceof DefaultEnvironment) {
+            return (DefaultEnvironment) parent;
+        }
+
+        throw new IllegalStateException();
+    }
 }

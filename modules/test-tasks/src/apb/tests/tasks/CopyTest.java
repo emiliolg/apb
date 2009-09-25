@@ -23,14 +23,14 @@ import java.io.IOException;
 
 import apb.tasks.FileSet;
 
-import apb.tests.utils.FileAssert;
+import apb.tests.testutils.FileAssert;
 
 import static apb.tasks.CoreTasks.copy;
 import static apb.tasks.CoreTasks.copyFiltering;
 import static apb.tasks.CoreTasks.mkdir;
 
-import static apb.tests.utils.FileAssert.assertDirEquals;
-import static apb.tests.utils.FileAssert.assertDoesNotExist;
+import static apb.tests.testutils.FileAssert.assertDirEquals;
+import static apb.tests.testutils.FileAssert.assertDoesNotExist;
 //
 // User: emilio
 // Date: Sep 3, 2009
@@ -110,7 +110,7 @@ public class CopyTest
     public void testFilterFile()
         throws IOException
     {
-        createFile(dir1, "c.txt", DATA1);
+        FileAssert.createFile(dir1, "c.txt", DATA1);
         copyFiltering("$basedir/dir1").to("$basedir/dir2").execute();
 
         FileAssert.assertFileEquals(new File(dir1, "a.txt"), new File(dir2, "a.txt"));
@@ -141,7 +141,7 @@ public class CopyTest
         throws IOException
     {
         for (String file : files) {
-            createFile(dir, file, DATA);
+            FileAssert.createFile(dir, file, DATA);
         }
     }
 

@@ -36,12 +36,12 @@ public interface TestReport
 {
     //~ Instance fields ......................................................................................
 
-    TestReport.Builder JUNIT = new JUnitTestReport.Builder().usePrefix("test-");
+    JUnitTestReport.Builder JUNIT = new JUnitTestReport.Builder().usePrefix("test-");
 
-    TestReport.Builder SIMPLE = new SimpleReport.Builder(true);
-    TestReport.Builder SIMPLE_TO_FILE = new SimpleReport.Builder(true).to("test-output");
+    SimpleReport.Builder SIMPLE = new SimpleReport.Builder(true);
+    SimpleReport.Builder SIMPLE_TO_FILE = new SimpleReport.Builder(true).to("test-output");
 
-    TestReport.Builder SUMMARY = new SimpleReport.Builder(false);
+    SimpleReport.Builder SUMMARY = new SimpleReport.Builder(false);
 
     //~ Methods ..............................................................................................
 

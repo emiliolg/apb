@@ -19,7 +19,6 @@
 package apb.utils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import apb.Messages;
@@ -43,19 +42,26 @@ public abstract class OptionParser
     protected final List<String> arguments;
 
     protected List<Option> options = null;
+    private final boolean  exitOnStopParsing = true;
 
-    private final String  appName;
-    private final boolean exitOnStopParsing = true;
+    private final String appName;
 
     //~ Constructors .........................................................................................
 
-    protected OptionParser(final String[] args, String name)
+    protected OptionParser(final List<String> args, String name)
     {
-        arguments = Arrays.asList(args);
+        arguments = args;
         appName = name;
     }
 
     //~ Methods ..............................................................................................
+
+    public abstract void printVersion();
+
+    public List<Option> getOptions()
+    {
+        return options;
+    }
 
     public List<String> getArguments()
     {
@@ -114,8 +120,6 @@ public abstract class OptionParser
             String ops = opt.getHelp();
             System.err.println(ops + nChars(len - ops.length(), ' ') + ": " + opt.getDescription());
         }
-
-        System.exit(0);
     }
 
     public String getAppName()
@@ -123,21 +127,19 @@ public abstract class OptionParser
         return appName;
     }
 
-    protected abstract void printVersion();
-
-    protected final Option<Boolean> addBooleanOption(final char letter, @NotNull final String name,
-                                                     @NotNull String description)
+    public final Option<Boolean> addBooleanOption(final char letter, @NotNull final String name,
+                                                  @NotNull String description)
     {
         return addOption(Boolean.class, letter, name, description, "");
     }
 
-    protected final Option<Integer> addIntegerOption(final char letter, @NotNull final String name,
-                                                     @NotNull String description, String valueDescription)
+    public final Option<Integer> addIntegerOption(final char letter, @NotNull final String name,
+                                                  @NotNull String description, String valueDescription)
     {
         return addOption(Integer.class, letter, name, description, valueDescription);
     }
 
-    protected List<String> parse()
+    public List<String> parse()
     {
         int i;
 
@@ -247,6 +249,7 @@ public abstract class OptionParser
                     public void execute(String v)
                     {
                         printHelp();
+                        System.exit(0);
                     }
                 };
 
@@ -257,6 +260,7 @@ public abstract class OptionParser
                     public void execute(String v)
                     {
                         printVersion();
+                        System.exit(0);
                     }
                 };
             options.add(versionOption);
@@ -287,18 +291,18 @@ public abstract class OptionParser
     */
     public static class Option<T>
     {
-        private boolean            canRepeat;
-        private final String       description;
-        private final char         letter;
-        private final String       name;
+        private boolean        canRepeat;
+        private final char     letter;
+        private final Class<T> type;
+        private final List<T>  validValues;
+
+        private final List<T>      values;
         private final OptionParser optionParser;
-        private final Class<T>     type;
-        private final List<T>      validValues;
+        private final String       description;
+        private final String       name;
+        private final String       valueDescription;
 
-        private T      value;
-        private final String valueDescription;
-
-        private final List<T> values;
+        private T value;
 
         Option(OptionParser optionParser, final Class<T> type, final char letter, @NotNull final String name,
                @NotNull String description, @NotNull String valueDescription)
@@ -376,7 +380,7 @@ public abstract class OptionParser
         public void setValue(String str)
         {
             value =
-                type.cast(type == Integer.class ? Integer.valueOf(str)
+                type.cast(type == Integer.class ? str.isEmpty() ? 0 : Integer.valueOf(str)
                                                 : type == Boolean.class ? Boolean.valueOf(str) : str);
         }
 

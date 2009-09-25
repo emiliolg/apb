@@ -27,6 +27,9 @@ import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static apb.utils.StringUtils.isEmpty;
+import static apb.utils.StringUtils.isNotEmpty;
+
 // User: emilio
 // Date: Aug 24, 2009
 // Time: 5:46:51 PM
@@ -59,11 +62,11 @@ public class Apb
         String    path = System.getenv("APB_PROJECT_PATH");
         String    path2 = getEnv().getProperty("project.path", "");
 
-        if (!path2.isEmpty()) {
-            path = path == null ? path2 : path + File.pathSeparator + path2;
+        if (isNotEmpty(path2)) {
+            path = isEmpty(path) ? path2 : path + File.pathSeparator + path2;
         }
 
-        if (path.isEmpty()) {
+        if (isEmpty(path)) {
             path = "./project-definitions";
         }
 
@@ -139,11 +142,24 @@ public class Apb
         return env;
     }
 
+    public static String makeStandardHeader()
+    {
+        final ProjectBuilder pb = getCurrentProjectBuilder();
+        return pb == null ? "" : pb.standardHeader();
+    }
+
     static Environment setCurrentEnv(Environment e)
     {
         Environment result = currentEnvironment.get();
         currentEnvironment.set(e);
         return result;
+    }
+
+    @Nullable static ProjectBuilder getCurrentProjectBuilder()
+    {
+        final Environment e = currentEnvironment.get();
+        return e != null && e instanceof DefaultEnvironment
+               ? ((DefaultEnvironment) e).getCurrentProjectBuilder() : null;
     }
 
     private static void initProxies(Environment env)
