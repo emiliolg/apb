@@ -31,9 +31,9 @@ import apb.DefinitionException;
 import apb.Environment;
 import apb.ProjectBuilder;
 
+import apb.tests.testutils.CheckOutput;
 import apb.tests.testutils.TestLogger;
 
-import junit.framework.ComparisonCompactor;
 import junit.framework.TestCase;
 
 import org.jetbrains.annotations.NotNull;
@@ -42,18 +42,17 @@ import static java.util.Collections.singleton;
 
 import static apb.tasks.CoreTasks.delete;
 
-import static apb.utils.StringUtils.truncateTo;
-
 public abstract class ApbTestCase
     extends TestCase
 {
     //~ Instance fields ......................................................................................
 
+    protected File dataDir;
+
     protected Environment  env;
-    protected File         dataDir;
-    protected File         tmpdir;
     protected List<String> output;
     protected Set<File>    projectPath;
+    protected File         tmpdir;
 
     //~ Constructors .........................................................................................
 
@@ -102,48 +101,6 @@ public abstract class ApbTestCase
         return index >= output.size() ? "" : output.get(index);
     }
 
-    protected void checkOutput(String... expectedLines)
-    {
-        StringBuilder msg = new StringBuilder();
-        boolean       many = false;
-
-        for (int i = 0, j = 0; i < expectedLines.length || j < output.size(); i++, j++) {
-            String current = output(j);
-            String expected = i < expectedLines.length ? expectedLines[i] : "";
-
-            //Check if partial match
-            if (expected.endsWith("\\+")) {
-                expected = expected.substring(0, expected.length() - 2);
-
-                // Check if many
-                if (expected.endsWith("\\+")) {
-                    expected = expected.substring(0, expected.length() - 2);
-                    many = true;
-                }
-
-                current = truncateTo(current, expected);
-            }
-
-            if (!expected.equals(current)) {
-                msg.append(new ComparisonCompactor(20, expected, current).compact("Line (" + i + "):"));
-                msg.append("\n");
-            }
-
-            if (many) {
-                while (expected.equals(truncateTo(output(++j), expected))) {
-                    ;
-                }
-
-                --j;
-                many = false;
-            }
-        }
-
-        if (msg.length() > 0) {
-            fail(msg.toString());
-        }
-    }
-
     protected String dataFile(String fileName)
     {
         return new File(dataDir, fileName).getAbsolutePath();
@@ -154,10 +111,9 @@ public abstract class ApbTestCase
         return new File(tmpdir, fileName).getAbsolutePath();
     }
 
-    private String output(int i)
+    protected void checkOutput(String... expected)
     {
-        String current = i < output.size() ? output.get(i) : "\n";
-        return current.substring(0, current.length() - 1);
+        CheckOutput.checkOutput(output, expected);
     }
 
     //~ Static fields/initializers ...........................................................................

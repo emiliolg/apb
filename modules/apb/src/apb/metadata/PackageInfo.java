@@ -41,6 +41,11 @@ public class PackageInfo
     @BuildProperty public boolean addClassPath;
 
     /**
+     * The directory for the package.
+     */
+    @BuildProperty public String dir = "lib";
+
+    /**
      * Whether to generate a jar with the sources or not.
      */
     @BuildProperty public boolean generateSourcesJar;
@@ -48,17 +53,7 @@ public class PackageInfo
     /**
      * Indicates whether dependencies must be included in package.
      */
-    public IncludeDependencies includeDependencies = IncludeDependencies.NONE;
-
-    /**
-     * The packaging type for the module
-     */
-    public PackageType type = PackageType.JAR;
-
-    /**
-     * The directory for the package.
-     */
-    @BuildProperty public String dir = "lib";
+    @BuildProperty public IncludeDependencies includeDependencies = IncludeDependencies.NONE;
 
     /**
      * The main class of the package
@@ -71,10 +66,20 @@ public class PackageInfo
     @BuildProperty public String name = "${group}-${moduleid}-${version}";
 
     /**
+     * The packaging type for the module
+     */
+    public PackageType type = PackageType.JAR;
+
+    /**
      * Additional dependencies added into the package.
      * Libraries are not included in module package. Specified library dependencies will be ignored.
      */
     private final DependencyList additionalDependencies = new DependencyList();
+
+    /**
+     * Additional attribute for the package manifest
+     */
+    private final Map<Attributes.Name, String> attributes = new HashMap<Attributes.Name, String>();
 
     /**
      * Excluded patterns specifying files that must not be included in package.
@@ -85,11 +90,6 @@ public class PackageInfo
      * Extra entries to add to the manifest Class-Path
      */
     private final List<String> extraClassPathEntries = new ArrayList<String>();
-
-    /**
-     * Additional attribute for the package manifest
-     */
-    private final Map<Attributes.Name, String> attributes = new HashMap<Attributes.Name, String>();
 
     /**
      * Services defined in the package

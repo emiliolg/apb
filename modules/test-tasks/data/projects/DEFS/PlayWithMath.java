@@ -18,6 +18,7 @@
 
 
 import apb.metadata.Module;
+import apb.metadata.PackageInfo;
 
 public class PlayWithMath
     extends Module
@@ -35,7 +36,6 @@ public class PlayWithMath
         pkg.mainClass = "Play";
         pkg.addClassPath = true;
         pkg.generateSourcesJar = true;
-
         compiler.validateDependencies = true;
     }
 }

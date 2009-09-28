@@ -18,6 +18,8 @@
 
 package apb.tests.utils;
 
+import apb.Messages;
+
 import apb.sunapi.Base64;
 import apb.sunapi.XmlSerializer;
 
@@ -59,5 +61,6 @@ public class DummyTest
         new XmlUtils();
         new CoreTasks();
         new Constants();
+        new Messages();
     }
 }

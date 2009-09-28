@@ -35,8 +35,10 @@ public class TestTasks
 
         // Explicitily include apb. (It will be excluded by default otherwise)
         coverage.includes("apb.*");
-        coverage.excludes("apb.tests.javas.*", "apb.tests.utils.*", "apb.tests.testutils.*",
-                          "apb.tests.tasks.*", "apb.tests.build.*");
+        coverage.excludes("apb.tests.javas.*", "apb.tests.utils.*", "apb.tests.testutils.*",  //
+                          "apb.tests.tasks.*", "apb.tests.build.*",  //
+                          "apb.utils.Console", "apb.utils.JavaSystemCaller*",  //
+                          "apb.processors.*");
         coverage.reports(CoverageReport.HTML);
 
         setenv("APB_PROJECT_PATH", "");

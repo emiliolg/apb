@@ -17,12 +17,14 @@
 
 
 
+import java.io.File;
 import java.util.Map;
 
 import apb.Command;
 import apb.ModuleHelper;
 
 import apb.metadata.BuildTarget;
+import apb.metadata.Library;
 import apb.metadata.Module;
 import apb.metadata.PackageInfo;
 
@@ -38,6 +40,7 @@ public final class Info
         ModuleHelper h = getHelper();
         printf("Helper          '%s'\n", h.toString());
         printf("Is top level    '%b'\n", h.isTopLevel());
+        printf("Is test module  '%b'\n", h.isTestModule());
         printf("JDK             '%s'\n", h.getJdkName());
         printf("LastModified    '%d'\n", h.lastModified());
         printf("Dir File        '%s'\n", h.getDirFile());
@@ -64,11 +67,25 @@ public final class Info
         for (String m : h.listAllModules()) {
             printf("%s\n", m);
         }
+
+        printf("--- Libraries ---\n");
+
+        for (Library library : h.getAllLibraries()) {
+            printf("%s\n", library);
+        }
+
+        printf("--- Runtime Path ---\n");
+
+        for (File library : h.runtimePath()) {
+            printf("%s\n", library);
+        }
     }
 
     //~ Instance initializers ................................................................................
 
     {
-        dependencies(new HelloWorld(), localLibrary("../lib/junit-3.8.2.jar"));
+        dependencies(new HelloWorld(),  //
+                     compile(new Math()),  //
+                     runtime(localLibrary("../lib/junit-3.8.2.jar")));
     }
 }

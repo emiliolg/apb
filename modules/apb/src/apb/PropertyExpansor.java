@@ -282,7 +282,23 @@ class PropertyExpansor
                     result = Boolean.parseBoolean(value);
                 }
                 else if (type == Integer.TYPE) {
-                    result = Integer.parseInt(value);
+                    try {
+                        result = Integer.parseInt(value);
+                    }
+                    catch (NumberFormatException e) {
+                        result = 0;
+                    }
+                }
+                else if (type.isEnum()) {
+                    final Object[] enums = type.getEnumConstants();
+                    result = enums[0];
+
+                    for (Object o : enums) {
+                        if (o.toString().equalsIgnoreCase(value)) {
+                            result = o;
+                            break;
+                        }
+                    }
                 }
                 else {
                     throw new BuildException("Unsuported conversion to " + type.getName());

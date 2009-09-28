@@ -30,30 +30,30 @@ public class IdeaInfo
     //~ Instance fields ......................................................................................
 
     /**
+     * The directory where the idea '.iml' & 'ipr' files are going to be placed
+     */
+    @BuildProperty public String dir = "$basedir/IDEA";
+
+    /**
      * Wheter to include empty source directories (like generated sources)
      * in the idea definitions
      */
     @BuildProperty public boolean includeEmptyDirs = false;
 
     /**
-     * The directory where the idea '.iml' & 'ipr' files are going to be placed
-     */
-    @BuildProperty public String dir = "$basedir/IDEA";
-
-    /**
      * The name of the jdk to use
      */
-    @BuildProperty public final String jdkName = "$java.specification.version";
+    @BuildProperty public String jdkName = "$java.specification.version";
 
     /**
      * The name of the template module file
      * If empty it will take the one in apb.jar
      */
-    @BuildProperty public final String moduleTemplate = "";
+    @BuildProperty public String moduleTemplate = "";
 
     /**
      * The name of the template project file
      * If empty it will take the one in apb.jar
      */
-    @BuildProperty public final String projectTemplate = "";
+    @BuildProperty public String projectTemplate = "";
 }

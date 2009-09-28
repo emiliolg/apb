@@ -43,6 +43,7 @@ public class InfoTest
         build("Info", "info");
         checkOutput("Helper          'Info'",  //
                     "Is top level    'true'",  //
+                    "Is test module  'false'",  //
                     "JDK             '1.6'",  //
                     "LastModified    '" + ts + "'",  //
                     "Dir File        '" + dir + "'",  //
@@ -68,6 +69,19 @@ public class InfoTest
                     "package: Creates a jar file containing the compiled classes and resources of the module.",  //
                     "resources: Copy (eventually filtering) resources to the output directory.",  //
                     "run-minimal-tests: Run test with the annotation @Test(group=\"minimal\") generating reports and (optional) coverage information.",  //
-                    "run-tests: Test the compiled sources, generating reports and (optional) coverage information.");
+                    "run-tests: Test the compiled sources, generating reports and (optional) coverage information.",  //
+                    "--- Modules ---",  //
+                    "hello-world",  //
+                    "info",  //
+                    "math",  //
+                    "tests.math",  //
+                    "--- Libraries ---",  //
+                    "../lib/junit-3.8.2.jar",  //
+                    "--- Runtime Path ---",  //
+                    outputBase + "/classes",  //
+                    dataFile("projects/output/hello-world/classes"),  //
+                    tmpFile("output/classes"),  //
+                    dataFile("lib/junit-3.8.2.jar"),  //
+                    "");
     }
 }

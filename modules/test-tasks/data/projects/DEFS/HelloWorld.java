@@ -41,4 +41,10 @@ public class HelloWorld
     {
         printf("Good Bye World !\n");
     }
+
+    @BuildTarget
+    public void hellowho()
+    {
+        printf("Hello $who !\n");
+    }
 }

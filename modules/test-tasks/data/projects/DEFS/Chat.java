@@ -26,7 +26,7 @@ public final class Chat
 {
     //~ Methods ..............................................................................................
 
-    @BuildTarget(before = "bye")
+    @BuildTarget(before = "bye", depends="hello")
     public void chat()
     {
         printf("How are you doing !\n");

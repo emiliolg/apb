@@ -61,22 +61,23 @@ public class Idea
 
         if (helper.isTopLevel()) {
             IdegenTask.generateProject(helper.getId(), helper.getProjectDirectory()).on(dir)  //
-                              .usingModules(helper.listAllModules())  //
-                              .usingTemplate(info.projectTemplate)  //
-                              .ifOlder(helper.lastModified())  //
-                              .execute();
+                      .usingModules(helper.listAllModules())  //
+                      .usingTemplate(info.projectTemplate)  //
+                      .useJdk(info.jdkName)  //
+                      .ifOlder(helper.lastModified())  //
+                      .execute();
         }
     }
 
     private IdegenTask.Module createTask(ModuleHelper mod, File dir, IdeaInfo info)
     {
         return IdegenTask.generateModule(mod.getId()).on(dir)  //
-                                     .usingSources(mod.getSourceDirs())  //
-                                     .usingOutput(mod.getOutput())  //
-                                     .includeEmptyDirs(info.includeEmptyDirs)  //
-                                     .usingTemplate(info.moduleTemplate)  //
-                                     .usingModules(mod.getDirectDependencies())  //
-                                     .usingLibraries(mod.getAllLibraries())  //
-                                     .ifOlder(mod.lastModified());
+                         .usingSources(mod.getSourceDirs())  //
+                         .usingOutput(mod.getOutput())  //
+                         .includeEmptyDirs(info.includeEmptyDirs)  //
+                         .usingTemplate(info.moduleTemplate)  //
+                         .usingModules(mod.getDirectDependencies())  //
+                         .usingLibraries(mod.getAllLibraries())  //
+                         .ifOlder(mod.lastModified());
     }
 }

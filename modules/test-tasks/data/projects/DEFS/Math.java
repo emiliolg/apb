@@ -18,17 +18,22 @@
 
 
 import apb.metadata.Module;
+import apb.metadata.BuildProperty;
+import apb.idegen.IdeaInfo;
 
 public class Math
     extends Module
 {
     //~ Instance initializers ................................................................................
+    @BuildProperty
+    IdeaInfo idegen = new IdeaInfo();
 
     {
         outputBase = "$tmpdir/output";
         group = "tests";
         version = "1.0";
         pkg.dir = "$tmpdir/output/lib";
+        idegen.jdkName="1.6";
         tests(new tests.Math());
     }
 }
