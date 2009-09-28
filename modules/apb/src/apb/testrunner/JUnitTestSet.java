@@ -270,19 +270,34 @@ public final class JUnitTestSet
 
             if (test instanceof TestCase) {
                 name = ((TestCase) test).getName();
+            } else if (test instanceof TestSuite) {
+                name = ((TestSuite) test).getName();
             }
 
             return name;
         }
 
+		private static String testCurrent(TestReport report, Test test) {
+            String current = "";
+
+            if (test instanceof TestCase) {
+                current = report.getCurrentTest();
+            } else if (test instanceof TestSuite) {
+                current = report.getCurrentSuite();
+            }
+            
+            return current;
+		}
+		
         private void validateCurrentTest(Test test)
         {
             final String name = testName(test);
-            final String current = report.getCurrentTest();
+            final String current = testCurrent(report, test);
 
             if (!name.equals(current)) {
                 throw new IllegalStateException(name + " vs " + current);
             }
         }
+
     }
 }
