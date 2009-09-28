@@ -35,6 +35,8 @@ import apb.utils.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static javax.tools.Diagnostic.Kind.ERROR;
+
 import static apb.utils.ColorUtils.*;
 
 /**
@@ -47,12 +49,13 @@ public class DiagnosticReporter
 {
     //~ Instance fields ......................................................................................
 
+    @NotNull private final Environment env;
+    private int                        warns, errors;
+    private final JavacTask            javacTask;
+
     @NotNull private final List<Diagnostic<? extends JavaFileObject>> ds;
-    @NotNull private final Environment                                env;
     @NotNull private List<String>                                     excludes;
-    private final JavacTask                                                 javacTask;
     @Nullable private String                                          lastFile;
-    private int                                                       warns, errors;
 
     //~ Constructors .........................................................................................
 
@@ -84,7 +87,7 @@ public class DiagnosticReporter
     {
         final JavaFileObject source = diagnostic == null ? null : diagnostic.getSource();
 
-        if (source != null && !isExcluded(source)) {
+        if (source != null && (diagnostic.getKind() == ERROR || !isExcluded(source))) {
             count(diagnostic);
 
             String fileName = source.toString();
