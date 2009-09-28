@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +24,7 @@ import java.util.List;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
+import static javax.tools.Diagnostic.Kind.ERROR;
 
 import apb.Environment;
 
@@ -84,7 +84,7 @@ public class DiagnosticReporter
     {
         final JavaFileObject source = diagnostic == null ? null : diagnostic.getSource();
 
-        if (source != null && !isExcluded(source)) {
+        if (source != null && (diagnostic.getKind() == ERROR || !isExcluded(source))) {
             count(diagnostic);
 
             String fileName = source.toString();
