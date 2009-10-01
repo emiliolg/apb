@@ -26,6 +26,8 @@ import apb.Messages;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
+import static apb.Apb.exit;
+
 import static apb.utils.StringUtils.nChars;
 
 /**
@@ -41,8 +43,8 @@ public abstract class OptionParser
 
     protected final List<String> arguments;
 
-    protected List<Option> options = null;
-    private final boolean  exitOnStopParsing = true;
+    @NotNull protected final List<Option> options;
+    private final boolean                 exitOnStopParsing = true;
 
     private final String appName;
 
@@ -52,13 +54,16 @@ public abstract class OptionParser
     {
         arguments = args;
         appName = name;
+        options = new ArrayList<Option>();
+        options.add(new HelpOption(this));
+        options.add(new VersionOption(this));
     }
 
     //~ Methods ..............................................................................................
 
     public abstract void printVersion();
 
-    public List<Option> getOptions()
+    @NotNull public List<Option> getOptions()
     {
         return options;
     }
@@ -234,43 +239,15 @@ public abstract class OptionParser
                                     @NotNull final String name, @NotNull String description,
                                     @NotNull String valueDescription)
     {
-        init();
         final Option<T> opt = new Option<T>(this, type, letter, name, description, valueDescription);
         options.add(opt);
         return opt;
     }
 
-    private void init()
-    {
-        if (options == null) {
-            options = new ArrayList<Option>();
-            final Option<Boolean> helpOption =
-                new Option<Boolean>(this, Boolean.class, 'h', Option.HELP, Messages.HELP, "") {
-                    public void execute(String v)
-                    {
-                        printHelp();
-                        System.exit(0);
-                    }
-                };
-
-            options.add(helpOption);
-
-            final Option<Boolean> versionOption =
-                new Option<Boolean>(this, Boolean.class, '\0', Option.VERSION, Messages.VERSION, "") {
-                    public void execute(String v)
-                    {
-                        printVersion();
-                        System.exit(0);
-                    }
-                };
-            options.add(versionOption);
-        }
-    }
-
     private void stopParsing()
     {
         if (exitOnStopParsing) {
-            System.exit(1);
+            exit(1);
         }
 
         throw new RuntimeException();
@@ -291,16 +268,16 @@ public abstract class OptionParser
     */
     public static class Option<T>
     {
+        final OptionParser     optionParser;
         private boolean        canRepeat;
         private final char     letter;
         private final Class<T> type;
         private final List<T>  validValues;
 
-        private final List<T>      values;
-        private final OptionParser optionParser;
-        private final String       description;
-        private final String       name;
-        private final String       valueDescription;
+        private final List<T> values;
+        private final String  description;
+        private final String  name;
+        private final String  valueDescription;
 
         private T value;
 
@@ -444,5 +421,35 @@ public abstract class OptionParser
 
         @NonNls static final String HELP = "help";
         @NonNls static final String VERSION = "version";
+    }
+
+    private static class HelpOption
+        extends Option<Boolean>
+    {
+        public HelpOption(OptionParser optionParser)
+        {
+            super(optionParser, Boolean.class, 'h', Option.HELP, Messages.HELP, "");
+        }
+
+        public void execute(String v)
+        {
+            optionParser.printHelp();
+            exit(0);
+        }
+    }
+
+    private static class VersionOption
+        extends Option<Boolean>
+    {
+        public VersionOption(OptionParser optionParser)
+        {
+            super(optionParser, Boolean.class, '\0', Option.VERSION, Messages.VERSION, "");
+        }
+
+        public void execute(String v)
+        {
+            optionParser.printVersion();
+            exit(0);
+        }
     }
 }

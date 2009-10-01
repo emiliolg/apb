@@ -179,7 +179,7 @@ class ApbOptions
             OptionCompletion       op = new OptionCompletion(options, index);
 
             System.out.println(op.execute(arguments));
-            System.exit(0);
+            Apb.exit(0);
         }
     }
 

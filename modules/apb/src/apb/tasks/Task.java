@@ -68,8 +68,13 @@ public abstract class Task
 
     protected void logVerbose(String msg, Object... args)
     {
-        if (env.mustShow(DebugOption.TASK_INFO)) {
+        if (isVerbose()) {
             env.logVerbose(msg, args);
         }
+    }
+
+    protected boolean isVerbose()
+    {
+        return env.mustShow(DebugOption.TASK_INFO);
     }
 }

@@ -20,6 +20,7 @@ package apb;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -115,7 +116,7 @@ public class Main
         }
         else {
             options.printHelp();
-            System.exit(0);
+            Apb.exit(0);
             result = Collections.emptyList();
         }
 
@@ -137,7 +138,13 @@ public class Main
                 b.build(env, argParts[0], argParts[1]);
             }
             catch (DefinitionException d) {
-                env.logSevere("%s\nCause: %s\n", d.getMessage(), d.getCause().getMessage());
+                String causeMsg = d.getCause().getMessage();
+
+                if (d.getCause() instanceof FileNotFoundException) {
+                    causeMsg = "File not found: " + causeMsg;
+                }
+
+                env.logSevere("%s\nCause: %s\n", d.getMessage(), causeMsg);
                 e = d.getCause();
             }
             catch (BuildException b) {

@@ -40,6 +40,8 @@ import org.jetbrains.annotations.Nullable;
 
 import static java.util.Arrays.asList;
 
+import static apb.Apb.exit;
+
 import static apb.utils.StringUtils.isEmpty;
 //
 // User: emilio
@@ -90,7 +92,7 @@ public class Main
             saveOutput(report, reportSpecFile);
         }
 
-        System.exit(r);
+        exit(r);
     }
 
     private static ClassLoader createClassLoader(TestRunnerOptions options)

@@ -79,8 +79,8 @@ public class InfoTest
                     "../lib/junit-3.8.2.jar",  //
                     "--- Runtime Path ---",  //
                     outputBase + "/classes",  //
-                    dataFile("projects/output/hello-world/classes"),  //
-                    tmpFile("output/classes"),  //
+                    new File(outputDir, "hello-world/classes").getPath(),  //
+                    mathClasses.getPath(),  //
                     dataFile("lib/junit-3.8.2.jar"),  //
                     "");
     }

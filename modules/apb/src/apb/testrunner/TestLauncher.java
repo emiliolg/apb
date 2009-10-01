@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -519,8 +520,10 @@ public class TestLauncher
         }
 
         try {
-            TestRunner        runner = new TestRunner(testClasses, reportDir, includes, excludes, testGroups);
-            final ClassLoader loader = createClassLoader(classPath);
+            TestRunner      runner = new TestRunner(testClasses, reportDir, includes, excludes, testGroups);
+            final Set<File> cp = new HashSet<File>(classPath);
+            cp.add(testClasses);
+            final ClassLoader loader = createClassLoader(cp);
             return runner.run(testCreator(), report, loader, singleTest);
         }
         catch (Exception e) {

@@ -58,6 +58,7 @@ import apb.tasks.FileSet;
 import org.jetbrains.annotations.NotNull;
 
 import static apb.utils.StringUtils.isEmpty;
+import static apb.utils.StringUtils.isNotEmpty;
 //
 // User: emilio
 // Date: Sep 8, 2008
@@ -328,7 +329,8 @@ public class FileUtils
     }
 
     public static void copyFileFiltering(@NotNull File from, @NotNull File to, boolean append,
-                                         @NotNull String encoding, @NotNull List<Filter> filters)
+                                         @NotNull String encoding, @NotNull List<Filter> filters,
+                                         List<String> linesToInsert, List<String> linesToAppend)
         throws IOException
     {
         BufferedReader reader = null;
@@ -338,6 +340,10 @@ public class FileUtils
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(from), encoding));
             writer = new PrintWriter(new OutputStreamWriter(createOutputStream(to, append), encoding));
 
+            for (String s : linesToInsert) {
+                writer.println(s);
+            }
+
             String line;
 
             while ((line = reader.readLine()) != null) {
@@ -346,6 +352,10 @@ public class FileUtils
                 }
 
                 writer.println(line);
+            }
+
+            for (String s : linesToAppend) {
+                writer.println(s);
             }
         }
         finally {
@@ -448,15 +458,27 @@ public class FileUtils
 
     public static void validateDirectory(File dir)
     {
+        String msg = validateDir(dir);
+
+        if (isNotEmpty(msg)) {
+            throw new BuildException(msg);
+        }
+    }
+
+    public static String validateDir(File dir)
+    {
+        String msg = "";
+
         if (!dir.isDirectory()) {
             if (dir.exists()) {
-                throw new BuildException(dir + " is not a directory.");
+                msg = dir + " is not a directory.";
             }
-
-            if (!dir.mkdirs()) {
-                throw new BuildException("Cannot create directory: " + dir);
+            else if (!dir.mkdirs()) {
+                msg = "Cannot create directory: " + dir;
             }
         }
+
+        return msg;
     }
 
     /**
@@ -747,6 +769,51 @@ public class FileUtils
         return result;
     }
 
+    /**
+     * Find the innermost single directory inside the one specified.
+     * For example, with the following directory layouts
+     * <p><blockquote><pre>
+     *     base1 --- a -- b +--- c1
+     *                     |
+     *                     +--- c2
+     *
+     *     base2 --- a +-- b +--- c1
+     *                 |
+     *                 +--- c2
+     *
+     *     base3 +--- a +-- b +--- c1
+     *           |
+     *           +--- c2
+     *
+     * </pre></blockquote><p>
+     * It will return:
+     * <p><blockquote><pre>
+     *     topSingleDirectory(new File("base1")) --> "a/b"
+     *     topSingleDirectory(new File("base2")) --> "a"
+     *     topSingleDirectory(new File("base3")) --> ""
+     * </pre></blockquote><p>
+     *
+     * @param baseDir The directory used as the base
+     * @return The path to the inner most single directory starting from basDir
+     */
+    public static String topSingleDirectory(@NotNull File baseDir)
+    {
+        if (!baseDir.isDirectory()) {
+            throw new IllegalArgumentException("Not a directory: " + baseDir);
+        }
+
+        String result = "";
+        File[] inner;
+
+        while ((inner = baseDir.listFiles()).length == 1 && inner[0].isDirectory()) {
+            baseDir = inner[0];
+            final String part = baseDir.getName();
+            result = result.isEmpty() ? part : result + File.separator + part;
+        }
+
+        return result;
+    }
+
     static boolean isSymbolicLink(File file)
     {
         try {
@@ -867,11 +934,4 @@ public class FileUtils
 
                       // Mac
                       "**/.DS_Store");
-
-    //~ Inner Interfaces .....................................................................................
-
-    public static interface Filter
-    {
-        String filter(String str);
-    }
 }

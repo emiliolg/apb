@@ -24,9 +24,11 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import apb.Apb;
 import apb.Main;
 
 import apb.tests.testutils.CheckOutput;
+import apb.tests.testutils.FileAssert;
 
 import junit.framework.TestCase;
 
@@ -43,6 +45,7 @@ public class MainTest
     //~ Instance fields ......................................................................................
 
     List<String> output;
+    private File tmpFile;
 
     //~ Methods ..............................................................................................
 
@@ -51,20 +54,24 @@ public class MainTest
     {
         invokeMain("HelloWorld.hello");
         checkOutput("[HelloWorld.hello]              Hello World !",  //
-                    "[HelloWorld]                    ",  //
-                    "[HelloWorld]                    BUILD COMPLETED in \\+");
+                    "",  //
+                    BUILD_COMPLETED);
     }
 
     public void testIdegen()
         throws Throwable
     {
         invokeMain("Math.idegen:idea");
-        checkOutput(IDEGEN_WRITING,  //
-                    IDEGEN_WRITING,  //   Test
-                    IDEGEN_WRITING,  //
-                    IDEGEN_WRITING,  //
-                    "[Math]                          ",  //
-                    "[Math]                          BUILD COMPLETED in \\+");
+        checkOutput("[Math.idegen:idea]              Writing: " + ideaFile("math.iml"),  //
+                    "[tests.Math.idegen:idea]        Writing: " + ideaFile("tests.math.iml"),  //
+                    "[Math.idegen:idea]              Writing: " + ideaFile("DEFS.iml"),  //
+                    "[Math.idegen:idea]              Writing: " + ideaFile("math.ipr"),  //
+                    "",  //
+                    BUILD_COMPLETED);
+        FileAssert.assertExists(ideaFile("math.iml"));
+        FileAssert.assertExists(ideaFile("tests.math.iml"));
+        FileAssert.assertExists(ideaFile("DEFS.iml"));
+        FileAssert.assertExists(ideaFile("math.ipr"));
     }
 
     public void testWrongCommand()
@@ -81,7 +88,7 @@ public class MainTest
     {
         invokeMain("HelloWord.hello");
         checkOutput("[HelloWord]                     Cannot load definition for: HelloWord",  //
-                    "[HelloWord]                     Cause: HelloWord.java",  //
+                    "[HelloWord]                     Cause: File not found: HelloWord.java",  //
                     "[HelloWord]                     ",  //
                     "[HelloWord]                     BUILD FAILED !!");
     }
@@ -101,29 +108,89 @@ public class MainTest
     {
         invokeMain("-Dwho=John", "HelloWorld.hellowho");
         checkOutput("[HelloWorld.hellowho]           Hello John !",  //
-                    "[HelloWorld]                    ",  //
-                    "[HelloWorld]                    BUILD COMPLETED in \\+");
+                    "",  //
+                    BUILD_COMPLETED);
+    }
+
+    public void testHelp()
+        throws Throwable
+    {
+        try {
+            Apb.setAvoidSystemExit(true);
+            invokeMain("Math.help");
+        }
+        finally {
+            Apb.setAvoidSystemExit(false);
+        }
+
+        checkOutput("Commands for 'Math' : ",  //
+                    "    clean\\+",  //
+                    "    compile\\+",  //
+                    "   \\+\\+");
+    }
+
+    public void testGlobalHelp()
+        throws Throwable
+    {
+        try {
+            Apb.setAvoidSystemExit(true);
+            invokeMain("--help");
+        }
+        finally {
+            Apb.setAvoidSystemExit(false);
+        }
+
+        checkOutput("apb [options]  Mod.command ...",  //
+                    "",  //
+                    "Where:",  //
+                    "    Mod     : module or project specification defined as 'Mod.java' in the project path.",  //
+                    "    command : help and others. (Execute the help command over a module to get the actual list).",  //
+                    "",  //
+                    "Options: ",  //
+                    "  \\+\\+"  //
+                   );
+    }
+
+    public void testVersion()
+        throws Throwable
+    {
+        try {
+            Apb.setAvoidSystemExit(true);
+            invokeMain("--version");
+        }
+        finally {
+            Apb.setAvoidSystemExit(false);
+        }
+
+        checkOutput("apb \\+",  //
+                    "java \\+",  //
+                    "OS \\+",  //
+                    "Memory \\+"  //
+                   );
     }
 
     void invokeMain(String... args)
     {
         ByteArrayOutputStream b = new ByteArrayOutputStream();
         PrintStream           prev = System.out;
+        PrintStream           prevErr = System.err;
 
         try {
             PrintStream p = new PrintStream(b);
             System.setOut(p);
+            System.setErr(p);
 
             try {
-                String       path = System.getProperty("datadir") + "/projects/DEFS";
-                String       tmp = new File("tmp").getAbsolutePath();
+                String path = System.getProperty("datadir") + "/projects/DEFS";
+                tmpFile = new File("tmp").getAbsoluteFile();
                 List<String> cmd = new ArrayList<String>(asList(args));
                 cmd.add(0, "-Dcolor=false");
                 cmd.add(0, "-Dproject.path=" + path);
-                cmd.add(0, "-Dtmpdir=" + tmp);
+                cmd.add(0, "-Dtmpdir=" + tmpFile.getPath());
                 cmd.add(0, "-f");
                 Main.main(cmd.toArray(new String[cmd.size()]));
             }
+            catch (Apb.ExitException ignore) {}
             catch (Throwable throwable) {
                 throwable.printStackTrace(p);
             }
@@ -132,6 +199,7 @@ public class MainTest
         }
         finally {
             System.setOut(prev);
+            System.setErr(prevErr);
         }
 
         output = new ArrayList<String>();
@@ -141,6 +209,11 @@ public class MainTest
         }
     }
 
+    private File ideaFile(String name)
+    {
+        return new File(new File(tmpFile, "IDEA"), name);
+    }
+
     private void checkOutput(String... expected)
     {
         CheckOutput.checkOutput(output, expected);
@@ -148,5 +221,5 @@ public class MainTest
 
     //~ Static fields/initializers ...........................................................................
 
-    private static final String IDEGEN_WRITING = "[Math.idegen:idea]              Writing: \\+";
+    private static final String BUILD_COMPLETED = "BUILD COMPLETED in \\+";
 }

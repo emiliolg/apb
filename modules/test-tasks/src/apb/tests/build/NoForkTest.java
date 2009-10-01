@@ -30,7 +30,7 @@ import apb.tests.testutils.FileAssert;
 // Time: 5:38:33 PM
 
 //
-public class TestNoForkTest
+public class NoForkTest
     extends ApbTestCase
 {
     //~ Methods ..............................................................................................
@@ -38,31 +38,24 @@ public class TestNoForkTest
     public void testRunNoFork()
         throws DefinitionException
     {
-        final File   classFile = new File(tmpdir, "output/classes/math/Fraction.class").getAbsoluteFile();
-        final File   testClassFile =
-            new File(tmpdir, "output/classes/math/test/FractionTest.class").getAbsoluteFile();
-        final File   jarFile = new File(tmpdir, "output/lib/tests-math-1.0.jar").getAbsoluteFile();
-        final String reportFile = new File(tmpdir, "output/reports").getAbsolutePath();
+        final File reportFile = new File(outputDir, "tests/math/reports");
 
         build("Math", "run-tests");
         checkOutput(COMPILING_1_FILE,  //
                     COMPILING_1_FILE,  //
-                    BUILDING + jarFile.getPath(),  //
+                    BUILDING + mathJar.getPath(),  //
                     SOME_TESTS_HAVE_FAILED,  //
                     CHECK + reportFile);
 
-        FileAssert.assertExists(classFile);
-        FileAssert.assertExists(testClassFile);
+        FileAssert.assertExists(fractionClass);
+        FileAssert.assertExists(fractionTestClass);
 
         build("Math", "clean");
-        checkOutput(DELETING_DIRECTORY + classFile.getParentFile().getParent(),  //
-                    DELETING_DIRECTORY + classFile.getParent(),  //
-                    DELETING_DIRECTORY + testClassFile.getParent(),  //
-                    DELETING_FILE + jarFile.getPath(),  //
-                    DELETING_DIRECTORY + reportFile,  //
-                    DELETING_DIRECTORY + new File(tmpdir, "output/coverage").getAbsolutePath());
-        FileAssert.assertDoesNotExist(classFile);
-        FileAssert.assertDoesNotExist(testClassFile);
+        checkOutput(DELETING_DIRECTORY + mathClasses,  //
+                    DELETING_FILE + mathJar.getPath(),  //
+                    DELETING_DIRECTORY + testMathClasses);
+        FileAssert.assertDoesNotExist(fractionClass);
+        FileAssert.assertDoesNotExist(fractionTestClass);
     }
 
     @Override protected void createEnv(Map<String, String> properties)

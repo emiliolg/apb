@@ -45,6 +45,11 @@ public class CopyTask
 {
     //~ Instance fields ......................................................................................
 
+    /**
+     * The source when a single file
+     */
+    @Nullable protected File singleSource;
+
     @NotNull protected final File to;
 
     @NotNull protected final List<FileSet> from;
@@ -55,6 +60,7 @@ public class CopyTask
     {
         from = fileSets;
         this.to = to;
+        singleSource = extractSingleFile();
     }
 
     //~ Methods ..............................................................................................
@@ -64,29 +70,32 @@ public class CopyTask
        */
     public void execute()
     {
-        final File source = extractSingleFile();
-
-        if (source == null) {
+        if (singleSource == null) {
             copyToDirectory();
         }
         else {
-            final File dest = to.isDirectory() ? new File(to, source.getName()) : to;
-
-            if (env.forceBuild() || !dest.exists() || source.lastModified() > dest.lastModified()) {
-                copyFile(source, dest);
-            }
+            copyToFile(singleSource);
         }
     }
 
-    protected void doCopyFile(File source, File dest)
+    protected void doCopyFile(File sourceFile, File dest)
         throws IOException
     {
         if (env.isVerbose()) {
-            logVerbose("Copy %s\n", source);
+            logVerbose("Copy %s\n", sourceFile);
             logVerbose("  to %s\n", dest);
         }
 
-        FileUtils.copyFile(source, dest, false);
+        FileUtils.copyFile(sourceFile, dest, false);
+    }
+
+    private void copyToFile(@NotNull final File sourceFile)
+    {
+        final File dest = to.isDirectory() ? new File(to, sourceFile.getName()) : to;
+
+        if (env.forceBuild() || !dest.exists() || sourceFile.lastModified() > dest.lastModified()) {
+            copyFile(sourceFile, dest);
+        }
     }
 
     @Nullable private File extractSingleFile()

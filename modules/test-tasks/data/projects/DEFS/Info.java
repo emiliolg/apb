@@ -47,7 +47,7 @@ public final class Info
         printf("Source File     '%s'\n", h.getSourceFile());
         printf("Project dir     '%s'\n", h.getProjectDirectory());
         printf("Output          '%s'\n", h.getOutput());
-        printf("Source          '%s'\n", h.getSource());
+        printf("Source          '%s'\n", h.getSourceDir());
         printf("Generated       '%s'\n", h.getGeneratedSource());
         printf("Package File    '%s'\n", h.getPackageFile());
         printf("Source Package  '%s'\n", h.getSourcePackageFile());

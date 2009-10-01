@@ -33,6 +33,8 @@ import apb.utils.OptionParser;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
+import static apb.Apb.exit;
+
 import static apb.utils.StringUtils.isEmpty;
 //
 // User: emilio
@@ -109,7 +111,7 @@ class TestRunnerOptions
 
         if (result.isEmpty()) {
             printHelp();
-            System.exit(0);
+            exit(0);
         }
 
         // Initialize base dir
@@ -119,7 +121,7 @@ class TestRunnerOptions
 
         if (!basedir.isDirectory()) {
             System.err.println("Invalid base directory: " + basedir);
-            System.exit(TestRunner.ERROR);
+            exit(TestRunner.ERROR);
         }
 
         return result;
@@ -229,7 +231,8 @@ class TestRunnerOptions
 
             if (result == null) {
                 System.err.println("Invalid creator class: " + creatorClass);
-                System.exit(TestRunner.ERROR);
+                exit(TestRunner.ERROR);
+                throw new RuntimeException();
             }
         }
         else {

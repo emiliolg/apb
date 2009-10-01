@@ -148,6 +148,20 @@ public class Apb
         return pb == null ? "" : pb.standardHeader();
     }
 
+    public static void exit(int status)
+    {
+        if (avoidSystemExit) {
+            throw new ExitException();
+        }
+
+        System.exit(status);
+    }
+
+    public static void setAvoidSystemExit(boolean b)
+    {
+        avoidSystemExit = b;
+    }
+
     static Environment setCurrentEnv(Environment e)
     {
         Environment result = currentEnvironment.get();
@@ -181,8 +195,18 @@ public class Apb
 
     //~ Static fields/initializers ...........................................................................
 
+    private static boolean avoidSystemExit;
+
     private static final InheritableThreadLocal<Environment> currentEnvironment =
         new InheritableThreadLocal<Environment>();
 
     private static final String JAR_FILE_URL_PREFIX = "jar:file:";
+
+    //~ Inner Classes ........................................................................................
+
+    public static class ExitException
+        extends RuntimeException
+    {
+        private static final long serialVersionUID = 2893150484674194063L;
+    }
 }

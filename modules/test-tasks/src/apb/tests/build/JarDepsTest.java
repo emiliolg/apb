@@ -18,7 +18,6 @@
 
 package apb.tests.build;
 
-import java.io.File;
 import java.util.Map;
 
 import apb.DefinitionException;
@@ -38,24 +37,18 @@ public class JarDepsTest
     public void testPlay()
         throws DefinitionException
     {
-        final File jarFile1 = new File(tmpdir, "output/lib/tests-math-1.0.jar").getAbsoluteFile();
-        final File jarFile2 = new File(tmpdir, "output/lib/tests-play-with-math-1.0.jar").getAbsoluteFile();
-        final File srcJarFile =
-            new File(tmpdir, "output/lib/tests-play-with-math-1.0-src.jar").getAbsoluteFile();
-        final File classFile = new File(tmpdir, "output/classes/Play.class").getAbsoluteFile();
-
         build("PlayWithMath", "package");
         checkOutput(COMPILING_1_FILE,  //
-                    BUILDING + jarFile1.getPath(),  //
+                    BUILDING + mathJar.getPath(),  //
                     COMPILING_1_FILE,  //
                     "Adding module 'Math'.",  //
-                    BUILDING + jarFile2.getPath(),  //
-                    BUILDING + srcJarFile.getPath());
+                    BUILDING + playJar.getPath(),  //
+                    BUILDING + playSrcJar.getPath());
 
-        FileAssert.assertExists(jarFile1);
-        FileAssert.assertExists(jarFile2);
-        FileAssert.assertExists(srcJarFile);
-        FileAssert.assertExists(classFile);
+        FileAssert.assertExists(mathJar);
+        FileAssert.assertExists(playJar);
+        FileAssert.assertExists(playSrcJar);
+        FileAssert.assertExists(playClass);
     }
 
     @Override protected void createEnv(Map<String, String> properties)

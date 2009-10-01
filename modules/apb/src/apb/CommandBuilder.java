@@ -188,7 +188,7 @@ public class CommandBuilder
                 }
             }
 
-            System.exit(0);
+            Apb.exit(0);
         }
 
         private static void printSpaces()

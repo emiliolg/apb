@@ -120,10 +120,10 @@ public abstract class IdegenTask
     public abstract static class Module
         extends IdegenTask
     {
-        protected boolean                     testModule;
-        @Nullable protected File              output;
-        @NotNull protected final List<String> excludes;
-
+        protected boolean                      testModule;
+        @Nullable protected File               output;
+        @NotNull protected final List<String>  contentDirs;
+        @NotNull protected final List<String>  excludes;
         @NotNull protected final List<Library> libraries;
         @NotNull protected final List<String>  moduleDependencies;
         @NotNull protected final List<File>    sourceDirs;
@@ -140,6 +140,7 @@ public abstract class IdegenTask
             sourceDirs = new ArrayList<File>();
 
             moduleDependencies = new ArrayList<String>();
+            contentDirs = new ArrayList<String>();
         }
 
         public abstract void execute();
@@ -208,6 +209,12 @@ public abstract class IdegenTask
                 moduleDependencies.add(module.getId());
             }
 
+            return this;
+        }
+
+        public Module withContentDirs(List<String> dirs)
+        {
+            contentDirs.addAll(dirs);
             return this;
         }
     }

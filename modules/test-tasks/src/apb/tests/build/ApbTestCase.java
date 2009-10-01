@@ -47,12 +47,23 @@ public abstract class ApbTestCase
 {
     //~ Instance fields ......................................................................................
 
-    protected File dataDir;
+    protected Environment env;
 
-    protected Environment  env;
+    protected File         dataDir;
+    protected File         fractionClass;
+    protected File         fractionTestClass;
+    protected File         mathClasses;
+    protected File         mathJar;
+    protected File         outputDir;
+    protected File         playClass;
+    protected File         playClasses;
+    protected File         playJar;
+    protected File         playSrcJar;
+    protected File         testMathClasses;
+    protected File         testOutputDir;
+    protected File         tmpdir;
     protected List<String> output;
     protected Set<File>    projectPath;
-    protected File         tmpdir;
 
     //~ Constructors .........................................................................................
 
@@ -81,6 +92,17 @@ public abstract class ApbTestCase
         createEnv(props);
         dataDir = new File(env.expand("$datadir"));
         projectPath = singleton(new File(dataDir, "projects/DEFS"));
+        outputDir = new File(tmpdir, "output").getAbsoluteFile();
+        testOutputDir = new File(outputDir, "tests/math");
+        mathClasses = new File(new File(outputDir, "math"), "classes");
+        fractionClass = new File(mathClasses, "math/Fraction.class");
+        testMathClasses = new File(testOutputDir, "classes");
+        fractionTestClass = new File(testMathClasses, "math/test/FractionTest.class");
+        mathJar = new File(outputDir, "lib/tests-math-1.0.jar");
+        playJar = new File(outputDir, "lib/tests-play-with-math-1.0.jar");
+        playSrcJar = new File(outputDir, "lib/tests-play-with-math-1.0-src.jar");
+        playClasses = new File(new File(outputDir, "play-with-math"), "classes");
+        playClass = new File(playClasses, "Play.class");
     }
 
     protected void build(final String module, final String command)

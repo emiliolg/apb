@@ -21,6 +21,7 @@ package apb.idegen;
 import java.io.File;
 
 import apb.ModuleHelper;
+import apb.ProjectBuilder;
 import apb.ProjectElementHelper;
 import apb.TestModuleHelper;
 
@@ -46,30 +47,40 @@ public class Idea
     public void invoke(ProjectElement element)
     {
         final ProjectElementHelper helper = element.getHelper();
-        IdeaInfo                   info = helper.getInfoObject("idegen", IdeaInfo.class);
-        File                       dir = helper.fileFromBase(info.dir);
+        final IdeaInfo             info = helper.getInfoObject("idegen", IdeaInfo.class);
+        final File                 targetDir = helper.fileFromBase(info.dir);
 
         if (helper instanceof ModuleHelper) {
             final ModuleHelper mod = (ModuleHelper) helper;
 
-            createTask(mod, dir, info).withPackageType(mod.getPackageType()).execute();
+            if (mod.isTestModule()) {
+                createTask(mod, info, targetDir).testModule(true).execute();
+            }
+            else {
+                createTask(mod, info, targetDir).withPackageType(mod.getPackageType()).execute();
 
-            for (TestModuleHelper testModule : mod.getTestModules()) {
-                createTask(testModule, dir, info).testModule(true).execute();
+                for (TestModuleHelper testModule : mod.getTestModules()) {
+                    ProjectBuilder.forward(getQName(), testModule);
+                }
             }
         }
 
         if (helper.isTopLevel()) {
-            IdegenTask.generateProject(helper.getId(), helper.getProjectDirectory()).on(dir)  //
-                      .usingModules(helper.listAllModules())  //
-                      .usingTemplate(info.projectTemplate)  //
-                      .useJdk(info.jdkName)  //
-                      .ifOlder(helper.lastModified())  //
-                      .execute();
+            generateProject(helper, info, targetDir);
         }
     }
 
-    private IdegenTask.Module createTask(ModuleHelper mod, File dir, IdeaInfo info)
+    private void generateProject(ProjectElementHelper helper, final IdeaInfo info, final File dir)
+    {
+        IdegenTask.generateProject(helper.getId(), helper.getProjectDirectory()).on(dir)  //
+                  .usingModules(helper.listAllModules())  //
+                  .usingTemplate(info.projectTemplate)  //
+                  .useJdk(info.jdkName)  //
+                  .ifOlder(helper.lastModified())  //
+                  .execute();
+    }
+
+    private IdegenTask.Module createTask(ModuleHelper mod, final IdeaInfo info, final File dir)
     {
         return IdegenTask.generateModule(mod.getId()).on(dir)  //
                          .usingSources(mod.getSourceDirs())  //
@@ -78,6 +89,7 @@ public class Idea
                          .usingTemplate(info.moduleTemplate)  //
                          .usingModules(mod.getDirectDependencies())  //
                          .usingLibraries(mod.getAllLibraries())  //
+                         .withContentDirs(info.contentDirs())  //
                          .ifOlder(mod.lastModified());
     }
 }

@@ -18,8 +18,6 @@
 
 package tests;
 
-import apb.metadata.TestModule;
-
 import apb.testrunner.output.TestReport;
 
 import static apb.coverage.CoverageReport.*;
@@ -28,13 +26,11 @@ import static apb.coverage.CoverageReport.Depth.ALL;
 
 //
 public class Math
-    extends TestModule
+    extends base.BaseTestModule
 {
     //~ Instance initializers ................................................................................
 
     {
-        outputBase = "$tmpdir/output";
-
         dependencies(localLibrary("../lib/junit-3.8.2.jar"));
         useProperties("module");
 

@@ -20,16 +20,16 @@ package apb.tasks;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import apb.Apb;
-import apb.Environment;
 
 import apb.metadata.ResourcesInfo;
 
 import apb.utils.FileUtils;
+import apb.utils.Filter;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -46,6 +46,10 @@ public class FilterTask
 {
     //~ Instance fields ......................................................................................
 
+    @NotNull private final List<Filter> filters;
+    @NotNull private final List<String> linesToAppend;
+    @NotNull private final List<String> linesToInsert;
+
     @NotNull private String encoding = ResourcesInfo.DEFAULT_ENCODING;
 
     //~ Constructors .........................................................................................
@@ -54,9 +58,15 @@ public class FilterTask
     {
         super(from, to);
 
-        for (FileSet fileSet : from) {
-            fileSet.excluding(ResourcesInfo.DEFAULT_DO_NOT_FILTER);
+        if (singleSource == null) {
+            for (FileSet fileSet : from) {
+                fileSet.excluding(ResourcesInfo.DEFAULT_DO_NOT_FILTER);
+            }
         }
+
+        filters = new ArrayList<Filter>();
+        linesToInsert = new ArrayList<String>();
+        linesToAppend = new ArrayList<String>();
     }
 
     //~ Methods ..............................................................................................
@@ -66,19 +76,69 @@ public class FilterTask
      * If none is specfied UTF8 will be used
      * @param enc The encoding to be used
      */
-    @NotNull public CopyTask withEncoding(@NotNull String enc)
+    @NotNull public FilterTask withEncoding(@NotNull String enc)
     {
         encoding = enc;
+        return this;
+    }
+
+    /**
+    * When filtering replaces each substring of the input that matches the given <a
+    * href="../util/regex/Pattern.html#sum">regular expression</a> with the
+    * given replacement.
+    *
+    * @param   regex
+    *          the regular expression to which this string is to be matched
+    *
+    * @throws java.util.regex.PatternSyntaxException
+    *          if the regular expression's syntax is invalid
+    *
+    * @see java.util.regex.Pattern
+    */
+    @NotNull public FilterTask replacing(@NotNull String regex, @NotNull String replacement)
+    {
+        filters.add(Filter.Factory.replaceAll(regex, replacement));
+        return this;
+    }
+
+    /**
+     * Define a line to be inserted at the top of the new File
+     * @param line The line to be inserted at the top of the new File
+     */
+    public FilterTask insertingLine(@NotNull String line)
+    {
+        linesToInsert.add(line);
+        return this;
+    }
+
+    /**
+     * Define a line to be appended at the end of the new File
+     * @param line The line to be appended at the end of the new File
+     */
+    public FilterTask appendingLine(@NotNull String line)
+    {
+        linesToAppend.add(line);
         return this;
     }
 
     @Override protected void doCopyFile(File source, File dest)
         throws IOException
     {
-        logVerbose("Filtering %s\n", source);
-        logVerbose("       to %s\n", dest);
-        final FileUtils.Filter f = new PropertyFilter(env);
-        FileUtils.copyFileFiltering(source, dest, false, encoding, Collections.singletonList(f));
+        // By default filter expanding properties
+        if (filters.isEmpty()) {
+            filters.add(Filter.Factory.expandProperties(env));
+        }
+
+        if (isVerbose()) {
+            logVerbose("Filtering %s\n", source);
+            logVerbose("       to %s\n", dest);
+
+            for (Filter filter : filters) {
+                logVerbose("%s\n", filter);
+            }
+        }
+
+        FileUtils.copyFileFiltering(source, dest, false, encoding, filters, linesToInsert, linesToAppend);
     }
 
     //~ Inner Classes ........................................................................................
@@ -121,22 +181,6 @@ public class FilterTask
         @NotNull public FilterTask to(@NotNull File to)
         {
             return new FilterTask(from, to);
-        }
-    }
-
-    private static class PropertyFilter
-        implements FileUtils.Filter
-    {
-        private final Environment env;
-
-        public PropertyFilter(Environment env)
-        {
-            this.env = env;
-        }
-
-        public String filter(String str)
-        {
-            return env.expand(str);
         }
     }
 }

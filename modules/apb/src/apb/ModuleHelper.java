@@ -109,7 +109,7 @@ public class ModuleHelper
      * Get current module source directory
      * @return current module source directory
      */
-    @NotNull public File getSource()
+    @NotNull public File getSourceDir()
     {
         if (source == null) {
             source = fileFromBase(getModule().source);
@@ -303,7 +303,7 @@ public class ModuleHelper
     {
         List<File> sourceDirs = new ArrayList<File>();
 
-        sourceDirs.add(getSource());
+        sourceDirs.add(getSourceDir());
         sourceDirs.add(getGeneratedSource());
         return sourceDirs;
     }
@@ -414,7 +414,7 @@ public class ModuleHelper
 
             // generate sources jar
             if (packageInfo.generateSourcesJar) {
-                jar(getSourcePackageFile()).fromDir(getSource())  //
+                jar(getSourcePackageFile()).fromDir(getSourceDir())  //
                                            .excluding(FileUtils.DEFAULT_EXCLUDES)  //
                                            .execute();
             }
@@ -532,7 +532,7 @@ public class ModuleHelper
     {
         List<FileSet> fileSets = new ArrayList<FileSet>();
 
-        fileSets.add(FileSet.fromDir(getSource()).including(info.includes()).excluding(info.excludes()));
+        fileSets.add(FileSet.fromDir(getSourceDir()).including(info.includes()).excluding(info.excludes()));
 
         if (getGeneratedSource().exists()) {
             fileSets.add(FileSet.fromDir(getGeneratedSource()));

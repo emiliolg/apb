@@ -206,7 +206,7 @@ public abstract class DefaultEnvironment
     public final void abort(String msg)
     {
         logInfo(msg);
-        System.exit(1);
+        Apb.exit(1);
     }
 
     /**
@@ -300,7 +300,7 @@ public abstract class DefaultEnvironment
     @NotNull public final File fileFromSource(@NotNull String name)
     {
         final File child = new File(expand(name));
-        return child.isAbsolute() ? child : new File(getModuleHelper().getSource(), child.getPath());
+        return child.isAbsolute() ? child : new File(getModuleHelper().getSourceDir(), child.getPath());
     }
 
     /**

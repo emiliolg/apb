@@ -37,45 +37,34 @@ public class TestTest
     public void testCompile()
         throws DefinitionException
     {
-        final File classFile = new File(tmpdir, "output/classes/math/Fraction.class").getAbsoluteFile();
-        final File testClassFile =
-            new File(tmpdir, "output/classes/math/test/FractionTest.class").getAbsoluteFile();
-
         build("Math", "compile-tests");
         checkOutput(COMPILING_1_FILE,  //
                     COMPILING_1_FILE);
-        FileAssert.assertExists(classFile);
-        FileAssert.assertExists(testClassFile);
+        FileAssert.assertExists(fractionClass);
+        FileAssert.assertExists(fractionTestClass);
 
         build("Math", "compile-tests");
         checkOutput();
 
         build("Math", "clean");
-        checkOutput(DELETING_DIRECTORY + classFile.getParentFile().getParent(),  //
-                    DELETING_DIRECTORY + classFile.getParent(),  //
-                    DELETING_DIRECTORY + testClassFile.getParent(),  //
-                    DELETING_DIRECTORY + new File(tmpdir, "output/reports").getAbsolutePath(),  //
-                    DELETING_DIRECTORY + new File(tmpdir, "output/coverage").getAbsolutePath());
+        checkOutput(DELETING_DIRECTORY + mathClasses,  //
+                    DELETING_DIRECTORY + testMathClasses);
 
-        FileAssert.assertDoesNotExist(classFile);
-        FileAssert.assertDoesNotExist(testClassFile);
+        FileAssert.assertDoesNotExist(fractionClass);
+        FileAssert.assertDoesNotExist(fractionTestClass);
     }
 
     public void testRun()
         throws DefinitionException
     {
-        final File   classFile = new File(tmpdir, "output/classes/math/Fraction.class").getAbsoluteFile();
-        final File   testClassFile =
-            new File(tmpdir, "output/classes/math/test/FractionTest.class").getAbsoluteFile();
-        final File   jarFile = new File(tmpdir, "output/lib/tests-math-1.0.jar").getAbsoluteFile();
-        final File   coverageDir = new File(tmpdir, "output/coverage");
+        final File   coverageDir = new File(testOutputDir, "coverage");
         final File   coverageHtml = new File(coverageDir, "coverage.html");
-        final String reportDir = new File(tmpdir, "output/reports").getAbsolutePath();
+        final String reportDir = new File(testOutputDir, "reports").getPath();
 
         build("Math", "run-tests");
         checkOutput(COMPILING_1_FILE,  //
                     COMPILING_1_FILE,  //
-                    BUILDING + jarFile.getPath(),  //
+                    BUILDING + mathJar.getPath(),  //
                     SUITE_1_1_RUN,  //
                     SEPAR,  //
                     TEST_DIVIDE_FAILED1, TEST_DIVIDE_FAILED2, TEST_DIVIDE_FAILED3,  //
@@ -91,20 +80,17 @@ public class TestTest
                     SOME_TESTS_HAVE_FAILED,  //
                     CHECK + reportDir);
 
-        FileAssert.assertExists(classFile);
-        FileAssert.assertExists(testClassFile);
+        FileAssert.assertExists(fractionClass);
+        FileAssert.assertExists(fractionTestClass);
         FileAssert.assertExists(coverageHtml);
 
         build("Math", "clean");
-        checkOutput(DELETING_DIRECTORY + classFile.getParentFile().getParent(),  //
-                    DELETING_DIRECTORY + classFile.getParent(),  //
-                    DELETING_DIRECTORY + testClassFile.getParent(),  //
-                    DELETING_FILE + jarFile.getPath(),  //
-                    DELETING_DIRECTORY + reportDir,  //
-                    DELETING_DIRECTORY + coverageDir.getAbsolutePath());
+        checkOutput(DELETING_DIRECTORY + mathClasses,  //
+                    DELETING_FILE + mathJar.getPath(),  //
+                    DELETING_DIRECTORY + testMathClasses);
 
-        FileAssert.assertDoesNotExist(classFile);
-        FileAssert.assertDoesNotExist(testClassFile);
+        FileAssert.assertDoesNotExist(fractionClass);
+        FileAssert.assertDoesNotExist(fractionTestClass);
         FileAssert.assertDoesNotExist(coverageHtml);
         FileAssert.assertDoesNotExist(coverageDir);
     }

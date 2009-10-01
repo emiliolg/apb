@@ -69,6 +69,7 @@ public class DeleteTask
             boolean ok = true;
 
             if (f.isDirectory()) {
+                env.logInfo("Deleting directory %s\n", f.getAbsolutePath());
                 ok = removeDir(f);
             }
             else if (f.isFile()) {
@@ -93,8 +94,6 @@ public class DeleteTask
             return true;
         }
 
-        env.logInfo("Deleting directory %s\n", d.getAbsolutePath());
-
         String[] list = d.list();
 
         if (list == null) {
@@ -105,6 +104,7 @@ public class DeleteTask
             File f = new File(d, s);
 
             if (f.isDirectory()) {
+                logVerbose("Deleting directory %s\n", f.getAbsolutePath());
                 removeDir(f);
             }
             else {

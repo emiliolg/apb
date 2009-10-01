@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 
+import apb.tasks.CoreTasks;
+
 import apb.tests.testutils.FileAssert;
 
 import apb.utils.FileUtils;
@@ -189,6 +191,20 @@ public class FileTest
     {
         createFiles();
         assertTrue(FileUtils.equalsContent(new File(dir1, "a.java"), new File(dir2, "A.java")));
+    }
+
+    public void testTopSingleDirectory()
+        throws IOException
+    {
+        createFiles();
+        File base = basedir.getAbsoluteFile();
+        File classes = new File(base.getParentFile(), "classes");
+        assertEquals("apb/tests", FileUtils.topSingleDirectory(classes));
+        assertEquals("", FileUtils.topSingleDirectory(base));
+
+        CoreTasks.delete(dir2).execute();
+
+        assertEquals("dir1", FileUtils.topSingleDirectory(base));
     }
 
     void createFiles()

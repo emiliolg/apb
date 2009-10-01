@@ -18,12 +18,11 @@
 
 
 import apb.metadata.BuildTarget;
-import apb.metadata.Module;
 
 import static apb.tasks.CoreTasks.printf;
 
 public class HelloWorld
-    extends Module
+    extends base.BaseModule
 {
     //~ Methods ..............................................................................................
 
@@ -42,8 +41,7 @@ public class HelloWorld
         printf("Good Bye World !\n");
     }
 
-    @BuildTarget
-    public void hellowho()
+    @BuildTarget public void hellowho()
     {
         printf("Hello $who !\n");
     }

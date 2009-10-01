@@ -118,11 +118,14 @@ public class ProjectBuilder
 
     public static void forward(@NotNull String command, Iterable<? extends Module> modules)
     {
-        final ProjectBuilder pb = getInstance();
-
         for (Module module : modules) {
-            pb.build(module.getHelper(), command);
+            forward(command, module.getHelper());
         }
+    }
+
+    public static void forward(@NotNull String command, @NotNull ModuleHelper module)
+    {
+        getInstance().build(module, command);
     }
 
     // @Todo create an accesor
@@ -365,6 +368,7 @@ public class ProjectBuilder
         }
 
         contextStack.removeLast();
+        currentName = contextStack.isEmpty() ? "" : contextStack.getLast().element;
     }
 
     @NotNull private File projectDir(File projectElementFile)

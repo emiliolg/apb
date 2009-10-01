@@ -49,10 +49,11 @@ import apb.Messages;
 
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
-import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.utils.StringUtils.isNotEmpty;
 //
 // User: emilio
 // Date: Sep 9, 2008
@@ -64,16 +65,16 @@ public class JarTask
 {
     //~ Instance fields ......................................................................................
 
-    private String comment;
-
-    private final boolean               doCompress = true;
-    @NotNull private final List<String> excludes, includes;
-    private final File                  jarFile;
+    private final boolean doCompress = true;
+    private final File    jarFile;
 
     private final int                         level = Deflater.DEFAULT_COMPRESSION;
+    @NotNull private final List<String>       excludes, includes;
+    private final List<File>                  sourceDir;
     @NotNull private Manifest                 manifest;
     @NotNull private Map<String, Set<String>> services;
-    private final List<File>                  sourceDir;
+
+    private String comment;
 
     //~ Constructors .........................................................................................
 
@@ -101,7 +102,7 @@ public class JarTask
 
     public JarTask mainClass(String className)
     {
-        if (StringUtils.isNotEmpty(className)) {
+        if (isNotEmpty(className)) {
             setManifestAttribute(Attributes.Name.MAIN_CLASS, className);
         }
 

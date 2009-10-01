@@ -38,7 +38,6 @@ import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
-import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 
@@ -92,32 +91,6 @@ public class InMemJavaC
     }
 
     //~ Methods ..............................................................................................
-
-    /**
-     * Compile the file and invoke the main method of the compiled class
-     * Mainly a test method.
-     */
-    public static void main(String[] args)
-        throws ClassNotFoundException, MalformedURLException
-    {
-        if (args.length < 1) {
-            System.err.println("Usage: InMemJavac file arguments...");
-            System.exit(0);
-        }
-
-        File source = new File(args[0]);
-
-        if (!source.exists()) {
-            System.err.println("Can't open: " + args[0]);
-            System.exit(0);
-        }
-
-        System.arraycopy(args, 1, args, 0, args.length - 1);
-
-        InMemJavaC javac = new InMemJavaC(Apb.createBaseEnvironment());
-
-        invokeMain(javac.compileToClass(null, source), args);
-    }
 
     @Nullable public File sourceFile(@NotNull Class clazz)
     {

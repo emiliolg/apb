@@ -18,8 +18,6 @@
 
 package apb.tests.build;
 
-import java.io.File;
-
 import apb.DefinitionException;
 
 import apb.tests.testutils.FileAssert;
@@ -37,49 +35,37 @@ public class MathTest
     public void testMath()
         throws DefinitionException
     {
-        final File jarFile = new File(tmpdir, "output/lib/tests-math-1.0.jar").getAbsoluteFile();
-        final File classFile = new File(tmpdir, "output/classes/math/Fraction.class").getAbsoluteFile();
-
         build("Math", "package");
         checkOutput(COMPILING_1_FILE,  //
-                    BUILDING + jarFile.getPath());
+                    BUILDING + mathJar.getPath());
 
-        FileAssert.assertExists(jarFile);
-        FileAssert.assertExists(classFile);
+        FileAssert.assertExists(mathJar);
+        FileAssert.assertExists(fractionClass);
 
         build("Math", "package");
         checkOutput();
 
         build("Math", "clean");
-        checkOutput(DELETING_DIRECTORY + classFile.getParentFile().getParent(),  //
-                    DELETING_DIRECTORY + classFile.getParent(),  //
-                    DELETING_FILE + jarFile.getPath(),  //
-                    DELETING_DIRECTORY + new File(tmpdir, "output/reports").getAbsolutePath(),  //
-                    DELETING_DIRECTORY + new File(tmpdir, "output/coverage").getAbsolutePath());
+        checkOutput(DELETING_DIRECTORY + mathClasses,  //
+                    DELETING_FILE + mathJar.getPath());
 
-        FileAssert.assertDoesNotExist(jarFile);
-        FileAssert.assertDoesNotExist(classFile);
+        FileAssert.assertDoesNotExist(mathJar);
+        FileAssert.assertDoesNotExist(fractionClass);
     }
 
     public void testPlay()
         throws DefinitionException
     {
-        final File jarFile1 = new File(tmpdir, "output/lib/tests-math-1.0.jar").getAbsoluteFile();
-        final File jarFile2 = new File(tmpdir, "output/lib/tests-play-with-math-1.0.jar").getAbsoluteFile();
-        final File srcJarFile =
-            new File(tmpdir, "output/lib/tests-play-with-math-1.0-src.jar").getAbsoluteFile();
-        final File classFile = new File(tmpdir, "output/classes/Play.class").getAbsoluteFile();
-
         build("PlayWithMath", "package");
         checkOutput(COMPILING_1_FILE,  //
-                    BUILDING + jarFile1.getPath(),  //
+                    BUILDING + mathJar.getPath(),  //
                     COMPILING_1_FILE,  //
-                    BUILDING + jarFile2.getPath(),  //
-                    BUILDING + srcJarFile.getPath());
+                    BUILDING + playJar.getPath(),  //
+                    BUILDING + playSrcJar.getPath());
 
-        FileAssert.assertExists(jarFile1);
-        FileAssert.assertExists(jarFile2);
-        FileAssert.assertExists(srcJarFile);
-        FileAssert.assertExists(classFile);
+        FileAssert.assertExists(mathJar);
+        FileAssert.assertExists(playJar);
+        FileAssert.assertExists(playSrcJar);
+        FileAssert.assertExists(playClass);
     }
 }

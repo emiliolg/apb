@@ -16,19 +16,27 @@
 //
 
 
+package base;
 
-public class PlayWithMath
-    extends base.BaseModule
+import apb.idegen.IdeaInfo;
+
+import apb.metadata.BuildProperty;
+import apb.metadata.TestModule;
+
+public abstract class BaseTestModule
+    extends TestModule
 {
+    //~ Instance fields ......................................................................................
+
+    @BuildProperty IdeaInfo idegen = new IdeaInfo();
+
     //~ Instance initializers ................................................................................
 
     {
-        dependencies(new Math());
-
-        pkg.dir = "$tmpdir/output/lib";
-        pkg.mainClass = "Play";
-        pkg.addClassPath = true;
-        pkg.generateSourcesJar = true;
-        compiler.validateDependencies = true;
+        outputBase = "$tmpdir/output/$moduledir";
+        group = "tests";
+        version = "1.0";
+        idegen.jdkName = "1.6";
+        idegen.dir = "$tmpdir/IDEA";
     }
 }

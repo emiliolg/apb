@@ -18,7 +18,12 @@
 
 package apb.idegen;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import apb.metadata.BuildProperty;
+
+import static java.util.Arrays.asList;
 //
 // User: emilio
 // Date: Sep 10, 2009
@@ -30,15 +35,15 @@ public class IdeaInfo
     //~ Instance fields ......................................................................................
 
     /**
-     * The directory where the idea '.iml' & 'ipr' files are going to be placed
-     */
-    @BuildProperty public String dir = "$basedir/IDEA";
-
-    /**
      * Wheter to include empty source directories (like generated sources)
      * in the idea definitions
      */
     @BuildProperty public boolean includeEmptyDirs = false;
+
+    /**
+     * The directory where the idea '.iml' & 'ipr' files are going to be placed
+     */
+    @BuildProperty public String dir = "$basedir/IDEA";
 
     /**
      * The name of the jdk to use
@@ -56,4 +61,21 @@ public class IdeaInfo
      * If empty it will take the one in apb.jar
      */
     @BuildProperty public String projectTemplate = "";
+
+    /**
+     * Additional content directories
+     */
+    private final List<String> contentDirs = new ArrayList<String>();
+
+    //~ Methods ..............................................................................................
+
+    public void contentDirs(String... dirs)
+    {
+        contentDirs.addAll(asList(dirs));
+    }
+
+    public List<String> contentDirs()
+    {
+        return contentDirs;
+    }
 }

@@ -16,19 +16,11 @@
 //
 
 
+package submod.mod;
 
-public class PlayWithMath
-    extends base.BaseModule
+public class TestFile
 {
-    //~ Instance initializers ................................................................................
+    //~ Constructors .........................................................................................
 
-    {
-        dependencies(new Math());
-
-        pkg.dir = "$tmpdir/output/lib";
-        pkg.mainClass = "Play";
-        pkg.addClassPath = true;
-        pkg.generateSourcesJar = true;
-        compiler.validateDependencies = true;
-    }
+    public TestFile() {}
 }

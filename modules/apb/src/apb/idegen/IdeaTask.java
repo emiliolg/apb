@@ -49,6 +49,7 @@ import apb.utils.XmlUtils;
 
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -246,25 +247,29 @@ public class IdeaTask
             return result;
         }
 
-        private static List<Library> librariesForDef(Environment env, File jarFile)
+        private static List<Library> librariesForDef(@NotNull Environment env, @Nullable File jarFile)
             throws IOException
         {
-            List<Library>      libraries = new ArrayList<Library>();
-            final String       path = jarFile.getPath();
-            File               srcFile =
-                new File(path.substring(0, path.length() - 4) + ModuleHelper.SRC_JAR);
-            final File         base = env.getBaseDir();
-            final LocalLibrary library = new LocalLibrary(makePath(base, jarFile), false);
-
-            if (srcFile.exists()) {
-                library.setSources(makePath(base, srcFile));
-            }
+            List<Library> libraries = new ArrayList<Library>();
+            final File    base = env.getBaseDir();
 
             for (File f : env.getExtClassPath()) {
                 libraries.add(new LocalLibrary(makePath(base, f), false));
             }
 
-            libraries.add(library);
+            if (jarFile != null) {
+                final String       path = jarFile.getPath();
+                File               srcFile =
+                    new File(path.substring(0, path.length() - 4) + ModuleHelper.SRC_JAR);
+                final LocalLibrary library = new LocalLibrary(makePath(base, jarFile), false);
+
+                if (srcFile.exists()) {
+                    library.setSources(makePath(base, srcFile));
+                }
+
+                libraries.add(library);
+            }
+
             return libraries;
         }
 
@@ -322,10 +327,21 @@ public class IdeaTask
                                                       final String moduleId)
         {
             try {
-                final Iterable<Library> libraries = librariesForDef(env, Apb.applicationJarFile());
-                final Module            task = new IdeaTask.Module(moduleId, modulesHome);
+                File     apbJarFile = null;
+                String[] mods = new String[0];
+
+                if (modules.contains(APB_MODULE)) {
+                    mods = new String[] { APB_MODULE };
+                }
+                else {
+                    apbJarFile = Apb.applicationJarFile();
+                }
+
+                final Module task = new IdeaTask.Module(moduleId, modulesHome);
+
                 task.usingSources(java.util.Collections.singletonList(defDir))  //
-                    .usingLibraries(libraries)  //
+                    .usingLibraries(librariesForDef(env, apbJarFile))  //
+                    .usingModules(mods)  //
                     .excluding("file://$MODULE_DIR$/")  //
                     .execute();
                 addModuleToProject(moduleId, modulesElement, EMPTY_STRING_SET);
@@ -385,6 +401,8 @@ public class IdeaTask
             component.setAttribute("jdk-15", String.valueOf(jdk_15));
             component.setAttribute("assert-keyword", String.valueOf(assertKeyword));
         }
+
+        private static final String APB_MODULE = "apb";
     }
 
     /**
@@ -427,6 +445,14 @@ public class IdeaTask
                             addExcludeFolders(content);
 
                             addSourceFolder(content, source);
+                        }
+                    }
+
+                    for (String c : contentDirs) {
+                        File contentDir = env.fileFromBase(c);
+
+                        if (contentDir.exists() || includeEmptyDirs) {
+                            findContent(component, URL_ATTRIBUTE, relativeUrl("file", contentDir));
                         }
                     }
 

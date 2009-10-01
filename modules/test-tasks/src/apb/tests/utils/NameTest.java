@@ -18,6 +18,7 @@
 
 package apb.tests.utils;
 
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -37,8 +38,14 @@ public class NameTest
 
     public void testDirFromId()
     {
-        String str = NameUtils.dirFromId("a-b.c.d");
-        assertEquals("a-b/c/d", str);
+        final String id = "a-b.c.d";
+        final String dir = "a-b/c/d";
+
+        String str = NameUtils.dirFromId(id);
+        assertEquals(dir, str);
+
+        str = NameUtils.idFromDir(dir);
+        assertEquals(id, str);
     }
 
     public void testName()
@@ -51,6 +58,69 @@ public class NameTest
         str = NameUtils.name(v.getClass());
 
         assertEquals("java.lang.String[]", str);
+
+        str = NameUtils.name(Map.Entry.class);
+
+        assertEquals("java.util.Map.Entry", str);
+    }
+
+    public void testPackageName()
+    {
+        String str = NameUtils.packageName(String.class);
+        assertEquals("java.lang", str);
+
+        String[] v = { "a", "b" };
+
+        str = NameUtils.packageName(v.getClass());
+
+        assertEquals("java.lang", str);
+
+        str = NameUtils.packageName(Map.Entry.class);
+
+        assertEquals("java.util", str);
+    }
+
+    public void testSimpleName()
+    {
+        String str = NameUtils.simpleName(String.class);
+        assertEquals("String", str);
+
+        String[] v = { "a", "b" };
+
+        str = NameUtils.simpleName(v.getClass());
+
+        assertEquals("String[]", str);
+
+        str = NameUtils.simpleName(Map.Entry.class);
+
+        assertEquals("Entry", str);
+    }
+
+    public void testValidName()
+    {
+        String str = "java.lang.String";
+        assertValid(str, NameUtils.isValidQualifiedClassName(str));
+        assertInvalid(str, NameUtils.isValidSimpleClassName(str));
+        assertInvalid(str, NameUtils.isValidPackageName(str));
+        assertInvalid(str, NameUtils.isValidJavaId(str));
+
+        str = "String";
+        assertValid(str, NameUtils.isValidQualifiedClassName(str));
+        assertValid(str, NameUtils.isValidSimpleClassName(str));
+        assertInvalid(str, NameUtils.isValidPackageName(str));
+        assertValid(str, NameUtils.isValidJavaId(str));
+
+        str = "S tring";
+        assertInvalid(str, NameUtils.isValidQualifiedClassName(str));
+        assertInvalid(str, NameUtils.isValidSimpleClassName(str));
+        assertInvalid(str, NameUtils.isValidPackageName(str));
+        assertInvalid(str, NameUtils.isValidJavaId(str));
+
+        str = "string";
+        assertInvalid(str, NameUtils.isValidQualifiedClassName(str));
+        assertInvalid(str, NameUtils.isValidSimpleClassName(str));
+        assertValid(str, NameUtils.isValidPackageName(str));
+        assertValid(str, NameUtils.isValidJavaId(str));
     }
 
     public void testIdFromClass()
@@ -70,7 +140,7 @@ public class NameTest
 
         str = NameUtils.idFromClass(AClassWith$And_Inside.class);
 
-        assertEquals("apb.tests.utils.name-test.aclass-with.and-inside", str);
+        assertEquals("apb.tests.utils.name-test.aclass-with-and-inside", str);
     }
 
     public void testIdFromMember()
@@ -80,6 +150,16 @@ public class NameTest
         assertEquals("case-insensitive-order", str);
         str = NameUtils.idFromMember(String.class.getMethod("charAt", Integer.TYPE));
         assertEquals("char-at", str);
+    }
+
+    private void assertValid(String str, boolean condition)
+    {
+        assertTrue("Valid " + str, condition);
+    }
+
+    private void assertInvalid(String str, boolean condition)
+    {
+        assertFalse("Invalid " + str, condition);
     }
 
     //~ Inner Classes ........................................................................................

@@ -16,19 +16,19 @@
 //
 
 
+package submod;
 
-public class PlayWithMath
-    extends base.BaseModule
+import apb.metadata.Module;
+
+public class Mod
+    extends Module
 {
     //~ Instance initializers ................................................................................
 
     {
-        dependencies(new Math());
-
+        outputBase = "$tmpdir/output";
+        group = "submod";
+        version = "1.0";
         pkg.dir = "$tmpdir/output/lib";
-        pkg.mainClass = "Play";
-        pkg.addClassPath = true;
-        pkg.generateSourcesJar = true;
-        compiler.validateDependencies = true;
     }
 }
