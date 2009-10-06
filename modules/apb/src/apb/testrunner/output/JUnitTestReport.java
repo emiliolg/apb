@@ -47,7 +47,7 @@ public class JUnitTestReport
 {
     //~ Constructors .........................................................................................
 
-    private JUnitTestReport(boolean showOutput, @NotNull String prefix)
+    protected JUnitTestReport(boolean showOutput, @NotNull String prefix)
     {
         super(showOutput, prefix);
     }
