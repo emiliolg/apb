@@ -21,7 +21,9 @@ package apb.tests.utils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 import apb.tasks.CoreTasks;
 
@@ -139,23 +141,23 @@ public class FileTest
     {
         long ts = System.currentTimeMillis() - 10000;
         createFiles();
-        Collection<File> collection = FileUtils.listDirsWithFiles(basedir, "txt");
+        Collection<File> collection = sort(FileUtils.listDirsWithFiles(basedir, "txt"));
         assertEquals("[tmp/dir1]", collection.toString());
-        collection = FileUtils.listDirsWithFiles(basedir, "java");
+        collection = sort(FileUtils.listDirsWithFiles(basedir, "java"));
         assertEquals("[tmp/dir1, tmp/dir2]", collection.toString());
 
-        collection = FileUtils.listAllFilesWithExt(basedir, "java");
+        collection = sort(FileUtils.listAllFilesWithExt(basedir, "java"));
 
         assertEquals(ALL_JAVA, collection.toString());
 
-        collection = FileUtils.listAllFilesWithExt(asList(dir1, dir2), "java");
+        collection = sort(FileUtils.listAllFilesWithExt(asList(dir1, dir2), "java"));
 
         assertEquals(ALL_JAVA, collection.toString());
 
-        collection = FileUtils.listJavaSources(asList(dir1, dir2));
-        assertEquals("[A.java, B.java, C.java, A.java, B.java, C.java]", collection.toString());
+        collection = sort(FileUtils.listJavaSources(asList(dir1, dir2)));
+        assertEquals("[A.java, A.java, B.java, B.java, C.java, C.java]", collection.toString());
 
-        collection = FileUtils.listAllFiles(dir1);
+        collection = sort(FileUtils.listAllFiles(dir1));
 
         assertEquals(ALL_DIR1, collection.toString());
 
@@ -223,6 +225,13 @@ public class FileTest
         addFiles(dir2, "A.java", "B.java", "C.java");
     }
 
+    private Collection<File> sort(Collection<File> files)
+    {
+        ArrayList<File> result = new ArrayList<File>(files);
+        Collections.sort(result, FileUtils.FILE_COMPARATOR);
+        return result;
+    }
+
     private void addFiles(File dir, String... files)
         throws IOException
     {
@@ -241,7 +250,7 @@ public class FileTest
     //~ Static fields/initializers ...........................................................................
 
     private static final String ALL_DIR1 =
-        "[tmp/dir1/A.java, tmp/dir1/a.txt, tmp/dir1/B.java, tmp/dir1/b.txt, tmp/dir1/C.java]";
+        "[tmp/dir1/A.java, tmp/dir1/B.java, tmp/dir1/C.java, tmp/dir1/a.txt, tmp/dir1/b.txt]";
 
     private static final String ALL_JAVA =
         "[tmp/dir1/A.java, tmp/dir1/B.java, tmp/dir1/C.java, tmp/dir2/A.java, tmp/dir2/B.java, tmp/dir2/C.java]";

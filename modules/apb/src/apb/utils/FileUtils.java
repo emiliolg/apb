@@ -40,6 +40,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -885,6 +886,20 @@ public class FileUtils
     }
 
     //~ Static fields/initializers ...........................................................................
+
+    public static final Comparator<File> FILE_COMPARATOR =
+        new Comparator<File>() {
+            @Override public int compare(File o1, File o2)
+            {
+                return o1 == o2
+                       ? 0
+                       : o1 == null
+                         ? -1
+                         : o2 == null ? 1  //
+                                      : o1.equals(o2) ? 0  //
+                                                      : o1.getPath().compareTo(o2.getPath());
+            }
+        };
 
     public static final String APB_PROPERTIES = "apb.properties";
 
