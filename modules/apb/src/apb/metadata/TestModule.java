@@ -177,6 +177,11 @@ public class TestModule
      */
     private List<String> useProperties = new ArrayList<String>();
 
+    /**
+     * Indicates whether deep classpath is used for running tests
+     */
+    public boolean useDeepClasspath = true;
+
     //~ Methods ..............................................................................................
 
     public List<String> includes()

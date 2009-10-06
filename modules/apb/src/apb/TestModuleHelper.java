@@ -142,6 +142,17 @@ public class TestModuleHelper
         return m.testType.creatorClass(m.customCreator);
     }
 
+    public boolean useDeepClasspath() {
+        return getModule().useDeepClasspath;
+    }
+
+    /**
+     * @return direct runtime dependencies
+     */
+    public List<File> testRuntimeClasspath(){
+        return classPath(true, true, false);
+    }
+
     void activate(@NotNull ProjectElement activatedTestModule)
     {
         super.activate(activatedTestModule);

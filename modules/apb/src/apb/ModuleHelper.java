@@ -304,7 +304,7 @@ public class ModuleHelper
         return s.substring(s.charAt(0) == '-' ? 1 : 0, s.charAt(l - 1) == '-' ? l - 1 : l);
     }
 
-    private List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
+    protected List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
     {
         List<File> result = new ArrayList<File>();
 

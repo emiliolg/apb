@@ -147,7 +147,7 @@ public class TestTask
         super(env);
         report = new SimpleReport(true, true);
         moduleHelper = env.getTestModuleHelper();
-        classPath = moduleHelper.deepClassPath(true, false);
+        classPath = moduleHelper.useDeepClasspath() ? moduleHelper.deepClassPath(true, false) : moduleHelper.testRuntimeClasspath();
 
         classesToTest = moduleHelper.getClassesToTest();
         classPath.removeAll(classesToTest);
