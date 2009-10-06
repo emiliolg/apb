@@ -20,6 +20,7 @@ package apb.ant;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,8 +46,8 @@ public class ApbTask
 
     private boolean recurse;
 
-    @NotNull private final Environment env;
-    private Map<String, String>        properties;
+    @NotNull private final Environment         env;
+    @NotNull private final Map<String, String> properties;
 
     @NotNull private String command = Command.DEFAULT_COMMAND;
     private String          defdir;
@@ -56,6 +57,7 @@ public class ApbTask
 
     public ApbTask()
     {
+        properties = new HashMap<String, String>();
         env = Apb.createBaseEnvironment(new AntLogger(this), properties);
         recurse = true;
     }
@@ -123,7 +125,7 @@ public class ApbTask
         return defdir;
     }
 
-    public Map<String, String> getProperties()
+    @NotNull public Map<String, String> getProperties()
     {
         return properties;
     }
