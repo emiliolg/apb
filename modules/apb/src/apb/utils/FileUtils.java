@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 package apb.utils;
 
@@ -58,6 +56,10 @@ import org.jetbrains.annotations.NotNull;
 //
 public class FileUtils
 {
+    //~ Constructors .........................................................................................
+
+    private FileUtils() {}
+
     //~ Methods ..............................................................................................
 
     public static Set<File> listDirsWithFiles(@NotNull File dir, @NotNull String ext)
@@ -195,7 +197,7 @@ public class FileUtils
 
     public static String makePath(Collection<File> files)
     {
-        return makePath(files, File.pathSeparator);
+        return makePath(unique(files), File.pathSeparator);
     }
 
     public static String makePath(Collection<File> files, String pathSeparator)
@@ -383,17 +385,21 @@ public class FileUtils
     public static FileOutputStream createOutputStream(File file, boolean append)
         throws FileNotFoundException
     {
-        if (!append && file.exists() && !file.canWrite() && !file.delete()) {
-            throw new BuildException("Can not recreate: '" + file + "'.");
-        }
-
         final File parentFile = file.getParentFile();
 
-        if (!parentFile.exists()) {
-            parentFile.mkdirs();
-        }
+        parentFile.mkdirs();
 
-        return new FileOutputStream(file, append);
+        try {
+            return new FileOutputStream(file, append);
+        }
+        catch (FileNotFoundException e) {
+            if (!append && file.exists() && !file.canWrite() && !file.delete()) {
+                final BuildException be = new BuildException("Can not recreate: '" + file + "'.");
+                be.initCause(e);
+            }
+
+            throw e;
+        }
     }
 
     /**
@@ -407,9 +413,7 @@ public class FileUtils
     {
         final File parentFile = file.getParentFile();
 
-        if (!parentFile.exists()) {
-            parentFile.mkdirs();
-        }
+        parentFile.mkdirs();
 
         return new FileWriter(file);
     }
@@ -438,12 +442,13 @@ public class FileUtils
     public static void validateDirectory(File dir)
     {
         if (!dir.isDirectory()) {
-            if (dir.exists()) {
-                throw new BuildException(dir + " is not a directory.");
-            }
-
             if (!dir.mkdirs()) {
-                throw new BuildException("Cannot create directory: " + dir);
+                if (dir.exists()) {
+                    throw new BuildException(dir + " is not a directory.");
+                }
+                else {
+                    throw new BuildException("Cannot create directory: " + dir);
+                }
             }
         }
     }
@@ -490,15 +495,15 @@ public class FileUtils
     @NotNull public static URL[] toURLArray(@NotNull Iterable<File> urls)
         throws MalformedURLException
     {
-        Set<URL> result = new HashSet<URL>();
+        final Set<File> set = new HashSet<File>();
 
         for (File url : urls) {
             if (url != null) {
-                result.add(new URL(url.toURI().toASCIIString()));
+                set.add(normalizeFile(url));
             }
         }
 
-        return result.toArray(new URL[result.size()]);
+        return toUrl(set);
     }
 
     public static PrintStream nullOutputStream()
@@ -597,9 +602,9 @@ public class FileUtils
     public static URL[] toUrl(Collection<File> cp)
         throws MalformedURLException
     {
-        URL[] urls = new URL[cp.size()];
-        int   i = 0;
+        final URL[] urls = new URL[cp.size()];
 
+        int i = 0;
         for (File file : cp) {
             urls[i++] = file.toURI().toURL();
         }
@@ -634,6 +639,20 @@ public class FileUtils
         throws IOException
     {
         return !file.getAbsolutePath().equals(file.getCanonicalPath());
+    }
+
+    private static List<File> unique(Collection<File> files)
+    {
+        final Set<File>  sets = new HashSet<File>(files.size());
+        final List<File> result = new ArrayList<File>(files.size());
+
+        for (File file : files) {
+            if (sets.add(file)) {
+                result.add(file);
+            }
+        }
+
+        return result;
     }
 
     private static boolean alreadyProcesses(File f, Set<File> files)
@@ -745,7 +764,7 @@ public class FileUtils
 
     //~ Inner Interfaces .....................................................................................
 
-    public static interface Filter
+    public interface Filter
     {
         String filter(String str);
     }

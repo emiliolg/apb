@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 package apb.coverage;
 
@@ -32,12 +30,16 @@ import java.util.Map;
 import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;
+
 import apb.metadata.CoverageInfo;
+
 import apb.utils.FileUtils;
-import static apb.utils.FileUtils.*;
+
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.utils.FileUtils.*;
 
 /**
  * To be used from TestTask
@@ -69,10 +71,10 @@ public class CoverageBuilder
 
     @NotNull public List<String> addCommandLineArguments()
     {
-        List<String> args = new ArrayList<String>();
-        List<File>   cs = helper.getClassesToTest();
+        final List<String> args = new ArrayList<String>();
 
         if (coverage.enable) {
+            List<File> cs = helper.getClassesToTest();
             args.add(env.isVerbose() ? "-verbose" : "-quiet");
 
             for (CoverageReport report : processReports()) {
@@ -93,7 +95,8 @@ public class CoverageBuilder
             args.add("-sp");
             args.add(makePath(helper.getSourcesToTest()));
             args.add("-cp");
-            args.add(makePath(env.applicationJarFile(), helper.getOutput()) + File.pathSeparator + makePath(cs));
+            args.add(makePath(env.applicationJarFile(), helper.getOutput()) + File.pathSeparator +
+                     makePath(cs));
             args.add(TESTRUNNER_MAIN);
         }
 
@@ -130,7 +133,7 @@ public class CoverageBuilder
         return coverage.enable ? EMMARUN : TESTRUNNER_MAIN;
     }
 
-    private String formatLine(EnumMap<CoverageReport.Column, Integer> coverageInfo)
+    private static String formatLine(Map<CoverageReport.Column, Integer> coverageInfo)
     {
         StringBuilder builder = new StringBuilder();
 
@@ -139,7 +142,7 @@ public class CoverageBuilder
                 builder.append(", ");
             }
 
-            builder.append(e.getKey()).append(" = ").append(e.getValue()).append("%");
+            builder.append(e.getKey()).append(" = ").append(e.getValue()).append('%');
         }
 
         return builder.toString();

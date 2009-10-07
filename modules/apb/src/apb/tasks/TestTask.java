@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,11 +14,9 @@
 // limitations under the License
 //
 
-
 package apb.tasks;
 
 import java.io.File;
-import static java.io.File.pathSeparator;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -38,22 +35,29 @@ import java.util.Set;
 import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;
+
 import apb.coverage.CoverageBuilder;
+
 import apb.metadata.CoverageInfo;
 import apb.metadata.TestModule;
+
 import apb.testrunner.Invocation;
 import apb.testrunner.TestRunner;
-import static apb.testrunner.TestRunner.listTests;
-import static apb.testrunner.TestRunner.worseResult;
 import apb.testrunner.output.SimpleReport;
 import apb.testrunner.output.TestReport;
 import apb.testrunner.output.TestReportBroadcaster;
+
 import apb.utils.FileUtils;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static apb.testrunner.TestRunner.listTests;
+import static apb.testrunner.TestRunner.worseResult;
+
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
 import static apb.utils.StringUtils.makeString;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Nov 5, 2008
@@ -83,19 +87,19 @@ public class TestTask
     /**
      * The classpath for the tests
      */
-    @NotNull private Collection<File>   classPath;
-    private boolean                     classPathInSystemClassloader;
-    @NotNull private final CoverageInfo coverage;
+    @NotNull private final Collection<File> classPath;
+    private final boolean                   classPathInSystemClassloader;
+    @NotNull private final CoverageInfo     coverage;
 
     /**
      * Enable assertions when running the tests
      */
-    private boolean enableAssertions;
+    private final boolean enableAssertions;
 
     /**
      * Enable the java debugger in the forked process
      */
-    private boolean enableDebugger;
+    private final boolean enableDebugger;
 
     /**
      * The list of tests to exclude
@@ -105,12 +109,12 @@ public class TestTask
     /**
      * Fail if no tests are found
      */
-    private boolean failIfEmpty;
+    private final boolean failIfEmpty;
 
     /**
      * Fail the build when a test fails
      */
-    private boolean failOnError;
+    private final boolean failOnError;
 
     /**
      * The list of tests to include
@@ -118,22 +122,22 @@ public class TestTask
     @NotNull private List<String> includes;
 
     /**
+     * List of additional args to pass to the tests.
+     */
+    @NotNull private final List<String> javaArgs;
+
+    /**
      * The test module helper
      */
-    private TestModuleHelper moduleHelper;
+    private final TestModuleHelper moduleHelper;
 
     /**
      * List of System properties to pass to the tests.
      */
-    @NotNull private Map<String, String> properties;
+    @NotNull private final Map<String, String> properties;
 
-    /**
-     * List of additional args to pass to the tests.
-     */
-    @NotNull private List<String> javaArgs;
-
-    @NotNull private TestReport          report;
-    @Nullable private File               reportDir;
+    @NotNull private TestReport report;
+    @Nullable private File      reportDir;
 
     /**
      * The list of test groups to execute
@@ -147,7 +151,9 @@ public class TestTask
         super(env);
         report = new SimpleReport(true, true);
         moduleHelper = env.getTestModuleHelper();
-        classPath = moduleHelper.useDeepClasspath() ? moduleHelper.deepClassPath(true, false) : moduleHelper.testRuntimeClasspath();
+        classPath =
+            moduleHelper.useDeepClasspath() ? moduleHelper.deepClassPath(true, false)
+                                            : moduleHelper.testRuntimeClasspath();
 
         classesToTest = moduleHelper.getClassesToTest();
         classPath.removeAll(classesToTest);
@@ -314,7 +320,6 @@ public class TestTask
         }
     }
 
-
     private boolean isCoverageEnabled()
     {
         return coverage.enable;
@@ -369,7 +374,6 @@ public class TestTask
     private int executeEachSuite(@NotNull File reportSpecsFile, @NotNull CoverageBuilder coverageBuilder)
         throws Exception
     {
-
         List<File> f = new ArrayList<File>(classPath);
         f.add(getEnv().getModuleHelper().getOutput());
         ClassLoader cl = createClassLoader(f);
@@ -400,8 +404,12 @@ public class TestTask
         List<String> args = new ArrayList<String>();
 
         JavaTask java = new JavaTask(env, false, coverageBuilder.runnerMainClass());
-        // enable assertions
-        java.addJavaArg("-ea");
+
+        if (enableAssertions) {
+            // enable assertions
+            java.addJavaArg("-ea");
+        }
+
         java.setClasspath(runnerClassPath());
 
         args.addAll(coverageBuilder.addCommandLineArguments());
@@ -437,21 +445,22 @@ public class TestTask
             args.add("-f");
         }
 
-        if (!isCoverageEnabled()) {
+        if (!allClassesInSystemClassloader()) {
             args.add("-c");
-            args.add(makePath(classPath) + pathSeparator + makePath(classesToTest));
+            args.add(makePath(testClassPath()));
         }
 
         if (suite == null) {
-
             final String includeString = makePathFromStrings(includes);
-            if(!"".equals(includeString)){
+
+            if (!"".equals(includeString)) {
                 args.add("-i");
                 args.add(includeString);
             }
 
             final String excludeString = makePathFromStrings(excludes);
-            if(!"".equals(excludeString)){
+
+            if (!"".equals(excludeString)) {
                 args.add("-e");
                 args.add(excludeString);
             }
@@ -490,24 +499,36 @@ public class TestTask
         return java.getExitValue();
     }
 
+    private List<File> testClassPath()
+    {
+        final List<File> path = new ArrayList<File>();
+        path.addAll(classPath);
+        path.addAll(classesToTest);
+        path.add(moduleHelper.getOutput());
+        return path;
+    }
+
+    private boolean allClassesInSystemClassloader()
+    {
+        return isClassPathInSystemClassloader() || isCoverageEnabled();
+    }
+
     private String runnerClassPath()
     {
-        final File appJar = env.applicationJarFile();
+        final List<File> path = new ArrayList<File>();
 
-        List<File> path = new ArrayList<File>();
+        if (allClassesInSystemClassloader()) {
+            path.addAll(testClassPath());
+        }
+
+        final File appJar = env.applicationJarFile();
 
         if (isCoverageEnabled()) {
             path.add(new File(appJar.getParent(), "emma.jar"));
-            path.addAll(classPath);
-        }
-        else if (isClassPathInSystemClassloader()) {
-            path.addAll(classPath);
-        }
-        else {
-            path.add(appJar);
         }
 
         path.addAll(env.getExtClassPath());
+        path.add(appJar);
 
         return makePath(path);
     }
@@ -515,10 +536,19 @@ public class TestTask
     private File reportSpecs()
     {
         try {
-            File               file = File.createTempFile("reps", null);
-            ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(file));
-            os.writeObject(report);
-            os.close();
+            final File             file = File.createTempFile("reps", null);
+            final FileOutputStream fos = new FileOutputStream(file);
+
+            try {
+                final ObjectOutputStream os = new ObjectOutputStream(fos);
+                os.writeObject(report);
+                os.flush();
+                os.close();
+            }
+            finally {
+                fos.close();
+            }
+
             return file;
         }
         catch (IOException e) {
