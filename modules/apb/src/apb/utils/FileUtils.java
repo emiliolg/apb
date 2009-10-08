@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.utils;
 
@@ -968,11 +970,4 @@ public class FileUtils
 
                       // Mac
                       "**/.DS_Store");
-
-    //~ Inner Interfaces .....................................................................................
-
-    public interface Filter
-    {
-        String filter(String str);
-    }
 }
