@@ -44,7 +44,7 @@ public class XjcTask
     @NotNull private final File targetDir;
 
     @NotNull private final List<File> externalBindings;
-    @NotNull private final String     targetPackage;
+    @NotNull private String           targetPackage;
 
     //~ Constructors .........................................................................................
 
@@ -52,14 +52,13 @@ public class XjcTask
      * Construt the XML Binding Compiler Task
      * @param schemaFile  The xml schema to generate the java bindings for, relative the source folder
      * @param target The directory where generated files will be placed
-     * @param pkg specifies the target package
      */
-    private XjcTask(@NotNull File schemaFile, @NotNull File target, @NotNull String pkg)
+    private XjcTask(@NotNull File schemaFile, @NotNull File target)
     {
         super();
         schema = schemaFile;
         targetDir = target;
-        targetPackage = pkg.trim();
+        targetPackage = "";
         externalBindings = new ArrayList<File>();
         packageAnnotations = true;
         timestamp = true;
@@ -73,6 +72,16 @@ public class XjcTask
     public XjcTask withBinding(@NotNull String bindingFileName)
     {
         return withBinding(env.fileFromBase(bindingFileName));
+    }
+
+    /**
+     * Specify the name of the package to for generated classes
+     * @param packageName the name of the stylesheet to use
+     */
+    @NotNull public XjcTask usingPackage(@NotNull String packageName)
+    {
+        targetPackage = packageName;
+        return this;
     }
 
     /**
@@ -91,6 +100,7 @@ public class XjcTask
 
     /**
      * Wheter to generate  package level annotations (package-info.java)
+     * Default to true
      */
     public XjcTask usePackageAnnotations(boolean b)
     {
@@ -193,7 +203,6 @@ public class XjcTask
     public static class Builder
     {
         @NotNull private final File from;
-        @Nullable private File      to;
 
         /**
          * Private constructor called from factory methods
@@ -213,7 +222,7 @@ public class XjcTask
          * Specify the target file where sources will be generated
          * @param dirName The directory where to place generated files
          */
-        @NotNull public Builder to(@NotNull String dirName)
+        @NotNull public XjcTask to(@NotNull String dirName)
         {
             return to(Apb.getEnv().fileFromBase(dirName));
         }
@@ -222,30 +231,13 @@ public class XjcTask
          * Specify the target file where sources will be generated
          * @param dir The directory where to place generated files
          */
-        @NotNull public Builder to(@NotNull File dir)
+        @NotNull public XjcTask to(@NotNull File dir)
         {
             if (dir.isFile()) {
                 throw new BuildException("Not a directory: '" + dir.getPath() + "'.");
             }
 
-            to = dir;
-            return this;
-        }
-
-        /**
-         * Specify the name of the package to for generated classes
-         * @param packageName the name of the stylesheet to use
-         * @throws IllegalStateException if {@link #to} was not invoked before
-         */
-        @NotNull public XjcTask usingPackage(@NotNull String packageName)
-        {
-            final File target = to;
-
-            if (target == null) {
-                throw new IllegalStateException("Must invoked 'to' method to specify the output file or directory");
-            }
-
-            return new XjcTask(from, target, packageName);
+            return new XjcTask(from, dir);
         }
     }
 }

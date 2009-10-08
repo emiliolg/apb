@@ -40,6 +40,7 @@ import apb.metadata.TestModule;
 
 import apb.tasks.FileSet;
 import apb.tasks.JarTask;
+import apb.tasks.JavacTask;
 
 import apb.utils.DebugOption;
 import apb.utils.FileUtils;
@@ -72,7 +73,6 @@ public class ModuleHelper
 
     @Nullable private Iterable<ModuleHelper>     dependencies;
     @Nullable private Iterable<ModuleHelper>     directDependencies;
-    @Nullable private Iterable<Library>          libraries;
     @Nullable private Iterable<TestModuleHelper> testModules;
 
     //~ Constructors .........................................................................................
@@ -200,30 +200,15 @@ public class ModuleHelper
         return directDependencies;
     }
 
-    @NotNull public Iterable<Library> getLibraries()
+    @NotNull public Iterable<Library> getAllLibraries()
     {
-        if (libraries == null) {
+        if (allLibraries == null) {
             List<Library> list = new ArrayList<Library>();
 
             for (Dependency dependency : getModule().dependencies()) {
                 if (dependency.isLibrary()) {
                     list.add(dependency.asLibrary());
                 }
-            }
-
-            libraries = list;
-        }
-
-        return libraries;
-    }
-
-    @NotNull public Iterable<Library> getAllLibraries()
-    {
-        if (allLibraries == null) {
-            List<Library> list = new ArrayList<Library>();
-
-            for (Library library : getLibraries()) {
-                list.add(library);
             }
 
             for (Library l : getCompileInfo().extraLibraries()) {
@@ -276,27 +261,6 @@ public class ModuleHelper
     public boolean isTestModule()
     {
         return false;
-    }
-
-    public Collection<File> deepClassPath(boolean useJars, boolean addModuleOutput)
-    {
-        Set<File> result = new HashSet<File>();
-
-        if (addModuleOutput) {
-            result.add(useJars && hasPackage() ? getPackageFile() : getOutput());
-        }
-
-        // First classpath for module dependencies
-        for (ModuleHelper dependency : getDirectDependencies()) {
-            result.addAll(dependency.deepClassPath(useJars, true));
-        }
-
-        // The classpath for libraries
-        for (Library library : getLibraries()) {
-            addIfNotNull(result, library.getArtifact(this, PackageType.JAR));
-        }
-
-        return result;
     }
 
     public List<File> getSourceDirs()
@@ -426,24 +390,30 @@ public class ModuleHelper
         CompileInfo   info = getCompileInfo();
         List<FileSet> fileSets = getSourceFileSets(info);
 
-        javac(fileSets).to(getOutput())  //
-                       .withClassPath(compileClassPath())  //
-                       .sourceVersion(info.source)  //
-                       .targetVersion(info.target)  //
-                       .withAnnotationOptions(info.annotationOptions())  //
-                       .withExtraLibraries(info.extraLibraries())  //
-                       .debug(info.debug)  //
-                       .deprecated(info.deprecated)  //
-                       .lint(info.lint)  //
-                       .showWarnings(info.warn)  //
-                       .failOnWarning(info.failOnWarning)  //
-                       .lintOptions(info.lintOptions)  //
-                       .trackUnusedDependencies(info.validateDependencies)  //
-                       .processing(info.getProcessingOption().paramValue())  //
-                       .usingDefaultFormatter(info.defaultErrorFormatter)  //
-                       .excludeFromWarning(info.warnExcludes())  //
-                       .useName(getName())  //
-                       .execute();
+        JavacTask javac =
+            javac(fileSets).to(getOutput())  //
+                           .withClassPath(compileClassPath())  //
+                           .sourceVersion(info.source)  //
+                           .targetVersion(info.target)  //
+                           .withAnnotationOptions(info.annotationOptions())  //
+                           .withExtraLibraries(info.extraLibraries())  //
+                           .debug(info.debug)  //
+                           .deprecated(info.deprecated)  //
+                           .lint(info.lint)  //
+                           .showWarnings(info.warn)  //
+                           .failOnWarning(info.failOnWarning)  //
+                           .lintOptions(info.lintOptions)  //
+                           .trackUnusedDependencies(info.validateDependencies)  //
+                           .processing(info.getProcessingOption().paramValue())  //
+                           .usingDefaultFormatter(info.defaultErrorFormatter)  //
+                           .excludeFromWarning(info.warnExcludes())  //
+                           .useName(getName());
+
+        if (!info.warnGenerated) {
+            javac.excludeFromWarning(getGeneratedSource());
+        }
+
+        javac.execute();
     }
 
     public void generateJavadoc()
@@ -503,6 +473,29 @@ public class ModuleHelper
         }
 
         pb.execute(this, commandName);
+    }
+
+    /**
+     * todo this should be replaced by runtimepath or compileclasspath....
+     */
+    Collection<File> deepClassPath(boolean useJars, boolean addModuleOutput)
+    {
+        Set<File> result = new HashSet<File>();
+
+        if (addModuleOutput) {
+            result.add(useJars && hasPackage() ? getPackageFile() : getOutput());
+        }
+
+        for (Dependency dependency : getModule().dependencies()) {
+            if (dependency.isModule()) {
+                result.addAll(dependency.asModule().getHelper().deepClassPath(useJars, true));
+            }
+            else if (dependency.isLibrary()) {
+                addIfNotNull(result, dependency.asLibrary().getArtifact(this, PackageType.JAR));
+            }
+        }
+
+        return result;
     }
 
     private static String trimDashes(String s)
@@ -602,15 +595,15 @@ public class ModuleHelper
         }
 
         // Add dependencies from modules
-        for (ModuleHelper module : getDirectDependencies()) {
-            if (module.getModule().mustInclude(compile)) {
-                result.add(useJars && module.hasPackage() ? module.getPackageFile() : module.getOutput());
-            }
-        }
-
-        for (Library lib : getLibraries()) {
-            if (lib.mustInclude(compile)) {
-                addIfNotNull(result, lib.getArtifact(this, PackageType.JAR));
+        for (Dependency dependency : getModule().dependencies()) {
+            if (dependency.mustInclude(compile)) {
+                if (dependency.isModule()) {
+                    ModuleHelper m = dependency.asModule().getHelper();
+                    result.add(useJars && m.hasPackage() ? m.getPackageFile() : m.getOutput());
+                }
+                else if (dependency.isLibrary()) {
+                    addIfNotNull(result, dependency.asLibrary().getArtifact(this, PackageType.JAR));
+                }
             }
         }
 

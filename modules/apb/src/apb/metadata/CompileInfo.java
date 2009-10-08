@@ -67,6 +67,22 @@ public class CompileInfo
     @BuildProperty public boolean lint = false;
 
     /**
+     * Wheter to validate that all dependencies are being used
+     * If it's true and there are some unused dependencies it will fail with the list of unused ones
+     */
+    @BuildProperty public boolean validateDependencies = false;
+
+    /**
+     * Generate warnings
+     */
+    @BuildProperty public boolean warn = true;
+
+    /**
+     * Genrate warnings from generated sources
+     */
+    @BuildProperty public boolean warnGenerated = false;
+
+    /**
      * Enable specific warnings (Comma separated list) :
      * {all,cast,deprecation,divzero,empty,unchecked,fallthrough,path,serial,finally,overrides,
      * -cast,-deprecation,-divzero,-empty,-unchecked,-fallthrough,-path,-serial,-finally,-overrides,none}
@@ -81,22 +97,6 @@ public class CompileInfo
      * Generate class files for specific VM version
      */
     @BuildProperty public String target = "";
-
-    /**
-     * Wheter to validate that all dependencies are being used
-     * If it's true and there are some unused dependencies it will fail with the list of unused ones
-     */
-    @BuildProperty public boolean validateDependencies = false;
-
-    /**
-     * Generate warnings
-     */
-    @BuildProperty public boolean warn = true;
-
-    /**
-     * Options to pass to the annotation processor
-     */
-    private final Map<String, String> annotationOptions = new HashMap<String, String>();
 
     /**
      * The list of files to exclude from compilation.
@@ -116,14 +116,19 @@ public class CompileInfo
     private final List<String> includes = new ArrayList<String>(DEFAULT_SOURCES);
 
     /**
-     * Controls whether annotation processing and/or compilation is done.
-     */
-    private ProcessingOption processingOption = ProcessingOption.DEFAULT;
-
-    /**
      * Do not generate warnings for the following list of files
      */
     private final List<String> warnExcludes = new ArrayList<String>();
+
+    /**
+     * Options to pass to the annotation processor
+     */
+    private final Map<String, String> annotationOptions = new HashMap<String, String>();
+
+    /**
+     * Controls whether annotation processing and/or compilation is done.
+     */
+    private ProcessingOption processingOption = ProcessingOption.DEFAULT;
 
     //~ Methods ..............................................................................................
 

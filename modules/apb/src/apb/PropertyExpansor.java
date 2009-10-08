@@ -237,7 +237,9 @@ class PropertyExpansor
             final String value;
 
             try {
-                value = canonize(propertyName, env.expand(String.valueOf(fieldValue)));
+                value =
+                    fieldValue == null ? null
+                                       : canonize(propertyName, env.expand(String.valueOf(fieldValue)));
             }
             catch (BuildException e) {
                 if (e.getCause() instanceof PropertyException) {

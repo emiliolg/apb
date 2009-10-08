@@ -702,7 +702,7 @@
        <public>true</public>
        <static>true</static>
       </modifier>
-      <order>enumConstant|field|constructor|method|static|initializer|enum|interface|class|annotation</order>
+      <order>enumConstant|field|initializer|constructor|method|static|enum|interface|class|annotation</order>
      </declaration>
      <modifier>
       <annotation>true</annotation>

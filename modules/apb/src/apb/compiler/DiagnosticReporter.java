@@ -18,7 +18,8 @@
 
 package apb.compiler;
 
-import java.util.Collections;
+import java.io.File;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -52,6 +53,7 @@ public class DiagnosticReporter
     @NotNull private final Environment env;
     private int                        warns, errors;
     private final JavacTask            javacTask;
+    @NotNull private final List<File>  directories;
 
     @NotNull private final List<Diagnostic<? extends JavaFileObject>> ds;
     @NotNull private List<String>                                     excludes;
@@ -69,7 +71,8 @@ public class DiagnosticReporter
         env = javacTask.getEnv();
         lastFile = null;
         ds = new LinkedList<Diagnostic<? extends JavaFileObject>>();
-        excludes = Collections.emptyList();
+        excludes = new ArrayList<String>();
+        directories = new ArrayList<File>();
         errors = warns = 0;
     }
 
@@ -85,29 +88,39 @@ public class DiagnosticReporter
      */
     public void report(@Nullable Diagnostic<? extends JavaFileObject> diagnostic)
     {
-        final JavaFileObject source = diagnostic == null ? null : diagnostic.getSource();
+        if (diagnostic != null) {
+            final String fileName =
+                diagnostic.getSource() == null ? GLOBAL_ERRORS : diagnostic.getSource().toString();
 
-        if (source != null && (diagnostic.getKind() == ERROR || !isExcluded(source))) {
-            count(diagnostic);
+            if (diagnostic.getKind() == ERROR || !isExcluded(fileName)) {
+                count(diagnostic);
 
-            String fileName = source.toString();
+                if (!fileName.equals(lastFile)) {
+                    doReport();
+                    lastFile = fileName;
+                }
 
-            if (!fileName.equals(lastFile)) {
-                doReport();
-                lastFile = fileName;
+                ds.add(diagnostic);
             }
-
-            ds.add(diagnostic);
         }
     }
 
     /**
-     * Set the patterns that defines which files to exclude warnings from
-     * @param patterns The patterns
+     * Add a pattern to the list to be excluded from warnings
+     * @param pattern The pattern to be added
      */
-    public void setExcludes(@NotNull List<String> patterns)
+    public void addExcludePattern(@NotNull String pattern)
     {
-        excludes = StringUtils.normalizePaths(patterns);
+        excludes.add(StringUtils.normalizePath(pattern));
+    }
+
+    /**
+     * Add a whole directory to the list to be excluded from warnings
+     * @param directory The directory to be added
+     */
+    public void addExcludeDirectory(@NotNull File directory)
+    {
+        directories.add(directory);
     }
 
     /**
@@ -178,13 +191,25 @@ public class DiagnosticReporter
 
     /**
      * Verify if this fileObject must be excluded from the output
-     * @param fileObject The file to check
+     * @param fileName
      * @return true if the file must be excluded, false otherwise
      */
-    private boolean isExcluded(@NotNull JavaFileObject fileObject)
+    private boolean isExcluded(final String fileName)
     {
+        if (fileName.equals(GLOBAL_ERRORS)) {
+            return true;
+        }
+
+        if (!directories.isEmpty()) {
+            for (File directory : directories) {
+                if (fileName.startsWith(directory.getPath() + File.separator)) {
+                    return true;
+                }
+            }
+        }
+
         if (!excludes.isEmpty()) {
-            String name = javacTask.removeSourceDir(fileObject.toString());
+            String name = javacTask.removeSourceDir(fileName);
 
             if (name != null) {
                 for (String exclude : excludes) {
@@ -197,4 +222,8 @@ public class DiagnosticReporter
 
         return false;
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final String GLOBAL_ERRORS = "<CONFIGURATION>";
 }

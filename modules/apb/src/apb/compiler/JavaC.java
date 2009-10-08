@@ -46,10 +46,10 @@ public class JavaC
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final JavaCompiler compiler;
-
     @NotNull private final DiagnosticReporter diagnostics;
-    @NotNull private final Set<File>          usedPathElements;
+
+    @NotNull private final JavaCompiler compiler;
+    @NotNull private final Set<File>    usedPathElements;
 
     //~ Constructors .........................................................................................
 
@@ -93,7 +93,6 @@ public class JavaC
                     makePath(extraLibraries));
         options.add("-sourcepath");
         options.add(makePath(sourceDirs));
-        options.add("-Axxx=yyy");
         usedPathElements.add(targetDir);
 
         boolean result =

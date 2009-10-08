@@ -25,9 +25,7 @@ import apb.tasks.FileSet;
 
 import apb.tests.testutils.FileAssert;
 
-import static apb.tasks.CoreTasks.copy;
-import static apb.tasks.CoreTasks.copyFiltering;
-import static apb.tasks.CoreTasks.mkdir;
+import static apb.tasks.CoreTasks.*;
 
 import static apb.tests.testutils.FileAssert.assertDirEquals;
 import static apb.tests.testutils.FileAssert.assertDoesNotExist;
@@ -56,6 +54,8 @@ public class CopyTest
         assertDoesNotExist(dir3);
 
         copy("dir1").to("$basedir/dir2").execute();
+        assertDoesNotExist(new File(dir2, ".svn"));
+        delete("dir1/.svn").execute();
         assertDirEquals(dir1, dir2);
 
         // Copy again (Must skip copy)
@@ -133,6 +133,10 @@ public class CopyTest
         dir1 = new File(basedir, "dir1");
         addFiles(dir1, "A.java", "B.java", "C.java");
         addFiles(dir1, "a.txt", "b.txt");
+
+        File svnDir = new File(dir1, ".svn");
+        mkdir(svnDir).execute();
+        addFiles(svnDir, "a.txt", "b.txt");
 
         dir2 = new File(basedir, "dir2");
     }

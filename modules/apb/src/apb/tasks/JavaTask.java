@@ -185,7 +185,7 @@ public class JavaTask
                 addIfNotNull(result, dependency.asLibrary().getArtifact(env, PackageType.JAR));
             }
             else if (dependency.isModule()) {
-                result.addAll(dependency.asModule().getHelper().deepClassPath(false, true));
+                result.addAll(dependency.asModule().getHelper().runtimePath());
             }
         }
 

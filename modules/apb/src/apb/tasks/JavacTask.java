@@ -160,7 +160,23 @@ public class JavacTask
     public JavacTask excludeFromWarning(List<String> patterns)
     {
         if (reporter != null) {
-            reporter.setExcludes(patterns);
+            for (String pattern : patterns) {
+                reporter.addExcludePattern(pattern);
+            }
+        }
+
+        return this;
+    }
+
+    /**
+     * Which directories to exclude from warning analysis
+     */
+    public JavacTask excludeFromWarning(File... directories)
+    {
+        if (reporter != null) {
+            for (File dir : directories) {
+                reporter.addExcludeDirectory(dir);
+            }
         }
 
         return this;
