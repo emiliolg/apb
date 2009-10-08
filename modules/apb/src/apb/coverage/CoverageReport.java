@@ -50,10 +50,10 @@ public class CoverageReport
     @NotNull private List<Column> columns;
 
     @NotNull private Depth                    depth;
-    @NotNull private EnumSet<Column>          descending;
-    @NotNull private List<Column>             order;
+    @NotNull private final EnumSet<Column>          descending;
+    @NotNull private final List<Column>             order;
     @Nullable private File                    output;
-    @NotNull private EnumMap<Column, Integer> thresholds;
+    @NotNull private final EnumMap<Column, Integer> thresholds;
 
     @NotNull private final String type;
 

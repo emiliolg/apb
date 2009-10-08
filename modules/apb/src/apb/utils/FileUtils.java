@@ -23,6 +23,7 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,24 +31,33 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.Writer;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import apb.Apb;
 import apb.BuildException;
-import apb.Environment;
 import apb.Os;
 
+import apb.tasks.FileSet;
+
 import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.StringUtils.isEmpty;
+import static apb.utils.StringUtils.isNotEmpty;
 //
 // User: emilio
 // Date: Sep 8, 2008
@@ -108,53 +118,56 @@ public class FileUtils
         return result;
     }
 
-    public static List<File> filterByTimestamp(final List<File> files, final List<File> sourceDirs,
-                                               final File targetDir, final String targetExt)
+    /** Check that all files in the directory are older than
+    * the timestamp specified as a parameter
+    * @param dir The directory where to check files
+    * @param timestamp The reference timestamp
+    * @return true if all files are older thatn the specified timestamp, false otherwise
+    */
+    public static boolean uptodate(@NotNull File dir, long timestamp)
     {
-        String       targetPrefix = targetDir.getAbsolutePath();
-        List<String> sourcePrefixes = absolutePaths(sourceDirs);
+        return uptodate(dir, "", timestamp);
+    }
 
-        List<File> result = new ArrayList<File>();
-
-        for (File file : files) {
-            String path = file.getAbsolutePath();
-
-            int prefixLen = -1;
-
-            for (String prefix : sourcePrefixes) {
-                if (path.startsWith(prefix)) {
-                    prefixLen = prefix.length();
-                    break;
+    /**
+     * Check that all files in the directory finishing with the given extension are older than
+     * the timestamp specified as a parameter
+     * @param dir The directory where to check files
+     * @param ext The extension to be checked to verify that files should be included in the check
+     * @param timestamp The reference timestamp
+     * @return true if all files are older thatn the specified timestamp, false otherwise
+     */
+    public static boolean uptodate(@NotNull File dir, String ext, long timestamp)
+    {
+        if (dir.exists()) {
+            for (File file : dir.listFiles()) {
+                if (file.isDirectory()) {
+                    if (!uptodate(file, ext, timestamp)) {
+                        return false;
+                    }
                 }
-            }
-
-            if (prefixLen == -1) {
-                throw new IllegalStateException(file + " not in any source directory.");
-            }
-
-            File target = new File(targetPrefix + changeExtension(path.substring(prefixLen), targetExt));
-
-            final long targetMod;
-
-            if ((targetMod = target.lastModified()) == 0 || file.lastModified() > targetMod) {
-                result.add(file);
+                else if (isEmpty(ext) || file.getName().endsWith(ext)) {
+                    if (file.lastModified() > timestamp) {
+                        return false;
+                    }
+                }
             }
         }
 
-        return result;
+        return true;
     }
 
     /**
      * Change a filename extension to a new one
-     * @param fileName  The filename to change the extension
-     * @param ext the new extension
-     * @return the filename with a new extension
+     * @param file
+     *@param ext the new extension  @return the filename with a new extension
      */
-    @NotNull public static String changeExtension(@NotNull String fileName, @NotNull String ext)
+    @NotNull public static File changeExtension(@NotNull File file, @NotNull String ext)
     {
-        int    dot = fileName.lastIndexOf('.');
-        String baseName = dot == -1 ? fileName : fileName.substring(0, dot);
-        return baseName + (ext.charAt(0) == '.' ? ext : '.' + ext);
+        String name = file.getName();
+        int    dot = name.lastIndexOf('.');
+        String baseName = dot == -1 ? name : name.substring(0, dot);
+        return new File(file.getParentFile(), baseName + (ext.charAt(0) == '.' ? ext : '.' + ext));
     }
 
     public static List<File> removePrefix(List<File> filePrefixes, List<File> files)
@@ -177,17 +190,17 @@ public class FileUtils
         return result;
     }
 
-    public static File removePrefix(File filePrefix, File file)
+    public static String removePrefix(File filePrefix, File file)
     {
         String prefix = filePrefix.getAbsolutePath();
 
         String path = file.getAbsolutePath();
 
-        if (path.startsWith(prefix)) {
+        if (!path.startsWith(prefix)) {
             throw new IllegalStateException();
         }
 
-        return new File(path.substring(prefix.length() + 1));
+        return path.substring(prefix.length() + 1);
     }
 
     public static String makePath(File... files)
@@ -235,7 +248,7 @@ public class FileUtils
         return result.toString();
     }
 
-    public static File makeRelative(@NotNull File baseDir, @NotNull File file)
+    @NotNull public static File makeRelative(@NotNull File baseDir, @NotNull File file)
     {
         List<String> base = getAbsoluteParts(baseDir);
         List<String> f = getAbsoluteParts(file);
@@ -259,7 +272,7 @@ public class FileUtils
             result = new File(result, f.get(j));
         }
 
-        return result;
+        return result == null ? new File(".") : result;
     }
 
     public static List<String> getAbsoluteParts(File file)
@@ -319,15 +332,20 @@ public class FileUtils
     }
 
     public static void copyFileFiltering(@NotNull File from, @NotNull File to, boolean append,
-                                         @NotNull String encoding, @NotNull List<Filter> filters)
+                                         @NotNull String encoding, @NotNull List<Filter> filters,
+                                         List<String> linesToInsert, List<String> linesToAppend)
         throws IOException
     {
         BufferedReader reader = null;
-        Writer         writer = null;
+        PrintWriter    writer = null;
 
         try {
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(from), encoding));
-            writer = new OutputStreamWriter(createOutputStream(to, append), encoding);
+            writer = new PrintWriter(new OutputStreamWriter(createOutputStream(to, append), encoding));
+
+            for (String s : linesToInsert) {
+                writer.println(s);
+            }
 
             String line;
 
@@ -336,7 +354,11 @@ public class FileUtils
                     line = filter.filter(line);
                 }
 
-                writer.write(line);
+                writer.println(line);
+            }
+
+            for (String s : linesToAppend) {
+                writer.println(s);
             }
         }
         finally {
@@ -441,16 +463,27 @@ public class FileUtils
 
     public static void validateDirectory(File dir)
     {
+        String msg = validateDir(dir);
+
+        if (isNotEmpty(msg)) {
+            throw new BuildException(msg);
+        }
+    }
+
+    public static String validateDir(File dir)
+    {
+        String msg = "";
+
         if (!dir.isDirectory()) {
-            if (!dir.mkdirs()) {
-                if (dir.exists()) {
-                    throw new BuildException(dir + " is not a directory.");
-                }
-                else {
-                    throw new BuildException("Cannot create directory: " + dir);
-                }
+            if (dir.exists()) {
+                msg = dir + " is not a directory.";
+            }
+            else if (!dir.mkdirs()) {
+                msg = "Cannot create directory: " + dir;
             }
         }
+
+        return msg;
     }
 
     /**
@@ -519,7 +552,7 @@ public class FileUtils
         return os.isWindows() || os.isOs2() ? cmd + ".exe" : cmd;
     }
 
-    public static String findJavaExecutable(@NotNull final String cmd, @NotNull final Environment env)
+    public static String findJavaExecutable(@NotNull final String cmd)
     {
         final String javaCmd = addExecutableExtension(cmd);
 
@@ -535,19 +568,19 @@ public class FileUtils
         if (result == null) {
             // Try with environment JAVA_HOME
             if (JAVA_HOME == null) {
-                env.logInfo("JAVA_HOME environment variable not set.\n");
+                Apb.getEnv().logInfo("JAVA_HOME environment variable not set.\n");
             }
             else {
                 result = findCmdInDir(new File(JAVA_HOME), cmd);
 
                 if (result == null) {
-                    env.logInfo("Invalid value for JAVA_HOME environment variable: %s\n", JAVA_HOME);
+                    Apb.getEnv().logInfo("Invalid value for JAVA_HOME environment variable: %s\n", JAVA_HOME);
                 }
             }
         }
 
         if (result == null) {
-            env.logInfo("Looking for '%s' in the PATH.\n", cmd);
+            Apb.getEnv().logInfo("Looking for '%s' in the PATH.\n", cmd);
             result = javaCmd;
         }
 
@@ -581,17 +614,17 @@ public class FileUtils
      * Returns true if any of the files is newer than <code>targetTime</code>
      * @param files to iterate
      * @param targetTime threshold modification time
-     * @return <code>true</code> is any file newer than <code>targetTime</code>, <code>false</code> otherwise
+     * @return <code>true</code> is all files are older than <code>targetTime</code>, <code>false</code> otherwise
      */
     public static boolean uptodate(Iterable<File> files, long targetTime)
     {
         for (File file : files) {
             if (file.lastModified() > targetTime) {
-                return true;
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     public static String getCurrentWorkingDirectory()
@@ -605,6 +638,7 @@ public class FileUtils
         final URL[] urls = new URL[cp.size()];
 
         int i = 0;
+
         for (File file : cp) {
             urls[i++] = file.toURI().toURL();
         }
@@ -635,10 +669,165 @@ public class FileUtils
         return normalized.getPath().equals(file.getPath()) ? file : normalized;
     }
 
-    static boolean isSymbolicLink(File file)
+    /**
+     * Return the apb home directory
+     * @return the apb home directory
+     */
+    @NotNull public static File getApbDir()
+    {
+        return new File(System.getProperty("user.home"), APB_DIR);
+    }
+
+    @NotNull public static Properties userProperties()
+    {
+        File propFile = new File(getApbDir(), APB_PROPERTIES);
+
+        Properties p = new Properties();
+
+        try {
+            p.load(new FileReader(propFile));
+        }
+        catch (IOException ignore) {
+            // Ignore
+        }
+
+        return p;
+    }
+
+    public static boolean equalsContent(File file1, File file2)
+    {
+        final boolean present1 = file1.exists();
+        final boolean present2 = file2.exists();
+
+        if (!present1 && !present2) {
+            return true;
+        }
+
+        if (present1 != present2) {
+            return false;
+        }
+
+        try {
+            FileInputStream i1 = new FileInputStream(file1);
+            FileInputStream i2 = new FileInputStream(file2);
+            byte[]          buff1 = new byte[1024];
+            byte[]          buff2 = new byte[1024];
+            int             n;
+
+            while ((n = i1.read(buff1)) >= 0) {
+                if (i2.read(buff2) != n) {
+                    return false;
+                }
+
+                for (int i = 0; i < buff1.length; i++) {
+                    if (buff1[i] != buff2[i]) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+        catch (IOException e) {
+            return false;
+        }
+    }
+
+    public static void touch(@NotNull File f, long time)
         throws IOException
     {
-        return !file.getAbsolutePath().equals(file.getCanonicalPath());
+        if (!f.createNewFile() && f.isDirectory()) {
+            for (File childFile : f.listFiles()) {
+                touch(childFile, time);
+            }
+        }
+
+        f.setLastModified(time);
+    }
+
+    /**
+     * An utility method to list all files from a group of FileSets,
+     * returning a map of each file mapped to a target directory
+     * @param filesets The filesets to be listed
+     * @param target The target directory to map the original file
+     * @param checkTimestamp Wheter to check the timestamp of the target file before adding it to the map or not.print an info message if any fileset is empty
+     */
+    public static Map<File, File> listAllMappingToTarget(List<FileSet> filesets, File target,
+                                                         boolean checkTimestamp)
+    {
+        Map<File, File> result = new LinkedHashMap<File, File>();
+
+        for (FileSet fileset : filesets) {
+            final List<String> fileNames = fileset.list();
+
+            if (!fileNames.isEmpty()) {
+                for (String f : fileNames) {
+                    final File source = new File(fileset.getDir(), f);
+                    final File dest = new File(target, f);
+
+                    if (!checkTimestamp || !dest.exists() || source.lastModified() > dest.lastModified()) {
+                        result.put(source, dest);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Find the innermost single directory inside the one specified.
+     * For example, with the following directory layouts
+     * <p><blockquote><pre>
+     *     base1 --- a -- b +--- c1
+     *                     |
+     *                     +--- c2
+     *
+     *     base2 --- a +-- b +--- c1
+     *                 |
+     *                 +--- c2
+     *
+     *     base3 +--- a +-- b +--- c1
+     *           |
+     *           +--- c2
+     *
+     * </pre></blockquote><p>
+     * It will return:
+     * <p><blockquote><pre>
+     *     topSingleDirectory(new File("base1")) --> "a/b"
+     *     topSingleDirectory(new File("base2")) --> "a"
+     *     topSingleDirectory(new File("base3")) --> ""
+     * </pre></blockquote><p>
+     *
+     * @param baseDir The directory used as the base
+     * @return The path to the inner most single directory starting from basDir
+     */
+    public static String topSingleDirectory(@NotNull File baseDir)
+    {
+        if (!baseDir.isDirectory()) {
+            throw new IllegalArgumentException("Not a directory: " + baseDir);
+        }
+
+        String result = "";
+        File[] inner;
+
+        while ((inner = baseDir.listFiles()).length == 1 && inner[0].isDirectory()) {
+            baseDir = inner[0];
+            final String part = baseDir.getName();
+            result = result.isEmpty() ? part : result + File.separator + part;
+        }
+
+        return result;
+    }
+
+    static boolean isSymbolicLink(File file)
+    {
+        try {
+            return !file.getAbsolutePath().equals(file.getCanonicalPath());
+        }
+        catch (IOException e) {
+            return true;
+        }
     }
 
     private static List<File> unique(Collection<File> files)
@@ -716,6 +905,24 @@ public class FileUtils
     }
 
     //~ Static fields/initializers ...........................................................................
+
+    public static final Comparator<File> FILE_COMPARATOR =
+        new Comparator<File>() {
+            @Override public int compare(File o1, File o2)
+            {
+                return o1 == o2
+                       ? 0
+                       : o1 == null
+                         ? -1
+                         : o2 == null ? 1  //
+                                      : o1.equals(o2) ? 0  //
+                                                      : o1.getPath().compareTo(o2.getPath());
+            }
+        };
+
+    public static final String APB_PROPERTIES = "apb.properties";
+
+    private static final String APB_DIR = ".apb";
 
     public static final String JAVA_HOME = System.getenv("JAVA_HOME");
     public static final String java_home = System.getProperty("java.home");

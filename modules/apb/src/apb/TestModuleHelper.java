@@ -19,17 +19,20 @@
 package apb;
 
 import java.io.File;
+import static java.util.Arrays.asList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
-import apb.metadata.CoverageInfo;
-import apb.metadata.ProjectElement;
+import apb.coverage.CoverageBuilder;
+import apb.metadata.Module;
 import apb.metadata.TestModule;
-
+import apb.tasks.CoreTasks;
+import apb.tasks.FileSet;
+import apb.testrunner.TestLauncher;
 import apb.testrunner.output.TestReport;
-
+import apb.testrunner.output.TestReportBroadcaster;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Dec 2, 2008
@@ -41,18 +44,15 @@ public class TestModuleHelper
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private File coverageDir;
-
-    private ModuleHelper moduleToTest;
-
-    @NotNull private File reportsDir;
-    @NotNull private File workingDirectory;
+    @Nullable private File coverageDir;
+    @Nullable private File reportsDir;
+    @Nullable private File workingDirectory;
 
     //~ Constructors .........................................................................................
 
-    TestModuleHelper(@NotNull TestModule module, @NotNull Environment env)
+    TestModuleHelper(ProjectBuilder pb, @NotNull TestModule module)
     {
-        super(module, env);
+        super(pb, module);
     }
 
     //~ Methods ..............................................................................................
@@ -62,23 +62,15 @@ public class TestModuleHelper
         return (TestModule) super.getModule();
     }
 
-    public CoverageInfo getCoverageInfo()
-    {
-        return getModule().coverage;
-    }
-
-    public void setModuleToTest(ModuleHelper module)
-    {
-        moduleToTest = module;
-    }
-
     @NotNull public ModuleHelper getModuleToTest()
     {
-        if (moduleToTest == null) {
+        Module m = getModule().getModuleToTest();
+
+        if (m == null) {
             throw new IllegalStateException("'moduleToTest' not initialized");
         }
 
-        return moduleToTest;
+        return m.getHelper();
     }
 
     @Override public boolean isTestModule()
@@ -88,77 +80,73 @@ public class TestModuleHelper
 
     @NotNull public File getWorkingDirectory()
     {
-        return workingDirectory;
-    }
+        if (workingDirectory == null) {
+            workingDirectory = fileFromBase(getModule().workingDirectory);
+        }
 
-    public List<TestReport> getReports()
-    {
-        return getModule().reports();
+        return workingDirectory;
     }
 
     @NotNull public File getReportsDir()
     {
+        if (reportsDir == null) {
+            reportsDir = fileFromBase(getModule().reportsDir);
+        }
+
         return reportsDir;
     }
 
     @NotNull public File getCoverageDir()
     {
+        if (coverageDir == null) {
+            coverageDir = fileFromBase(getModule().coverage.output);
+        }
+
         return coverageDir;
     }
 
     @NotNull public List<File> getClassesToTest()
     {
-        if (moduleToTest == null) {
-            return Collections.emptyList();
-        }
-        else {
-            return Collections.singletonList(moduleToTest.getOutput());
-        }
+        return Collections.singletonList(getModuleToTest().getOutput());
     }
 
     public boolean isCoverageEnabled()
     {
-        return getCoverageInfo().enable;
+        return getModule().coverage.enable;
     }
 
     public List<File> getSourcesToTest()
     {
-        return moduleToTest.getSourceDirs();
+        return getModuleToTest().getSourceDirs();
     }
 
-    public int getMemory()
+    public void runTests(String... groups)
     {
-        return getModule().memory;
+        if (groups.length > 0) {
+            putProperty("tests.groups", groups[0]);
+        }
+
+        List<String> testGroups = groups.length == 0 ? getModule().groups() : asList(groups);
+
+        final CoverageBuilder coverageBuilder = new CoverageBuilder(this);
+        TestLauncher          testLauncher =
+            new TestLauncher(getModule(), getOutput(), testGroups, buildReports(), getReportsDir(),
+                             deepClassPath(true, false), getClassesToTest(), coverageBuilder);
+        testLauncher.execute();
     }
 
-    public Map<String, String> getEnvironmentVariables()
+    public void cleanTestReports()
     {
-        return getModule().environment();
+        CoreTasks.delete(FileSet.fromDir(getReportsDir()), FileSet.fromDir(getCoverageDir())).execute();
     }
 
-    public String getCreatorClass()
+    private TestReport buildReports()
     {
-        final TestModule m = getModule();
-        return m.testType.creatorClass(m.customCreator);
-    }
+        List<TestReport.Builder> testReports = getModule().reports();
 
-    public boolean useDeepClasspath() {
-        return getModule().useDeepClasspath;
-    }
-
-    /**
-     * @return direct runtime dependencies
-     */
-    public List<File> testRuntimeClasspath(){
-        return classPath(true, true, false);
-    }
-
-    void activate(@NotNull ProjectElement activatedTestModule)
-    {
-        super.activate(activatedTestModule);
-        TestModule m = getModule();
-        workingDirectory = env.fileFromBase(m.workingDirectory);
-        reportsDir = env.fileFromBase(m.reportsDir);
-        coverageDir = env.fileFromBase(m.coverage.output);
+        return testReports.isEmpty()
+               ? TestReport.SIMPLE.build(this)
+               : testReports.size() == 1 ? testReports.get(0).build(this)
+                                         : new TestReportBroadcaster(this, testReports);
     }
 }

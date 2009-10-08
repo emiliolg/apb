@@ -19,11 +19,11 @@
 
 import apb.metadata.Module;
 
-import libraries.Junit3;
 import libraries.Asm;
+import libraries.Junit3;
 
 public final class Apb
-    extends DefaultModule
+    extends ApbModule
 {
     //~ Static fields/initializers ...........................................................................
 
@@ -33,19 +33,19 @@ public final class Apb
 
     {
         description = "APB Project Builder";
-        dependencies(Junit3.LIB, Asm.LIB,ApbTest.MODULE);                
+        dependencies(Junit3.LIB, Asm.LIB, ApbTest.MODULE);
 
         pkg.mainClass = "apb.Main";
         pkg.name = "apb";
         pkg.addClassPath = true;
         pkg.generateSourcesJar = true;
 
-        pkg.services("apb.Command", "apb.commands.idegen.Idea", "apb.commands.idegen.Eclipse");
-        pkg.services("apb.Command", "apb.commands.module.Clone");
+        pkg.services("apb.Command", "apb.idegen.Idea", "apb.idegen.Eclipse");
+        pkg.services("apb.Command", "apb.module.Clone");
         pkg.services("apb.testrunner.TestSetCreator", "apb.testrunner.JunitTestSetCreator");
-        pkg.services("javax.annotation.processing.Processor","apb.processors.NotNullProcessor");
+        pkg.services("javax.annotation.processing.Processor", "apb.processors.NotNullProcessor");
 
-        javadoc.deprecatedList = false;
+        javadoc.generateDeprecatedList = false;
         javadoc.links("http://java.sun.com/javase/6/docs/api");
 
         compiler.warnExcludes("apb/sunapi/*");

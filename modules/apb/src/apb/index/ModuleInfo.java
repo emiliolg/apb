@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import apb.Command;
+import apb.CommandBuilder;
 import apb.ProjectElementHelper;
 
 import org.jetbrains.annotations.NotNull;
@@ -61,7 +62,9 @@ public class ModuleInfo
         commands = new ArrayList<String>();
         defaultCommand = Command.DEFAULT_COMMAND;
 
-        for (Map.Entry<String, Command> cmd : element.listCommands().entrySet()) {
+        CommandBuilder b = element.getCommandBuilder();
+
+        for (Map.Entry<String, Command> cmd : b.commands().entrySet()) {
             final String nm = cmd.getValue().getQName();
 
             if (cmd.getKey().equals(Command.DEFAULT_COMMAND)) {

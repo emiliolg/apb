@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.testrunner;
 
@@ -31,6 +33,8 @@ import apb.utils.OptionParser;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
+import static apb.Apb.exit;
+
 import static apb.utils.StringUtils.isEmpty;
 //
 // User: emilio
@@ -42,27 +46,28 @@ class TestRunnerOptions
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private File                   basedir;
-    private final Option<String>            classpath;
-    private Option<String>                  creator;
-    private final Option<String>            excludes;
-    @NotNull private TestSetCreator.Factory factory;
-    private final Option<Boolean>           failEmpty;
-    private final Option<String>            includes;
-    private Option<String>                  output;
-    private final Option<Boolean>           quiet;
-    private Option<String>                  reports;
-    private Option<String>                  reportSpecs;
-    private final Option<String>            suite;
-    private Option<String>                  testGroups;
-    private final Option<String>            type;
-    private final Option<Boolean>           verbose;
+    @NotNull private File                         basedir;
+    private final Option<String>                  classpath;
+    private final Option<String>                  creator;
+    private final Option<String>                  excludes;
+    private final Option<Boolean>                 failEmpty;
+    private final Option<String>                  includes;
+    private final Option<String>                  output;
+    private final Option<Boolean>                 quiet;
+    private final Option<String>                  reports;
+    private final Option<String>                  reportSpecs;
+    private final Option<String>                  singleTest;
+    private final Option<String>                  suite;
+    private final Option<String>                  testGroups;
+    private final Option<String>                  type;
+    private final Option<Boolean>                 verbose;
+    @NotNull private final TestSetCreator.Factory factory;
 
     //~ Constructors .........................................................................................
 
-    TestRunnerOptions(String[] ops)
+    TestRunnerOptions(List<String> ops)
     {
-        super(ops, "testrunner", "0.1");
+        super(ops, "testrunner");
         factory = new TestSetCreator.Factory();
 
         quiet = addBooleanOption('q', "quiet", Messages.QUIET_OUTPUT);
@@ -81,6 +86,7 @@ class TestRunnerOptions
         reportSpecs = addOption("report-specs-file", Messages.REPORT_SPEC_FILE, "<file name>");
         output = addOption('o', "output", Messages.OUTPUT_FOR_REPORTS, "<directory>");
         creator = addOption("creator", "A class defining a creator for a test type.", "<class>");
+        singleTest = addOption("single-test", "Define a single test to be run.", "<test-name>");
 
         for (String testType : factory.names()) {
             type.addValidValue(testType);
@@ -105,6 +111,7 @@ class TestRunnerOptions
 
         if (result.isEmpty()) {
             printHelp();
+            exit(0);
         }
 
         // Initialize base dir
@@ -114,7 +121,7 @@ class TestRunnerOptions
 
         if (!basedir.isDirectory()) {
             System.err.println("Invalid base directory: " + basedir);
-            System.exit(TestRunner.ERROR);
+            exit(TestRunner.ERROR);
         }
 
         return result;
@@ -176,6 +183,11 @@ class TestRunnerOptions
         return result;
     }
 
+    public String getSingleTest()
+    {
+        return singleTest.getValue();
+    }
+
     @NotNull public List<String> getTestGroups()
     {
         return asStringList(testGroups);
@@ -189,6 +201,11 @@ class TestRunnerOptions
     public String getReportSpecFile()
     {
         return reportSpecs.getValue();
+    }
+
+    public void printVersion()
+    {
+        System.err.println(getAppName() + " version: 1.0");
     }
 
     File getBaseDir()
@@ -214,7 +231,8 @@ class TestRunnerOptions
 
             if (result == null) {
                 System.err.println("Invalid creator class: " + creatorClass);
-                System.exit(TestRunner.ERROR);
+                exit(TestRunner.ERROR);
+                throw new RuntimeException();
             }
         }
         else {

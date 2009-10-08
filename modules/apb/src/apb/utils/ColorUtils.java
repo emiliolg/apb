@@ -64,7 +64,7 @@ public class ColorUtils
     public static final String RED = "\033[31m";
     public static final String YELLOW = "\033[33m";
     public static final String BLUE = "\033[34m";
-    static final String        RESET = "\033[0m";
+    public static final String RESET = "\033[0m";
 
     private static final char ANSI_ESCAPE = '\033';
     private static final char ANSI_END = 'm';

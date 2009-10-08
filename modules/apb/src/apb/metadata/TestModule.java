@@ -23,11 +23,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import apb.Environment;
-
-import apb.tasks.TestTask;
+import apb.TestModuleHelper;
 
 import apb.testrunner.output.TestReport;
+
+import org.jetbrains.annotations.NotNull;
 
 import static java.util.Arrays.asList;
 
@@ -66,74 +66,77 @@ public class TestModule
     //~ Instance fields ......................................................................................
 
     /**
-     * Wheter the dependencies classpath is included in the system classoader.
+     * Wheter the dependencies classpath is included in the system classloader.
      */
-    public boolean classPathInSystemClassloader = false;
-
-    /**
-     *  Info for coverage
-     */
-    public final CoverageInfo coverage = new CoverageInfo();
-
-    /**
-     * A custom creator classname
-     */
-    public String customCreator = null;
+    @BuildProperty public boolean classPathInSystemClassloader = false;
 
     /**
      * Whether to enable assertions when running the tests
      */
-    public boolean enableAssertions = true;
+    @BuildProperty public boolean enableAssertions = true;
 
     /**
      * Enable the java debugger in the forked process
      */
-    public boolean enableDebugger = false;
+    @BuildProperty public boolean enableDebugger = false;
 
     /**
      * Fail if no tests are found
      */
-    public boolean failIfEmpty = false;
+    @BuildProperty public boolean failIfEmpty = false;
 
     /**
      * Fail the build when a test fails
      */
-    public boolean failOnError = false;
+    @BuildProperty public boolean failOnError = false;
 
     /**
      *  Whether to fork a new process to run the tests or not.
      */
-    public boolean fork = true;
+    @BuildProperty public boolean fork = true;
 
     /**
      *  Whether to fork a new process for EACH test suite.
      */
-    public boolean forkPerSuite = false;
+    @BuildProperty public boolean forkPerSuite = false;
+
+    /**
+     * Wheter to show output in reports or not
+     */
+    @BuildProperty public boolean showOutput = false;
+
+    /**
+     *  Info for coverage
+     */
+    @BuildProperty public CoverageInfo coverage = new CoverageInfo();
 
     /**
      * Max. memory allocate for the tests (in megabytes).
      */
-    public int memory = 256;
+    @BuildProperty public int memory = 256;
+
+    /**
+     * A custom creator classname
+     */
+    @BuildProperty public String customCreator = null;
 
     /**
       * The directory to generate the reports output
       */
-    @BuildProperty public String reportsDir = "$moduledir/output/reports";
+    @BuildProperty public final String reportsDir = "$output-base/reports";
 
-    /**
-     * The type of runner for the test
-     */
-    public TestType testType = TestType.JUNIT;
+    @BuildProperty(description = "The name of a specified test to be run.")
+    public String runOnly = "";
 
     /**
      * Working directory for running the tests
      */
-    @BuildProperty public String workingDirectory = "$moduledir";
+    @BuildProperty public final String workingDirectory = "$output-base";
 
     /**
-     * Environment variables to be set when running the tests
+     * The type of runner for the test
      */
-    private final Map<String, String> environment = new HashMap<String, String>();
+    public final TestType testType = TestType.JUNIT;
 
     /**
      * The list of tests files to exclude.
@@ -152,16 +155,17 @@ public class TestModule
     private final List<String> includes = new ArrayList<String>();
 
     /**
-     * The module being tested
+     * test reports
      */
-    private Module module;
+    private final List<TestReport.Builder> reports = new ArrayList<TestReport.Builder>();
 
     /**
-     * Properties to be set when running the tests
+     * The list of properties to copy from the apb to the test to be run
      */
-    private final Map<String, String> properties = new HashMap<String, String>();
+    private final List<String> useProperties = new ArrayList<String>();
 
     /**
+<<<<<<< HEAD:modules/apb/src/apb/metadata/TestModule.java
      * Additional Java Args to be set when running the tests
      */
     private final List<String> javaArgs = new ArrayList<String>();
@@ -169,13 +173,21 @@ public class TestModule
 
     /**
      * test reports
+=======
+     * Environment variables to be set when running the tests
+>>>>>>> origin/env:modules/apb/src/apb/metadata/TestModule.java
      */
-    private final List<TestReport> reports = new ArrayList<TestReport>();
+    private final Map<String, String> environment = new HashMap<String, String>();
 
     /**
-     * The list of properties to copy from the apb to the test to be run
+     * Properties to be set when running the tests
      */
-    private List<String> useProperties = new ArrayList<String>();
+    private final Map<String, String> properties = new HashMap<String, String>();
+
+    /**
+     * The module being tested
+     */
+    private Module moduleToTest;
 
     /**
      * Indicates whether deep classpath is used for running tests
@@ -199,7 +211,7 @@ public class TestModule
         return groups;
     }
 
-    public List<TestReport> reports()
+    public List<TestReport.Builder> reports()
     {
         return reports;
     }
@@ -227,7 +239,7 @@ public class TestModule
      * Method used to set the Reports to be generated when running the test.
      * @param report The Report generators to be used
      */
-    public void reports(TestReport... report)
+    public void reports(TestReport.Builder... report)
     {
         reports.addAll(asList(report));
     }
@@ -290,36 +302,42 @@ public class TestModule
 
     /**
      * Run the tests
-     * @param env
      */
     @BuildTarget(
                  depends = "package",
                  recursive = false
                 )
-    public void run(Environment env)
+    public void run()
     {
-        TestTask.execute(env);
+        getHelper().runTests();
     }
 
     /**
      * Run the minimal tests
-     * @param env
      */
     @BuildTarget(
                  depends = "package",
                  recursive = false
                 )
-    public void runMinimal(Environment env)
+    public void runMinimal()
     {
-        env.putProperty("tests.groups", "minimal");
-
-        TestTask.execute(env);
+        getHelper().runTests("minimal");
     }
 
-    @Override public void clean(Environment env)
+    @NotNull @Override public TestModuleHelper getHelper()
     {
-        super.clean(env);
-        TestTask.cleanReports(env);
+        return (TestModuleHelper) super.getHelper();
+    }
+
+    @Override public void clean()
+    {
+        super.clean();
+        getHelper().cleanTestReports();
+    }
+
+    public Module getModuleToTest()
+    {
+        return moduleToTest;
     }
 
     /**
@@ -327,12 +345,12 @@ public class TestModule
      * Update the dependencies
      * @param m The original module
      */
-    void setModule(Module m)
+    void setModuleToTest(Module m)
     {
-        if (module == null) {
+        if (moduleToTest == null) {
             dependencies.add(m);
             dependencies.addAll(m.dependencies());
-            module = m;
+            moduleToTest = m;
         }
     }
 

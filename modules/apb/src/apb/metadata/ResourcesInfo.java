@@ -45,25 +45,26 @@ public class ResourcesInfo
     @BuildProperty public String encoding = DEFAULT_ENCODING;
 
     /**
-     * Wheter to use filtering or not.
-     */
-    @BuildProperty public boolean filtering = false;
-
-    /**
      * The target directory for the resources.
      * The default is the output directory for the module.
      */
     @BuildProperty public String output = "$output";
 
     /**
-     * File extensions to not apply filtering (The following extensions are always filtered: jpg, jpeg, gif, bmp, png)
+     * File extensions to not apply filtering.
+     * The following extensions are always excluded from filtering: jpg, jpeg, gif, bmp, png
      */
     private final List<String> doNotFilter = new ArrayList<String>(DEFAULT_DO_NOT_FILTER);
 
     /**
      * The list of files to exclude.
      */
-    private final List<String> excludes = new ArrayList<String>();
+    private final List<String> excludes = new ArrayList<String>(CompileInfo.DEFAULT_SOURCES);
+
+    /**
+     * The list of files to be included in filtering
+     */
+    private final List<String> filter = new ArrayList<String>();
 
     /**
      * The list of files to include.
@@ -76,6 +77,11 @@ public class ResourcesInfo
     public List<String> doNotFilter()
     {
         return doNotFilter;
+    }
+
+    public List<String> filter()
+    {
+        return filter;
     }
 
     public List<String> includes()
@@ -104,6 +110,15 @@ public class ResourcesInfo
     public void excludes(String... patterns)
     {
         excludes.addAll(Arrays.asList(patterns));
+    }
+
+    /**
+     * Method used to define the list of resources to be filtered
+     * @param patterns The list of patterns to be filtered
+     */
+    public void filter(String... patterns)
+    {
+        filter.addAll(Arrays.asList(patterns));
     }
 
     /**

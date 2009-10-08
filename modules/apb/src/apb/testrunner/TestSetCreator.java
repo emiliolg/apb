@@ -35,7 +35,7 @@ public interface TestSetCreator<T>
 {
     //~ Methods ..............................................................................................
 
-    @Nullable TestSet<T> createTestSet(@NotNull Class<T> testClass)
+    @Nullable TestSet<T> createTestSet(@NotNull Class<T> testClass, @NotNull String singleTest)
         throws TestSetFailedException;
 
     @NotNull Class<T> getTestClass();

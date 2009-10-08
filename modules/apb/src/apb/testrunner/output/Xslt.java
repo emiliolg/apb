@@ -68,8 +68,7 @@ public class Xslt
     }
 
     private static Transformer createTransformer(final InputStream style)
-        throws TransformerConfigurationException, IOException, SAXException, ParserConfigurationException
-    {
+        throws TransformerConfigurationException {
         InputStream xslStream = null;
 
         try {

@@ -18,8 +18,16 @@ package apb.utils;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Writer;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import apb.BuildException;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -32,12 +40,9 @@ import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSException;
 import org.w3c.dom.ls.LSOutput;
 import org.w3c.dom.ls.LSSerializer;
-//
-// User: emilio
-// Date: Dec 19, 2008
-// Time: 2:37:30 PM
 
-//
+import org.xml.sax.SAXException;
+
 public class XmlUtils
 {
     //~ Constructors .........................................................................................
@@ -45,6 +50,25 @@ public class XmlUtils
     private XmlUtils() {}
 
     //~ Methods ..............................................................................................
+
+    public static Document readDocument(@NotNull File file)
+    {
+        try {
+            DocumentBuilder reader = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+
+            InputStream is = new FileInputStream(file);
+            return reader.parse(is);
+        }
+        catch (ParserConfigurationException e) {
+            throw new BuildException(e);
+        }
+        catch (IOException e) {
+            throw new BuildException(e);
+        }
+        catch (SAXException e) {
+            throw new BuildException(e);
+        }
+    }
 
     public static void writeDocument(@NotNull Document document, @NotNull File file)
     {

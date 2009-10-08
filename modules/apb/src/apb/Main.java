@@ -16,15 +16,22 @@
 
 package apb;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import static java.util.Arrays.asList;
 import java.util.Collections;
 import java.util.List;
-
-import apb.index.ModuleInfo;
-
-import apb.utils.StandaloneEnv;
+import java.util.Set;
 
 import static apb.Messages.BUILD_COMPLETED;
 import static apb.Messages.BUILD_FAILED;
+import apb.index.DefinitionsIndex;
+import apb.index.ModuleInfo;
+import apb.utils.FileUtils;
 
 public class Main
 {
@@ -33,29 +40,59 @@ public class Main
     public static void main(String[] args)
         throws Throwable
     {
-        ApbOptions   options = new ApbOptions(args);
+        checkEnvironment();
+        ApbOptions   options = new ApbOptions(asList(args));
         List<String> arguments = options.parse();
-        Environment  env = new StandaloneEnv(Main.class.getPackage().getName(), options.definedProperties());
-        options.initEnv(env);
+
+        Environment env = Apb.createBaseEnvironment(options);
+
+        final Set<File> path = Apb.loadProjectPath();
 
         if (arguments.isEmpty()) {
-            arguments = searchDefault(env, options);
+            arguments = searchDefault(env, options, path);
         }
 
-        final boolean ok = execute(env, arguments);
+        boolean success = Main.execute(env, arguments, path, options.showStackTrace());
 
-        if (!ok) {
+        if (!success) {
             System.exit(1);
         }
     }
 
-    public static boolean execute(Environment env, String element, String command)
-        throws DefinitionException
+    private static void checkEnvironment()
+        throws IOException
     {
-        ProjectElementHelper projectElement = env.constructProjectElement(element);
-        projectElement.setTopLevel(true);
-        projectElement.build(command);
-        return true;
+        File dir = FileUtils.getApbDir();
+
+        if (dir.exists()) {
+            if (!dir.isDirectory()) {
+                throw new IOException(String.format("Invalid apb directory: %s\n", dir.getPath()));
+            }
+        }
+        else if (!dir.mkdirs()) {
+            throw new IOException(String.format("Cannot create directory: %s\n", dir.getPath()));
+        }
+
+        File properties = new File(dir, FileUtils.APB_PROPERTIES);
+
+        if (!properties.exists()) {
+            File apbHome = Apb.getHome();
+
+            if (apbHome != null) {
+                BufferedReader s =
+                    new BufferedReader(new InputStreamReader(Main.class.getResourceAsStream("/resources/apb.properties"),
+                                                             "UTF8"));
+                PrintStream    w = new PrintStream(properties);
+                String         line;
+
+                while ((line = s.readLine()) != null) {
+                    w.printf(line, apbHome.getPath());
+                    w.println();
+                }
+
+                w.close();
+            }
+        }
     }
 
     /**
@@ -63,12 +100,14 @@ public class Main
      * of the current directory one.
      * @param env
      * @param options
+     * @param projectPath
      * @result The definiton
      */
-    private static List<String> searchDefault(Environment env, ApbOptions options)
+    private static List<String> searchDefault(Environment env, ApbOptions options,
+                                              final Set<File> projectPath)
     {
         final List<String> result;
-        final ModuleInfo   info = env.getDefinitionsIndex().searchCurrentDirectory();
+        final ModuleInfo   info = new DefinitionsIndex(env, projectPath).searchCurrentDirectory();
 
         if (info != null) {
             env.logInfo("Executing: %s.%s\n", info.getName(), info.getDefaultCommand());
@@ -76,55 +115,55 @@ public class Main
         }
         else {
             options.printHelp();
+            Apb.exit(0);
             result = Collections.emptyList();
         }
 
         return result;
     }
 
-    private static boolean execute(Environment env, List<String> arguments)
+    private static boolean execute(Environment env, List<String> arguments, final Set<File> projectPath,
+                                   boolean showStackTrace)
         throws Throwable
     {
-        env.resetClock();
-
-        boolean ok = true;
+        Throwable e = null;
+        long      clock = System.currentTimeMillis();
 
         for (String argument : arguments) {
             final String[] argParts = splitParts(argument);
 
             try {
-                if (!execute(env, argParts[0], argParts[1])) {
-                    ok = false;
-                }
+                ProjectBuilder b = new ProjectBuilder(env, projectPath);
+                b.build(env, argParts[0], argParts[1]);
             }
-            catch (DefinitionException e) {
-                env.logSevere("%s\nCause: %s\n", e.getMessage(), e.getCause().getMessage());
+            catch (DefinitionException d) {
+                String causeMsg = d.getCause().getMessage();
 
-                if (env.showStackTrace()) {
-                    throw e.getCause();
+                if (d.getCause() instanceof FileNotFoundException) {
+                    causeMsg = "File not found: " + causeMsg;
                 }
 
-                ok = false;
+                env.logSevere("%s\nCause: %s\n", d.getMessage(), causeMsg);
+                e = d.getCause();
             }
             catch (BuildException b) {
-                ok = false;
-                Throwable e = b.getCause() == null ? b : b.getCause();
+                e = b.getCause() == null ? b : b.getCause();
                 env.logSevere("%s\n", b.getMessage());
-
-                if (env.showStackTrace()) {
-                    throw e;
-                }
             }
         }
 
-        if (ok) {
-            env.logInfo(BUILD_COMPLETED(System.currentTimeMillis() - env.getClock()));
+        if (e == null) {
+            env.logInfo(BUILD_COMPLETED(System.currentTimeMillis() - clock));
         }
         else {
+            if (showStackTrace) {
+                e.printStackTrace(System.err);
+            }
+
             env.logInfo(BUILD_FAILED);
         }
 
-        return ok;
+        return e == null;
     }
 
     private static String[] splitParts(String argument)

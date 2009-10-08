@@ -33,6 +33,10 @@ import java.lang.annotation.Target;
 public @interface BuildProperty
 {
     /**
+     * A description for the property
+     */
+    String description() default "";
+    /**
      * The order attribute is used to force a property to be processes before.<br>
      * So if you want to ensure that a given Property is processed before others, give the property a low
      * order value.

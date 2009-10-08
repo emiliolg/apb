@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +13,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.utils;
 
+import java.util.AbstractSet;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 //
 // User: emilio
 // Date: Oct 15, 2008
@@ -23,6 +28,7 @@ import java.util.IdentityHashMap;
 
 //
 public class IdentitySet<T>
+    extends AbstractSet<T>
 {
     //~ Instance fields ......................................................................................
 
@@ -30,14 +36,25 @@ public class IdentitySet<T>
 
     //~ Methods ..............................................................................................
 
-    public boolean contains(T element)
+    @SuppressWarnings({ "SuspiciousMethodCalls" })
+    public boolean contains(Object element)
     {
         return map.containsKey(element);
     }
 
-    public void add(T element)
+    @Override public Iterator<T> iterator()
     {
-        map.put(element, element);
+        return map.keySet().iterator();
+    }
+
+    @Override public int size()
+    {
+        return map.size();
+    }
+
+    public boolean add(T element)
+    {
+        return map.put(element, element) == null;
     }
 
     public void clear()

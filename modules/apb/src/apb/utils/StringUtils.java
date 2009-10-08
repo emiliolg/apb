@@ -22,9 +22,8 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Properties;
 import java.util.StringTokenizer;
 
 import apb.sunapi.Base64;
@@ -167,14 +166,6 @@ public class StringUtils
         return allStars(pattern, patternStart, patternEnd);
     }
 
-    public static void main(String[] args)
-    {
-        String  pattern = "/**/X.java";
-        String  str = "/A/B/C/X.java";
-        boolean match = matchPath(pattern, str, true);
-        System.out.println("match = " + match);
-    }
-
     public static String encode(String str)
     {
         final int           len = str.length();
@@ -230,32 +221,6 @@ public class StringUtils
         return outBuffer.toString();
     }
 
-    public static String quote(String path)
-    {
-        String result = path;
-
-        if (path.isEmpty() || path.indexOf(' ') == -1) {
-            final StringBuilder builder = new StringBuilder();
-            builder.append('\'');
-
-            for (int i = 0; i < path.length(); i++) {
-                char chr = path.charAt(i);
-
-                if (chr == '\'') {
-                    builder.append("\'");
-                }
-                else {
-                    builder.append(chr);
-                }
-            }
-
-            builder.append('\'');
-            result = builder.toString();
-        }
-
-        return result;
-    }
-
     public static boolean isJavaId(String s)
     {
         if (s.isEmpty() || !Character.isJavaIdentifierStart(s.charAt(0))) {
@@ -269,28 +234,6 @@ public class StringUtils
         }
 
         return true;
-    }
-
-    public static String convert(Object param)
-    {
-        if (param instanceof File[]) {
-            return Arrays.toString((File[]) param);
-        }
-        else if (param instanceof Properties) {
-            //            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            //
-            //            try {
-            //                ((Properties) param).store(baos, "");
-            //                return new String(baos.toByteArray(), "8859_1");
-            //            }
-            //            catch (Exception e) {
-            throw new RuntimeException("bug in property conversion");
-        }
-
-        //        }
-        else {
-            return param.toString();
-        }
     }
 
     public static String nChars(int n, char chr)
@@ -326,7 +269,7 @@ public class StringUtils
         return pattern;
     }
 
-    public static List<String> normalizePaths(List<String> list)
+    public static List<String> normalizePaths(Collection<String> list)
     {
         List<String> patterns = new ArrayList<String>();
 
@@ -377,34 +320,38 @@ public class StringUtils
     }
 
     /**
-     * Create a string with the elements separated by the indicated character
-     * @param list
-     * @param sep
-     * @return A String with the elements of the list separated by the specified separator
+     * Encode the given bytes in a Base64 String
+     * @param bytes
+     * @return A Base64 String
      */
-    @NotNull public static String makeString(@NotNull List<String> list, final char sep)
+    public static String encodeBase64(@NotNull byte[] bytes)
     {
-        StringBuilder buffer = new StringBuilder();
-
-        for (String testGroup : list) {
-            if (buffer.length() > 0) {
-                buffer.append(sep);
-            }
-
-            buffer.append(testGroup);
-        }
-
-        return buffer.toString();
+        return Base64.encode(bytes);
     }
 
     /**
-     * Encode the given String bytes in a Base64 String
-     * @param str The string to encode
-     * @return A Base64 String
+     * Decode the given  Base64 String
+     * @param str The string to decode
+     * @return The decoded bytes
      */
-    public static String encodeBase64(@NotNull String str)
+    public static byte[] decodeBase64(@NotNull String str)
     {
-        return Base64.encode(str.getBytes());
+        return Base64.decode(str);
+    }
+
+    /**
+     * Truncate the first string to the second one length if longer
+     * @param string The string to be truncated
+     * @param reference The string used as the reference length
+     * @return The first string truncated to the second one length
+     */
+    public static String truncateTo(String string, String reference)
+    {
+        if (string.length() > reference.length()) {
+            string = string.substring(0, reference.length());
+        }
+
+        return string;
     }
 
     private static boolean matchPathStart(List<String> patterns, List<String> paths, boolean caseSensitive)

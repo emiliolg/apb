@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.testrunner;
 
@@ -26,12 +29,20 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
-import apb.testrunner.output.SimpleReport;
+import apb.Apb;
+
 import apb.testrunner.output.TestReport;
+
 import apb.utils.FileUtils;
-import static apb.utils.StringUtils.isEmpty;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static java.util.Arrays.asList;
+
+import static apb.Apb.exit;
+
+import static apb.utils.StringUtils.isEmpty;
 //
 // User: emilio
 // Date: Nov 12, 2008
@@ -45,7 +56,9 @@ public class Main
     public static void main(String[] args)
         throws TestSetFailedException
     {
-        TestRunnerOptions options = new TestRunnerOptions(args);
+        Apb.createBaseEnvironment();
+
+        TestRunnerOptions options = new TestRunnerOptions(asList(args));
         options.parse();
 
         TestRunner runner =
@@ -64,6 +77,7 @@ public class Main
 
         final TestSetCreator<?> creator = options.findCreator(classloader);
         final String            suite = options.getSuite();
+        final String            singleTest = options.getSingleTest();
 
         final String     reportSpecFile = options.getReportSpecFile();
         final TestReport report = restoreOutput(reportSpecFile);
@@ -71,14 +85,14 @@ public class Main
         int r;
 
         if (isEmpty(suite)) {
-            r = runner.run(creator, report, classloader);
+            r = runner.run(creator, report, classloader, singleTest);
         }
         else {
-            r = runner.runOne(suite, creator, classloader, report);
+            r = runner.runOne(suite, creator, classloader, report, singleTest);
             saveOutput(report, reportSpecFile);
         }
 
-        System.exit(r);
+        exit(r);
     }
 
     private static ClassLoader createClassLoader(TestRunnerOptions options)
@@ -118,7 +132,7 @@ public class Main
             }
         }
 
-        return result == null ? new SimpleReport(true, true) : result;
+        return result == null ? TestReport.SIMPLE.build(Apb.getEnv()) : result;
     }
 
     private static void saveOutput(@NotNull TestReport report, @Nullable String reportSpecFile)

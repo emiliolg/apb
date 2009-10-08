@@ -30,10 +30,13 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import apb.BuildException;
 import apb.Environment;
+import apb.ProjectBuilder;
 
 import apb.utils.FileUtils;
 
@@ -51,26 +54,28 @@ public class DefinitionsIndex
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final Environment            env;
-    @NotNull private final String[]               excludeDirs;
-    @NotNull private final Map<File, ModulesInfo> mdir;
     @NotNull private final Collection<ModuleInfo> modules;
+    private final File                            definitionsDir;
+    @NotNull private final Map<File, ModulesInfo> mdir;
+
+    @NotNull private final String[] excludeDirs;
 
     //~ Constructors .........................................................................................
 
-    public DefinitionsIndex(@NotNull Environment e)
+    public DefinitionsIndex(@NotNull Environment e, Set<File> projectPath)
     {
-        env = e;
         modules = new TreeSet<ModuleInfo>();
         mdir = new TreeMap<File, ModulesInfo>();
-        String excludes = env.getProperty("project.path.exclude", DEFAULT_EXCLUDES);
+        String excludes = e.getProperty("project.path.exclude", DEFAULT_EXCLUDES);
 
         if (!excludes.equals(DEFAULT_EXCLUDES)) {
             excludes += "," + DEFAULT_EXCLUDES;
         }
 
         excludeDirs = excludes.split(",");
-        loadCache();
+        final String d = e.getProperty("definitions.dir", "");
+        definitionsDir = d.isEmpty() ? new File(FileUtils.getApbDir(), DEFINITIONS_IDX) : new File(d);
+        loadCache(e, projectPath);
     }
 
     //~ Methods ..............................................................................................
@@ -115,10 +120,27 @@ public class DefinitionsIndex
         return result;
     }
 
+    @Override public String toString()
+    {
+        StringBuilder result = new StringBuilder();
+        result.append("[");
+
+        for (ModuleInfo info : this) {
+            if (result.length() > 1) {
+                result.append(", ");
+            }
+
+            result.append(String.valueOf(info));
+        }
+
+        result.append("]");
+        return result.toString();
+    }
+
     private void storeEntries()
     {
         try {
-            File       modulesDir = getModulesDirFile();
+            File       modulesDir = getDefinitionsDir();
             final File dir = modulesDir.getParentFile();
 
             if (!dir.exists() && !dir.mkdirs()) {
@@ -136,17 +158,17 @@ public class DefinitionsIndex
             oos.close();
         }
         catch (IOException e) {
-            env.logSevere("Cannot write definitions cache. Cause: %s\n", e.getMessage());
+            throw new BuildException("Cannot write definitions cache. Cause: " + e.getMessage());
         }
     }
 
-    private void loadCache()
+    private void loadCache(Environment e, final Set<File> projectPath)
     {
         loadEntries();
 
         boolean mustStore = false;
 
-        for (File pdir : env.getProjectPath()) {
+        for (File pdir : projectPath) {
             ModulesInfo info = mdir.get(pdir);
             List<File>  files = new ArrayList<File>();
             listDefinitionFiles(pdir, files);
@@ -154,13 +176,13 @@ public class DefinitionsIndex
 
             if (info == null || lastModified > info.getLastScanTime()) {
                 if (!mustStore) {
-                    env.logVerbose("Regenerating definitions cache");
+                    e.logVerbose("Regenerating definitions cache");
                 }
 
                 mustStore = true;
                 info = new ModulesInfo(pdir, lastModified);
-                info.loadModulesInfo(env, files);
-                env.resetJavac();
+                ProjectBuilder pb = new ProjectBuilder(e, projectPath);
+                info.loadModulesInfo(e, pb, files);
                 mdir.put(pdir, info);
             }
 
@@ -210,14 +232,14 @@ public class DefinitionsIndex
             });
     }
 
-    @NotNull private File getModulesDirFile()
+    @NotNull private File getDefinitionsDir()
     {
-        return new File(env.getApbDir(), DEFINITIONS_IDX);
+        return definitionsDir;
     }
 
     private void loadEntries()
     {
-        File modulesDir = getModulesDirFile();
+        File modulesDir = getDefinitionsDir();
 
         try {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream(modulesDir));

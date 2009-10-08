@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.testrunner;
 
@@ -29,10 +31,11 @@ public class JunitTestSetCreator
 {
     //~ Methods ..............................................................................................
 
-    @Nullable public TestSet<Object> createTestSet(@NotNull Class<Object> testClass)
+    @Nullable public TestSet<Object> createTestSet(@NotNull Class<Object> testClass,
+                                                   @NotNull String        singleTest)
         throws TestSetFailedException
     {
-        return JUnitTestSet.buildTestSet(testClass);
+        return JUnitTestSet.buildTestSet(testClass, singleTest);
     }
 
     @NotNull public Class<Object> getTestClass()

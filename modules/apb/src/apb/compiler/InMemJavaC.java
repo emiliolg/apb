@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,10 +38,10 @@ import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
+import apb.BuildException;
 import apb.Environment;
 
 import apb.utils.FileUtils;
-import apb.utils.StandaloneEnv;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -57,12 +58,13 @@ public class InMemJavaC
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final Map<File, Class> classesByFile;
+    @NotNull private final Environment env;
 
-    @NotNull private final JavaCompiler          compiler;
-    @NotNull private final Environment           env;
-    @NotNull private final MemoryJavaFileManager fileManager;
+    @NotNull private final JavaCompiler compiler;
+
+    @NotNull private final Map<File, Class>      classesByFile;
     @NotNull private final MemoryClassLoader     memoryClassLoader;
+    @NotNull private final MemoryJavaFileManager fileManager;
 
     //~ Constructors .........................................................................................
 
@@ -71,13 +73,18 @@ public class InMemJavaC
      * @param environment
      */
     public InMemJavaC(@NotNull Environment environment)
-        throws MalformedURLException
     {
         env = environment;
         compiler = ToolProvider.getSystemJavaCompiler();
-        memoryClassLoader =
-            new MemoryClassLoader(FileUtils.toUrl(environment.getExtClassPath()),
-                                  getClass().getClassLoader());
+
+        try {
+            memoryClassLoader =
+                new MemoryClassLoader(FileUtils.toUrl(environment.getExtClassPath()),
+                                      getClass().getClassLoader());
+        }
+        catch (MalformedURLException e) {
+            throw new BuildException(e);
+        }
 
         fileManager = new MemoryJavaFileManager(compiler, memoryClassLoader);
         classesByFile = new HashMap<File, Class>();
@@ -85,36 +92,30 @@ public class InMemJavaC
 
     //~ Methods ..............................................................................................
 
-    /**
-     * Compile the file and invoke the main method of the compiled class
-     * Mainly a test method.
-     */
-    public static void main(String[] args)
-        throws ClassNotFoundException, MalformedURLException
-    {
-        if (args.length < 1) {
-            System.err.println("Usage: InMemJavac file arguments...");
-            System.exit(0);
-        }
-
-        File source = new File(args[0]);
-
-        if (!source.exists()) {
-            System.err.println("Can't open: " + args[0]);
-            System.exit(0);
-        }
-
-        System.arraycopy(args, 1, args, 0, args.length - 1);
-
-        InMemJavaC javac = new InMemJavaC(new StandaloneEnv());
-
-        invokeMain(javac.compileToClass(null, source), args);
-    }
-
     @Nullable public File sourceFile(@NotNull Class clazz)
     {
         return memoryClassLoader.equals(clazz.getClassLoader())
                ? memoryClassLoader.sourceFile(clazz.getName()) : null;
+    }
+
+    /**
+     * Compile the source in the specified File load it and return the associated class.
+     * It also keeps a cache of already loaded classes
+     * @param sourcePath The (optional) sourcePath where to find the source for he class
+     * @param source the file to be compiled
+     * @return The compiled class
+     */
+    @NotNull public Class<?> loadClass(@Nullable File sourcePath, @NotNull File source)
+        throws ClassNotFoundException
+    {
+        Class<?> clazz = classesByFile.get(source);
+
+        if (clazz == null) {
+            clazz = compileToClass(sourcePath, source);
+            classesByFile.put(source, clazz);
+        }
+
+        return clazz;
     }
 
     /**
@@ -124,7 +125,7 @@ public class InMemJavaC
      * @return The compiled class
      * @throws ClassNotFoundException if the compilation fails or the class cannot be loaded
      */
-    @NotNull public Class<?> compileToClass(@Nullable File sourcePath, @NotNull File source)
+    @NotNull Class<?> compileToClass(@Nullable File sourcePath, @NotNull File source)
         throws ClassNotFoundException
     {
         String className = memoryClassLoader.classNameFromSource(source);
@@ -143,7 +144,7 @@ public class InMemJavaC
         }
 
         options.add("-implicit:class");
-        
+
         String extClassPath = FileUtils.makePath(env.getExtClassPath());
 
         if (!extClassPath.isEmpty()) {
@@ -164,27 +165,6 @@ public class InMemJavaC
         // If the compilation was successfull load the compiled class and return it
 
         return memoryClassLoader.getClassFromSource(source);
-    }
-
-    /**
-     * Compile the source in the specified File load it and return the associated class.
-     * It also keeps a cache of already loaded classes
-     * @param sourcePath The (optional) sourcePath where to find the source for he class
-     * @param source the file to be compiled
-     * @return The compiled class
-     */
-    @NotNull public Class<?> loadClass(@Nullable File sourcePath, @NotNull File source)
-        throws ClassNotFoundException
-    {
-        Class<?> clazz = classesByFile.get(source);
-
-        if (clazz == null) {
-            env.logVerbose("Loading: %s\n", source);
-            clazz = compileToClass(sourcePath, source);
-            classesByFile.put(source, clazz);
-        }
-
-        return clazz;
     }
 
     /**
@@ -219,9 +199,9 @@ public class InMemJavaC
     static class MemoryJavaOutput
         extends SimpleJavaFileObject
     {
-        private String            className;
-        private long              lastModified;
-        private MemoryClassLoader memoryClassLoader;
+        private final long              lastModified;
+        private final MemoryClassLoader memoryClassLoader;
+        private final String            className;
 
         public MemoryJavaOutput(FileObject fileObject, String className, MemoryClassLoader memoryClassLoader)
         {
@@ -250,8 +230,8 @@ public class InMemJavaC
      */
     private static class ClassInfo
     {
-        private ByteArrayOutputStream bytes;
-        private MemoryJavaOutput      file;
+        private final ByteArrayOutputStream bytes;
+        private final MemoryJavaOutput      file;
 
         public ClassInfo(MemoryJavaOutput fileObject, ByteArrayOutputStream outputStream)
         {
@@ -365,7 +345,7 @@ public class InMemJavaC
     private static class MemoryJavaFileManager
         extends DefaultJavaFileManager
     {
-        private MemoryClassLoader memoryClassLoader;
+        private final MemoryClassLoader memoryClassLoader;
 
         public MemoryJavaFileManager(JavaCompiler stdFileManager, MemoryClassLoader memoryClassLoader)
         {

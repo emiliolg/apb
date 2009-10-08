@@ -21,6 +21,7 @@ package apb.metadata;
 import java.io.File;
 
 import apb.Environment;
+import apb.ProjectBuilder;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,8 +36,9 @@ public class RemoteLibrary
 {
     //~ Instance fields ......................................................................................
 
+    private final String relativeUrl;
+
     @NotNull private String targetDir;
-    private String relativeUrl;
 
     //~ Constructors .........................................................................................
 
@@ -61,7 +63,7 @@ public class RemoteLibrary
 
         if (name != null) {
             File target = env.fileFromBase(targetDir + File.separator + name);
-            result = env.getArtifactsCache().getArtifact(group, relativeUrl + "/" + name, target);
+            result = ProjectBuilder.getArtifactsCache().getArtifact(group, relativeUrl + "/" + name, target);
         }
 
         return result;
@@ -71,7 +73,4 @@ public class RemoteLibrary
     {
         return type == PackageType.JAR ? id + '-' + version + ".jar" : null;
     }
-
-    //~ Static fields/initializers ...........................................................................
-
 }

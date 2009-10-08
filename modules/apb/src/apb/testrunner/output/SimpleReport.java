@@ -24,6 +24,8 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import apb.Environment;
+
 import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -39,18 +41,14 @@ public class SimpleReport
 {
     //~ Instance fields ......................................................................................
 
+    private final boolean showDetail;
+
     @Nullable private transient List<Failure> failures;
     @NotNull private transient PrintWriter    output;
-    private boolean                           showDetail;
 
     //~ Constructors .........................................................................................
 
-    public SimpleReport(boolean showOutput, boolean showDetail)
-    {
-        this(showOutput, showDetail, "");
-    }
-
-    public SimpleReport(boolean showOutput, boolean showDetail, @NotNull String fileName)
+    private SimpleReport(boolean showOutput, boolean showDetail, @NotNull String fileName)
     {
         super(showOutput, fileName);
         this.showDetail = showDetail;
@@ -81,13 +79,16 @@ public class SimpleReport
         super.stopRun();
 
         if (!showDetail) {
-            output.printf("%d suites and %d tests run (%d skipped) in %.3f seconds.", getSuitesRun(), getTotalTestsRun(), getTotalSkipped(),
-                          getTimeEllapsed() / ONE_SECOND);
+            output.printf("%d suites and %d tests run (%d skipped) in %.3f seconds.", getSuitesRun(),
+                          getTotalTestsRun(), getTotalSkipped(), getTimeEllapsed() / ONE_SECOND);
             printFailures(getTotalFailures());
         }
+
         output.flush();
-        if (!fileName.isEmpty())
+
+        if (!fileName.isEmpty()) {
             output.close();
+        }
     }
 
     public void endSuite()
@@ -100,6 +101,7 @@ public class SimpleReport
                               getSuiteTimeEllapsed() / ONE_SECOND);
                 printFailures(getSuiteTestFailures());
             }
+
             if (showOutput) {
                 appendOutAndErr();
             }
@@ -114,7 +116,6 @@ public class SimpleReport
     public synchronized void failure(@NotNull Throwable t)
     {
         super.failure(t);
-        endTest();
 
         final List<Failure> fs = failures == null ? (failures = new ArrayList<Failure>()) : failures;
         fs.add(new Failure(getCurrentTest(), t));
@@ -140,6 +141,7 @@ public class SimpleReport
     private void initOutput(File dir)
     {
         reportsDir = dir;
+
         if (fileName.isEmpty()) {
             output = new PrintWriter(System.out, true);
         }
@@ -199,10 +201,43 @@ public class SimpleReport
 
     //~ Inner Classes ........................................................................................
 
+    public static class Builder
+        implements TestReport.Builder
+    {
+        private final boolean     showDetail;
+        @Nullable private Boolean showOutput;
+        @NotNull private String   output;
+
+        public Builder(boolean showDetail)
+        {
+            this.showDetail = showDetail;
+            output = "";
+        }
+
+        public Builder showOutput(boolean b)
+        {
+            showOutput = b;
+            return this;
+        }
+
+        @NotNull public TestReport build(@NotNull Environment env)
+        {
+            boolean show =
+                showOutput == null ? env.getBooleanProperty(SHOW_OUTPUT_PROPERTY, false) : showOutput;
+            return new SimpleReport(show, showDetail, output);
+        }
+
+        public Builder to(@NotNull String outputFileName)
+        {
+            output = outputFileName;
+            return this;
+        }
+    }
+
     private static class Failure
     {
-        private Throwable cause;
-        private String    test;
+        private final String    test;
+        private final Throwable cause;
 
         public Failure(String test, Throwable cause)
         {

@@ -27,7 +27,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 
+import apb.Environment;
+
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static apb.utils.Constants.*;
 //
@@ -44,7 +47,7 @@ public class JUnitTestReport
 {
     //~ Constructors .........................................................................................
 
-    public JUnitTestReport(boolean showOutput, @NotNull String prefix)
+    protected JUnitTestReport(boolean showOutput, @NotNull String prefix)
     {
         super(showOutput, prefix);
     }
@@ -97,7 +100,11 @@ public class JUnitTestReport
         throws IOException
     {
         final File reportFile = new File(reportsDir, AGGREGATED_FILE);
+
         //reportFile.deleteOnExit();
+        if (!reportsDir.exists()) {
+            reportsDir.mkdirs();
+        }
 
         PrintStream fos = new PrintStream(reportFile, UTF8);
 
@@ -111,7 +118,6 @@ public class JUnitTestReport
         fos.println("</testsuites>");
 
         fos.close();
-
         return reportFile;
     }
 
@@ -133,4 +139,32 @@ public class JUnitTestReport
     private static final long serialVersionUID = 2784000716925297814L;
 
     private static final String AGGREGATED_FILE = "Test-Suites.xml";
+
+    //~ Inner Classes ........................................................................................
+
+    public static class Builder
+        implements TestReport.Builder
+    {
+        @Nullable private Boolean showOutput;
+        @NotNull private String   prefix = "";
+
+        public Builder showOutput(boolean b)
+        {
+            showOutput = b;
+            return this;
+        }
+
+        @NotNull public TestReport build(@NotNull Environment env)
+        {
+            boolean show =
+                showOutput == null ? env.getBooleanProperty(SHOW_OUTPUT_PROPERTY, false) : showOutput;
+            return new JUnitTestReport(show, prefix);
+        }
+
+        public Builder usePrefix(@NotNull String p)
+        {
+            prefix = p;
+            return this;
+        }
+    }
 }

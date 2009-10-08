@@ -23,7 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 import static apb.utils.StringUtils.isEmpty;
 
-public class Console
+public abstract class Console
 {
     //~ Methods ..............................................................................................
 
@@ -32,7 +32,7 @@ public class Console
         String result = "";
 
         while (result.isEmpty()) {
-            result = getConsole().readLine(isEmpty(defValue) ? "%s: " : "%s [%s]: ", prompt, defValue);
+            result = getConsole().readLine(prompt, defValue);
 
             if (result.isEmpty() && defValue != null) {
                 result = defValue;
@@ -47,7 +47,7 @@ public class Console
         Integer result = null;
 
         while (result == null) {
-            String st = getConsole().readLine(defValue == null ? "%s: " : "%s [%d]: ", prompt, defValue);
+            String st = getConsole().readLine(prompt, String.valueOf(defValue));
 
             if (st.isEmpty() && defValue != null) {
                 result = defValue;
@@ -65,29 +65,52 @@ public class Console
         return result;
     }
 
-    public static void main(String[] args)
-    {
-        String s = getString("Entre una opcion", "");
-        System.out.println("s = " + s);
-        s = getString("Entre una opcion", "pepe");
-        System.out.println("s = " + s);
-        int n = getInt("Entre una opcion", 9);
-        System.out.println("n = " + n);
-    }
-
     public static void printf(String msg, Object... args)
     {
         System.console().printf(msg, args);
     }
 
-    private static java.io.Console getConsole()
+    public static Console getConsole()
     {
-        final java.io.Console console = System.console();
+        if (instance == null) {
+            final java.io.Console console = System.console();
 
-        if (console == null) {
-            throw new IllegalStateException("Cannot find a console");
+            if (console == null) {
+                throw new IllegalStateException("Cannot find a console");
+            }
+
+            instance = new DefaultConsole(console);
         }
 
-        return console;
+        return instance;
+    }
+
+    public static void setConsole(Console c)
+    {
+        instance = c;
+    }
+
+    protected abstract String readLine(String prompt, String defaultValue);
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static Console instance;
+
+    //~ Inner Classes ........................................................................................
+
+    public static class DefaultConsole
+        extends Console
+    {
+        private java.io.Console javaConsole;
+
+        public DefaultConsole(java.io.Console c)
+        {
+            javaConsole = c;
+        }
+
+        protected String readLine(String prompt, String defValue)
+        {
+            return javaConsole.readLine(isEmpty(defValue) ? "%s: " : "%s [%s]: ", prompt, defValue);
+        }
     }
 }

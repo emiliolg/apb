@@ -34,7 +34,7 @@ public class DefaultJavaFileManager
 {
     //~ Constructors .........................................................................................
 
-    protected DefaultJavaFileManager(JavaCompiler compiler)
+    DefaultJavaFileManager(JavaCompiler compiler)
     {
         super(compiler.getStandardFileManager(null, null, null));
     }

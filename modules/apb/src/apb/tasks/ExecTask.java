@@ -17,15 +17,14 @@
 package apb.tasks;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import apb.Environment;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,41 +35,35 @@ import org.jetbrains.annotations.Nullable;
 
 //
 public class ExecTask
-    extends CommandTask
+    extends ConditionalTask
 {
     //~ Instance fields ......................................................................................
 
-    private int                          exitValue;
-    @Nullable private final List<String> output;
+    private boolean redirectErrorStream;
+
+    @NotNull private File currentDirectory;
+
+    private int                                exitValue;
+    @NotNull private final List<String>        args;
+    @Nullable private List<String>             output;
+    @NotNull private final Map<String, String> environment;
+
+    /**
+     * The command to be executed
+     */
+    @NotNull private final String cmd;
 
     //~ Constructors .........................................................................................
 
-    public ExecTask(@NotNull Environment env, @NotNull List<String> cmd)
+    ExecTask(@NotNull String cmd, @NotNull List<String> args)
     {
-        super(env, cmd);
-        output = null;
-    }
-
-    public ExecTask(@NotNull Environment env, @NotNull String... args)
-    {
-        this(env, new ArrayList<String>(Arrays.asList(args)));
-    }
-
-    public ExecTask(@NotNull Environment env, @NotNull List<String> output, @NotNull List<String> cmd)
-    {
-        super(env, cmd);
-        this.output = output;
+        this.cmd = cmd;
+        this.args = args;
+        environment = new HashMap<String, String>();
+        currentDirectory = env.getBaseDir();
     }
 
     //~ Methods ..............................................................................................
-
-    public static List<String> executeTo(@NotNull Environment env, @NotNull List<String> cmd)
-    {
-        List<String> output = new ArrayList<String>();
-        ExecTask     task = new ExecTask(env, output, cmd);
-        task.execute();
-        return output;
-    }
 
     public void execute()
     {
@@ -83,12 +76,12 @@ public class ExecTask
         try {
             p = createProcess();
 
+            loggerThread = redirectErrorStream ? null : logStream(p.getErrorStream(), true, true);
+
             if (output == null) {
-                loggerThread = null;
                 logStream(p.getInputStream(), false, false);
             }
             else {
-                loggerThread = logStream(p.getErrorStream(), true, true);
                 loadStream(p.getInputStream());
             }
         }
@@ -126,19 +119,63 @@ public class ExecTask
         return thread;
     }
 
+    public ExecTask outputTo(@NotNull List<String> o)
+    {
+        output = o;
+        return this;
+    }
+
+    /**
+     * Define current working directory for the command to be executed
+     * @param directory The directory to change to
+     */
+    public ExecTask onDir(@NotNull String directory)
+    {
+        currentDirectory = env.fileFromBase(directory);
+        return this;
+    }
+
+    /**
+     * Set the wnvironment to the one specified
+     * @param e The environment to be set
+     */
+    public ExecTask withEnvironment(@NotNull Map<String, String> e)
+    {
+        environment.clear();
+        environment.putAll(e);
+        return this;
+    }
+
+    /**
+     * Wheter to redirect the standard error of the command to the same output of the standard output or not
+     */
+    public ExecTask redirectErrorStream(boolean b)
+    {
+        redirectErrorStream = b;
+        return this;
+    }
+
+    protected void insertArguments(List<String> argList)
+    {
+        args.addAll(0, argList);
+    }
+
     private Process createProcess()
         throws IOException
     {
-        ProcessBuilder      b = new ProcessBuilder(getArguments());
+        List<String> allArgs = new ArrayList<String>();
+        allArgs.add(cmd);
+        allArgs.addAll(args);
+        ProcessBuilder      b = new ProcessBuilder(allArgs);
         Map<String, String> e = b.environment();
 
-        for (Map.Entry<String, String> entry : getEnvironment().entrySet()) {
+        for (Map.Entry<String, String> entry : environment.entrySet()) {
             e.put(entry.getKey(), entry.getValue());
         }
 
-        b.directory(getCurrentDirectory());
+        b.directory(currentDirectory);
 
-        if (output == null) {
+        if (redirectErrorStream) {
             b.redirectErrorStream(true);
         }
 
@@ -189,13 +226,14 @@ public class ExecTask
     private void loadStream(InputStream is)
         throws IOException
     {
-        assert output != null;
+        List<String> o = output;
+        assert o != null;
         final BufferedReader out = new BufferedReader(new InputStreamReader(is));
 
         String line;
 
         while ((line = out.readLine()) != null) {
-            output.add(line);
+            o.add(line);
         }
     }
 
@@ -204,11 +242,11 @@ public class ExecTask
         if (env.isVerbose()) {
             logVerbose("Executing: \n");
 
-            for (String arg : getArguments()) {
+            for (String arg : args) {
                 logVerbose("     %s\n", arg);
             }
 
-            final Map<String, String> e = getEnvironment();
+            final Map<String, String> e = environment;
 
             if (!e.isEmpty()) {
                 logVerbose("Environment: \n");
@@ -218,7 +256,7 @@ public class ExecTask
                 }
             }
 
-            logVerbose("Current directory: %s\n", getCurrentDirectory());
+            logVerbose("Current directory: %s\n", currentDirectory);
         }
     }
 }

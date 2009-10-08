@@ -21,10 +21,12 @@ package apb;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import apb.metadata.CompileInfo;
 import apb.metadata.Dependency;
@@ -33,15 +35,21 @@ import apb.metadata.Library;
 import apb.metadata.Module;
 import apb.metadata.PackageInfo;
 import apb.metadata.PackageType;
-import apb.metadata.ProjectElement;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
+
+import apb.tasks.FileSet;
+import apb.tasks.JarTask;
+import apb.tasks.JavacTask;
 
 import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static apb.tasks.CoreTasks.*;
 
 import static apb.utils.CollectionUtils.addIfNotNull;
 //
@@ -55,35 +63,26 @@ public class ModuleHelper
 {
     //~ Instance fields ......................................................................................
 
-    private final List<ModuleHelper>          dependencies;
-    @NotNull private final List<ModuleHelper> directDependencies;
+    @Nullable private File generatedSource;
+    @Nullable private File output;
+    @Nullable private File packageFile;
+    @Nullable private File source;
+    @Nullable private File sourcePackageFile;
 
-    private File                         generatedSource;
-    @NotNull private final List<Library> localLibraries;
-    private File                         output;
-    private File                         packageDir;
-    private File                         source;
+    @Nullable private Iterable<Library> allLibraries;
+
+    @Nullable private Iterable<ModuleHelper>     dependencies;
+    @Nullable private Iterable<ModuleHelper>     directDependencies;
+    @Nullable private Iterable<TestModuleHelper> testModules;
 
     //~ Constructors .........................................................................................
 
-    ModuleHelper(Module module, Environment env)
+    ModuleHelper(ProjectBuilder pb, Module module)
     {
-        super(module, env);
-
-        dependencies = new ArrayList<ModuleHelper>();
-
-        directDependencies = new ArrayList<ModuleHelper>();
-        localLibraries = new ArrayList<Library>();
-
-        // Add Direct Dependencies & local libraries
-        for (Dependency dependency : module.dependencies()) {
-            if (dependency.isModule()) {
-                directDependencies.add((ModuleHelper) env.getHelper(dependency.asModule()));
-            }
-            else if (dependency.isLibrary()) {
-                localLibraries.add(dependency.asLibrary());
-            }
-        }
+        super(pb, module);
+        putProperty(MODULE_PROP_KEY, getName());
+        putProperty(MODULE_PROP_KEY + ID_SUFFIX, getId());
+        putProperty(MODULE_PROP_KEY + DIR_SUFFIX, module.getDir());
     }
 
     //~ Methods ..............................................................................................
@@ -96,56 +95,163 @@ public class ModuleHelper
     /**
      * Get current module output directory
      * @return current module output directory
-     * @throws IllegalStateException If there is no current module
      */
     @NotNull public File getOutput()
     {
         if (output == null) {
-            throw new IllegalStateException("Module:'" + getName() + "' not initialized");
+            output = fileFromBase(getModule().output);
         }
 
         return output;
     }
 
-    public File getSource()
+    /**
+     * Get current module source directory
+     * @return current module source directory
+     */
+    @NotNull public File getSourceDir()
     {
+        if (source == null) {
+            source = fileFromBase(getModule().source);
+        }
+
         return source;
     }
 
-    public File getPackageFile()
+    /**
+     * Get current module generated sources directory
+     * @return current module generated sources directory
+     */
+    @NotNull public File getGeneratedSource()
     {
-        return new File(packageDir, getPackageName() + getPackageInfo().type.getExt());
+        if (generatedSource == null) {
+            generatedSource = fileFromBase(getModule().generatedSource);
+        }
+
+        return generatedSource;
     }
 
-    public File getSourcePackageFile()
+    /**
+     * Get current module package (.jar, .war etc) file
+     * @return current module pacjage file
+     */
+    @NotNull public File getPackageFile()
     {
-        return new File(packageDir, getPackageName() + SRC_JAR);
+        if (packageFile == null) {
+            if (!hasPackage()) {
+                throw new IllegalArgumentException("Module: '" + getName() + "' does not have a package.");
+            }
+
+            File dir = FileUtils.normalizeFile(fileFromBase(getModule().pkg.dir));
+            packageFile = new File(dir, getPackageName() + getPackageType().getExt());
+        }
+
+        return packageFile;
     }
 
-    public PackageInfo getPackageInfo()
+    /**
+     * Get current module sources package (xxxx-src.jar) file
+     * @return current module sources package file
+     */
+    @NotNull public File getSourcePackageFile()
+    {
+        if (sourcePackageFile == null) {
+            File dir = FileUtils.normalizeFile(fileFromBase(getModule().pkg.dir));
+            sourcePackageFile = new File(dir, getPackageName() + SRC_JAR);
+        }
+
+        return sourcePackageFile;
+    }
+
+    @NotNull public PackageInfo getPackageInfo()
     {
         return getModule().pkg;
     }
 
-    @NotNull public List<Library> getLocalLibraries()
+    public boolean hasPackage()
     {
-        return localLibraries;
+        return getPackageType() != PackageType.NONE;
     }
 
-    public ResourcesInfo getResourcesInfo()
+    @NotNull public PackageType getPackageType()
+    {
+        return getPackageInfo().type;
+    }
+
+    @NotNull public ResourcesInfo getResourcesInfo()
     {
         return getModule().resources;
     }
 
     @NotNull public Iterable<ModuleHelper> getDirectDependencies()
     {
+        if (directDependencies == null) {
+            ArrayList<ModuleHelper> list = new ArrayList<ModuleHelper>();
+
+            for (Dependency dependency : getModule().dependencies()) {
+                if (dependency.isModule()) {
+                    list.add(dependency.asModule().getHelper());
+                }
+            }
+
+            directDependencies = list;
+        }
+
         return directDependencies;
     }
-    
-    @NotNull public Iterable<ModuleHelper> getDependencies() {
+
+    @NotNull public Iterable<Library> getAllLibraries()
+    {
+        if (allLibraries == null) {
+            List<Library> list = new ArrayList<Library>();
+
+            for (Dependency dependency : getModule().dependencies()) {
+                if (dependency.isLibrary()) {
+                    list.add(dependency.asLibrary());
+                }
+            }
+
+            for (Library l : getCompileInfo().extraLibraries()) {
+                list.add(l);
+            }
+
+            allLibraries = list;
+        }
+
+        return allLibraries;
+    }
+
+    @NotNull public Iterable<ModuleHelper> getDependencies()
+    {
+        if (dependencies == null) {
+            // Topological Sort elements
+            List<ModuleHelper> list = new ArrayList<ModuleHelper>();
+            tsort(list, new IdentitySet<ModuleHelper>());
+
+            if (mustShow(DebugOption.DEPENDENCIES)) {
+                logVerbose("Dependencies for: %s = %s\n", getName(), list.toString());
+            }
+
+            dependencies = list;
+        }
+
         return dependencies;
     }
 
+    @NotNull public Iterable<TestModuleHelper> getTestModules()
+    {
+        if (testModules == null) {
+            List<TestModuleHelper> list = new ArrayList<TestModuleHelper>();
+
+            for (TestModule testModule : getModule().tests()) {
+                list.add(testModule.getHelper());
+            }
+
+            testModules = list;
+        }
+
+        return testModules;
+    }
 
     public List<File> compileClassPath()
     {
@@ -157,37 +263,11 @@ public class ModuleHelper
         return false;
     }
 
-    public Collection<File> deepClassPath(boolean useJars, boolean addModuleOutput)
-    {
-        Set<File> result = new HashSet<File>();
-
-        if (addModuleOutput) {
-            result.add(useJars && hasPackage() ? getPackageFile() : getOutput());
-        }
-
-        // First classpath for module dependencies
-        for (ModuleHelper dependency : getDirectDependencies()) {
-            result.addAll(dependency.deepClassPath(useJars, true));
-        }
-
-        // The classpath for libraries
-        for (Library library : getLocalLibraries()) {
-            addIfNotNull(result, library.getArtifact(env, PackageType.JAR));
-        }
-
-        return result;
-    }
-
-    public File getGeneratedSource()
-    {
-        return generatedSource;
-    }
-
     public List<File> getSourceDirs()
     {
         List<File> sourceDirs = new ArrayList<File>();
 
-        sourceDirs.add(getSource());
+        sourceDirs.add(getSourceDir());
         sourceDirs.add(getGeneratedSource());
         return sourceDirs;
     }
@@ -207,15 +287,23 @@ public class ModuleHelper
         return trimDashes(getModule().pkg.name);
     }
 
-    public Set<ModuleHelper> listAllModules()
+    public Set<String> listAllModules()
     {
-        Set<ModuleHelper> result = new LinkedHashSet<ModuleHelper>();
+        Set<String> result = new TreeSet<String>();
 
-        for (ModuleHelper mod : dependencies) {
-            mod.addTo(result);
+        for (ModuleHelper mod : getDependencies()) {
+            result.add(mod.getId());
+
+            for (TestModuleHelper t : mod.getTestModules()) {
+                result.add(t.getId());
+            }
         }
 
-        addTo(result);
+        result.add(getId());
+
+        for (TestModuleHelper t : getTestModules()) {
+            result.add(t.getId());
+        }
 
         return result;
     }
@@ -225,37 +313,147 @@ public class ModuleHelper
         return classPath(false, true, false);
     }
 
-    public boolean hasPackage()
-    {
-        return getPackageInfo().type != PackageType.NONE;
-    }
-
     public List<String> manifestClassPath()
     {
         List<String> files = new ArrayList<String>();
 
-        // Make the files relative to the jarfile
-        File jarFileDir = getPackageFile().getParentFile();
+        if (getPackageInfo().addClassPath) {
+            for (File file : classPath(true, false, false)) {
+                files.add(file.getPath());
+            }
 
-        for (File file : classPath(true, false, false)) {
-            files.add(FileUtils.makeRelative(jarFileDir, file).getPath());
+            files.addAll(getPackageInfo().extraClassPathEntries());
         }
 
-        files.addAll(getPackageInfo().extraClassPathEntries());
         return files;
     }
 
-    protected void initDependencyGraph()
+    @NotNull @Override public ModuleHelper getModuleHelper()
     {
-        // Topological Sort elements
-        tsort(dependencies, new IdentitySet<ModuleHelper>());
+        return this;
+    }
 
-        if (env.mustShow(DebugOption.DEPENDENCIES)) {
-            env.logVerbose("Dependencies for: %s = %s\n", getName(), dependencies.toString());
+    public void clean()
+    {
+        delete(getOutput()).execute();
+        delete(getGeneratedSource()).execute();
+
+        if (hasPackage()) {
+            delete(getPackageFile()).execute();
+
+            if (getPackageInfo().generateSourcesJar) {
+                delete(getSourcePackageFile()).execute();
+            }
         }
     }
 
-    protected void doBuild(String commandName)
+    public void createPackage()
+    {
+        final PackageInfo packageInfo = getPackageInfo();
+
+        if (hasPackage()) {
+            final List<Module> additionalDeps = modulesToPackage();
+
+            Map<String, Set<String>> services = mergeServices(additionalDeps);
+
+            JarTask jarTask =
+                jar(getPackageFile()).fromDir(getOutput())  //
+                                     .mainClass(packageInfo.mainClass)  //
+                                     .version(getModule().version)  //
+                                     .manifestAttributes(packageInfo.attributes())  //
+                                     .withClassPath(manifestClassPath())  //
+                                     .withServices(services).excluding(packageInfo.excludes());
+
+            // prepare dependencies included in package
+
+            if (!additionalDeps.isEmpty()) {
+                for (Module m : additionalDeps) {
+                    logVerbose("Adding module '%s'.\n", m.toString());
+                    jarTask.addDir(m.getHelper().getOutput());
+                }
+            }
+
+            // run task
+            jarTask.execute();
+
+            // generate sources jar
+            if (packageInfo.generateSourcesJar) {
+                jar(getSourcePackageFile()).fromDir(getSourceDir())  //
+                                           .excluding(FileUtils.DEFAULT_EXCLUDES)  //
+                                           .execute();
+            }
+        }
+    }
+
+    public void compile()
+    {
+        CompileInfo   info = getCompileInfo();
+        List<FileSet> fileSets = getSourceFileSets(info);
+
+        JavacTask javac =
+            javac(fileSets).to(getOutput())  //
+                           .withClassPath(compileClassPath())  //
+                           .sourceVersion(info.source)  //
+                           .targetVersion(info.target)  //
+                           .withAnnotationOptions(info.annotationOptions())  //
+                           .withExtraLibraries(info.extraLibraries())  //
+                           .debug(info.debug)  //
+                           .deprecated(info.deprecated)  //
+                           .lint(info.lint)  //
+                           .showWarnings(info.warn)  //
+                           .failOnWarning(info.failOnWarning)  //
+                           .lintOptions(info.lintOptions)  //
+                           .trackUnusedDependencies(info.validateDependencies)  //
+                           .processing(info.getProcessingOption().paramValue())  //
+                           .usingDefaultFormatter(info.defaultErrorFormatter)  //
+                           .excludeFromWarning(info.warnExcludes())  //
+                           .useName(getName());
+
+        if (!info.warnGenerated) {
+            javac.excludeFromWarning(getGeneratedSource());
+        }
+
+        javac.execute();
+    }
+
+    public void generateJavadoc()
+    {
+        JavadocInfo info = getJavadocInfo();
+
+        javadoc(getModule().source).to(info.output)  //
+                                   .maxMemory(info.memory)  //
+                                   .withClassPath(compileClassPath())  //
+                                   .withEncoding(info.encoding)  //
+                                   .withVisibility(info.visibility)  //
+                                   .withLocale(info.locale)  //
+                                   .withOverview(info.overview)  //
+                                   .withTitle(info.title)  //
+                                   .withHeader(info.header)  //
+                                   .withFooter(info.footer)  //
+                                   .withBottom(info.bottom)  //
+                                   .withWindowTitle(info.windowTitle)  //
+                                   .withLinks(info.links())  //
+                                   .withOfflineLinks(info.offlineLinks())  //
+                                   .withGroups(info.groups())  //
+                                   .includeAuthorInfo(info.author)  //
+                                   .includeDeprecatedInfo(info.deprecated)  //
+                                   .includeVersionInfo(info.version)  //
+                                   .includeSinceInfo(info.since)  //
+                                   .includeHelpLinks(info.help)  //
+                                   .additionalOptions(info.additionalOptions())  //
+                                   .splitIndexPerLetter(info.splitIndexPerLetter)  //
+                                   .generateIndex(info.index)  //
+                                   .generateHtmlSource(info.linkSource)  //
+                                   .generateClassHierarchy(info.tree)  //
+                                   .generateDeprecatedList(info.generateDeprecatedList)  //
+                                   .createUsePages(info.use)  //
+                                   .usingDoclet(info.doclet)  //
+                                   .including(info.includes())  //
+                                   .excluding(info.excludes())  //
+                                   .execute();
+    }
+
+    protected void build(ProjectBuilder pb, String commandName)
     {
         Command command = findCommand(commandName);
 
@@ -263,39 +461,41 @@ public class ModuleHelper
             throw new BuildException("Invalid command: " + commandName);
         }
 
-        if (command.isRecursive() && !env.isNonRecursive()) {
-            for (ModuleHelper dep : dependencies) {
-                dep.execute(commandName);
+        if (command.isRecursive() && !isNonRecursive()) {
+            for (ModuleHelper dep : getDependencies()) {
+                pb.execute(dep, commandName);
             }
         }
         else {
-            for (ModuleHelper dep : dependencies) {
-                dep.activate();
-            }
-
             for (Command cmd : command.getDirectDependencies()) {
-                build(cmd.getQName());
+                pb.build(this, cmd.getQName());
             }
         }
 
-        execute(commandName);
+        pb.execute(this, commandName);
     }
 
-    void activate(@NotNull ProjectElement activatedModule)
+    /**
+     * todo this should be replaced by runtimepath or compileclasspath....
+     */
+    Collection<File> deepClassPath(boolean useJars, boolean addModuleOutput)
     {
-        super.activate(activatedModule);
+        Set<File> result = new HashSet<File>();
 
-        Module module = getModule();
-        output = env.fileFromBase(module.output);
-        source = env.fileFromBase(module.source);
-        generatedSource = env.fileFromBase(module.generatedSource);
-
-        packageDir = FileUtils.normalizeFile(env.fileFromBase(module.pkg.dir));
-
-        for (TestModule testModule : module.tests()) {
-            final TestModuleHelper helper = (TestModuleHelper) env.getHelper(testModule);
-            helper.setModuleToTest(this);
+        if (addModuleOutput) {
+            result.add(useJars && hasPackage() ? getPackageFile() : getOutput());
         }
+
+        for (Dependency dependency : getModule().dependencies()) {
+            if (dependency.isModule()) {
+                result.addAll(dependency.asModule().getHelper().deepClassPath(useJars, true));
+            }
+            else if (dependency.isLibrary()) {
+                addIfNotNull(result, dependency.asLibrary().getArtifact(this, PackageType.JAR));
+            }
+        }
+
+        return result;
     }
 
     private static String trimDashes(String s)
@@ -304,7 +504,88 @@ public class ModuleHelper
         return s.substring(s.charAt(0) == '-' ? 1 : 0, s.charAt(l - 1) == '-' ? l - 1 : l);
     }
 
-    protected List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
+    private static void mergeServices(Map<String, Set<String>> mergedServices,
+                                      Map<String, Set<String>> services)
+    {
+        for (Map.Entry<String, Set<String>> e : services.entrySet()) {
+            String            service = e.getKey();
+            Set<String>       providers = e.getValue();
+            final Set<String> mergedProviders = mergedServices.get(service);
+
+            if (mergedProviders == null) {
+                mergedServices.put(service, new HashSet<String>(providers));
+            }
+            else {
+                mergedProviders.addAll(providers);
+            }
+        }
+    }
+
+    private List<FileSet> getSourceFileSets(CompileInfo info)
+    {
+        List<FileSet> fileSets = new ArrayList<FileSet>();
+
+        fileSets.add(FileSet.fromDir(getSourceDir()).including(info.includes()).excluding(info.excludes()));
+
+        if (getGeneratedSource().exists()) {
+            fileSets.add(FileSet.fromDir(getGeneratedSource()));
+        }
+
+        return fileSets;
+    }
+
+    private Map<String, Set<String>> mergeServices(List<Module> additionalDeps)
+    {
+        final Map<String, Set<String>> services = getPackageInfo().services();
+
+        if (additionalDeps.isEmpty()) {
+            return services;
+        }
+
+        // add packaged dependencies
+        Map<String, Set<String>> mergedServices = new HashMap<String, Set<String>>();
+
+        for (Module m : additionalDeps) {
+            mergeServices(mergedServices, m.pkg.services());
+        }
+
+        mergeServices(mergedServices, services);
+
+        return mergedServices;
+    }
+
+    private List<Module> modulesToPackage()
+    {
+        List<Module>      result = new ArrayList<Module>();
+        final PackageInfo packageInfo = getPackageInfo();
+
+        switch (packageInfo.includeDependencies) {
+        case DIRECT:
+
+            for (ModuleHelper dep : getDirectDependencies()) {
+                result.add(dep.getModule());
+            }
+
+            break;
+        case ALL:
+
+            for (ModuleHelper dep : getDependencies()) {
+                result.add(dep.getModule());
+            }
+
+            break;
+        }
+
+        for (Dependency dep : packageInfo.additionalDependencies()) {
+            if (dep.isModule()) {
+                result.add(dep.asModule());
+            }
+        }
+
+        return result;
+    }
+
+    private List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
     {
         List<File> result = new ArrayList<File>();
 
@@ -313,28 +594,20 @@ public class ModuleHelper
             result.add(getOutput());
         }
 
+        // Add dependencies from modules
         for (Dependency dependency : getModule().dependencies()) {
             if (dependency.mustInclude(compile)) {
                 if (dependency.isModule()) {
-                    ModuleHelper hlp = (ModuleHelper) env.getHelper(dependency.asModule());
-                    result.add(useJars && hlp.hasPackage() ? hlp.getPackageFile() : hlp.getOutput());
+                    ModuleHelper m = dependency.asModule().getHelper();
+                    result.add(useJars && m.hasPackage() ? m.getPackageFile() : m.getOutput());
                 }
                 else if (dependency.isLibrary()) {
-                    addIfNotNull(result, dependency.asLibrary().getArtifact(env, PackageType.JAR));
+                    addIfNotNull(result, dependency.asLibrary().getArtifact(this, PackageType.JAR));
                 }
             }
         }
 
         return result;
-    }
-
-    private void addTo(Set<ModuleHelper> result)
-    {
-        result.add(this);
-
-        for (TestModule testModule : getModule().tests()) {
-            result.add((ModuleHelper) env.getHelper(testModule));
-        }
     }
 
     /**
@@ -346,7 +619,7 @@ public class ModuleHelper
     {
         visited.add(this);
 
-        for (ModuleHelper dependency : directDependencies) {
+        for (ModuleHelper dependency : getDirectDependencies()) {
             if (!visited.contains(dependency)) {
                 dependency.tsort(elements, visited);
                 elements.add(dependency);
@@ -356,5 +629,6 @@ public class ModuleHelper
 
     //~ Static fields/initializers ...........................................................................
 
-    public static final String SRC_JAR = "-src.jar";
+    public static final String  SRC_JAR = "-src.jar";
+    private static final String MODULE_PROP_KEY = "module";
 }

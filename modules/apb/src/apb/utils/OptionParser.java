@@ -19,13 +19,14 @@
 package apb.utils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import apb.Messages;
 
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+
+import static apb.Apb.exit;
 
 import static apb.utils.StringUtils.nChars;
 
@@ -36,28 +37,36 @@ import static apb.utils.StringUtils.nChars;
  * one-letter options can be combined (preceding them with a single
  * '-').
  */
-public class OptionParser
+public abstract class OptionParser
 {
     //~ Instance fields ......................................................................................
 
     protected final List<String> arguments;
 
-    protected List<Option> options = null;
+    @NotNull protected final List<Option> options;
+    private final boolean                 exitOnStopParsing = true;
 
-    private final String  appName;
-    private final boolean exitOnStopParsing = true;
-    private final String  versionNumber;
+    private final String appName;
 
     //~ Constructors .........................................................................................
 
-    protected OptionParser(final String[] args, String name, String version)
+    protected OptionParser(final List<String> args, String name)
     {
-        arguments = Arrays.asList(args);
+        arguments = args;
         appName = name;
-        versionNumber = version;
+        options = new ArrayList<Option>();
+        options.add(new HelpOption(this));
+        options.add(new VersionOption(this));
     }
 
     //~ Methods ..............................................................................................
+
+    public abstract void printVersion();
+
+    @NotNull public List<Option> getOptions()
+    {
+        return options;
+    }
 
     public List<String> getArguments()
     {
@@ -116,23 +125,26 @@ public class OptionParser
             String ops = opt.getHelp();
             System.err.println(ops + nChars(len - ops.length(), ' ') + ": " + opt.getDescription());
         }
-
-        System.exit(0);
     }
 
-    protected final Option<Boolean> addBooleanOption(final char letter, @NotNull final String name,
-                                                     @NotNull String description)
+    public String getAppName()
+    {
+        return appName;
+    }
+
+    public final Option<Boolean> addBooleanOption(final char letter, @NotNull final String name,
+                                                  @NotNull String description)
     {
         return addOption(Boolean.class, letter, name, description, "");
     }
 
-    protected final Option<Integer> addIntegerOption(final char letter, @NotNull final String name,
-                                                     @NotNull String description, String valueDescription)
+    public final Option<Integer> addIntegerOption(final char letter, @NotNull final String name,
+                                                  @NotNull String description, String valueDescription)
     {
         return addOption(Integer.class, letter, name, description, valueDescription);
     }
 
-    protected List<String> parse()
+    public List<String> parse()
     {
         int i;
 
@@ -201,17 +213,6 @@ public class OptionParser
         throw new RuntimeException();
     }
 
-    String getAppName()
-    {
-        return appName;
-    }
-
-    void printVersion()
-    {
-        System.err.println(getAppName() + " version: " + versionNumber);
-        System.exit(0);
-    }
-
     private int execute(Option opt, int i)
     {
         if (opt.isBoolean()) {
@@ -238,41 +239,15 @@ public class OptionParser
                                     @NotNull final String name, @NotNull String description,
                                     @NotNull String valueDescription)
     {
-        init();
         final Option<T> opt = new Option<T>(this, type, letter, name, description, valueDescription);
         options.add(opt);
         return opt;
     }
 
-    private void init()
-    {
-        if (options == null) {
-            options = new ArrayList<Option>();
-            final Option<Boolean> helpOption =
-                new Option<Boolean>(this, Boolean.class, 'h', Option.HELP, Messages.HELP, "") {
-                    public void execute(String v)
-                    {
-                        printHelp();
-                    }
-                };
-
-            options.add(helpOption);
-
-            final Option<Boolean> versionOption =
-                new Option<Boolean>(this, Boolean.class, '\0', Option.VERSION, Messages.VERSION, "") {
-                    public void execute(String v)
-                    {
-                        printVersion();
-                    }
-                };
-            options.add(versionOption);
-        }
-    }
-
     private void stopParsing()
     {
         if (exitOnStopParsing) {
-            System.exit(1);
+            exit(1);
         }
 
         throw new RuntimeException();
@@ -293,18 +268,18 @@ public class OptionParser
     */
     public static class Option<T>
     {
-        private boolean            canRepeat;
-        private final String       description;
-        private final char         letter;
-        private final String       name;
-        private final OptionParser optionParser;
-        private final Class<T>     type;
-        private final List<T>      validValues;
+        final OptionParser     optionParser;
+        private boolean        canRepeat;
+        private final char     letter;
+        private final Class<T> type;
+        private final List<T>  validValues;
 
-        private T      value;
-        private String valueDescription;
+        private final List<T> values;
+        private final String  description;
+        private final String  name;
+        private final String  valueDescription;
 
-        private List<T> values;
+        private T value;
 
         Option(OptionParser optionParser, final Class<T> type, final char letter, @NotNull final String name,
                @NotNull String description, @NotNull String valueDescription)
@@ -382,7 +357,7 @@ public class OptionParser
         public void setValue(String str)
         {
             value =
-                type.cast(type == Integer.class ? Integer.valueOf(str)
+                type.cast(type == Integer.class ? str.isEmpty() ? 0 : Integer.valueOf(str)
                                                 : type == Boolean.class ? Boolean.valueOf(str) : str);
         }
 
@@ -446,5 +421,35 @@ public class OptionParser
 
         @NonNls static final String HELP = "help";
         @NonNls static final String VERSION = "version";
+    }
+
+    private static class HelpOption
+        extends Option<Boolean>
+    {
+        public HelpOption(OptionParser optionParser)
+        {
+            super(optionParser, Boolean.class, 'h', Option.HELP, Messages.HELP, "");
+        }
+
+        public void execute(String v)
+        {
+            optionParser.printHelp();
+            exit(0);
+        }
+    }
+
+    private static class VersionOption
+        extends Option<Boolean>
+    {
+        public VersionOption(OptionParser optionParser)
+        {
+            super(optionParser, Boolean.class, '\0', Option.VERSION, Messages.VERSION, "");
+        }
+
+        public void execute(String v)
+        {
+            optionParser.printVersion();
+            exit(0);
+        }
     }
 }

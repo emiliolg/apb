@@ -18,8 +18,11 @@
 
 package apb.metadata;
 
-import apb.Environment;
+import apb.ProjectBuilder;
+import apb.ProjectElementHelper;
+
 import apb.utils.NameUtils;
+
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -29,11 +32,6 @@ import org.jetbrains.annotations.NotNull;
 public abstract class ProjectElement
     implements Named
 {
-    public ProjectElement()
-    {
-        NameRegistry.intern(this);
-    }
-
     //~ Instance fields ......................................................................................
 
     /**
@@ -63,42 +61,51 @@ public abstract class ProjectElement
      */
     @BuildProperty public String version = "";
 
+    @NotNull private final ProjectElementHelper helper;
+
+    //~ Constructors .........................................................................................
+
+    public ProjectElement()
+    {
+        helper = ProjectBuilder.register(NameRegistry.intern(this));
+    }
+
     //~ Methods ..............................................................................................
 
     @BuildTarget(description = "Deletes all output directories (compiled code and packages).")
-    public abstract void clean(Environment env);
+    public abstract void clean();
 
     @BuildTarget(description = "Copy (eventually filtering) resources to the output directory.")
-    public abstract void resources(Environment env);
+    public abstract void resources();
 
     @BuildTarget(
                  depends = "resources",
                  description = "Compile classes and place them in the output directory."
                 )
-    public abstract void compile(Environment env);
+    public abstract void compile();
 
     @BuildTarget(
                  depends = "compile",
                  description = "Compile test classes.",
                  recursive = false
                 )
-    public abstract void compileTests(Environment env);
+    public abstract void compileTests();
 
     @BuildTarget(
                  depends = { "compile-tests", "package" },
                  description =
                  "Test the compiled sources, generating reports and (optional) coverage information.",
-                 recursive = false 
+                 recursive = false
                 )
-    public abstract void runTests(Environment env);
-    
+    public abstract void runTests();
+
     @BuildTarget(
                  depends = "compile-tests",
                  description =
                  "Run test with the annotation @Test(group=\"minimal\") generating reports and (optional) coverage information.",
-                 recursive = false 
+                 recursive = false
                 )
-    public abstract void runMinimalTests(Environment env);
+    public abstract void runMinimalTests();
 
     @BuildTarget(
                  depends = "compile",
@@ -106,25 +113,21 @@ public abstract class ProjectElement
                  description =
                  "Creates a jar file containing the compiled classes and resources of the module."
                 )
-    public abstract void packageit(Environment env);
+    public abstract void packageit();
 
-//    @BuildTarget(description = "Generate Idea project and module files.")
-//    public void genIdea(Environment env)
-//    {
-//        IdeaTask.execute(env);
-//    }
+    @NotNull public ProjectElementHelper getHelper()
+    {
+        return helper;
+    }
 
     /**
      * Initialization hook.
      * You can override this method to provide initializations AFTER
      * the Object is constructed. This can be useful to avoid problem with cyclic references.
      */
-    public void init()
-    {
-    }
+    public void init() {}
 
-    @NotNull
-    public String getName()
+    @NotNull public String getName()
     {
         return NameUtils.name(getClass());
     }

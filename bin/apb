@@ -53,6 +53,8 @@ fi
 if [ -z $APB_MEMORY ]
 then
 	APB_MEMORY="-Xmx256m"
+else
+	APB_MEMORY="-Xmx${APB_MEMORY}m"
 fi
 # launch APB
 

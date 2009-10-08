@@ -22,14 +22,14 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
-import apb.metadata.Module;
+import apb.index.DefinitionsIndex;
 
 import apb.utils.DebugOption;
 import apb.utils.OptionParser;
-import apb.utils.StandaloneEnv;
+
+import static java.lang.System.err;
+import static java.lang.System.getProperty;
 
 import static apb.Messages.*;
 //
@@ -42,23 +42,23 @@ class ApbOptions
 {
     //~ Instance fields ......................................................................................
 
-    private Option<String> debug;
+    private final Option<String> debug;
 
-    private Option<String> defineProperty;
+    private final Option<String> defineProperty;
 
-    private Option<Boolean> forceBuild;
-    private Option<Boolean> noFailOnError;
-    private Option<Boolean> nonRecursive;
-    private Option<Boolean> quiet;
-    private Option<Boolean> showStackTrace;
-    private Option<Boolean> track;
-    private Option<Boolean> verbose;
+    private final Option<Boolean> forceBuild;
+    private final Option<Boolean> noFailOnError;
+    private final Option<Boolean> nonRecursive;
+    private final Option<Boolean> quiet;
+    private final Option<Boolean> showStackTrace;
+    private final Option<Boolean> track;
+    private final Option<Boolean> verbose;
 
     //~ Constructors .........................................................................................
 
-    public ApbOptions(String[] ops)
+    public ApbOptions(List<String> ops)
     {
-        super(ops, "apb", version());
+        super(ops, "apb");
         showStackTrace = addBooleanOption('s', "show-stack-trace", SHOW_STACK_TRACE);
         quiet = addBooleanOption('q', "quiet", QUIET_OUTPUT);
         verbose = addBooleanOption('v', "verbose", VERBOSE);
@@ -87,7 +87,7 @@ class ApbOptions
 
     public String[] getArgFullDescription()
     {
-        return new String[] { MODULE_OR_PROJECT, COMMANDS(printCommands()) };
+        return new String[] { MODULE_OR_PROJECT, COMMANDS };
     }
 
     public List<String> parse()
@@ -96,19 +96,13 @@ class ApbOptions
         return super.parse();
     }
 
-    public void initEnv(Environment environment)
+    public void initEnv(BaseEnvironment environment)
     {
         if (quiet.getValue()) {
             environment.setQuiet();
         }
 
-        if (showStackTrace.getValue()) {
-            environment.setShowStackTrace();
-        }
-
-        if (nonRecursive.getValue()) {
-            environment.setNonRecursive();
-        }
+        environment.setNonRecursive(nonRecursive.getValue());
 
         environment.setDebugOptions(debugOptions());
 
@@ -134,7 +128,23 @@ class ApbOptions
         return result;
     }
 
-    public EnumSet<DebugOption> debugOptions()
+    public boolean showStackTrace()
+    {
+        return showStackTrace.getValue();
+    }
+
+    public void printVersion()
+    {
+        final Package pkg = ApbOptions.class.getPackage();
+        final String  version = pkg.getImplementationVersion();
+        err.printf("%-10s: %s\n", pkg.getName(), version == null ? "" : version);
+        err.printf("%-10s: %s\n", "java", getProperty("java.version"));
+        err.printf("%-10s: %s %s on %s\n", "OS", getProperty("os.name"), getProperty("os.version"),
+                   getProperty("os.arch"));
+        err.printf("%-10s: %dM\n", "Memory", Runtime.getRuntime().maxMemory() / MB);
+    }
+
+    EnumSet<DebugOption> debugOptions()
     {
         EnumSet<DebugOption> result = EnumSet.noneOf(DebugOption.class);
 
@@ -161,44 +171,19 @@ class ApbOptions
         return result;
     }
 
-    private static String version()
-    {
-        final String result = ApbOptions.class.getPackage().getImplementationVersion();
-        return result == null ? "" : result;
-    }
-
-    private static String printCommands()
-    {
-        StringBuilder cmds = new StringBuilder();
-
-        // Create a Mock Module Helper
-        ModuleHelper mock = new ModuleHelper(new Module(), new StandaloneEnv());
-        Set<String>  nameSpaces = new TreeSet<String>();
-
-        for (Command cmd : mock.listCommands().values()) {
-            if (cmd.hasNameSpace()) {
-                nameSpaces.add(cmd.getNameSpace());
-            }
-            else {
-                cmds.append(cmds.length() == 0 ? "[ " : " | ");
-                cmds.append(cmd.getName());
-            }
-        }
-
-        for (String nameSpace : nameSpaces) {
-            cmds.append(" | ").append(nameSpace).append(":*");
-        }
-
-        cmds.append(" ]");
-        return cmds.toString();
-    }
-
     private void doCompletion()
     {
         if (arguments.size() >= 3 && "--complete".equals(arguments.get(0))) {
-            OptionCompletion op = new OptionCompletion(options);
+            final DefinitionsIndex index =
+                new DefinitionsIndex(Apb.createBaseEnvironment(), Apb.loadProjectPath());
+            OptionCompletion       op = new OptionCompletion(options, index);
 
-            op.execute(arguments);
+            System.out.println(op.execute(arguments));
+            Apb.exit(0);
         }
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final long MB = 1024 * 1024;
 }

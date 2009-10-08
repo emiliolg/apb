@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +15,10 @@
 // limitations under the License
 //
 
+
 package apb.compiler;
 
 import java.io.File;
-import static java.io.File.pathSeparator;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,8 +28,12 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
 import apb.utils.FileUtils;
-import static apb.utils.FileUtils.makePath;
+
 import org.jetbrains.annotations.NotNull;
+
+import static java.io.File.pathSeparator;
+
+import static apb.utils.FileUtils.makePath;
 //
 // User: emilio
 // Date: Sep 8, 2008
@@ -41,9 +46,10 @@ public class JavaC
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final JavaCompiler       compiler;
     @NotNull private final DiagnosticReporter diagnostics;
-    @NotNull private final Set<File>          usedPathElements;
+
+    @NotNull private final JavaCompiler compiler;
+    @NotNull private final Set<File>    usedPathElements;
 
     //~ Constructors .........................................................................................
 
@@ -87,6 +93,7 @@ public class JavaC
                     makePath(extraLibraries));
         options.add("-sourcepath");
         options.add(makePath(sourceDirs));
+        usedPathElements.add(targetDir);
 
         boolean result =
             compiler.getTask(null, fileManager, diagnostics, options, null,

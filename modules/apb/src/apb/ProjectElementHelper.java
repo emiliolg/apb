@@ -20,13 +20,12 @@ package apb;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
-import apb.metadata.Module;
-import apb.metadata.Project;
 import apb.metadata.ProjectElement;
-import apb.metadata.TestModule;
 
 import apb.utils.FileUtils;
 
@@ -39,53 +38,42 @@ import org.jetbrains.annotations.Nullable;
 
 //
 public abstract class ProjectElementHelper
+    extends DelegatedEnvironment
 {
     //~ Instance fields ......................................................................................
 
-    public Environment                    env;
     @NotNull protected final Set<Command> executedCommands;
-    @Nullable ProjectElement              element;
 
-    private CommandBuilder builder;
+    /**
+     * The Map for Info objects
+     */
+    @NotNull final Map<String, Object> infoMap;
+    private boolean                    initialized;
+    private boolean                    topLevel;
 
-    @NotNull private final ProjectElement proto;
-    private boolean                       topLevel;
+    @Nullable private CommandBuilder      commandBuilder;
+    @NotNull private final File           projectDirectory;
+    @NotNull private final File           sourceFile;
+    @NotNull private final ProjectElement element;
 
     //~ Constructors .........................................................................................
 
-    protected ProjectElementHelper(@NotNull ProjectElement element, @NotNull Environment environment)
+    protected ProjectElementHelper(@NotNull ProjectBuilder pb, @NotNull ProjectElement element)
     {
-        proto = element;
-        env = environment;
-        executedCommands = new HashSet<Command>();
+        super(pb.getBaseEnvironment());
 
-        synchronized (env.getHelpers()) {
-            env.getHelpers().put(getName(), this);
-        }
+        this.element = element;
+        executedCommands = new HashSet<Command>();
+        infoMap = new TreeMap<String, Object>();
+
+        sourceFile = pb.sourceFile(element);
+        projectDirectory = findProjectDir(element, sourceFile);
+        initialized = false;
     }
 
     //~ Methods ..............................................................................................
 
-    public abstract Set<ModuleHelper> listAllModules();
-
-    @NotNull public static ProjectElementHelper create(ProjectElement element, Environment environment)
-    {
-        element.init();
-        ProjectElementHelper result;
-
-        if (element instanceof TestModule) {
-            result = new TestModuleHelper((TestModule) element, environment);
-        }
-        else if (element instanceof Module) {
-            result = new ModuleHelper((Module) element, environment);
-        }
-        else {
-            result = new ProjectHelper((Project) element, environment);
-        }
-
-        result.initDependencyGraph();
-        return result;
-    }
+    public abstract Set<String> listAllModules();
 
     public final String toString()
     {
@@ -94,32 +82,23 @@ public abstract class ProjectElementHelper
 
     @NotNull public final String getName()
     {
-        return proto.getName();
+        return element.getName();
     }
 
     public final String getId()
     {
-        return proto.getId();
-    }
-
-    public final Environment getEnv()
-    {
-        return env;
+        return element.getId();
     }
 
     @NotNull public ProjectElement getElement()
     {
-        if (element == null) {
-            throw new IllegalStateException("Not activated element: " + getName());
-        }
-
         return element;
     }
 
-    public final File getBasedir()
-    {
-        return env.getBaseDir();
-    }
+    //    @NotNull public final File getBaseDir()
+    //    {
+    //        return new File(element.basedir);
+    //    }
 
     public final void setTopLevel(boolean b)
     {
@@ -138,22 +117,17 @@ public abstract class ProjectElementHelper
 
     public final long lastModified()
     {
-        return env.sourceLastModified(getElement().getClass());
+        return sourceFile.lastModified();
     }
 
     public final SortedMap<String, Command> listCommands()
     {
-        return getBuilder().commands();
-    }
-
-    public final ProjectElement activate()
-    {
-        return env.activate(proto);
+        return getCommandBuilder().commands();
     }
 
     public Command findCommand(String commandName)
     {
-        return getBuilder().commands().get(commandName);
+        return getCommandBuilder().commands().get(commandName);
     }
 
     /**
@@ -163,10 +137,10 @@ public abstract class ProjectElementHelper
      */
     @NotNull public File getDirFile()
     {
-        File result = new File(env.expand(proto.getDir()));
+        File result = new File(expand(element.getDir()));
 
         if (!result.isAbsolute()) {
-            File basedir = new File(env.expand(proto.basedir));
+            File basedir = new File(expand(element.basedir));
 
             basedir = FileUtils.normalizeFile(basedir);
 
@@ -176,64 +150,79 @@ public abstract class ProjectElementHelper
         return result;
     }
 
-    public void remove()
+    @NotNull public File getSourceFile()
     {
-        synchronized (env.getHelpers()) {
-            env.getHelpers().remove(getName());
-        }
+        return sourceFile;
     }
 
-    protected abstract void doBuild(String commandName);
-
-    protected void initDependencyGraph() {}
-
-    protected void execute(@NotNull String commandName)
+    /**
+     * Returns The directory where the project definition files are stored
+     */
+    @NotNull public File getProjectDirectory()
     {
-        Command command = findCommand(commandName);
-
-        if (command != null && notExecuted(command)) {
-            ProjectElement projectElement = activate();
-
-            for (Command cmd : command.getDependencies()) {
-                if (notExecuted(cmd)) {
-                    final String cmdName = cmd.getQName();
-                    env.startExecution(getName(), cmdName);
-                    markExecuted(cmd);
-                    cmd.invoke(projectElement, env);
-                    env.endExecution(getName(), cmdName);
-                }
-            }
-        }
+        return projectDirectory;
     }
 
-    void build(String commandName)
+    @NotNull public CommandBuilder getCommandBuilder()
     {
-        env.startExecution(getName(), commandName);
-        doBuild(commandName);
-        env.endExecution(getName(), commandName);
-    }
-
-    void activate(@NotNull ProjectElement activatedElement)
-    {
-        element = activatedElement;
-    }
-
-    @NotNull private CommandBuilder getBuilder()
-    {
-        if (builder == null) {
-            builder = new CommandBuilder(proto);
+        if (commandBuilder == null) {
+            commandBuilder = new CommandBuilder(getElement());
         }
 
-        return builder;
+        return commandBuilder;
     }
 
-    private void markExecuted(Command cmd)
+    @Override public boolean equals(Object o)
+    {
+        return this == o ||
+               o instanceof ProjectElementHelper && getName().equals(((ProjectElementHelper) o).getName());
+    }
+
+    @Override public int hashCode()
+    {
+        return getName().hashCode();
+    }
+
+    @NotNull public <T> T getInfoObject(@NotNull String name, @NotNull Class<T> type)
+    {
+        return PropertyExpansor.retrieveInfoObject(this, name, type);
+    }
+
+    protected abstract void build(ProjectBuilder pb, String commandName);
+
+    void markExecuted(Command cmd)
     {
         executedCommands.add(cmd);
     }
 
-    private boolean notExecuted(Command cmd)
+    boolean notExecuted(Command cmd)
     {
         return !executedCommands.contains(cmd);
     }
+
+    void init()
+    {
+        if (!initialized) {
+            PropertyExpansor.expandProperties(this, "", getElement());
+            getElement().init();
+            initialized = true;
+        }
+    }
+
+    private static File findProjectDir(ProjectElement proto, File sourceFile)
+    {
+        File   result = sourceFile;
+        String className = proto.getClass().getName();
+
+        for (int i = 0; i != -1; i = className.indexOf('.', i + 1)) {
+            result = result.getParentFile();
+        }
+
+        return result;
+    }
+
+    //~ Static fields/initializers ...........................................................................
+
+    static final String ID_SUFFIX = "id";
+    static final String DIR_SUFFIX = "dir";
 }

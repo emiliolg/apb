@@ -21,14 +21,14 @@ package apb.metadata;
 import java.util.ArrayList;
 import java.util.List;
 
-import apb.Environment;
 import apb.ModuleHelper;
-import apb.tasks.CopyTask;
-import apb.tasks.JarTask;
-import apb.tasks.JavacTask;
-import apb.tasks.JavadocTask;
-import apb.tasks.RemoveTask;
+import apb.ProjectBuilder;
+
+import apb.tasks.FileSet;
+
 import org.jetbrains.annotations.NotNull;
+
+import static apb.tasks.CoreTasks.copy;
 
 /**
  * This class defines a Module for the building system
@@ -83,19 +83,9 @@ public class Module
     @BuildProperty public final CompileInfo compiler = new CompileInfo();
 
     /**
-     * The directory where the generated source files for this module are placed
-     */
-    @BuildProperty public String generatedSource = "output/$moduledir/gsrc";
-
-    /**
      * All the info for Javadoc
      */
     @BuildProperty public JavadocInfo javadoc = new JavadocInfo();
-
-    /**
-     * The directory for the output classes
-     */
-    @BuildProperty public String output = "output/$moduledir/classes";
 
     /**
      * All the info for the package (Jar,War, etc)
@@ -106,6 +96,24 @@ public class Module
      * All the info for processing resources
      */
     @BuildProperty public ResourcesInfo resources = new ResourcesInfo();
+
+    /**
+     * The directory where the generated source files for this module are placed
+     */
+    @BuildProperty public String generatedSource = "$output-base/gsrc";
+
+    /**
+     * The directory for the output classes
+     */
+    @BuildProperty public String output = "$output-base/classes";
+
+    /**
+     * A handy property that marks the base for all generated files
+     * You can modify this property or every property related to output directories
+     * (i.e: generatedSource, output, coverage-info.output, javadoc-info.output..)
+     */
+    @BuildProperty(order = 1)
+    public String outputBase = "output/$moduledir";
 
     /**
      * The directory where the source files for this module are placed
@@ -134,49 +142,82 @@ public class Module
         return tests;
     }
 
-    public void clean(Environment env)
+    @NotNull @Override public ModuleHelper getHelper()
     {
-        ModuleHelper helper = env.getModuleHelper();
-        RemoveTask.remove(env, helper.getOutput());
-        RemoveTask.remove(env, helper.getPackageFile());
-        RemoveTask.remove(env, helper.getGeneratedSource());
-        env.forward("clean", tests());
+        return (ModuleHelper) super.getHelper();
     }
 
-    public void resources(Environment env)
+    public void clean()
     {
-        CopyTask.copyResources(env);
+        getHelper().clean();
+        ProjectBuilder.forward("clean", tests());
     }
 
-    public void compile(Environment env)
+    public void resources()
     {
-        JavacTask.execute(env);
+        final FileSet fileSet =
+            FileSet.fromDir(resources.dir)  //
+                   .including(resources.includes())  //
+                   .excluding(resources.excludes());
+
+        copy(fileSet).to(resources.output).execute();
+        // todo add filtered
     }
 
-    public void compileTests(Environment env)
+    public void compile()
     {
-        env.forward("compile", tests());
+        getHelper().compile();
     }
 
-    public void runTests(Environment env)
+    public void compileTests()
     {
-        env.forward("run", tests());
+        ProjectBuilder.forward("compile", tests());
     }
 
-    public void runMinimalTests(Environment env)
+    public void runTests()
     {
-        env.forward("run-minimal", tests());
+        ProjectBuilder.forward("run", tests());
     }
 
-    public void packageit(Environment env)
+    public void runMinimalTests()
     {
-        JarTask.execute(env);
+        ProjectBuilder.forward("run-minimal", tests());
+    }
+
+    public void packageit()
+    {
+        getHelper().createPackage();
     }
 
     @BuildTarget(description = "Generates the Standard Java Documentation (Javadoc) for the module.")
-    public void javadoc(Environment env)
+    public void javadoc()
     {
-        JavadocTask.execute(env);
+        getHelper().generateJavadoc();
+    }
+
+    @NotNull public Module asModule()
+    {
+        return this;
+    }
+
+    public boolean isModule()
+    {
+        return true;
+    }
+
+    public boolean isLibrary()
+    {
+        return false;
+    }
+
+    @NotNull public Library asLibrary()
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean mustInclude(boolean compile)
+    {
+        return true;
     }
 
     /**
@@ -185,7 +226,7 @@ public class Module
      */
     protected final void dependencies(Dependencies... dependencyList)
     {
-            dependencies.addAll(dependencyList);
+        dependencies.addAll(dependencyList);
     }
 
     /**
@@ -195,7 +236,7 @@ public class Module
     protected final void tests(TestModule... testList)
     {
         for (TestModule test : testList) {
-            test.setModule(this);
+            test.setModuleToTest(this);
             tests.add(NameRegistry.intern(test));
         }
     }
@@ -207,8 +248,9 @@ public class Module
 
     protected Dependencies compile(Dependency... dep)
     {
-        return DecoratedDependency.asCompileOnly(dep);         
+        return DecoratedDependency.asCompileOnly(dep);
     }
+
     protected Dependencies runtime(Dependency... dep)
     {
         return DecoratedDependency.asRuntimeOnly(dep);
@@ -217,28 +259,5 @@ public class Module
     protected LocalLibrary optionalLibrary(String path)
     {
         return new LocalLibrary(path, true);
-    }
-
-    @NotNull
-    public Module asModule() {
-        return this;
-    }
-
-    public boolean isModule() {
-        return true;
-    }
-
-    public boolean isLibrary() {
-        return false;
-    }
-
-    @NotNull
-    public Library asLibrary() {
-       throw new UnsupportedOperationException();
-    }
-
-    public boolean mustInclude(boolean compile)
-    {
-        return true;
     }
 }

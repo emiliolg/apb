@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.testrunner;
 
@@ -77,14 +79,14 @@ public final class JUnitTestSet
         }
     }
 
-    @Nullable static JUnitTestSet buildTestSet(Class<Object> testClass)
+    @Nullable static JUnitTestSet buildTestSet(Class<Object> testClass, String singleTest)
     {
         final Method    method = getSuiteMethod(testClass);
         final TestSuite suite;
 
         //noinspection VariableNotUsedInsideIf
         if (method == null) {
-            suite = buildSuite(testClass);
+            suite = buildSuite(testClass, singleTest);
 
             if (suite == null) {
                 return null;
@@ -140,13 +142,22 @@ public final class JUnitTestSet
         return null;
     }
 
-    @Nullable private static TestSuite buildSuite(Class<?> clazz)
+    @Nullable private static TestSuite buildSuite(@NotNull Class<?> clazz, @NotNull final String singleTest)
     {
         if (!Test.class.isAssignableFrom(clazz)) {
             return null;
         }
 
-        final TestSuite testSuite = new TestSuite(clazz);
+        // This should be kept as an anonymous class because Junit constructs the test in the TestSuite constructor...
+
+        final TestSuite testSuite = singleTest.isEmpty() ? new TestSuite(clazz) : new TestSuite(clazz) {
+                    @Override public void addTest(Test test)
+                    {
+                        if (test instanceof TestCase && ((TestCase) test).getName().equals(singleTest)) {
+                            super.addTest(test);
+                        }
+                    }
+                };
         return isValidSuite(testSuite) ? testSuite : null;
     }
 
@@ -187,26 +198,24 @@ public final class JUnitTestSet
     @Nullable private Test constructTestObject(@NotNull List<String> testGroups)
         throws TestSetFailedException
     {
-        final Class<?> testClazz = getTestClass();
-
         // First try to see if there is a 'suite' method.
-        final Method suiteMethod = this.suiteMethod;
+        final Method m = suiteMethod;
 
         // No suite build one
-        if (suiteMethod == null) {
+        if (m == null) {
             //but only if no annotations because can only annotate suites.
             if (!testGroups.isEmpty()) {
                 return null;
             }
 
-            return this.testSuite;
+            return testSuite;
         }
 
         // Check if I've to run it and run it
 
-        if (mustRun(suiteMethod, testGroups)) {
+        if (mustRun(m, testGroups)) {
             try {
-                return (Test) suiteMethod.invoke(null);
+                return (Test) m.invoke(null);
             }
             catch (InvocationTargetException e) {
                 throw new TestSetFailedException(e.getTargetException());

@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,12 +13,16 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.metadata;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import apb.coverage.CoverageReport;
 
@@ -33,52 +38,57 @@ public class CoverageInfo
      * will be consider for coverage analysis but also all modules
      * that this module depends on.
      */
+    @BuildProperty(description = "Consider all dependant modules for coverage analysis")
     public boolean deep = false;
 
     /**
      * Output coverage data for future analysis
      */
+    @BuildProperty(description = "Output coverage data for future analysis")
     public boolean dumpData = true;
 
     /**
      * Whether to enable coverage processing
      */
+    @BuildProperty(description = "Enable coverage processing")
     public boolean enable = false;
 
     /**
      * Ensure a minimun level of coverage in % (0% = Do not fail)
      */
+    @BuildProperty(description = "Ensure a minimun level of coverage in % (0% = Do not fail)")
     public int ensure = 0;
 
     /**
      * The output directory for reports
      */
-    public String output = "$moduledir/output/coverage";
-
-    /**
-     * The list of classes to exclude from coverage
-     */
-    private final List<String> excludes = new ArrayList<String>();
-
-    /**
-     * The list of classes to include for coverage.
-     * If Empty all classes will be included.
-     */
-    private final List<String> includes = new ArrayList<String>();
+    @BuildProperty(description = "Coverage Reports directory")
+    public String output = "$output-base/coverage";
 
     /**
      * Coverage reports
      */
     private final List<CoverageReport> reports = new ArrayList<CoverageReport>();
 
+    /**
+     * The list of classes to exclude from coverage
+     */
+    private final Set<String> excludes = new LinkedHashSet<String>();
+
+    /**
+     * The list of classes to include for coverage.
+     * If Empty all classes will be included.
+     */
+    private final Set<String> includes = new LinkedHashSet<String>();
+
     //~ Methods ..............................................................................................
 
-    public List<String> includes()
+    public Set<String> includes()
     {
         return includes;
     }
 
-    public List<String> excludes()
+    public Set<String> excludes()
     {
         return excludes;
     }

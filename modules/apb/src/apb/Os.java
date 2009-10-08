@@ -13,7 +13,7 @@ public class Os
 
     private boolean linux;
     private boolean macOs;
-    private String  name;
+    private final String  name;
     private boolean os2;
     private boolean windows;
 
@@ -109,5 +109,5 @@ public class Os
 
     //~ Static fields/initializers ...........................................................................
 
-    private static Os instance = new Os();
+    private static final Os instance = new Os();
 }

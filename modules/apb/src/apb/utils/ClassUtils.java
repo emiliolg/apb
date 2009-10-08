@@ -59,18 +59,6 @@ public class ClassUtils
         return result;
     }
 
-    public static Object invokeStatic(ClassLoader classLoader, String className, String method,
-                                      Object... params)
-        throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
-               IllegalAccessException, InstantiationException
-    {
-        Class<?> clazz = classLoader.loadClass(className);
-        Object   a = ClassUtils.newInstance(classLoader, "org.apache.commons.lang.BitField", 10);
-        System.out.println("a.getClass() = " + a.getClass());
-
-        return findMethod(false, clazz, method, params).invoke(null, params);
-    }
-
     public static Object invoke(Object targetObject, String methodName, Object... params)
         throws NoSuchMethodException, InvocationTargetException, IllegalAccessException
     {
@@ -102,6 +90,7 @@ public class ClassUtils
     {
         for (Constructor<?> c : clazz.getConstructors()) {
             if (match(c.getParameterTypes(), params)) {
+                c.setAccessible(true);
                 return c;
             }
         }
@@ -113,11 +102,10 @@ public class ClassUtils
         throws NoSuchMethodException
     {
         final Method[] methods = nonPublic ? clazz.getDeclaredMethods() : clazz.getMethods();
+
         for (Method c : methods) {
             if (c.getName().equals(methodName) && match(c.getParameterTypes(), params)) {
-                if (nonPublic) {
-                    c.setAccessible(true);
-                }
+                c.setAccessible(true);
                 return c;
             }
         }
@@ -167,7 +155,7 @@ public class ClassUtils
 
     //~ Static fields/initializers ...........................................................................
 
-    private static Map<Class, Class> wrappers = new HashMap<Class, Class>();
+    private static final Map<Class, Class> wrappers = new HashMap<Class, Class>();
 
     static {
         wrappers.put(Boolean.TYPE, Boolean.class);

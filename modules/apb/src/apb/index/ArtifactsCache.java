@@ -24,10 +24,9 @@ import java.util.Map;
 
 import apb.Environment;
 
-import apb.tasks.DownloadTask;
-import apb.tasks.Task;
-
 import org.jetbrains.annotations.NotNull;
+
+import static apb.tasks.CoreTasks.download;
 //
 // User: emilio
 // Date: Jul 6, 2009
@@ -38,8 +37,8 @@ public class ArtifactsCache
 {
     //~ Instance fields ......................................................................................
 
-    private Environment       env;
-    private Map<String, File> map;
+    private final Environment       env;
+    private final Map<String, File> map;
 
     //~ Constructors .........................................................................................
 
@@ -59,8 +58,8 @@ public class ArtifactsCache
         if (result == null) {
             String repo = findRepository(group);
 
-            Task t = new DownloadTask(env, repo + "/" + relativeUrl, path);
-            t.execute();
+            download(repo + "/" + relativeUrl).to(target)  //
+                                              .execute();
             map.put(path, target);
             result = target;
         }
@@ -77,7 +76,8 @@ public class ArtifactsCache
      * @param group
      * @return A repository URL
      */
-    private @NotNull String findRepository(@NotNull String group) {
+    @NotNull private String findRepository(@NotNull String group)
+    {
         String repo = "";
 
         while (repo.isEmpty() && !group.isEmpty()) {
@@ -89,11 +89,12 @@ public class ArtifactsCache
         if (repo.isEmpty()) {
             repo = env.getProperty(REPOSITORY, DEFAULT_REPOSITORY);
         }
+
         return repo;
     }
 
     //~ Static fields/initializers ...........................................................................
 
     private static final String REPOSITORY = "repository";
-    private static String       DEFAULT_REPOSITORY = "http://mirrors.ibiblio.org/pub/mirrors/maven2";
+    private static final String DEFAULT_REPOSITORY = "http://mirrors.ibiblio.org/pub/mirrors/maven2";
 }

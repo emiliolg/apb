@@ -27,7 +27,7 @@ public class PropertyException
     //~ Instance fields ......................................................................................
 
     private String additionalInfo;
-    private String id;
+    private final String id;
     private String source;
 
     //~ Constructors .........................................................................................

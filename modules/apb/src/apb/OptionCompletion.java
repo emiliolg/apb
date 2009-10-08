@@ -27,7 +27,8 @@ import apb.index.DefinitionsIndex;
 import apb.index.ModuleInfo;
 
 import apb.utils.OptionParser;
-import apb.utils.StandaloneEnv;
+
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Mar 4, 2009
@@ -38,92 +39,122 @@ public class OptionCompletion
 {
     //~ Instance fields ......................................................................................
 
-    private Environment env;
+    @NotNull private DefinitionsIndex definitionsIndex;
 
-    private List<OptionParser.Option> options;
+    @NotNull private final List<OptionParser.Option> options;
 
     //~ Constructors .........................................................................................
 
-    public OptionCompletion(List<OptionParser.Option> options)
+    public OptionCompletion(List<OptionParser.Option> options, DefinitionsIndex index)
     {
-        env = new StandaloneEnv();
         this.options = options;
+        definitionsIndex = index;
     }
 
     //~ Methods ..............................................................................................
 
-    public void execute(List<String> arguments)
+    public String execute(List<String> arguments)
     {
-        int    argc = Integer.parseInt(arguments.get(1)) + 2;
-        String last = argc < arguments.size() ? arguments.get(argc) : "";
+        int argc = Integer.parseInt(arguments.get(1)) - 1;
+        return execute(argc, arguments.subList(3, arguments.size()));
+    }
 
-        if ("-".equals(last)) {
-            last = "--";
-        }
+    public String execute(int argc, List<String> arguments)
+    {
+        String              last = argc < arguments.size() ? arguments.get(argc) : "";
+        final StringBuilder result = new StringBuilder();
 
         if (last.startsWith("--")) {
-            print(findOptions(last.substring(2)));
+            printOptions(result, last.substring(2));
         }
         else if (last.startsWith("-")) {
-            print(findShortOptions(last.charAt(1)));
+            printShortOptions(result);
         }
         else {
-            List<?> values = optionValues(arguments.get(argc - 1));
+            List<?> values = optionValues(arguments, argc - 1);
 
             if (!values.isEmpty()) {
-                printValues(values, last);
+                printValues(result, values, last);
             }
             else if (last.isEmpty()) {
-                final ModuleInfo info = env.getDefinitionsIndex().searchCurrentDirectory();
+                final ModuleInfo info = definitionsIndex.searchCurrentDirectory();
 
                 if (info == null) {
-                    printCompletions("");
+                    printCompletions(result, "");
                 }
                 else {
-                    printCommands(info, "");
+                    printCommands(result, info);
                 }
             }
             else {
-                printCompletions(last);
+                printCompletions(result, last);
             }
         }
 
-        System.exit(0);
+        return result.toString();
     }
 
-    private static void print(Collection<String> opts)
-    {
-        for (String opt : opts) {
-            System.out.print(opt + " ");
-        }
-    }
-
-    private static void printValues(Collection<?> values, String start)
+    private static void printValues(StringBuilder output, Collection<?> values, String start)
     {
         for (Object v : values) {
             String s = String.valueOf(v);
 
             if (s.startsWith(start)) {
-                System.out.print(s + " ");
+                addEntry(output, s);
             }
         }
     }
 
-    private List<String> findOptions(String opt)
+    private static void addEntry(StringBuilder output, String str)
     {
-        List<String> result = new ArrayList<String>();
+        if (output.length() > 0) {
+            output.append(" ");
+        }
+
+        output.append(str);
+    }
+
+    private void printOptions(StringBuilder result, String opt)
+    {
+        List<String> opts = new ArrayList<String>();
 
         for (OptionParser.Option option : options) {
             if (option.getName().startsWith(opt)) {
-                result.add("--" + option.getName());
+                opts.add("--" + option.getName());
             }
         }
 
-        return result;
+        printSorted(result, opts);
     }
 
-    private List<?> optionValues(String opt)
+    private void printShortOptions(StringBuilder result)
     {
+        List<String> opts = new ArrayList<String>();
+
+        for (OptionParser.Option option : options) {
+            final char letter = option.getLetter();
+
+            if (letter != 0) {
+                opts.add("-" + letter);
+            }
+        }
+
+        printSorted(result, opts);
+    }
+
+    private void printSorted(StringBuilder result, List<String> opts)
+    {
+        Collections.sort(opts, String.CASE_INSENSITIVE_ORDER);
+
+        for (String op : opts) {
+            addEntry(result, op);
+        }
+    }
+
+    private List<?> optionValues(List<String> opts, int index)
+    {
+        String opt = index >= 0 && index < opts.size() ? opts.get(index) : "";
+
         if (opt.startsWith("--")) {
             opt = opt.substring(2);
 
@@ -146,55 +177,57 @@ public class OptionCompletion
         return Collections.emptyList();
     }
 
-    private List<String> findShortOptions(char chr)
+    private void printCompletions(StringBuilder output, String last)
+    {
+        int    dot = last.lastIndexOf(".");
+        String moduleName = dot == -1 ? last : last.substring(0, dot + 1);
+
+        List<ModuleInfo> modules = definitionsIndex.findAllByName(moduleName);
+
+        if (dot != -1) {
+            if (modules.size() == 1) {
+                List<String> cmds = listCommands(modules.get(0), last.substring(dot + 1));
+
+                if (!cmds.isEmpty()) {
+                    printSorted(output, cmds);
+                    return;
+                }
+            }
+            // If the String before the dot does not match
+            // Try to see if the whole string results in a better match
+
+            List<ModuleInfo> m2 = definitionsIndex.findAllByName(last);
+
+            if (!m2.isEmpty() && modules.isEmpty() || m2.size() < modules.size()) {
+                modules = m2;
+            }
+        }
+
+        if (modules.size() == 1) {
+            printCommands(output, modules.get(0));
+        }
+        else {
+            for (ModuleInfo module : modules) {
+                addEntry(output, module.getName());
+            }
+        }
+    }
+
+    private List<String> listCommands(ModuleInfo module, String cmdStart)
     {
         List<String> result = new ArrayList<String>();
 
-        for (OptionParser.Option option : options) {
-            if (option.getLetter() == chr) {
-                result.add("-" + option.getLetter());
+        for (String cmdName : module.getCommands()) {
+            if (cmdName.startsWith(cmdStart)) {
+                result.add(module.getName() + "." + cmdName);
             }
         }
 
         return result;
     }
 
-    private void printCompletions(String last)
+    private void printCommands(StringBuilder output, ModuleInfo module)
     {
-        int    dot = last.lastIndexOf(".");
-        String moduleName = dot == -1 ? last : last.substring(0, dot + 1);
-
-        final DefinitionsIndex index = env.getDefinitionsIndex();
-
-        List<ModuleInfo> modules = index.findAllByName(moduleName);
-
-        // If the String before the dot does not match a single module
-        // Try to see if the whole string results in a better match
-        if (modules.size() != 1 && dot != -1) {
-            List<ModuleInfo> m2 = index.findAllByName(last);
-
-            if (!m2.isEmpty() && modules.isEmpty() || m2.size() < modules.size()) {
-                modules = m2;
-                dot = -1;
-            }
-        }
-
-        if (modules.size() == 1) {
-            printCommands(modules.get(0), dot == -1 ? "" : last.substring(dot + 1));
-        }
-        else {
-            for (ModuleInfo module : modules) {
-                System.out.print(module.getName() + " ");
-            }
-        }
-    }
-
-    private void printCommands(ModuleInfo module, String cmdStart)
-    {
-        for (String cmdName : module.getCommands()) {
-            if (cmdName.startsWith(cmdStart)) {
-                System.out.print(module.getName() + "." + cmdName + " ");
-            }
-        }
+        printSorted(output, listCommands(module, ""));
     }
 }

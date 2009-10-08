@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +13,15 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.testrunner.output;
 
 import java.io.File;
 import java.io.Serializable;
+
+import apb.Environment;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,11 +36,12 @@ public interface TestReport
 {
     //~ Instance fields ......................................................................................
 
-    TestReport SIMPLE = new SimpleReport(true, true);
-    TestReport SIMPLE_TO_FILE = new SimpleReport(true, true, "test-output");
+    JUnitTestReport.Builder JUNIT = new JUnitTestReport.Builder().usePrefix("test-");
 
-    TestReport SUMMARY = new SimpleReport(false, false);
-    TestReport JUNIT = new JUnitTestReport(true, "test-");
+    SimpleReport.Builder SIMPLE = new SimpleReport.Builder(true);
+    SimpleReport.Builder SIMPLE_TO_FILE = new SimpleReport.Builder(true).to("test-output");
+
+    SimpleReport.Builder SUMMARY = new SimpleReport.Builder(false);
 
     //~ Methods ..............................................................................................
 
@@ -111,4 +117,13 @@ public interface TestReport
      * @param reportsDir The directory where the reports are written to
      */
     @NotNull TestReport init(@NotNull File reportsDir);
+
+    //~ Inner Interfaces .....................................................................................
+
+    static interface Builder
+    {
+        String SHOW_OUTPUT_PROPERTY = "show-output";
+
+        @NotNull TestReport build(@NotNull Environment env);
+    }
 }

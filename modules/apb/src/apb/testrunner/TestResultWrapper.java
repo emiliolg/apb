@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 public class TestResultWrapper extends TestResult {
-    private List<JUnitTestSet.TestListenerAdaptor> listeners = new ArrayList<JUnitTestSet.TestListenerAdaptor>();
+    private final List<JUnitTestSet.TestListenerAdaptor> listeners = new ArrayList<JUnitTestSet.TestListenerAdaptor>();
 
     @Override
     public void addListener(TestListener testListener) {

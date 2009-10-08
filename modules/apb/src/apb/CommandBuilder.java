@@ -47,7 +47,7 @@ public class CommandBuilder
 {
     //~ Instance fields ......................................................................................
 
-    private SortedMap<String, Command> commands;
+    private final SortedMap<String, Command> commands;
 
     //~ Constructors .........................................................................................
 
@@ -79,8 +79,7 @@ public class CommandBuilder
     private static boolean hasRightSignature(Method method)
     {
         Class<?>[] pars = method.getParameterTypes();
-        return pars.length == 1 && pars[0].equals(Environment.class) &&
-               java.lang.reflect.Modifier.isPublic(method.getModifiers()) &&
+        return pars.length == 0 && java.lang.reflect.Modifier.isPublic(method.getModifiers()) &&
                method.getReturnType().equals(Void.TYPE);
     }
 
@@ -139,7 +138,7 @@ public class CommandBuilder
 
     private static final Command HELP_COMMAND = new HelpCommand();
 
-    private static Map<String, Command> extensionCommands;
+    private static final Map<String, Command> extensionCommands;
 
     static {
         extensionCommands = new HashMap<String, Command>();
@@ -159,11 +158,11 @@ public class CommandBuilder
             super("help", "List the available commands with a brief description", false);
         }
 
-        public void invoke(ProjectElement projectElement, Environment env)
+        public void invoke(ProjectElement projectElement)
         {
             System.err.println("Commands for '" + projectElement.getName() + "' : ");
 
-            final Collection<Command> cmds = env.getHelper(projectElement).listCommands().values();
+            final Collection<Command> cmds = projectElement.getHelper().listCommands().values();
 
             for (Command cmd : cmds) {
                 if (!cmd.hasNameSpace()) {
@@ -189,7 +188,7 @@ public class CommandBuilder
                 }
             }
 
-            System.exit(0);
+            Apb.exit(0);
         }
 
         private static void printSpaces()
@@ -199,23 +198,22 @@ public class CommandBuilder
 
         private static void printCommand(Command cmd)
         {
-            System.err.printf(cmd.hasNameSpace() ? "  %-18s: %s\n" : "%-20s: %s\n", cmd.getName(), cmd.getDescription());
+            System.err.printf(cmd.hasNameSpace() ? "  %-18s: %s\n" : "%-20s: %s\n", cmd.getName(),
+                              cmd.getDescription());
+
+            for (String option : cmd.getOptions()) {
+                printSpaces();
+                System.err.printf("%22s%s\n", "", option);
+            }
         }
     }
 
     private static class InstanceCommand
         extends Command
     {
-        private List<Command> directDependencies;
+        private final List<Command> directDependencies;
 
         private final Method method;
-
-        protected InstanceCommand(@NotNull String name, @NotNull Method method, @NotNull String description, boolean recursive)
-        {
-            super(name, description, recursive);
-            this.method = method;
-            directDependencies = new ArrayList<Command>();
-        }
 
         InstanceCommand(Method method, BuildTarget annotation)
         {
@@ -223,41 +221,37 @@ public class CommandBuilder
                  annotation.description(), annotation.recursive());
         }
 
+        InstanceCommand(@NotNull String name, @NotNull Method method, @NotNull String description,
+                        boolean recursive)
+        {
+            super(name, description, recursive);
+            this.method = method;
+            directDependencies = new ArrayList<Command>();
+        }
+
         @NotNull @Override public List<Command> getDirectDependencies()
         {
             return directDependencies;
         }
 
-        public void invoke(ProjectElement element, Environment env)
+        public void invoke(ProjectElement element)
         {
             try {
                 if (Modifier.isStatic(method.getModifiers())) {
-                    method.invoke(null, element, env);
+                    method.invoke(null, element);
                 }
                 else {
-                    method.invoke(element, env);
+                    method.invoke(element);
                 }
             }
             catch (IllegalAccessException e) {
-                env.handle(e);
+                throw new BuildException(e);
             }
             catch (InvocationTargetException e) {
                 final Throwable t = e.getCause();
-                env.handle(t);
+                throw t instanceof BuildException ? (BuildException) t : new BuildException(t);
             }
         }
-
-        //    private boolean checkTarget(Environment env) {
-        //        boolean result = true;
-        //        final BuildTarget t = method.getAnnotation(BuildTarget.class);
-        //        if (!t.target().isEmpty() && !t.source().isEmpty()) {
-        //            File source = env.fileFromBase(t.source());
-        //            File target = env.fileFromBase(t.target());
-        //            result = source.lastModified() >= target.lastModified();
-        //        }
-        //        return result;
-        //
-        //    }
 
         void solveDirectDependencies(Map<String, InstanceCommand> commandsMap)
         {

@@ -24,9 +24,12 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;
@@ -48,33 +51,38 @@ public class CoverageBuilder
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final CoverageInfo coverage;
+    private boolean coverageEnabled;
 
-    @NotNull private final Environment      env;
-    @NotNull private final List<File>       filesDoDelete;
-    @NotNull private final TestModuleHelper helper;
-    @NotNull private final File             outputDir;
-    @Nullable private CoverageReport        textReport;
+    @NotNull private final CoverageInfo coverage;
+    @Nullable private CoverageReport    textReport;
+
+    @NotNull private final Environment env;
+    @NotNull private final File        outputDir;
+    @NotNull private final File        testClasses;
+    private List<File>                 classesToTest;
+    @NotNull private final List<File>  filesDoDelete;
+    private List<File>                 sourcesToTest;
 
     //~ Constructors .........................................................................................
 
-    public CoverageBuilder(@NotNull Environment env, @NotNull TestModuleHelper helper)
+    public CoverageBuilder(@NotNull TestModuleHelper helper)
     {
-        this.env = env;
-        this.helper = helper;
-        coverage = helper.getCoverageInfo();
+        env = helper;
+        testClasses = helper.getOutput();
+        coverage = helper.getModule().coverage;
         filesDoDelete = new ArrayList<File>();
         outputDir = helper.getCoverageDir();
+        sourcesToTest = helper.getSourcesToTest();
+        classesToTest = helper.getClassesToTest();
     }
 
     //~ Methods ..............................................................................................
 
     @NotNull public List<String> addCommandLineArguments()
     {
-        final List<String> args = new ArrayList<String>();
+        List<String> args = new ArrayList<String>();
 
-        if (coverage.enable) {
-            List<File> cs = helper.getClassesToTest();
+        if (coverageEnabled) {
             args.add(env.isVerbose() ? "-verbose" : "-quiet");
 
             for (CoverageReport report : processReports()) {
@@ -93,10 +101,10 @@ public class CoverageBuilder
             args.add("-ix");
             args.add("@" + exclusionFileForTests());
             args.add("-sp");
-            args.add(makePath(helper.getSourcesToTest()));
+            args.add(makePath(sourcesToTest));
             args.add("-cp");
-            args.add(makePath(env.applicationJarFile(), helper.getOutput()) + File.pathSeparator +
-                     makePath(cs));
+            args.add(makePath(Apb.applicationJarFile(), testClasses) + File.pathSeparator +
+                     makePath(classesToTest));
             args.add(TESTRUNNER_MAIN);
         }
 
@@ -105,7 +113,7 @@ public class CoverageBuilder
 
     public void stopRun()
     {
-        if (coverage.enable) {
+        if (coverageEnabled) {
             final CoverageReport report = textReport;
 
             if (report != null) {
@@ -130,7 +138,12 @@ public class CoverageBuilder
 
     @NotNull public String runnerMainClass()
     {
-        return coverage.enable ? EMMARUN : TESTRUNNER_MAIN;
+        return coverageEnabled ? EMMARUN : TESTRUNNER_MAIN;
+    }
+
+    public void setEnabled(boolean b)
+    {
+        coverageEnabled = b;
     }
 
     private static String formatLine(Map<CoverageReport.Column, Integer> coverageInfo)
@@ -223,7 +236,7 @@ public class CoverageBuilder
 
     @NotNull private String exclusionFileForTests()
     {
-        File testsDir = helper.getOutput();
+        File testsDir = testClasses;
 
         try {
             File        exclusionFile = createTempFile();
@@ -233,8 +246,11 @@ public class CoverageBuilder
                 ps.println("+" + p);
             }
 
-            ps.println("-apb.*");
-            ps.println("-junit.*");
+            // Exclusion set
+            Set<String> excludes = new LinkedHashSet<String>(coverage.excludes());
+            excludes.add("apb.*");
+            excludes.add("junit.*");
+            excludes.removeAll(coverage.includes());
 
             for (String p : coverage.excludes()) {
                 ps.println("-" + p);
