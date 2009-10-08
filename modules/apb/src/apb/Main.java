@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +15,7 @@
 // limitations under the License
 //
 
+
 package apb;
 
 import java.io.BufferedReader;
@@ -22,16 +24,19 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import static java.util.Arrays.asList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import static apb.Messages.BUILD_COMPLETED;
-import static apb.Messages.BUILD_FAILED;
 import apb.index.DefinitionsIndex;
 import apb.index.ModuleInfo;
+
 import apb.utils.FileUtils;
+
+import static java.util.Arrays.asList;
+
+import static apb.Messages.BUILD_COMPLETED;
+import static apb.Messages.BUILD_FAILED;
 
 public class Main
 {
@@ -55,7 +60,7 @@ public class Main
         boolean success = Main.execute(env, arguments, path, options.showStackTrace());
 
         if (!success) {
-            System.exit(1);
+            Apb.exit(1);
         }
     }
 

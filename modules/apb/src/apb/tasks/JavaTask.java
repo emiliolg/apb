@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +15,7 @@
 // limitations under the License
 //
 
+
 package apb.tasks;
 
 import java.io.File;
@@ -24,12 +26,16 @@ import java.util.Map;
 
 import apb.Environment;
 import apb.ModuleHelper;
+
 import apb.metadata.Dependency;
 import apb.metadata.DependencyList;
 import apb.metadata.PackageType;
-import static apb.utils.CollectionUtils.addIfNotNull;
+
 import apb.utils.FileUtils;
+
 import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.CollectionUtils.addIfNotNull;
 //
 // User: emilio
 // Date: Oct 22, 2008
@@ -40,6 +46,8 @@ public class JavaTask
     extends ExecTask
 {
     //~ Instance fields ......................................................................................
+
+    private boolean enableAssertions;
 
     private final boolean executeJar;
 
@@ -92,6 +100,11 @@ public class JavaTask
     public void execute()
     {
         List<String> argList = new ArrayList<String>();
+
+        if (enableAssertions) {
+            argList.add("-ea");
+        }
+
         argList.add("-Xmx" + memory + "m");
 
         // Pass properties
@@ -168,6 +181,12 @@ public class JavaTask
     @Override public JavaTask onDir(@NotNull String directory)
     {
         return (JavaTask) super.onDir(directory);
+    }
+
+    public JavaTask enableAssertions(boolean b)
+    {
+        enableAssertions = b;
+        return this;
     }
 
     private static List<File> fileList(Environment env, DependencyList dependencies)

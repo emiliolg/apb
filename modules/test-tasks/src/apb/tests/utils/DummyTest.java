@@ -21,7 +21,6 @@ package apb.tests.utils;
 import apb.Messages;
 
 import apb.sunapi.Base64;
-import apb.sunapi.XmlSerializer;
 
 import apb.tasks.CoreTasks;
 
@@ -31,10 +30,8 @@ import apb.utils.ClassUtils;
 import apb.utils.CollectionUtils;
 import apb.utils.ColorUtils;
 import apb.utils.Constants;
-import apb.utils.FileUtils;
 import apb.utils.NameUtils;
 import apb.utils.StringUtils;
-import apb.utils.XmlUtils;
 
 import junit.framework.TestCase;
 
@@ -49,7 +46,6 @@ public class DummyTest
 
     public void testConstructors()
     {
-        new XmlSerializer();
         new Base64();
         new FileAssert();
         new ClassUtils();
@@ -57,8 +53,6 @@ public class DummyTest
         new NameUtils();
         new StringUtils();
         new ColorUtils();
-        new FileUtils();
-        new XmlUtils();
         new CoreTasks();
         new Constants();
         new Messages();

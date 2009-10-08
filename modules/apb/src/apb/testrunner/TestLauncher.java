@@ -19,16 +19,13 @@
 package apb.testrunner;
 
 import java.io.File;
-import static java.io.File.pathSeparator;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import static java.lang.Character.isLowerCase;
 import java.net.MalformedURLException;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import static java.util.Arrays.asList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,21 +40,34 @@ import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 import apb.Proxy;
+
 import apb.coverage.CoverageBuilder;
+
 import apb.metadata.CoverageInfo;
 import apb.metadata.TestModule;
-import static apb.tasks.CoreTasks.java;
+
 import apb.tasks.JavaTask;
+
+import apb.testrunner.output.TestReport;
+
+import apb.utils.FileUtils;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static java.io.File.pathSeparator;
+import static java.lang.Character.isLowerCase;
+import static java.util.Arrays.asList;
+
+import static apb.tasks.CoreTasks.java;
+
 import static apb.testrunner.TestRunner.listTests;
 import static apb.testrunner.TestRunner.worseResult;
-import apb.testrunner.output.TestReport;
+
 import static apb.utils.CollectionUtils.listToString;
-import apb.utils.FileUtils;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
 import static apb.utils.StringUtils.isNotEmpty;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Nov 5, 2008
@@ -355,6 +365,7 @@ public class TestLauncher
 
         final Invocation  creator = testCreator();
         final Set<String> tests = listTests(cl, creator, testClasses, includes, excludes, singleTest);
+
         //report = report.init(reportDir);
         report.startRun(tests.size());
 
@@ -375,10 +386,6 @@ public class TestLauncher
     {
         // Create Arguments for Java Command
         List<String> args = new ArrayList<String>();
-
-        if (enableAssertions) {
-            args.add("-ea");
-        }
 
         args.addAll(coverageBuilder.addCommandLineArguments());
 
@@ -448,6 +455,8 @@ public class TestLauncher
             }
         }
 
+        java.enableAssertions(enableAssertions);
+
         java.execute();
 
         return java.getExitValue();
@@ -492,13 +501,16 @@ public class TestLauncher
         try {
             File               file = File.createTempFile("reps", null);
             ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(file));
+
             try {
                 os.writeObject(report);
                 os.flush();
                 os.close();
-            } finally {
+            }
+            finally {
                 os.close();
             }
+
             return file;
         }
         catch (IOException e) {

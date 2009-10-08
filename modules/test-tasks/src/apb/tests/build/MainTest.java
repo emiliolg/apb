@@ -115,14 +115,7 @@ public class MainTest
     public void testHelp()
         throws Throwable
     {
-        try {
-            Apb.setAvoidSystemExit(true);
-            invokeMain("Math.help");
-        }
-        finally {
-            Apb.setAvoidSystemExit(false);
-        }
-
+        invokeMain("Math.help");
         checkOutput("Commands for 'Math' : ",  //
                     "    clean\\+",  //
                     "    compile\\+",  //
@@ -132,14 +125,7 @@ public class MainTest
     public void testGlobalHelp()
         throws Throwable
     {
-        try {
-            Apb.setAvoidSystemExit(true);
-            invokeMain("--help");
-        }
-        finally {
-            Apb.setAvoidSystemExit(false);
-        }
-
+        invokeMain("--help");
         checkOutput("apb [options]  Mod.command ...",  //
                     "",  //
                     "Where:",  //
@@ -154,14 +140,7 @@ public class MainTest
     public void testVersion()
         throws Throwable
     {
-        try {
-            Apb.setAvoidSystemExit(true);
-            invokeMain("--version");
-        }
-        finally {
-            Apb.setAvoidSystemExit(false);
-        }
-
+        invokeMain("--version");
         checkOutput("apb \\+",  //
                     "java \\+",  //
                     "OS \\+",  //
@@ -176,6 +155,7 @@ public class MainTest
         PrintStream           prevErr = System.err;
 
         try {
+            Apb.setAvoidSystemExit(true);
             PrintStream p = new PrintStream(b);
             System.setOut(p);
             System.setErr(p);
@@ -200,6 +180,7 @@ public class MainTest
         finally {
             System.setOut(prev);
             System.setErr(prevErr);
+            Apb.setAvoidSystemExit(false);
         }
 
         output = new ArrayList<String>();
