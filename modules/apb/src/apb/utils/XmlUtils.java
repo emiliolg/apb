@@ -16,12 +16,11 @@
 
 package apb.utils;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Writer;
+import java.io.OutputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -73,7 +72,7 @@ public class XmlUtils
     public static void writeDocument(@NotNull Document document, @NotNull File file)
     {
         try {
-            final Writer output = new BufferedWriter(FileUtils.createWriter(file));
+            final OutputStream output = FileUtils.createOutputStream(file);
 
             try {
                 serialize(document, output);
@@ -123,14 +122,14 @@ public class XmlUtils
         parent.appendChild(name);
     }
 
-    private static void serialize(Document document, Writer output)
+    private static void serialize(Document document, OutputStream output)
         throws LSException
     {
         final DOMImplementationLS ls =
             (DOMImplementationLS) document.getImplementation().getFeature("LS", "3.0");
 
         final LSOutput out = ls.createLSOutput();
-        out.setCharacterStream(output);
+        out.setByteStream(output);
 
         final LSSerializer serializer = ls.createLSSerializer();
 
