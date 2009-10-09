@@ -27,10 +27,10 @@ import java.util.TreeMap;
 
 import apb.metadata.ProjectElement;
 
-import apb.utils.FileUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.utils.FileUtils.normalizeFile;
 //
 // User: emilio
 // Date: Oct 10, 2008
@@ -142,7 +142,7 @@ public abstract class ProjectElementHelper
         if (!result.isAbsolute()) {
             File basedir = new File(expand(element.basedir));
 
-            basedir = FileUtils.normalizeFile(basedir);
+            basedir = normalizeFile(basedir);
 
             result = new File(basedir, result.getPath());
         }
@@ -211,7 +211,7 @@ public abstract class ProjectElementHelper
 
     private static File findProjectDir(ProjectElement proto, File sourceFile)
     {
-        File   result = sourceFile;
+        File   result = normalizeFile(sourceFile.getAbsoluteFile());
         String className = proto.getClass().getName();
 
         for (int i = 0; i != -1; i = className.indexOf('.', i + 1)) {
