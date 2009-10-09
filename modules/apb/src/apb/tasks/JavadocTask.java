@@ -40,7 +40,6 @@ import org.jetbrains.annotations.NotNull;
 
 import static apb.tasks.CoreTasks.exec;
 
-import static apb.utils.CollectionUtils.filesFromBase;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.StringUtils.nChars;
 //
@@ -556,15 +555,6 @@ public class JavadocTask
     public static class Builder
     {
         @NotNull private final List<File> sourceDirs;
-
-        /**
-         * Private constructor called from factory methods
-         * @param sourceDirs The directories containing source classes to document
-         */
-        Builder(@NotNull String... sourceDirs)
-        {
-            this(filesFromBase(Apb.getEnv(), sourceDirs));
-        }
 
         /**
          * Private constructor called from factory methods

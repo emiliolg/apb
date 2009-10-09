@@ -23,9 +23,8 @@ import java.util.List;
 import java.util.Set;
 
 import apb.Apb;
-
-import apb.index.DefinitionsIndex;
-import apb.index.ModuleInfo;
+import apb.DefinitionsIndex;
+import apb.ModuleInfo;
 
 import apb.tests.build.ApbTestCase;
 import apb.tests.testutils.FileAssert;
@@ -75,7 +74,7 @@ public class IndexTest
 
         if (moduleInfo != null) {
             assertEquals("Math", String.valueOf(moduleInfo));
-            assertEquals(MATH_EXPECTED_COMMANDS, moduleInfo.getCommands());
+            assertEquals(MATH_EXPECTED_COMMANDS.toString(), moduleInfo.getCommands().toString());
             assertEquals(mathProject, moduleInfo.getContentDir().getPath());
             assertEquals("package", moduleInfo.getDefaultCommand());
             assertEquals("math", moduleInfo.getId());

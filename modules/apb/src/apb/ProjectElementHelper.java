@@ -110,11 +110,6 @@ public abstract class ProjectElementHelper
         return topLevel;
     }
 
-    public final String getJdkName()
-    {
-        return getElement().jdk;
-    }
-
     public final long lastModified()
     {
         return sourceFile.lastModified();

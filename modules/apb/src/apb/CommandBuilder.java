@@ -43,7 +43,7 @@ import org.jetbrains.annotations.NotNull;
 // Time: 4:47:11 PM
 
 //
-public class CommandBuilder
+class CommandBuilder
 {
     //~ Instance fields ......................................................................................
 
@@ -74,6 +74,11 @@ public class CommandBuilder
     public SortedMap<String, Command> commands()
     {
         return commands;
+    }
+
+    public Command getDefaultCommand()
+    {
+        return commands.get(Command.DEFAULT_COMMAND);
     }
 
     private static boolean hasRightSignature(Method method)

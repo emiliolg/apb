@@ -26,7 +26,7 @@ import apb.utils.DebugOption;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class DelegatedEnvironment
+abstract class DelegatedEnvironment
     extends DefaultEnvironment
 {
     //~ Instance fields ......................................................................................

@@ -63,7 +63,7 @@ public class RemoteLibrary
 
         if (name != null) {
             File target = env.fileFromBase(targetDir + File.separator + name);
-            result = ProjectBuilder.getArtifactsCache().getArtifact(group, relativeUrl + "/" + name, target);
+            result = ProjectBuilder.getArtifact(group, name, relativeUrl, target);
         }
 
         return result;

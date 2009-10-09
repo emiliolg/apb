@@ -71,6 +71,7 @@ import static apb.tasks.CoreTasks.copy;
  * </pre>
  *
  */
+@DefaultTarget("package")
 public class Module
     extends ProjectElement
     implements Dependency
@@ -103,6 +104,11 @@ public class Module
     @BuildProperty public String generatedSource = "$output-base/gsrc";
 
     /**
+     * The "group" (Usually organization name) for this element.
+     */
+    @BuildProperty public String group = "";
+
+    /**
      * The directory for the output classes
      */
     @BuildProperty public String output = "$output-base/classes";
@@ -119,6 +125,11 @@ public class Module
      * The directory where the source files for this module are placed
      */
     @BuildProperty public String source = "$moduledir/src";
+
+    /**
+     * The module version
+     */
+    @BuildProperty public String version = "";
 
     /**
      * The list of modules & libraries this module depends from
@@ -147,12 +158,14 @@ public class Module
         return (ModuleHelper) super.getHelper();
     }
 
+    @BuildTarget(description = "Deletes all output directories (compiled code and packages).")
     public void clean()
     {
         getHelper().clean();
         ProjectBuilder.forward("clean", tests());
     }
 
+    @BuildTarget(description = "Copy (eventually filtering) resources to the output directory.")
     public void resources()
     {
         final FileSet fileSet =
@@ -164,32 +177,62 @@ public class Module
         // todo add filtered
     }
 
+    @BuildTarget(
+                 depends = "resources",
+                 description = "Compile classes and place them in the output directory."
+                )
     public void compile()
     {
         getHelper().compile();
     }
 
+    @BuildTarget(
+                 depends = "compile",
+                 description = "Compile test classes.",
+                 recursive = false
+                )
     public void compileTests()
     {
         ProjectBuilder.forward("compile", tests());
     }
 
+    @BuildTarget(
+                 depends = { "compile-tests", "package" },
+                 description =
+                 "Test the compiled sources, generating reports and (optional) coverage information.",
+                 recursive = false
+                )
     public void runTests()
     {
         ProjectBuilder.forward("run", tests());
     }
 
+    @BuildTarget(
+                 depends = "compile-tests",
+                 description =
+                 "Run test with the annotation @Test(group=\"minimal\") generating reports and (optional) coverage information.",
+                 recursive = false
+                )
     public void runMinimalTests()
     {
         ProjectBuilder.forward("run-minimal", tests());
     }
 
+    @BuildTarget(
+                 depends = "compile",
+                 name = "package",
+                 description =
+                 "Creates a jar file containing the compiled classes and resources of the module."
+                )
     public void packageit()
     {
         getHelper().createPackage();
     }
 
-    @BuildTarget(description = "Generates the Standard Java Documentation (Javadoc) for the module.")
+    @BuildTarget(
+                 description = "Generates the Standard Java Documentation (Javadoc) for the module.",
+                 recursive = false
+                )
     public void javadoc()
     {
         getHelper().generateJavadoc();

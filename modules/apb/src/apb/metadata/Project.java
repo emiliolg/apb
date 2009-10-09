@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.metadata;
 
@@ -23,6 +26,16 @@ public class Project
     extends ProjectElement
 {
     //~ Instance fields ......................................................................................
+
+    /**
+     * The "group" (Usually organization name) for this element.
+     */
+    @BuildProperty public String group = "";
+
+    /**
+     * The module version
+     */
+    @BuildProperty public String version = "";
 
     private ProjectElementList components = new ProjectElementList();
 
@@ -37,18 +50,4 @@ public class Project
     {
         components.addAll(ms);
     }
-
-    public void clean() {}
-
-    public void resources() {}
-
-    public void compile() {}
-
-    public void compileTests() {}
-
-    public void runTests() {}
-
-    public void runMinimalTests() {}
-
-    public void packageit() {}
 }

@@ -84,7 +84,7 @@ public class Clone
 
     private void cloneContent(ModuleHelper module, File newDir, String newModule)
     {
-        String oldGroup = module.getElement().group;
+        String oldGroup = module.getModule().group;
         File   oldSources = module.getSourceDir();
         String topDir = FileUtils.topSingleDirectory(oldSources);
         String oldPackage = NameUtils.idFromDir(topDir);

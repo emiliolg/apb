@@ -16,7 +16,7 @@
 //
 
 
-package apb.index;
+package apb;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -33,10 +33,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
-import apb.BuildException;
-import apb.Environment;
-import apb.ProjectBuilder;
 
 import apb.utils.FileUtils;
 

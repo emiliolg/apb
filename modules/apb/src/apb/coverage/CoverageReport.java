@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.coverage;
 
@@ -47,13 +50,13 @@ public class CoverageReport
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private List<Column> columns;
-
-    @NotNull private Depth                    depth;
-    @NotNull private final EnumSet<Column>          descending;
-    @NotNull private final List<Column>             order;
-    @Nullable private File                    output;
+    @NotNull private Depth                          depth;
     @NotNull private final EnumMap<Column, Integer> thresholds;
+    @NotNull private final EnumSet<Column>          descending;
+    @Nullable private File                          output;
+
+    @NotNull private List<Column>       columns;
+    @NotNull private final List<Column> order;
 
     @NotNull private final String type;
 
@@ -140,17 +143,17 @@ public class CoverageReport
         return out;
     }
 
-    @NotNull List<Column> getColumns()
+    @NotNull public List<Column> getColumns()
     {
         return columns;
     }
 
-    @NotNull String getType()
+    @NotNull public String getType()
     {
         return type;
     }
 
-    @NotNull List<String> defines(File outputDir)
+    @NotNull public List<String> defines(File outputDir)
     {
         String       prefix = "-Dreport." + type + ".";
         List<String> result = new ArrayList<String>();

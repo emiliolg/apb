@@ -37,7 +37,7 @@ import static apb.Logger.Level.*;
 // Date: Aug 24, 2009
 // Time: 7:34:40 PM
 
-public abstract class DefaultEnvironment
+abstract class DefaultEnvironment
     implements Environment
 {
     //~ Instance fields ......................................................................................

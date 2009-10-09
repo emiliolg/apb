@@ -28,8 +28,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * The base class for project elements
  */
-@DefaultTarget("package")
-public abstract class ProjectElement
+public class ProjectElement
     implements Named
 {
     //~ Instance fields ......................................................................................
@@ -42,24 +41,9 @@ public abstract class ProjectElement
     @BuildProperty public String basedir = "$projects-home/..";
 
     /**
-     * A description of the Module.
+     * A description of the Element.
      */
     @BuildProperty public String description = "";
-
-    /**
-     * The "group" (Usually organization name) for this element.
-     */
-    @BuildProperty public String group = "";
-
-    /**
-     * The jdk version used for the module
-     */
-    @BuildProperty public String jdk = "1.6";
-
-    /**
-     * The module version
-     */
-    @BuildProperty public String version = "";
 
     @NotNull private final ProjectElementHelper helper;
 
@@ -72,48 +56,8 @@ public abstract class ProjectElement
 
     //~ Methods ..............................................................................................
 
-    @BuildTarget(description = "Deletes all output directories (compiled code and packages).")
-    public abstract void clean();
-
-    @BuildTarget(description = "Copy (eventually filtering) resources to the output directory.")
-    public abstract void resources();
-
-    @BuildTarget(
-                 depends = "resources",
-                 description = "Compile classes and place them in the output directory."
-                )
-    public abstract void compile();
-
-    @BuildTarget(
-                 depends = "compile",
-                 description = "Compile test classes.",
-                 recursive = false
-                )
-    public abstract void compileTests();
-
-    @BuildTarget(
-                 depends = { "compile-tests", "package" },
-                 description =
-                 "Test the compiled sources, generating reports and (optional) coverage information.",
-                 recursive = false
-                )
-    public abstract void runTests();
-
-    @BuildTarget(
-                 depends = "compile-tests",
-                 description =
-                 "Run test with the annotation @Test(group=\"minimal\") generating reports and (optional) coverage information.",
-                 recursive = false
-                )
-    public abstract void runMinimalTests();
-
-    @BuildTarget(
-                 depends = "compile",
-                 name = "package",
-                 description =
-                 "Creates a jar file containing the compiled classes and resources of the module."
-                )
-    public abstract void packageit();
+    //    @BuildTarget(description = "Deletes all output directories (compiled code and packages).")
+    //    public abstract void clean();
 
     @NotNull public ProjectElementHelper getHelper()
     {

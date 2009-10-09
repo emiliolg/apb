@@ -16,13 +16,11 @@
 //
 
 
-package apb.index;
+package apb;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-
-import apb.Environment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -33,7 +31,7 @@ import static apb.tasks.CoreTasks.download;
 // Time: 4:21:27 PM
 
 //
-public class ArtifactsCache
+class ArtifactsCache
 {
     //~ Instance fields ......................................................................................
 

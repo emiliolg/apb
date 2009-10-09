@@ -40,8 +40,7 @@ import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 import apb.Proxy;
-
-import apb.coverage.CoverageBuilder;
+import apb.TestModuleHelper;
 
 import apb.metadata.CoverageInfo;
 import apb.metadata.TestModule;
@@ -159,7 +158,7 @@ public class TestLauncher
 
     public TestLauncher(final TestModule testModule, @NotNull final File testClasses, List<String> testGroups,
                         final TestReport reports, File reportsDir, Collection<File> classPath,
-                        Collection<File> classesToTest, final CoverageBuilder coverageBuilder)
+                        Collection<File> classesToTest, TestModuleHelper module)
     {
         env = Apb.getEnv();
         this.classPath = new LinkedHashSet<File>(classPath);
@@ -202,7 +201,8 @@ public class TestLauncher
         }
 
         classPathInSystemClassloader = testModule.classPathInSystemClassloader;
-        this.coverageBuilder = coverageBuilder;
+        this.coverageBuilder = new CoverageBuilder(module);
+        ;
         this.coverageBuilder.setEnabled(isCoverageEnabled());
         maxMemory = testModule.memory;
         environmentVariables = testModule.environment();

@@ -23,8 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import apb.index.DefinitionsIndex;
-
 import apb.utils.DebugOption;
 import apb.utils.OptionParser;
 

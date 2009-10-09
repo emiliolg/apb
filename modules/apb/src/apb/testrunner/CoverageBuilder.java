@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +15,8 @@
 // limitations under the License
 //
 
-package apb.coverage;
+
+package apb.testrunner;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -34,6 +36,8 @@ import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;
 
+import apb.coverage.CoverageReport;
+
 import apb.metadata.CoverageInfo;
 
 import apb.utils.FileUtils;
@@ -45,9 +49,9 @@ import org.jetbrains.annotations.Nullable;
 import static apb.utils.FileUtils.*;
 
 /**
- * To be used from TestTask
+ * To be used from TestLauncher
  */
-public class CoverageBuilder
+class CoverageBuilder
 {
     //~ Instance fields ......................................................................................
 

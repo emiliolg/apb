@@ -16,17 +16,15 @@
 //
 
 
-package apb.index;
+package apb;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Map;
+import java.util.TreeSet;
 
-import apb.Command;
-import apb.CommandBuilder;
-import apb.ProjectElementHelper;
+import apb.metadata.Project;
+import apb.metadata.ProjectElement;
 
 import org.jetbrains.annotations.NotNull;
 //
@@ -45,8 +43,8 @@ public class ModuleInfo
 
     @NotNull private final Collection<String> commands;
 
-    @NotNull private final File contentDir;
-    @NotNull private String     defaultCommand;
+    @NotNull private final File   contentDir;
+    @NotNull private final String defaultCommand;
 
     @NotNull private final String id;
     @NotNull private final String name;
@@ -59,21 +57,20 @@ public class ModuleInfo
         name = element.getName();
         id = element.getId();
         contentDir = element.getDirFile();
-        commands = new ArrayList<String>();
-        defaultCommand = Command.DEFAULT_COMMAND;
+        commands = new TreeSet<String>();
 
-        CommandBuilder b = element.getCommandBuilder();
+        if (element instanceof ProjectHelper) {
+            Project p = ((ProjectHelper) element).getProject();
 
-        for (Map.Entry<String, Command> cmd : b.commands().entrySet()) {
-            final String nm = cmd.getValue().getQName();
-
-            if (cmd.getKey().equals(Command.DEFAULT_COMMAND)) {
-                defaultCommand = nm;
-            }
-            else {
-                commands.add(nm);
+            for (ProjectElement e : p.components()) {
+                addAllCommands(commands, e.getHelper().getCommandBuilder());
             }
         }
+
+        CommandBuilder b = element.getCommandBuilder();
+        addAllCommands(commands, b);
+        final Command dflt = b.getDefaultCommand();
+        defaultCommand = dflt == null ? Command.DEFAULT_COMMAND : dflt.getQName();
     }
 
     //~ Methods ..............................................................................................
@@ -121,6 +118,13 @@ public class ModuleInfo
     void establishPath(File pdefDir)
     {
         path = new File(pdefDir, getName().replace('.', File.separatorChar)).getPath();
+    }
+
+    private static void addAllCommands(Collection<String> commands, CommandBuilder b)
+    {
+        for (Command command : b.listCommands()) {
+            commands.add(command.getQName());
+        }
     }
 
     //~ Static fields/initializers ...........................................................................

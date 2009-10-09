@@ -16,7 +16,7 @@
 //
 
 
-package apb.index;
+package apb;
 
 import java.io.File;
 import java.io.Serializable;
@@ -24,10 +24,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import apb.Environment;
-import apb.ProjectBuilder;
-import apb.ProjectElementHelper;
 
 import org.jetbrains.annotations.NotNull;
 // User: emilio

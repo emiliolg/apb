@@ -44,7 +44,6 @@ public class InfoTest
         checkOutput("Helper          'Info'",  //
                     "Is top level    'true'",  //
                     "Is test module  'false'",  //
-                    "JDK             '1.6'",  //
                     "LastModified    '" + ts + "'",  //
                     "Dir File        '" + dir + "'",  //
                     "Source File     '" + source.getPath() + "'",  //

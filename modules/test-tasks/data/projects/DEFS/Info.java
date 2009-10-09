@@ -33,6 +33,14 @@ import static apb.tasks.CoreTasks.printf;
 public final class Info
     extends Module
 {
+    //~ Instance initializers ................................................................................
+
+    {
+        dependencies(new HelloWorld(),  //
+                     compile(new Math()),  //
+                     runtime(localLibrary("../lib/junit-3.8.2.jar")));
+    }
+
     //~ Methods ..............................................................................................
 
     @BuildTarget public void info()
@@ -41,7 +49,6 @@ public final class Info
         printf("Helper          '%s'\n", h.toString());
         printf("Is top level    '%b'\n", h.isTopLevel());
         printf("Is test module  '%b'\n", h.isTestModule());
-        printf("JDK             '%s'\n", h.getJdkName());
         printf("LastModified    '%d'\n", h.lastModified());
         printf("Dir File        '%s'\n", h.getDirFile());
         printf("Source File     '%s'\n", h.getSourceFile());
@@ -79,13 +86,5 @@ public final class Info
         for (File library : h.runtimePath()) {
             printf("%s\n", library);
         }
-    }
-
-    //~ Instance initializers ................................................................................
-
-    {
-        dependencies(new HelloWorld(),  //
-                     compile(new Math()),  //
-                     runtime(localLibrary("../lib/junit-3.8.2.jar")));
     }
 }

@@ -28,8 +28,6 @@ import java.util.TreeMap;
 
 import apb.compiler.InMemJavaC;
 
-import apb.index.ArtifactsCache;
-
 import apb.metadata.DependencyList;
 import apb.metadata.Module;
 import apb.metadata.Project;
@@ -134,14 +132,9 @@ public class ProjectBuilder
         return getInstance().findOrCreate(element);
     }
 
-    /**
-     * Return an instance of the ArtifactsCache
-     * that contains information avoid library Artifacts.
-     * @return The ArtifactCache
-     */
-    @NotNull public static ArtifactsCache getArtifactsCache()
+    public static File getArtifact(String group, String name, String relativeUrl, File target)
     {
-        return getInstance().artifactsCache;
+        return getInstance().artifactsCache.getArtifact(group, relativeUrl + "/" + name, target);
     }
 
     @Nullable public ProjectElementHelper constructProjectElement(Environment env, @NotNull File path,

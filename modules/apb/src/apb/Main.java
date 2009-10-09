@@ -28,9 +28,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import apb.index.DefinitionsIndex;
-import apb.index.ModuleInfo;
-
 import apb.utils.FileUtils;
 
 import static java.util.Arrays.asList;

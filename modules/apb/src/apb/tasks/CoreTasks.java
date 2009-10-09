@@ -32,6 +32,8 @@ import org.jetbrains.annotations.NotNull;
 
 import static java.util.Arrays.asList;
 
+import static apb.utils.CollectionUtils.filesFromBase;
+
 public class CoreTasks
 {
     //~ Methods ..............................................................................................
@@ -252,7 +254,20 @@ public class CoreTasks
         return new JarTask.Builder(jarFile);
     }
 
-    public static JavadocTask.Builder javadoc(String... sources)
+    /**
+     * generate documentation for the specified source directories
+     * @param sources The directories containing the source files to document
+     */
+    public static JavadocTask.Builder javadoc(final String... sources)
+    {
+        return javadoc(filesFromBase(Apb.getEnv(), sources));
+    }
+
+    /**
+     * generate documentation for the specified source directories
+     * @param sources The directories containing the source files to document
+     */
+    public static JavadocTask.Builder javadoc(final List<File> sources)
     {
         return new JavadocTask.Builder(sources);
     }

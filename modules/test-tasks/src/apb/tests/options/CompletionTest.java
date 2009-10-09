@@ -23,9 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apb.Apb;
+import apb.DefinitionsIndex;
 import apb.OptionCompletion;
-
-import apb.index.DefinitionsIndex;
 
 import apb.tests.build.ApbTestCase;
 
