@@ -155,7 +155,7 @@ public class FileTest
 
         assertSameFiles(asList("A.java", "A.java", "B.java", "B.java", "C.java", "C.java"), FileUtils.listJavaSources(asList(dir1, dir2)));
 
-        final Collection<File> collection = FileUtils.listAllFiles(dir1);
+        final Collection<File> collection = FileAssert.sort(FileUtils.listAllFiles(dir1), FileUtils.FILE_COMPARATOR);
 
         assertSameFiles(ALL_DIR1, collection);
 

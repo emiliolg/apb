@@ -123,7 +123,7 @@ public class FileAssert
 
 
 
-    private static <T> Collection<T> sort(Collection<T> files, Comparator<T> comparator) {
+    public static <T> Collection<T> sort(Collection<T> files, Comparator<T> comparator) {
         final List<T> result = new ArrayList<T>(files);
         Collections.sort(result, comparator);
         return result;
