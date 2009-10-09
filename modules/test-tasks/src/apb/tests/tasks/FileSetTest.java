@@ -26,6 +26,7 @@ import java.util.List;
 import apb.tasks.FileSet;
 
 import apb.tests.testutils.FileAssert;
+import static apb.tests.testutils.FileAssert.assertSame;
 
 import static java.util.Arrays.asList;
 //
@@ -63,8 +64,7 @@ public class FileSetTest
         assertEquals(new File(basedir, "dir1").getAbsoluteFile(), fileSet.getDir());
         assertEquals(basedir.getAbsolutePath() + "/dir1/{*.java,*.xml}-**/C.java", fileSet.toString());
 
-        List<String> l = fileSet.list();
-        assertEquals(asList("A.java", "a.xml", "B.java"), l);
+        FileAssert.assertSame(asList("A.java", "a.xml", "B.java"), fileSet.list());
     }
 
     public void testSingleFile()
@@ -148,8 +148,7 @@ public class FileSetTest
         assertEquals(new File(basedir, "dir1").getAbsoluteFile(), fileSet.getDir());
         assertEquals(basedir.getAbsolutePath() + "/dir1", fileSet.toString());
 
-        List<String> l = fileSet.list();
-        assertEquals(asList("A.java", "B.java", "C.java"), l);
+        FileAssert.assertSame(asList("A.java", "B.java", "C.java"), fileSet.list());
     }
 
     public void testEmpty()

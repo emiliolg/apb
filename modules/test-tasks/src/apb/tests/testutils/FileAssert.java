@@ -21,10 +21,10 @@ package apb.tests.testutils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import apb.utils.FileUtils;
+import static apb.utils.FileUtils.FILE_COMPARATOR;
 
 import junit.framework.Assert;
 
@@ -32,6 +32,12 @@ import static java.util.Arrays.asList;
 
 public class FileAssert
 {
+    private static final Comparator<String> STRING_COMPARATOR = new Comparator<String>(){
+        @Override
+        public int compare(final String o1,final String o2) {
+            return o1.compareTo(o2);
+        }
+    };
     //~ Methods ..............................................................................................
 
     public static void assertDoesNotExist(File file)
@@ -106,4 +112,21 @@ public class FileAssert
 
         w.close();
     }
+
+    public static void assertSameFiles(final List<String> expected, Collection<File> files) {
+        Assert.assertEquals(sort(expected, STRING_COMPARATOR).toString(),  sort(files, FILE_COMPARATOR).toString());
+    }
+
+    public static void assertSame(final List<String> expected, Collection<String> files) {
+        Assert.assertEquals(sort(expected, STRING_COMPARATOR).toString(),  sort(files, STRING_COMPARATOR).toString());
+    }
+
+
+
+    private static <T> Collection<T> sort(Collection<T> files, Comparator<T> comparator) {
+        final List<T> result = new ArrayList<T>(files);
+        Collections.sort(result, comparator);
+        return result;
+    }
+
 }

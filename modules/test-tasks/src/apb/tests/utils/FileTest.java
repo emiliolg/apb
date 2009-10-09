@@ -21,13 +21,13 @@ package apb.tests.utils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 import apb.tasks.CoreTasks;
 
 import apb.tests.testutils.FileAssert;
+import static apb.tests.testutils.FileAssert.assertSameFiles;
 
 import apb.utils.FileUtils;
 
@@ -141,25 +141,23 @@ public class FileTest
     {
         long ts = System.currentTimeMillis() - 10000;
         createFiles();
-        Collection<File> collection = sort(FileUtils.listDirsWithFiles(basedir, "txt"));
-        assertEquals("[tmp/dir1]", collection.toString());
-        collection = sort(FileUtils.listDirsWithFiles(basedir, "java"));
-        assertEquals("[tmp/dir1, tmp/dir2]", collection.toString());
+        assertSameFiles(asList("tmp/dir1"), FileUtils.listDirsWithFiles(basedir, "txt"));
+        assertSameFiles(asList("tmp/dir1", "tmp/dir2"), FileUtils.listDirsWithFiles(basedir, "java"));
 
-        collection = sort(FileUtils.listAllFilesWithExt(basedir, "java"));
 
-        assertEquals(ALL_JAVA, collection.toString());
 
-        collection = sort(FileUtils.listAllFilesWithExt(asList(dir1, dir2), "java"));
+        assertSameFiles(ALL_JAVA, FileUtils.listAllFilesWithExt(basedir, "java"));
 
-        assertEquals(ALL_JAVA, collection.toString());
 
-        collection = sort(FileUtils.listJavaSources(asList(dir1, dir2)));
-        assertEquals("[A.java, A.java, B.java, B.java, C.java, C.java]", collection.toString());
 
-        collection = sort(FileUtils.listAllFiles(dir1));
+        assertSameFiles(ALL_JAVA, FileUtils.listAllFilesWithExt(asList(dir1, dir2), "java"));
 
-        assertEquals(ALL_DIR1, collection.toString());
+
+        assertSameFiles(asList("A.java", "A.java", "B.java", "B.java", "C.java", "C.java"), FileUtils.listJavaSources(asList(dir1, dir2)));
+
+        final Collection<File> collection = FileUtils.listAllFiles(dir1);
+
+        assertSameFiles(ALL_DIR1, collection);
 
         boolean b = FileUtils.uptodate(collection, System.currentTimeMillis());
         assertTrue(b);
@@ -225,13 +223,6 @@ public class FileTest
         addFiles(dir2, "A.java", "B.java", "C.java");
     }
 
-    private Collection<File> sort(Collection<File> files)
-    {
-        ArrayList<File> result = new ArrayList<File>(files);
-        Collections.sort(result, FileUtils.FILE_COMPARATOR);
-        return result;
-    }
-
     private void addFiles(File dir, String... files)
         throws IOException
     {
@@ -249,11 +240,11 @@ public class FileTest
 
     //~ Static fields/initializers ...........................................................................
 
-    private static final String ALL_DIR1 =
-        "[tmp/dir1/A.java, tmp/dir1/B.java, tmp/dir1/C.java, tmp/dir1/a.txt, tmp/dir1/b.txt]";
+    private static final List<String> ALL_DIR1 =
+        asList("tmp/dir1/A.java", "tmp/dir1/B.java", "tmp/dir1/C.java", "tmp/dir1/a.txt", "tmp/dir1/b.txt");
 
-    private static final String ALL_JAVA =
-        "[tmp/dir1/A.java, tmp/dir1/B.java, tmp/dir1/C.java, tmp/dir2/A.java, tmp/dir2/B.java, tmp/dir2/C.java]";
+    private static final List<String> ALL_JAVA =
+        asList("tmp/dir1/A.java", "tmp/dir1/B.java", "tmp/dir1/C.java", "tmp/dir2/A.java", "tmp/dir2/B.java", "tmp/dir2/C.java");
 
     private static final String[] DATA = { "// Line2", "// Line2" };
 }
