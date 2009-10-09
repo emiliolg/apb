@@ -190,7 +190,7 @@ public class FileTest
         throws IOException
     {
         createFiles();
-        assertTrue(FileUtils.equalsContent(new File(dir1, "a.java"), new File(dir2, "A.java")));
+        assertTrue(FileUtils.equalsContent(new File(dir1, "A.java"), new File(dir2, "A.java")));
     }
 
     public void testTopSingleDirectory()
