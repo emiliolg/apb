@@ -402,6 +402,18 @@ public class FileUtils
     /**
      * Create a FileOutputStream, creates the intermediate directories if necessary
      * @param file The file to open
+     * @return A FileOutputStream
+     * @throws FileNotFoundException
+     */
+    public static FileOutputStream createOutputStream(File file)
+        throws FileNotFoundException
+    {
+        return createOutputStream(file, false);
+    }
+
+    /**
+     * Create a FileOutputStream, creates the intermediate directories if necessary
+     * @param file The file to open
      * @param append append to the output file
      * @return A FileOutputStream
      * @throws FileNotFoundException
@@ -417,9 +429,10 @@ public class FileUtils
             return new FileOutputStream(file, append);
         }
         catch (FileNotFoundException e) {
-            if (!append && file.exists() && !file.canWrite() && !file.delete()) {
+            if (!append && file.exists()) {
                 final BuildException be = new BuildException("Can not recreate: '" + file + "'.");
                 be.initCause(e);
+                throw be;
             }
 
             throw e;
@@ -448,7 +461,7 @@ public class FileUtils
         FileOutputStream writer = null;
 
         try {
-            writer = createOutputStream(to, false);
+            writer = createOutputStream(to);
 
             byte[] buffer = new byte[4092];
 
