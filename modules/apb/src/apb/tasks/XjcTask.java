@@ -180,7 +180,7 @@ public class XjcTask
 
         args.add(schema.getPath());
 
-        final ExecTask command = jar == null ? CoreTasks.exec("xjc", args) : CoreTasks.javaJar(jar, args);
+        final ExecTask command = jar == null ? CoreTasks.exec(env.getProperty(XJC_CMD, "xjc"), args) : CoreTasks.javaJar(jar, args);
         command.execute();
     }
 
@@ -241,4 +241,6 @@ public class XjcTask
             return new XjcTask(from, dir);
         }
     }
+
+    public static final String XJC_CMD = "xjc-cmd";
 }

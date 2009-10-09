@@ -22,10 +22,12 @@ import java.io.File;
 import java.io.IOException;
 
 import apb.Environment;
+import apb.Apb;
 
 import apb.tests.testutils.FileAssert;
 
 import static apb.tasks.CoreTasks.*;
+import apb.tasks.XjcTask;
 //
 // User: emilio
 // Date: Sep 3, 2009
@@ -40,6 +42,7 @@ public class XjcTest
     public void testBin()
         throws IOException
     {
+        Apb.getEnv().putProperty(XjcTask.XJC_CMD, dataPath("jaxb/bin/xjc") );
         final File schema = new File(dataFile(SCHEMADIR), "po.xsd");
         xjc(schema).to(SRCDIR)  //
                    .usingPackage("apb.po")  //
