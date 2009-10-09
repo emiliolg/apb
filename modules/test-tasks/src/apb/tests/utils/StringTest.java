@@ -38,14 +38,14 @@ public class StringTest
     public void testBase64()
         throws IOException
     {
-        String result = StringUtils.encodeBase64(STRING1.getBytes());
+        String result = StringUtils.encodeBase64(STRING1.getBytes("UTF8"));
         assertEquals("QSBzaW1wbGUgc3RyaW5n", result);
 
         assertBytesEquals(STRING1.getBytes(), StringUtils.decodeBase64(result));
 
-        result = StringUtils.encodeBase64(STRING2.getBytes());
-        assertEquals("PwFGMUYKQSB1bmljb2RlIHN0cmluZy4=", result);
-        assertBytesEquals(STRING2.getBytes(), StringUtils.decodeBase64(result));
+        result = StringUtils.encodeBase64(STRING2.getBytes("UTF8"));
+        assertEquals("4Yi0AUYxRgpBIHVuaWNvZGUgc3RyaW5nLg==", result);
+        assertBytesEquals(STRING2.getBytes("UTF8"), StringUtils.decodeBase64(result));
     }
 
     public void testEncode()
