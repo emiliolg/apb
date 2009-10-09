@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
+import static java.util.Collections.singletonList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,18 +44,12 @@ import javax.xml.transform.stream.StreamSource;
 
 import apb.Apb;
 import apb.BuildException;
-
-import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import static java.util.Collections.singletonList;
-
 import static apb.tasks.FileSet.fromDir;
 import static apb.tasks.FileSet.fromFile;
-
+import apb.utils.FileUtils;
 import static apb.utils.FileUtils.createOutputStream;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class XsltTask
     extends CopyTask
@@ -136,7 +131,7 @@ public class XsltTask
         try {
             final Transformer transformer = createTransformer();
             fis = new BufferedInputStream(new FileInputStream(infile));
-            fos = new BufferedOutputStream(createOutputStream(outfile, false));
+            fos = new BufferedOutputStream(createOutputStream(outfile));
             StreamResult res = new StreamResult(fos);
             Source       src = new StreamSource(fis);
 
@@ -152,6 +147,10 @@ public class XsltTask
             }
 
             transformer.transform(src, res);
+
+            fis.close();
+            fos.flush();
+            fos.close();
         }
         catch (TransformerException e) {
             throw new BuildException(e);
