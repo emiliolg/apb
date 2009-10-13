@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb;
 
 import java.io.File;
@@ -30,6 +28,7 @@ import java.util.TreeSet;
 
 import apb.metadata.CompileInfo;
 import apb.metadata.Dependency;
+import apb.metadata.DependencyList;
 import apb.metadata.JavadocInfo;
 import apb.metadata.Library;
 import apb.metadata.Module;
@@ -63,16 +62,16 @@ public class ModuleHelper
 {
     //~ Instance fields ......................................................................................
 
-    @Nullable private File generatedSource;
-    @Nullable private File output;
-    @Nullable private File packageFile;
-    @Nullable private File source;
-    @Nullable private File sourcePackageFile;
-
     @Nullable private Iterable<Library> allLibraries;
 
-    @Nullable private Iterable<ModuleHelper>     dependencies;
-    @Nullable private Iterable<ModuleHelper>     directDependencies;
+    @Nullable private Iterable<ModuleHelper> dependencies;
+    @Nullable private Iterable<ModuleHelper> directDependencies;
+
+    @Nullable private File                       generatedSource;
+    @Nullable private File                       output;
+    @Nullable private File                       packageFile;
+    @Nullable private File                       source;
+    @Nullable private File                       sourcePackageFile;
     @Nullable private Iterable<TestModuleHelper> testModules;
 
     //~ Constructors .........................................................................................
@@ -475,24 +474,31 @@ public class ModuleHelper
         pb.execute(this, commandName);
     }
 
-    /**
-     * todo this should be replaced by runtimepath or compileclasspath....
-     */
-    Collection<File> deepClassPath(boolean useJars, boolean addModuleOutput)
+    Collection<File> deepClassPath(DependencyList dependencies, boolean useJars)
     {
         Set<File> result = new HashSet<File>();
 
-        if (addModuleOutput) {
-            result.add(useJars && hasPackage() ? getPackageFile() : getOutput());
-        }
-
-        for (Dependency dependency : getModule().dependencies()) {
+        for (Dependency dependency : dependencies) {
             if (dependency.isModule()) {
                 result.addAll(dependency.asModule().getHelper().deepClassPath(useJars, true));
             }
             else if (dependency.isLibrary()) {
                 addIfNotNull(result, dependency.asLibrary().getArtifact(this, PackageType.JAR));
             }
+        }
+
+        return result;
+    }
+
+    /**
+     * todo this should be replaced by runtimepath or compileclasspath....
+     */
+    Collection<File> deepClassPath(boolean useJars, boolean addModuleOutput)
+    {
+        Collection<File> result = deepClassPath(getModule().dependencies(), useJars);
+
+        if (addModuleOutput) {
+            result.add(useJars && hasPackage() ? getPackageFile() : getOutput());
         }
 
         return result;

@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -53,13 +54,10 @@ import java.util.TreeSet;
 import apb.Apb;
 import apb.BuildException;
 import apb.Os;
-
 import apb.tasks.FileSet;
-
-import org.jetbrains.annotations.NotNull;
-
 import static apb.utils.StringUtils.isEmpty;
 import static apb.utils.StringUtils.isNotEmpty;
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Sep 8, 2008
@@ -780,7 +778,8 @@ public class FileUtils
                     final File source = new File(fileset.getDir(), f);
                     final File dest = new File(target, f);
 
-                    if (!checkTimestamp || !dest.exists() || source.lastModified() > dest.lastModified()) {
+                    long destLastMod;
+                    if (!checkTimestamp || (destLastMod=dest.lastModified())==0 || source.lastModified() > destLastMod) {
                         result.put(source, dest);
                     }
                 }
@@ -845,18 +844,9 @@ public class FileUtils
         }
     }
 
-    private static List<File> unique(Collection<File> files)
+    private static Set<File> unique(Collection<File> files)
     {
-        final Set<File>  sets = new HashSet<File>(files.size());
-        final List<File> result = new ArrayList<File>(files.size());
-
-        for (File file : files) {
-            if (sets.add(file)) {
-                result.add(file);
-            }
-        }
-
-        return result;
+        return new LinkedHashSet<File>(files);
     }
 
     private static boolean alreadyProcesses(File f, Set<File> files)

@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 package apb.testrunner;
 
@@ -55,26 +53,26 @@ class CoverageBuilder
 {
     //~ Instance fields ......................................................................................
 
-    private boolean coverageEnabled;
+    @NotNull private final List<File> classesToTest;
 
     @NotNull private final CoverageInfo coverage;
-    @Nullable private CoverageReport    textReport;
+
+    private boolean coverageEnabled;
 
     @NotNull private final Environment env;
+    @NotNull private final List<File>  filesDoDelete = new ArrayList<File>();
     @NotNull private final File        outputDir;
+    @NotNull private final List<File>  sourcesToTest;
     @NotNull private final File        testClasses;
-    private List<File>                 classesToTest;
-    @NotNull private final List<File>  filesDoDelete;
-    private List<File>                 sourcesToTest;
+    @Nullable private CoverageReport   textReport;
 
     //~ Constructors .........................................................................................
 
-    public CoverageBuilder(@NotNull TestModuleHelper helper)
+    CoverageBuilder(@NotNull TestModuleHelper helper)
     {
         env = helper;
         testClasses = helper.getOutput();
         coverage = helper.getModule().coverage;
-        filesDoDelete = new ArrayList<File>();
         outputDir = helper.getCoverageDir();
         sourcesToTest = helper.getSourcesToTest();
         classesToTest = helper.getClassesToTest();
@@ -103,12 +101,11 @@ class CoverageBuilder
 
             args.add("-f");
             args.add("-ix");
-            args.add("@" + exclusionFileForTests());
+            args.add('@' + exclusionFileForTests());
             args.add("-sp");
             args.add(makePath(sourcesToTest));
             args.add("-cp");
-            args.add(makePath(Apb.applicationJarFile(), testClasses) + File.pathSeparator +
-                     makePath(classesToTest));
+            args.add(buildClassPath());
             args.add(TESTRUNNER_MAIN);
         }
 
@@ -163,6 +160,15 @@ class CoverageBuilder
         }
 
         return builder.toString();
+    }
+
+    private String buildClassPath()
+    {
+        final List<File> cp = new ArrayList<File>();
+        cp.add(Apb.applicationJarFile());
+        cp.add(testClasses);
+        cp.addAll(classesToTest);
+        return makePath(cp);
     }
 
     private EnumMap<CoverageReport.Column, Integer> loadCoverageInfo(CoverageReport report)

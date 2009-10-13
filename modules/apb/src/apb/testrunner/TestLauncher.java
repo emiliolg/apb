@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +14,18 @@
 // limitations under the License
 //
 
-
 package apb.testrunner;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import static java.lang.Character.isLowerCase;
 import java.net.MalformedURLException;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import static java.util.Arrays.asList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,32 +41,20 @@ import apb.BuildException;
 import apb.Environment;
 import apb.Proxy;
 import apb.TestModuleHelper;
-
 import apb.metadata.CoverageInfo;
 import apb.metadata.TestModule;
-
-import apb.tasks.JavaTask;
-
-import apb.testrunner.output.TestReport;
-
-import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import static java.io.File.pathSeparator;
-import static java.lang.Character.isLowerCase;
-import static java.util.Arrays.asList;
-
 import static apb.tasks.CoreTasks.java;
-
+import apb.tasks.JavaTask;
 import static apb.testrunner.TestRunner.listTests;
 import static apb.testrunner.TestRunner.worseResult;
-
+import apb.testrunner.output.TestReport;
 import static apb.utils.CollectionUtils.listToString;
+import apb.utils.FileUtils;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
 import static apb.utils.StringUtils.isNotEmpty;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Nov 5, 2008
@@ -85,55 +73,7 @@ public class TestLauncher
     /**
      * Run EACH test suite in an independent (fork'ed) process
      */
-    boolean         forkPerSuite;
-    private boolean classPathInSystemClassloader;
-
-    /**
-     * Enable assertions when running the tests
-     */
-    private boolean enableAssertions;
-
-    /**
-     * Enable the java debugger in the forked process
-     */
-    private boolean enableDebugger;
-
-    /**
-     * Fail if no tests are found
-     */
-    private boolean failIfEmpty;
-
-    /**
-     * Fail the build when a test fails
-     */
-    private boolean                        failOnError;
-    @NotNull private final CoverageBuilder coverageBuilder;
-    @NotNull private final CoverageInfo    coverage;
-    @NotNull private final Environment     env;
-    @Nullable private File                 reportDir;
-    @NotNull private final File            testClasses;
-    private final int                      maxMemory;
-
-    /**
-     * The list of tests to exclude
-     */
-    @NotNull private List<String> excludes;
-
-    /**
-     * The list of tests to include
-     */
-    @NotNull private List<String> includes;
-
-    /**
-     * The list of test groups to execute
-     */
-    @NotNull private final List<String> testGroups;
-    private final Map<String, String>   environmentVariables;
-
-    /**
-     * List of System properties to pass to the tests.
-     */
-    @NotNull private Map<String, String> properties;
+    boolean forkPerSuite;
 
     /**
      * The classes to be tested
@@ -143,29 +83,76 @@ public class TestLauncher
     /**
      * The classpath for the tests
      */
-    @NotNull private Set<File> classPath;
-    private final String       creatorClass;
+    @NotNull private final Set<File>       classPath;
+    @NotNull private final CoverageInfo    coverage;
+    @NotNull private final CoverageBuilder coverageBuilder;
+    private final String                   creatorClass;
+
+    /**
+     * Enable assertions when running the tests
+     */
+    private final boolean enableAssertions;
+
+    /**
+     * Enable the java debugger in the forked process
+     */
+    private final boolean              enableDebugger;
+    @NotNull private final Environment env;
+    private final Map<String, String>  environmentVariables;
+
+    /**
+     * The list of tests to exclude
+     */
+    @NotNull private List<String> excludes;
+
+    /**
+     * Fail if no tests are found
+     */
+    private final boolean failIfEmpty;
+
+    /**
+     * Fail the build when a test fails
+     */
+    private final boolean failOnError;
+
+    /**
+     * The list of tests to include
+     */
+    @NotNull private List<String> includes;
+    private final int             maxMemory;
+
+    /**
+     * List of System properties to pass to the tests.
+     */
+    @NotNull private final Map<String, String> properties;
+
+    @NotNull private final TestReport report;
+    @Nullable private File            reportDir;
 
     /**
      * To be able to run a simple TestCase
      */
-    @NotNull private String singleTest;
-    private final String    workingDirectory;
+    @NotNull private String          singleTest = "";
+    @NotNull private final Set<File> systemClassPath = new LinkedHashSet<File>();
+    @NotNull private final File      testClasses;
 
-    @NotNull private final TestReport report;
+    /**
+     * The list of test groups to execute
+     */
+    @NotNull private final List<String> testGroups;
+    private final String                workingDirectory;
 
     //~ Constructors .........................................................................................
 
     public TestLauncher(final TestModule testModule, @NotNull final File testClasses, List<String> testGroups,
-                        final TestReport reports, File reportsDir, Collection<File> classPath,
-                        Collection<File> classesToTest, TestModuleHelper module)
+                        final TestReport reports, Collection<File> classPath, Collection<File> classesToTest,
+                        TestModuleHelper module)
     {
         env = Apb.getEnv();
         this.classPath = new LinkedHashSet<File>(classPath);
         this.classesToTest = new LinkedHashSet<File>(classesToTest);
         this.classPath.removeAll(classesToTest);
 
-        reportDir = reportsDir;
         report = reports;
 
         coverage = testModule.coverage;
@@ -174,7 +161,6 @@ public class TestLauncher
         failIfEmpty = testModule.failIfEmpty;
         failOnError = testModule.failOnError;
         this.testClasses = testClasses;
-        singleTest = "";
 
         if (isNotEmpty(testModule.runOnly)) {
             setSingleTest(testModule.runOnly);
@@ -200,9 +186,7 @@ public class TestLauncher
             fork = true;
         }
 
-        classPathInSystemClassloader = testModule.classPathInSystemClassloader;
         this.coverageBuilder = new CoverageBuilder(module);
-        ;
         this.coverageBuilder.setEnabled(isCoverageEnabled());
         maxMemory = testModule.memory;
         environmentVariables = testModule.environment();
@@ -211,6 +195,16 @@ public class TestLauncher
     }
 
     //~ Methods ..............................................................................................
+
+    public void addSystemClassPath(final Collection<File> jars)
+    {
+        systemClassPath.addAll(jars);
+    }
+
+    public void setReportDir(@Nullable File reportDir)
+    {
+        this.reportDir = reportDir;
+    }
 
     public void execute()
     {
@@ -400,7 +394,10 @@ public class TestLauncher
 
         if (!isCoverageEnabled()) {
             args.add("-c");
-            args.add(makePath(classPath) + pathSeparator + makePath(classesToTest));
+            final Set<File> cp = new LinkedHashSet<File>(classPath);
+            cp.removeAll(systemClassPath);
+            cp.addAll(classesToTest);
+            args.add(makePath(cp));
         }
 
         if (suite == null) {
@@ -478,17 +475,17 @@ public class TestLauncher
     {
         final File appJar = Apb.applicationJarFile();
 
-        List<File> path = new ArrayList<File>();
+        Set<File> path = new LinkedHashSet<File>();
 
         if (isCoverageEnabled()) {
             path.add(new File(appJar.getParent(), "emma.jar"));
             path.addAll(classPath);
         }
-        else if (classPathInSystemClassloader) {
-            path.addAll(classPath);
-        }
         else {
             path.add(appJar);
+            final Set<File> scp = new LinkedHashSet<File>(systemClassPath);
+            scp.retainAll(classPath);
+            path.addAll(scp);
         }
 
         path.addAll(env.getExtClassPath());

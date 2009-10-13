@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,21 +14,17 @@
 // limitations under the License
 //
 
-
 package apb.metadata;
 
 import java.util.ArrayList;
+import static java.util.Arrays.asList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import apb.TestModuleHelper;
-
 import apb.testrunner.output.TestReport;
-
 import org.jetbrains.annotations.NotNull;
-
-import static java.util.Arrays.asList;
 
 /**
  * This class defines a TestModule for the building system
@@ -63,12 +58,26 @@ import static java.util.Arrays.asList;
 public class TestModule
     extends Module
 {
+    //~ Instance initializers ................................................................................
+
+    {
+        /**
+         * By default tests do not generate any jar
+         */
+        pkg.type = PackageType.NONE;
+    }
+
     //~ Instance fields ......................................................................................
 
     /**
-     * Wheter the dependencies classpath is included in the system classloader.
+     *  Info for coverage
      */
-    @BuildProperty public boolean classPathInSystemClassloader = false;
+    @BuildProperty public CoverageInfo coverage = new CoverageInfo();
+
+    /**
+     * A custom creator classname
+     */
+    @BuildProperty public String customCreator;
 
     /**
      * Whether to enable assertions when running the tests
@@ -78,17 +87,17 @@ public class TestModule
     /**
      * Enable the java debugger in the forked process
      */
-    @BuildProperty public boolean enableDebugger = false;
+    @BuildProperty public boolean enableDebugger;
 
     /**
      * Fail if no tests are found
      */
-    @BuildProperty public boolean failIfEmpty = false;
+    @BuildProperty public boolean failIfEmpty;
 
     /**
      * Fail the build when a test fails
      */
-    @BuildProperty public boolean failOnError = false;
+    @BuildProperty public boolean failOnError;
 
     /**
      *  Whether to fork a new process to run the tests or not.
@@ -98,17 +107,7 @@ public class TestModule
     /**
      *  Whether to fork a new process for EACH test suite.
      */
-    @BuildProperty public boolean forkPerSuite = false;
-
-    /**
-     * Wheter to show output in reports or not
-     */
-    @BuildProperty public boolean showOutput = false;
-
-    /**
-     *  Info for coverage
-     */
-    @BuildProperty public CoverageInfo coverage = new CoverageInfo();
+    @BuildProperty public boolean forkPerSuite;
 
     /**
      * Max. memory allocate for the tests (in megabytes).
@@ -116,27 +115,38 @@ public class TestModule
     @BuildProperty public int memory = 256;
 
     /**
-     * A custom creator classname
-     */
-    @BuildProperty public String customCreator = null;
-
-    /**
       * The directory to generate the reports output
       */
-    @BuildProperty public final String reportsDir = "$output-base/reports";
+    @BuildProperty public String reportsDir = "$output-base/reports";
 
     @BuildProperty(description = "The name of a specified test to be run.")
     public String runOnly = "";
 
     /**
-     * Working directory for running the tests
+     * Wheter to show output in reports or not
      */
-    @BuildProperty public final String workingDirectory = "$output-base";
+    @BuildProperty public boolean showOutput;
 
     /**
      * The type of runner for the test
      */
     public final TestType testType = TestType.JUNIT;
+
+    /**
+     * Indicates whether deep classpath is used for running tests
+     */
+    public boolean useDeepClasspath = true;
+
+    /**
+     * Working directory for running the tests
+     */
+    @BuildProperty public String workingDirectory = "$output-base";
+
+    /**
+     * test reports
+     * Environment variables to be set when running the tests
+     */
+    private final Map<String, String> environment = new HashMap<String, String>();
 
     /**
      * The list of tests files to exclude.
@@ -155,34 +165,9 @@ public class TestModule
     private final List<String> includes = new ArrayList<String>();
 
     /**
-     * test reports
-     */
-    private final List<TestReport.Builder> reports = new ArrayList<TestReport.Builder>();
-
-    /**
-     * The list of properties to copy from the apb to the test to be run
-     */
-    private final List<String> useProperties = new ArrayList<String>();
-
-    /**
-<<<<<<< HEAD:modules/apb/src/apb/metadata/TestModule.java
      * Additional Java Args to be set when running the tests
      */
     private final List<String> javaArgs = new ArrayList<String>();
-
-
-    /**
-     * test reports
-=======
-     * Environment variables to be set when running the tests
->>>>>>> origin/env:modules/apb/src/apb/metadata/TestModule.java
-     */
-    private final Map<String, String> environment = new HashMap<String, String>();
-
-    /**
-     * Properties to be set when running the tests
-     */
-    private final Map<String, String> properties = new HashMap<String, String>();
 
     /**
      * The module being tested
@@ -190,11 +175,31 @@ public class TestModule
     private Module moduleToTest;
 
     /**
-     * Indicates whether deep classpath is used for running tests
+     * Properties to be set when running the tests
      */
-    public boolean useDeepClasspath = true;
+    private final Map<String, String> properties = new HashMap<String, String>();
+
+    /**
+     * test reports
+     */
+    private final List<TestReport.Builder> reports = new ArrayList<TestReport.Builder>();
+
+    /**
+     * The list of modules & libraries that if required by test-module, must run on the System ClassPath
+     */
+    private final DependencyList systemDependencies = new DependencyList();
+
+    /**
+     * The list of properties to copy from the apb to the test to be run
+     */
+    private final List<String> useProperties = new ArrayList<String>();
 
     //~ Methods ..............................................................................................
+
+    public DependencyList getSystemDependencies()
+    {
+        return systemDependencies;
+    }
 
     public List<String> includes()
     {
@@ -231,7 +236,8 @@ public class TestModule
         return useProperties;
     }
 
-    public List<String> javaArgs() {
+    public List<String> javaArgs()
+    {
         return javaArgs;
     }
 
@@ -340,6 +346,11 @@ public class TestModule
         return moduleToTest;
     }
 
+    protected final void systemDependencies(Dependencies... dependencyList)
+    {
+        systemDependencies.addAll(dependencyList);
+    }
+
     /**
      * Define the module this test is testing
      * Update the dependencies
@@ -359,13 +370,4 @@ public class TestModule
     public static final List<String> DEFAULT_INCLUDES =
         asList("**/*Test.class", "**/*TestCase.class", "**/*TestSuite.class");
     public static final List<String> DEFAULT_EXCLUDES = asList("**/*$*");
-
-    //~ Instance initializers ................................................................................
-
-    {
-        /**
-         * By default tests do not generate any jar
-         */
-        pkg.type = PackageType.NONE;
-    }
 }

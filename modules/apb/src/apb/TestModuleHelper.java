@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,27 +14,22 @@
 // limitations under the License
 //
 
-
 package apb;
 
 import java.io.File;
+import static java.util.Arrays.asList;
 import java.util.Collections;
 import java.util.List;
 
 import apb.metadata.Module;
 import apb.metadata.TestModule;
-
 import apb.tasks.CoreTasks;
 import apb.tasks.FileSet;
-
 import apb.testrunner.TestLauncher;
 import apb.testrunner.output.TestReport;
 import apb.testrunner.output.TestReportBroadcaster;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static java.util.Arrays.asList;
 //
 // User: emilio
 // Date: Dec 2, 2008
@@ -132,8 +126,10 @@ public class TestModuleHelper
         List<String> testGroups = groups.length == 0 ? getModule().groups() : asList(groups);
 
         TestLauncher testLauncher =
-            new TestLauncher(getModule(), getOutput(), testGroups, buildReports(), getReportsDir(),
-                             deepClassPath(true, false), getClassesToTest(), this);
+            new TestLauncher(getModule(), getOutput(), testGroups, buildReports(), deepClassPath(true, false),
+                             getClassesToTest(), this);
+        testLauncher.setReportDir(getReportsDir());
+        testLauncher.addSystemClassPath(deepClassPath(getModule().getSystemDependencies(), true));
         testLauncher.execute();
     }
 
