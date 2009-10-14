@@ -315,7 +315,14 @@ public class TestModule
                 )
     public void run()
     {
-        getHelper().runTests();
+        final TestModuleHelper helper = getHelper();
+        final String groups = helper.getProperty("tests.groups","");
+        if (groups.isEmpty()) {
+            helper.runTests();
+        }
+        else {
+            helper.runTests(groups.split(","));
+        }
     }
 
     /**
