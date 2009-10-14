@@ -119,7 +119,12 @@ public class TestLauncher
      * The list of tests to include
      */
     @NotNull private List<String> includes;
-    private final int             maxMemory;
+
+    /**
+     * List of additional args to pass to the tests.
+     */
+    @NotNull private final List<String> javaArgs;
+    private final int                   maxMemory;
 
     /**
      * List of System properties to pass to the tests.
@@ -178,6 +183,7 @@ public class TestLauncher
         this.testGroups = testGroups;
 
         properties = expandProperties(env, testModule.properties(), testModule.useProperties());
+        javaArgs = new ArrayList<String>(testModule.javaArgs());
         enableAssertions = testModule.enableAssertions;
 
         enableDebugger = testModule.enableDebugger;
@@ -211,6 +217,7 @@ public class TestLauncher
         if (env.isVerbose()) {
             showClassPath();
             showProperties();
+            showJavaArgs();
         }
 
         int result = fork ? executeOutOfProcess() : executeInProcess();
@@ -264,6 +271,15 @@ public class TestLauncher
         for (int i = 0; i < args.size(); i++) {
             String arg = args.get(i);
             args.set(i, arg.replace("$", "\\$"));
+        }
+    }
+
+    private void showJavaArgs()
+    {
+        env.logVerbose("Java args: \n");
+
+        for (String javaArg : javaArgs) {
+            env.logVerbose("         '%s'\n", javaArg);
         }
     }
 
@@ -449,6 +465,9 @@ public class TestLauncher
         // Add the test directory
         args.add(testClasses.getAbsolutePath());
         escapeDollars(args);
+
+        // add args
+        args.addAll(javaArgs);
 
         // Execute  the java command
         JavaTask java =
