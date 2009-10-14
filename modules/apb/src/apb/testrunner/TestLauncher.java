@@ -256,6 +256,18 @@ public class TestLauncher
     }
 
     /**
+     * Escape $ in args to prevent property expansion
+     * @param args
+     */
+    private static void escapeDollars(List<String> args)
+    {
+        for (int i = 0; i < args.size(); i++) {
+            String arg = args.get(i);
+            args.set(i, arg.replace("$", "\\$"));
+        }
+    }
+
+    /**
      * Set to execute specific tests
      *
      * @param tests The tests to be executed
@@ -459,30 +471,21 @@ public class TestLauncher
         return java.getExitValue();
     }
 
-    /**
-     * Escape $ in args to prevent property expansion
-     * @param args
-     */
-    private void escapeDollars(List<String> args)
-    {
-        for (int i = 0; i < args.size(); i++) {
-            String arg = args.get(i);
-            args.set(i, arg.replace("$", "\\$"));
-        }
-    }
-
     private String runnerClassPath()
     {
         final File appJar = Apb.applicationJarFile();
 
         Set<File> path = new LinkedHashSet<File>();
+        path.add(appJar);
+
+        // TODO search apb-test dynamically
+        path.add(new File(appJar.getParent(), "apb-test.jar"));
 
         if (isCoverageEnabled()) {
             path.add(new File(appJar.getParent(), "emma.jar"));
             path.addAll(classPath);
         }
         else {
-            path.add(appJar);
             final Set<File> scp = new LinkedHashSet<File>(systemClassPath);
             scp.retainAll(classPath);
             path.addAll(scp);
