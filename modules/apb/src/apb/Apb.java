@@ -43,7 +43,13 @@ public class Apb
 
     public static File applicationJarFile()
     {
-        String url = Apb.class.getResource("").toExternalForm();
+        final String className = Apb.class.getName();
+
+        // Strip the package name (plus the connecting dot) from the class name
+        // and append the .class extension
+        final String classFileName = className.substring(className.lastIndexOf('.') + 1) + ".class";
+
+        String url = Apb.class.getResource(classFileName).toExternalForm();
         int    ind = url.lastIndexOf('!');
 
         if (ind == -1 || !url.startsWith(JAR_FILE_URL_PREFIX)) {
