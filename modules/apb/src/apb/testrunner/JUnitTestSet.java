@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 package apb.testrunner;
 
@@ -61,20 +59,22 @@ public final class JUnitTestSet
                         @NotNull List<String> testGroups)
         throws TestSetFailedException
     {
-        Test test = constructTestObject(testGroups);
+        Test test = constructTestObject(testGroups, classLoader);
 
         if (test != null) {
             TestResultWrapper testResult = new TestResultWrapper();
 
             testResult.addListener(new TestListenerAdaptor(report));
 
-            final ClassLoader previousClassLoader = Thread.currentThread().getContextClassLoader();
-            Thread.currentThread().setContextClassLoader(classLoader);
+            final Thread      currentThread = Thread.currentThread();
+            final ClassLoader previousClassLoader = currentThread.getContextClassLoader();
+
             try {
+                currentThread.setContextClassLoader(classLoader);
                 test.run(testResult);
             }
             finally {
-                Thread.currentThread().setContextClassLoader(previousClassLoader);
+                currentThread.setContextClassLoader(previousClassLoader);
             }
         }
     }
@@ -195,7 +195,8 @@ public final class JUnitTestSet
         return false;
     }
 
-    @Nullable private Test constructTestObject(@NotNull List<String> testGroups)
+    @Nullable private Test constructTestObject(@NotNull List<String> testGroups,
+                                               @NotNull ClassLoader  classLoader)
         throws TestSetFailedException
     {
         // First try to see if there is a 'suite' method.
@@ -214,7 +215,11 @@ public final class JUnitTestSet
         // Check if I've to run it and run it
 
         if (mustRun(m, testGroups)) {
+            final Thread      currentThread = Thread.currentThread();
+            final ClassLoader previousClassLoader = currentThread.getContextClassLoader();
+
             try {
+                currentThread.setContextClassLoader(classLoader);
                 return (Test) m.invoke(null);
             }
             catch (InvocationTargetException e) {
@@ -222,6 +227,9 @@ public final class JUnitTestSet
             }
             catch (Exception e) {
                 throw new TestSetFailedException(e);
+            }
+            finally {
+                currentThread.setContextClassLoader(previousClassLoader);
             }
         }
 
@@ -279,25 +287,28 @@ public final class JUnitTestSet
 
             if (test instanceof TestCase) {
                 name = ((TestCase) test).getName();
-            } else if (test instanceof TestSuite) {
+            }
+            else if (test instanceof TestSuite) {
                 name = ((TestSuite) test).getName();
             }
 
             return name;
         }
 
-		private static String testCurrent(TestReport report, Test test) {
+        private static String testCurrent(TestReport report, Test test)
+        {
             String current = "";
 
             if (test instanceof TestCase) {
                 current = report.getCurrentTest();
-            } else if (test instanceof TestSuite) {
+            }
+            else if (test instanceof TestSuite) {
                 current = report.getCurrentSuite();
             }
-            
+
             return current;
-		}
-		
+        }
+
         private void validateCurrentTest(Test test)
         {
             final String name = testName(test);
@@ -307,6 +318,5 @@ public final class JUnitTestSet
                 throw new IllegalStateException(name + " vs " + current);
             }
         }
-
     }
 }

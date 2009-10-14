@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb.testrunner;
 
 import java.io.File;
@@ -29,7 +27,9 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import apb.testrunner.output.TestReport;
+
 import apb.utils.DirectoryScanner;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -42,15 +42,15 @@ public class TestRunner
 {
     //~ Instance fields ......................................................................................
 
-    private boolean failEmpty;
-    private boolean verbose;
-
     @NotNull private final File basedir;
-    @NotNull private final File outputDir;
 
     @NotNull private final List<String> excludes;
+
+    private boolean                     failEmpty;
     @NotNull private final List<String> includes;
+    @NotNull private final File         outputDir;
     @NotNull private final List<String> testGroups;
+    private boolean                     verbose;
 
     //~ Constructors .........................................................................................
 
@@ -141,8 +141,7 @@ public class TestRunner
     }
 
     private static <T> Set<String> listTestsNames(ClassLoader testsClassLoader, TestSetCreator<T> creator,
-                                                      File basedir, List<String> includes,
-                                                      List<String> excludes)
+                                                  File basedir, List<String> includes, List<String> excludes)
         throws TestSetFailedException
     {
         Set<String> testSets = new HashSet<String>();
@@ -204,7 +203,17 @@ public class TestRunner
         try {
             String className = file.replace(File.separatorChar, '.');
             className = className.substring(0, className.length() - ".class".length());
-            final Class<?> c = classLoader.loadClass(className);
+            final Class<?>    c;
+            final Thread      currentThread = Thread.currentThread();
+            final ClassLoader prevClassloader = currentThread.getContextClassLoader();
+
+            try {
+                currentThread.setContextClassLoader(classLoader);
+                c = classLoader.loadClass(className);
+            }
+            finally {
+                currentThread.setContextClassLoader(prevClassloader);
+            }
 
             if (testClass.isAssignableFrom(c)) {
                 return (Class<T>) c;
