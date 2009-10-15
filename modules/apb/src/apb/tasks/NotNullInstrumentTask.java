@@ -46,14 +46,14 @@ public class NotNullInstrumentTask
 {
     //~ Constructors .........................................................................................
 
-    public NotNullInstrumentTask(Environment env)
+    public NotNullInstrumentTask(@NotNull Environment env)
     {
         super(env);
     }
 
     //~ Methods ..............................................................................................
 
-    public static void process(Environment env)
+    public static void process(@NotNull Environment env)
     {
         final NotNullInstrumentTask task = new NotNullInstrumentTask(env);
         task.execute();
@@ -68,13 +68,13 @@ public class NotNullInstrumentTask
     {
         if (fileNames != null) {
             System.setProperty(getClassesProperty(),
-                               CollectionUtils.listToString(fileNames, CLASSES_PROPERTY));
+                               CollectionUtils.listToString(fileNames));
         }
     }
 
     public void execute()
     {
-        String       classesProperty = getClassesProperty();
+        final String  classesProperty = getClassesProperty();
         final String classes = System.getProperty(classesProperty);
         System.setProperty(classesProperty, "");
 
@@ -83,10 +83,9 @@ public class NotNullInstrumentTask
         }
     }
 
-    private void instrumentClass(final String classPath)
+    private void instrumentClass(@NotNull final String classPath)
     {
         final File classFile = new File(classPath);
-
         if (classFile.getName().endsWith(".class")) {
             try {
                 final InputStream fis = new FileInputStream(classFile);

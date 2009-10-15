@@ -406,7 +406,7 @@ public class ModuleHelper
                            .processing(info.getProcessingOption().paramValue())  //
                            .usingDefaultFormatter(info.defaultErrorFormatter)  //
                            .excludeFromWarning(info.warnExcludes())  //
-                           .useName(getName());
+                           .useName(getName()).withProcessorPath(info.processorPath());
 
         if (!info.warnGenerated) {
             javac.excludeFromWarning(getGeneratedSource());

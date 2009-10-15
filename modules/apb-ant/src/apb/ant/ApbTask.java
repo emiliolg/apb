@@ -33,12 +33,7 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 
 import org.jetbrains.annotations.NotNull;
-//
-// User: emilio
-// Date: Dec 10, 2008
-// Time: 12:55:25 PM
 
-//
 public class ApbTask
     extends Task
 {

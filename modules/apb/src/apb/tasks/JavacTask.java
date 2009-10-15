@@ -65,6 +65,7 @@ public class JavacTask
 
     @NotNull private final File          targetDir;
     @NotNull private final List<File>    classPath;
+    @NotNull private final List<File>    processorPath;
     @NotNull private final List<File>    extraLibraries;
     @NotNull private final List<FileSet> fileSets;
     @NotNull private final List<File>    sourceDirs;
@@ -86,6 +87,7 @@ public class JavacTask
         this.fileSets = fileSets;
         classPath = new ArrayList<File>();
         extraLibraries = new ArrayList<File>();
+        processorPath = new ArrayList<File>();
         sourceDirs = new ArrayList<File>();
         reporter = new DiagnosticReporter(this);
         source = "";
@@ -149,6 +151,14 @@ public class JavacTask
     {
         for (Library library : libraries) {
             addIfNotNull(extraLibraries, library.getArtifact(env, PackageType.JAR));
+        }
+
+        return this;
+    }
+    public JavacTask withProcessorPath(List<Library> libraries)
+    {
+        for (Library library : libraries) {
+            addIfNotNull(processorPath, library.getArtifact(env, PackageType.JAR));
         }
 
         return this;
@@ -220,7 +230,24 @@ public class JavacTask
                 logVerbose("Target directory: %s\n", targetDir);
             }
 
-            List<String> options = new ArrayList<String>();
+            final List<String> options = new ArrayList<String>();
+
+            // Set annotation processor classpath ...
+            options.add("-processorpath");
+            final StringBuilder processorsPath = new StringBuilder();
+            final File apbJar = Apb.applicationJarFile(false);
+            if(apbJar!=null)
+            {
+                processorsPath.append(apbJar);
+            }
+            for (final File jarFile : processorPath) {
+                if(processorsPath.length()>0)
+                {
+                    processorsPath.append(File.pathSeparator);
+                }
+                processorsPath.append(jarFile.getAbsolutePath());
+            }
+            options.add(processorsPath.toString());
 
             if (debug) {
                 options.add("-g");

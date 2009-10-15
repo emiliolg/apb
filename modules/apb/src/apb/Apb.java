@@ -30,10 +30,6 @@ import org.jetbrains.annotations.Nullable;
 import static apb.utils.StringUtils.isEmpty;
 import static apb.utils.StringUtils.isNotEmpty;
 
-// User: emilio
-// Date: Aug 24, 2009
-// Time: 5:46:51 PM
-
 /**
  * Entry point to common APB services
  */
@@ -42,6 +38,11 @@ public class Apb
     //~ Methods ..............................................................................................
 
     public static File applicationJarFile()
+    {
+        return applicationJarFile(true);
+    }
+
+    public static File applicationJarFile(boolean failOnNotFound)
     {
         final String className = Apb.class.getName();
 
@@ -52,12 +53,19 @@ public class Apb
         String url = Apb.class.getResource(classFileName).toExternalForm();
         int    ind = url.lastIndexOf('!');
 
-        if (ind == -1 || !url.startsWith(JAR_FILE_URL_PREFIX)) {
-            throw new BuildException("Can't not find 'apb' jar " + url);
+        File result = null;
+        if ((ind == -1 || !url.startsWith(JAR_FILE_URL_PREFIX))) {
+            if(failOnNotFound)
+            {
+                throw new BuildException("Can't not find 'apb' jar " + url);
+            }
+        }else
+        {
+            result= new File(url.substring(JAR_FILE_URL_PREFIX.length(), ind));
         }
-
-        return new File(url.substring(JAR_FILE_URL_PREFIX.length(), ind));
+        return result;
     }
+
 
     /**
      * Load the projectpath list.
