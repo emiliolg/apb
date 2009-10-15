@@ -30,7 +30,7 @@ rm -rf $LIB_DIR/apb.jar $LIB_DIR/apb-src.jar $LIB_DIR/ant-apb.jar $APB_DIR/modul
 if [ "$1" != "clean" ]
 then
     mkdir -p $OUT_DIR
-    javac -g -classpath $LIB_DIR/annotations.jar -sourcepath $SRC_DIR -d $OUT_DIR $SRC_DIR/apb/Main.java $SRC_DIR/apb/ApbOptions.java $SRC_DIR/apb/metadata/*.java  $SRC_DIR/apb/idegen/IdeaInfo.java
+    javac -g -classpath $LIB_DIR/annotations.jar:$LIB_DIR/asm-3.1.jar -sourcepath $SRC_DIR -d $OUT_DIR $SRC_DIR/apb/Main.java $SRC_DIR/apb/ApbOptions.java $SRC_DIR/apb/metadata/*.java  $SRC_DIR/apb/idegen/IdeaInfo.java
     java -classpath $OUT_DIR apb.Main -fs $APB_DIR/modules/project-definitions/ApbAll.package
     if [ "$1" != "package" ]
     then

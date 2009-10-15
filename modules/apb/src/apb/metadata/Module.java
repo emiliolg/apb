@@ -25,7 +25,7 @@ import apb.ModuleHelper;
 import apb.ProjectBuilder;
 
 import apb.tasks.FileSet;
-
+import apb.tasks.NotNullInstrumentTask;
 import org.jetbrains.annotations.NotNull;
 
 import static apb.tasks.CoreTasks.copy;
@@ -132,14 +132,20 @@ public class Module
     @BuildProperty public String version = "";
 
     /**
+     *  Enable @NotNull class instrumentation 
+     */
+    @BuildProperty public boolean  enableNotNullInstrumentation;
+    /**
      * The list of modules & libraries this module depends from
      */
     protected final DependencyList dependencies = new DependencyList();
+
 
     /*
      * The list of test modules
      */
     final List<TestModule> tests = new ArrayList<TestModule>();
+
 
     //~ Methods ..............................................................................................
 
@@ -184,6 +190,11 @@ public class Module
     public void compile()
     {
         getHelper().compile();
+
+        if(enableNotNullInstrumentation)
+        {
+            NotNullInstrumentTask.process(getHelper());
+        }
     }
 
     @BuildTarget(
