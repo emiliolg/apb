@@ -81,7 +81,7 @@ public class JavaTest
                   .withClassPath("$apb-jar")  //
                   .withAnnotationOptions(NotNullInstrumentTask.CLASSES_PROPERTY, p)  //
                   .execute();
-        NotNullInstrumentTask.process(env);
+        NotNullInstrumentTask.process();
 
         FileAssert.assertExists(new File(basedir, SUM_ARGS + ".class"));
 

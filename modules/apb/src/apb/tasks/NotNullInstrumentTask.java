@@ -27,7 +27,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import apb.Environment;
 import apb.utils.CollectionUtils;
 import static apb.utils.CollectionUtils.stringToList;
 import org.jetbrains.annotations.NotNull;
@@ -44,18 +43,11 @@ import org.objectweb.asm.Type;
 public class NotNullInstrumentTask
     extends Task
 {
-    //~ Constructors .........................................................................................
-
-    public NotNullInstrumentTask(@NotNull Environment env)
-    {
-        super(env);
-    }
-
     //~ Methods ..............................................................................................
 
-    public static void process(@NotNull Environment env)
+    public static void process()
     {
-        final NotNullInstrumentTask task = new NotNullInstrumentTask(env);
+        final NotNullInstrumentTask task = new NotNullInstrumentTask();
         task.execute();
     }
 
@@ -192,7 +184,7 @@ class NotNullClassInstrumenter
             }
 
             @Override  public void visitCode() {
-                if (isResultNotNull || notNullParams.size() > 0) {
+                if (isResultNotNull || !notNullParams.isEmpty()) {
                     startGeneratedCodeLabel = new Label();
                     mv.visitLabel(startGeneratedCodeLabel);
                 }
@@ -243,10 +235,11 @@ class NotNullClassInstrumenter
             }
 
             private void generateThrow(String exceptionClass, String descr, Label end) {
-                final String exceptionParamClass = "(Ljava/lang/String;)V";
                 mv.visitTypeInsn(Opcodes.NEW, exceptionClass);
                 mv.visitInsn(Opcodes.DUP);
                 mv.visitLdcInsn(descr);
+
+                final String exceptionParamClass = "(Ljava/lang/String;)V";
                 mv.visitMethodInsn(Opcodes.INVOKESPECIAL, exceptionClass, "<init>", exceptionParamClass);
                 mv.visitInsn(Opcodes.ATHROW);
                 mv.visitLabel(end);

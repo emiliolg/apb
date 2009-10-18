@@ -104,7 +104,6 @@ public class JavadocTask
 
     public JavadocTask(@NotNull List<File> sourceDirs, @NotNull File outputDir)
     {
-        super(Apb.getEnv());
         sourcesDir = sourceDirs;
         outputDirectory = outputDir;
         encoding = ResourcesInfo.DEFAULT_ENCODING;

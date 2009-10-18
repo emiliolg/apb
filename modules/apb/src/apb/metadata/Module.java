@@ -23,12 +23,9 @@ import java.util.List;
 
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
-
-import apb.tasks.FileSet;
-import apb.tasks.NotNullInstrumentTask;
-import org.jetbrains.annotations.NotNull;
-
 import static apb.tasks.CoreTasks.copy;
+import apb.tasks.FileSet;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This class defines a Module for the building system
@@ -132,10 +129,6 @@ public class Module
     @BuildProperty public String version = "";
 
     /**
-     *  Enable @NotNull class instrumentation 
-     */
-    @BuildProperty public boolean  enableNotNullInstrumentation;
-    /**
      * The list of modules & libraries this module depends from
      */
     protected final DependencyList dependencies = new DependencyList();
@@ -190,11 +183,16 @@ public class Module
     public void compile()
     {
         getHelper().compile();
-
-        if(enableNotNullInstrumentation)
-        {
-            NotNullInstrumentTask.process(getHelper());
-        }
+// This should be done differently...
+//        Using an extension
+// if not it is imposibly to boot build apb....!!!!!
+//
+// Also the flag is a compilerflag and not a Module Flag !!!!
+//
+//        if(enableNotNullInstrumentation)
+//        {
+//            NotNullInstrumentTask.process();
+//        }
     }
 
     @BuildTarget(

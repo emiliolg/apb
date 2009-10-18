@@ -43,17 +43,13 @@ import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import apb.Apb;
 import apb.BuildException;
 import apb.Messages;
-
 import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
-
+import static apb.utils.StringUtils.isNotEmpty;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static apb.utils.StringUtils.isNotEmpty;
 //
 // User: emilio
 // Date: Sep 9, 2008
@@ -80,7 +76,6 @@ public class JarTask
 
     private JarTask(@NotNull File jarFile, @NotNull File source)
     {
-        super(Apb.getEnv());
         this.jarFile = jarFile;
         sourceDir = new ArrayList<File>();
         sourceDir.add(source);
