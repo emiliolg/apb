@@ -515,10 +515,13 @@ public class TestLauncher
 
         // Add the test directory
         args.add(testClasses.getAbsolutePath());
-        escapeDollars(args);
 
-        // add args
+        // add extra java args
         args.addAll(javaArgs);
+
+        // Escape '$' signs in the arguments.
+        // This must be done after ALL arguments are added
+        escapeDollars(args);
 
         // Execute  the java command
         JavaTask java =
