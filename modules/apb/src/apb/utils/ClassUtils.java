@@ -111,6 +111,17 @@ public class ClassUtils
     public static File jarFromClass(Class<?> aClass)
     {
         String url = aClass.getResource("").toExternalForm();
+//
+// Todo check this with Dany ... Not sure why this is necesary...
+//
+//
+//        final String className = aClass.getName();
+//
+//        // Strip the package name (plus the connecting dot) from the class name
+//        // and append the .class extension
+//        final String classFileName = className.substring(className.lastIndexOf('.') + 1) + ".class";
+//
+//        String url = aClass.getResource(classFileName).toExternalForm();
         int    ind = url.lastIndexOf('!');
 
         if (ind == -1 || !url.startsWith(JAR_FILE_URL_PREFIX)) {

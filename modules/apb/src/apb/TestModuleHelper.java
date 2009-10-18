@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,20 +15,23 @@
 // limitations under the License
 //
 
+
 package apb;
 
 import java.io.File;
-import static java.util.Arrays.asList;
 import java.util.Collections;
 import java.util.List;
 
 import apb.metadata.Module;
 import apb.metadata.TestModule;
+
 import apb.tasks.CoreTasks;
 import apb.tasks.FileSet;
+
 import apb.testrunner.TestLauncher;
 import apb.testrunner.output.TestReport;
 import apb.testrunner.output.TestReportBroadcaster;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -163,7 +167,24 @@ public class TestModuleHelper
             putProperty("tests.groups", groups[0]);
         }
 
-        List<String> testGroups = groups.length == 0 ? getModule().groups() : asList(groups);
+        final List<String> testGroups;
+
+        if (groups.length != 0) {
+            testGroups = asList(groups);
+        }
+        else {
+            // Check test.groups property to override the value specified in the module
+            // Todo This must be removed once override is enable for List<String> properties !
+            //
+            final String gs = getProperty("tests.groups", "");
+
+            if (gs.isEmpty()) {
+                testGroups = getModule().groups();
+            }
+            else {
+                testGroups = asList(gs.split(","));
+            }
+        }
 
         TestLauncher testLauncher =
             new TestLauncher(getModule(), getOutput(), testGroups, buildReports(), deepClassPath(true, false),

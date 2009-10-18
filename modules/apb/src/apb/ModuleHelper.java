@@ -36,21 +36,16 @@ import apb.metadata.PackageInfo;
 import apb.metadata.PackageType;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
-
+import static apb.tasks.CoreTasks.*;
 import apb.tasks.FileSet;
 import apb.tasks.JarTask;
 import apb.tasks.JavacTask;
-
+import static apb.utils.CollectionUtils.addIfNotNull;
 import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static apb.tasks.CoreTasks.*;
-
-import static apb.utils.CollectionUtils.addIfNotNull;
 //
 // User: emilio
 // Date: Sep 15, 2008
@@ -524,6 +519,9 @@ public class ModuleHelper
         return this;
     }
 
+    /**
+    * todo this should be replaced by runtimepath or compileclasspath....
+    */
     Collection<File> deepClassPath(DependencyList dependencyList, boolean useJars)
     {
         Set<File> result = new HashSet<File>();
