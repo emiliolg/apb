@@ -108,6 +108,9 @@ abstract class DelegatedEnvironment
                                                                 : parent.getExtClassPath();
     }
 
+    /**
+     * @exclude
+     */
     @Nullable protected String retrieveProperty(@NotNull String id)
     {
         String result = retrieveLocalProperty(id);

@@ -70,7 +70,7 @@ public class ModuleInfo
         CommandBuilder b = element.getCommandBuilder();
         addAllCommands(commands, b);
         final Command dflt = b.getDefaultCommand();
-        defaultCommand = dflt == null ? Command.DEFAULT_COMMAND : dflt.getQName();
+        defaultCommand = dflt == null ? Command.DEFAULT_COMMAND : dflt.getName();
     }
 
     //~ Methods ..............................................................................................
@@ -123,7 +123,7 @@ public class ModuleInfo
     private static void addAllCommands(Collection<String> commands, CommandBuilder b)
     {
         for (Command command : b.listCommands()) {
-            commands.add(command.getQName());
+            commands.add(command.getName());
         }
     }
 

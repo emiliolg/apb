@@ -18,7 +18,6 @@
 
 
 import java.io.File;
-import java.util.Map;
 
 import apb.Command;
 import apb.ModuleHelper;
@@ -33,14 +32,6 @@ import static apb.tasks.CoreTasks.printf;
 public final class Info
     extends Module
 {
-    //~ Instance initializers ................................................................................
-
-    {
-        dependencies(new HelloWorld(),  //
-                     compile(new Math()),  //
-                     runtime(localLibrary("../lib/junit-3.8.2.jar")));
-    }
-
     //~ Methods ..............................................................................................
 
     @BuildTarget public void info()
@@ -49,7 +40,6 @@ public final class Info
         printf("Helper          '%s'\n", h.toString());
         printf("Is top level    '%b'\n", h.isTopLevel());
         printf("Is test module  '%b'\n", h.isTestModule());
-        printf("LastModified    '%d'\n", h.lastModified());
         printf("Dir File        '%s'\n", h.getDirFile());
         printf("Source File     '%s'\n", h.getSourceFile());
         printf("Project dir     '%s'\n", h.getProjectDirectory());
@@ -63,10 +53,8 @@ public final class Info
 
         printf("--- Commands ---\n");
 
-        for (Map.Entry<String, Command> e : h.listCommands().entrySet()) {
-            String name = e.getKey();
-            String descr = e.getValue().getDescription();
-            printf("%s: %s\n", name, descr);
+        for (Command cmd : h.listCommands()) {
+            printf("%s: %s\n", cmd.getName(), cmd.getDescription());
         }
 
         printf("--- Modules ---\n");
@@ -86,5 +74,13 @@ public final class Info
         for (File library : h.runtimePath()) {
             printf("%s\n", library);
         }
+    }
+
+    //~ Instance initializers ................................................................................
+
+    {
+        dependencies(new HelloWorld(),  //
+                     compile(new Math()),  //
+                     runtime(localLibrary("../lib/junit-3.8.2.jar")));
     }
 }

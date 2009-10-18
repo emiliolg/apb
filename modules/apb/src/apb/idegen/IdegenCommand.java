@@ -20,6 +20,8 @@ package apb.idegen;
 
 import apb.Command;
 
+import apb.metadata.Module;
+
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -34,6 +36,6 @@ public abstract class IdegenCommand
 
     public IdegenCommand(@NotNull String name)
     {
-        super("idegen", name, "Generate " + name + " project and module files.", true);
+        super(Module.class, "idegen", name, "Generate " + name + " project and module files.", true);
     }
 }

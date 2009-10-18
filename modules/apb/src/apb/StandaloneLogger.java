@@ -20,11 +20,17 @@ package apb;
 
 import apb.utils.ColorUtils;
 import apb.utils.LineSplitter;
+
+import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Sep 1, 2009
 // Time: 3:36:26 PM
 
+/**
+ * A logger that emmits the output to the standard output
+ * @exclude
+ */
 public class StandaloneLogger
     implements Logger
 {
@@ -36,7 +42,7 @@ public class StandaloneLogger
 
     //~ Methods ..............................................................................................
 
-    public void log(Level level, String msg, Object... args)
+    public void log(@NotNull Level level, @NotNull String msg, Object... args)
     {
         if (level.compareTo(minLevel) >= 0) {
             String str = format(args == null || args.length == 0 ? msg : String.format(msg, args));
@@ -67,7 +73,7 @@ public class StandaloneLogger
         color = b;
     }
 
-    public void setLevel(Level level)
+    public void setLevel(@NotNull Level level)
     {
         minLevel = level;
     }

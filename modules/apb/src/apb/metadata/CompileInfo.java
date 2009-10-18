@@ -110,11 +110,6 @@ public class CompileInfo
     private final List<Library> extraLibraries = new ArrayList<Library>();
 
     /**
-     * Specify where to find annotation processors
-     */
-    private final List<Library> processorPath = new ArrayList<Library>();
-
-    /**
      * The list of files to compile.
      *
      */
@@ -155,16 +150,6 @@ public class CompileInfo
     public List<Library> extraLibraries()
     {
         return extraLibraries;
-    }
-
-    public void processorPath(Library... libraries)
-    {
-         processorPath.addAll(asList(libraries));
-    }
-
-    public List<Library> processorPath ()
-    {
-        return processorPath;
     }
 
     /**

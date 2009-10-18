@@ -1,4 +1,4 @@
-#LyX 1.6.4 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.0 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -470,20 +470,22 @@ apb
 \end_inset
 
  (dot character) followed by the method (BuildTarget) that you want to invoke.
- APB will search for a file called 
+ APB will search for a 
 \family typewriter
 
 \begin_inset Quotes eld
 \end_inset
 
-ModuleName.java
+.java
+\family default
+
 \begin_inset Quotes erd
 \end_inset
 
-
-\family default
- in each of the directories specified in the project.path property, it will
- compile and load the file, and execute the specified method.
+ file with the module name in the current directory and in each of the directori
+es specified in the project.path property, it will compile and load the file,
+ and execute the specified method.
+ If not method is specified it will execute the default target if defined.
 \begin_inset Foot
 status open
 
@@ -511,6 +513,34 @@ status open
 
 \begin_layout Plain Layout
 
+$ cd samples/hello
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb HelloWorld
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld.hello]              Hello World ! 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+BUILD COMPLETED in 597 milliseconds.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
 $ apb HelloWorld.hello
 \end_layout
 
@@ -521,12 +551,11 @@ $ apb HelloWorld.hello
 
 \begin_layout Plain Layout
 
-[HelloWorld]                     
 \end_layout
 
 \begin_layout Plain Layout
 
-[HelloWorld]                    BUILD COMPLETED in 597 milliseconds.
+BUILD COMPLETED in 597 milliseconds.
 \end_layout
 
 \begin_layout Plain Layout
@@ -550,12 +579,12 @@ $ apb HelloWorld.bye
 
 \begin_layout Plain Layout
 
-[HelloWorld]                     
+                    
 \end_layout
 
 \begin_layout Plain Layout
 
-[HelloWorld]                    BUILD COMPLETED in 540 milliseconds.
+BUILD COMPLETED in 540 milliseconds.
 \end_layout
 
 \end_inset
@@ -565,27 +594,26 @@ $ apb HelloWorld.bye
 
 \begin_layout Standard
 Let's take a look at the HelloWorld.java file to figure out what is happening.
+\begin_inset Newpage pagebreak
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
 \begin_inset listings
-lstparams "frame=tb,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
 inline false
 status open
 
 \begin_layout Plain Layout
 
-import apb.metadata.BuildTarget;
+import apb.metadata.*;
 \end_layout
 
 \begin_layout Plain Layout
 
-import apb.metadata.Module;
-\end_layout
-
-\begin_layout Plain Layout
-
-import apb.tasks.CoreTasks.*;
+import static apb.tasks.CoreTasks.*;
 \end_layout
 
 \begin_layout Plain Layout
@@ -594,12 +622,25 @@ import apb.tasks.CoreTasks.*;
 
 \begin_layout Plain Layout
 
-public final class HelloWorld
+@DefaultTarget(
+\begin_inset Quotes eld
+\end_inset
+
+hello
+\begin_inset Quotes erd
+\end_inset
+
+)
 \end_layout
 
 \begin_layout Plain Layout
 
-    extends Module
+public class HelloWorld
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends ProjectElement
 \end_layout
 
 \begin_layout Plain Layout
@@ -663,12 +704,19 @@ n");
 
 \end_inset
 
-The java file defines a class (HelloWorld) that inherits from apb.metadata.Module,
- APB recognize any class that inherits (directly or indirectly) from Module
+The java file defines a class (HelloWorld) that inherits from 
+\family typewriter
+apb.metadata.
+ ProjectElement
+\family default
+, APB recognize any class that inherits (directly or indirectly) from 
+\family typewriter
+ProjectElement
+\family default
  as a container for methods to be executed.
  Also this class contains two methods annotated as BuildTargets this methods
  are equivalent to Ant targets, so when you request APB to execute one of
- this methods they code inside them will be executed.
+ this methods the code inside them will be executed.
 \end_layout
 
 \begin_layout Standard
@@ -693,6 +741,1320 @@ bye
 hello
 \series default
  target implicitly executed.
+\end_layout
+
+\begin_layout Standard
+As an additional feature try the following:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize},frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb HelloWorld.help
+\end_layout
+
+\begin_layout Plain Layout
+
+Commands for 'HelloWorld' :
+\end_layout
+
+\begin_layout Plain Layout
+
+   bye              : Good Bye from APB
+\end_layout
+
+\begin_layout Plain Layout
+
+   hello            : Greetings from APB
+\end_layout
+
+\begin_layout Plain Layout
+
+   help             : List the available commands with a brief description
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As you see APB will generate a basic help information based on the description
+ you have specified in the 
+\family typewriter
+BuildTarget
+\family default
+ annotations.
+\end_layout
+
+\begin_layout Section
+Using Inheritance
+\begin_inset CommandInset label
+LatexCommand label
+name "sec:Using-Inheritance"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+So far you have seen how to generate the equivalent of ANT 
+\family typewriter
+build.xml
+\family default
+ files in APB.
+ But because APB uses Java as the definition language all the power of Java
+ is available.
+ Let's use inheritance to extend the HelloWorld example.
+ Take a look at the 
+\family typewriter
+Chat.java
+\family default
+ file.
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+import apb.metadata.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+import static apb.tasks.CoreTasks.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+public class Chat
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends HelloWorld
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+    @BuildTarget(depends=
+\begin_inset Quotes erd
+\end_inset
+
+hello
+\begin_inset Quotes erd
+\end_inset
+
+, before=
+\begin_inset Quotes erd
+\end_inset
+
+bye
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Plain Layout
+
+    public void chat() {
+\end_layout
+
+\begin_layout Plain Layout
+
+        printf("Nice to see you again.
+ It has been a long time.
+\backslash
+n");
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+} 
+\end_layout
+
+\end_inset
+
+Here we've defined a new target that 
+\series bold
+depends
+\series default
+ on the 
+\begin_inset Quotes eld
+\end_inset
+
+hello
+\begin_inset Quotes erd
+\end_inset
+
+ target of the 
+\family typewriter
+HelloWorld
+\family default
+ class and we also indicates that this target must be executed 
+\series bold
+before
+\series default
+ the 
+\begin_inset Quotes eld
+\end_inset
+
+bye
+\begin_inset Quotes erd
+\end_inset
+
+ target of the super class.
+ This has the efect of 
+\begin_inset Quotes eld
+\end_inset
+
+injecting
+\begin_inset Quotes erd
+\end_inset
+
+ the execution of the 
+\begin_inset Quotes eld
+\end_inset
+
+chat
+\begin_inset Quotes erd
+\end_inset
+
+ target before the excution of the 
+\begin_inset Quotes eld
+\end_inset
+
+bye
+\begin_inset Quotes erd
+\end_inset
+
+ one.
+ Let's exercise it:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize},frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb Chat.chat
+\end_layout
+
+\begin_layout Plain Layout
+
+[Chat.hello]              Hello World ! 
+\end_layout
+
+\begin_layout Plain Layout
+
+[Chat.chat]               Nice to see you again.
+ It has been a long time.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb Chat.bye
+\end_layout
+
+\begin_layout Plain Layout
+
+[Chat.hello]              Hello World ! 
+\end_layout
+
+\begin_layout Plain Layout
+
+[Chat.chat]               Nice to see you again.
+ It has been a long time.
+\end_layout
+
+\begin_layout Plain Layout
+
+[Chat.bye]                Good Bye World !
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Invoking Tasks
+\end_layout
+
+\begin_layout Standard
+So far you have seen how to generate the equivalent of ANT 
+\family typewriter
+build.xml
+\family default
+ files in APB.
+ But because APB uses Java as the definition language all the power of Java
+ is available.
+ Let's use inheritance to extend the HelloWorld example.
+ Take a look at the 
+\family typewriter
+Chat.java
+\family default
+ file.
+\end_layout
+
+\begin_layout Section
+Summary
+\end_layout
+
+\begin_layout Chapter
+Using Predefined Modules
+\end_layout
+
+\begin_layout Standard
+Actually the whole power of APB shows when you used Predefined Modules.
+ Predefined Modules are just ProjectElement that include a set of predefined
+ build targets and properties that automate a build lifecycle.
+ Let's try them with a Java application.
+\end_layout
+
+\begin_layout Section
+First Java Application
+\end_layout
+
+\begin_layout Standard
+Let's take a look at the 
+\family typewriter
+Math.java 
+\family default
+file:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+import apb.metadata.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+public class Math
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends Module
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+        description = "A simple Math library";
+\end_layout
+
+\begin_layout Plain Layout
+
+        group = "samples";
+\end_layout
+
+\begin_layout Plain Layout
+
+        version = "1.0";
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+That's it.
+ This defines a Java Module, the id of the module will be 
+\family typewriter
+\series bold
+math
+\family default
+\series default
+, it will belong to the group 
+\family typewriter
+\series bold
+samples
+\family default
+\series default
+ and it have version 
+\family typewriter
+\series bold
+1.0
+\family default
+\series default
+.
+\end_layout
+
+\begin_layout Standard
+We're taking advantage of the APB default conventions here.
+ (If you take a look at the content of the 
+\begin_inset Quotes eld
+\end_inset
+
+math
+\begin_inset Quotes erd
+\end_inset
+
+ directory you will found a 
+\begin_inset Quotes eld
+\end_inset
+
+src
+\begin_inset Quotes erd
+\end_inset
+
+ subdirectory containing source code for the module).
+\end_layout
+
+\begin_layout Standard
+Let's see what happens if we try APB over it, let's first use help to list
+ the available commands:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\scriptsize},frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb Math.help
+\end_layout
+
+\begin_layout Plain Layout
+
+Commands for 'Math' : 
+\end_layout
+
+\begin_layout Plain Layout
+
+    clean               : Deletes all output directories (compiled code
+ and packages).
+\end_layout
+
+\begin_layout Plain Layout
+
+    compile             : Compile classes and place them in the output directory.
+\end_layout
+
+\begin_layout Plain Layout
+
+    compile-tests       : Compile test classes.
+\end_layout
+
+\begin_layout Plain Layout
+
+    help                : List the available commands with a brief description.
+\end_layout
+
+\begin_layout Plain Layout
+
+    javadoc             : Generates the Java Documentation (Javadoc) for
+ the module.
+\end_layout
+
+\begin_layout Plain Layout
+
+    package             : Creates a jar file with the module classes and
+ resources.
+\end_layout
+
+\begin_layout Plain Layout
+
+    resources           : Copy (eventually filtering) resources to the output
+ directory.
+\end_layout
+
+\begin_layout Plain Layout
+
+    run-tests           : Test the module (generating reports and  coverage
+ info).
+\end_layout
+
+\begin_layout Plain Layout
+
+    idegen:
+\end_layout
+
+\begin_layout Plain Layout
+
+      idegen:eclipse    : Generate eclipse project and module files.
+\end_layout
+
+\begin_layout Plain Layout
+
+      idegen:idea       : Generate idea project and module files.
+\end_layout
+
+\begin_layout Plain Layout
+
+    module:
+\end_layout
+
+\begin_layout Plain Layout
+
+      module:clone      : Generate a new Module based on a specified one.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+So where all this definitions come from ? As you have probably guessed they
+ come from the 
+\family typewriter
+apb.metadata.Module
+\family default
+ class
+\begin_inset Foot
+status open
+
+\begin_layout Plain Layout
+Actually the 
+\family typewriter
+idegen
+\family default
+ and 
+\family typewriter
+module
+\family default
+ commands are extension commands.
+ We will introduce extension commands later
+\end_layout
+
+\end_inset
+
+.
+ We're just using inheritance as described in 
+\begin_inset CommandInset ref
+LatexCommand prettyref
+reference "sec:Using-Inheritance"
+
+\end_inset
+
+ to predefine a number of useful targets.
+\end_layout
+
+\begin_layout Standard
+Now let's try the package command:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\scriptsize},frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb Math.package
+\end_layout
+
+\begin_layout Plain Layout
+
+[Math.compile]                  Compiling   1 file
+\end_layout
+
+\begin_layout Plain Layout
+
+[Math.package]                  Building: ....samples/lib/samples-math-1.0.jar
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+BUILD COMPLETED in 1278 milliseconds.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+So as you can see APB have compiled all the sources under the 
+\family typewriter
+src
+\family default
+ subdirectory, placed the generated classes under the directory 
+\family typewriter
+../output/math/classes
+\family default
+ and then package them in a jar file under the directory .
+\family typewriter
+./lib
+\family default
+.
+\end_layout
+
+\begin_layout Standard
+The location for classes and jars is defined in properties (actually java
+ fields) in the Module class, if you want to redefine there values you can
+ do it easily, for example:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+import apb.metadata.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+public class Math
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends Module
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+        description = "A simple Math library";
+\end_layout
+
+\begin_layout Plain Layout
+
+        group = "samples";
+\end_layout
+
+\begin_layout Plain Layout
+
+        version = "1.0";
+\end_layout
+
+\begin_layout Plain Layout
+
+        source = "$moduledir/src/main/java";
+\end_layout
+
+\begin_layout Plain Layout
+
+        output = "$moduledir/output/classes";
+\end_layout
+
+\begin_layout Plain Layout
+
+        pkg.dir = "$moduledir/package";
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Using dependencies
+\end_layout
+
+\begin_layout Standard
+What if we want to use the generated jar for the previous example in another
+ module?.
+ One alternative is just to say that the new module has a dependency on
+ the jar file.
+ Take a look at the example under the play-with-math directory:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+import apb.metadata.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+public class PlayWithMath
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends Module
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+        dependencies(localLibrary("lib/samples-math-1.0.jar"));
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+        group = "samples";
+\end_layout
+
+\begin_layout Plain Layout
+
+        version = "1.0";
+\end_layout
+
+\begin_layout Plain Layout
+
+        pkg.mainClass = "Play";
+\end_layout
+
+\begin_layout Plain Layout
+
+        pkg.addClassPath = true;
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+You can now exercise it:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\scriptsize},frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb PlayWithMath.package
+\end_layout
+
+\begin_layout Plain Layout
+
+[PlayWithMath.compile]          Compiling   1 file
+\end_layout
+
+\begin_layout Plain Layout
+
+[PlayWithMath.package]          Building: ..../lib/samples-play-with-math-1.0.jar
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+BUILD COMPLETED in 753 milliseconds.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb java -jar ../lib/samples-play-with-math-1.0.jar
+\end_layout
+
+\begin_layout Plain Layout
+
+f = 1/2
+\end_layout
+
+\begin_layout Plain Layout
+
+f.multiply(f) = 1/4
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Multi-Module Projects
+\end_layout
+
+\begin_layout Standard
+Actually the implementation on the previous example was not the recommended
+ one.
+ What happens for example if you modify a file in the 
+\family typewriter
+math
+\family default
+ module ? You'll need to take care of running APB again for both modules.
+ Also the path to the jar in the second module is hardwired, so if you modify
+ the first module to place the jar in another place or change it's name,
+ you'll have to take care of modifying it in the second module...
+\end_layout
+
+\begin_layout Standard
+APB offers a more natural way to do that instead of saying that the PlayWithMath
+ module depends on the jar file you can say that it depends on the Math
+ object.
+ Take a look at the modified PlayWithMath version under the 
+\family typewriter
+better-math
+\family default
+ directory:
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+import apb.metadata.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+public class PlayWithMath
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends DefaultModule
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+        dependencies(new Math());
+\end_layout
+
+\begin_layout Plain Layout
+
+        pkg.mainClass = "Play";
+\end_layout
+
+\begin_layout Plain Layout
+
+        pkg.addClassPath = true;
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+What have we changed ? 
+\end_layout
+
+\begin_layout Standard
+On the one hand we have placed all definition classes under a single sub-directo
+ry 
+\family typewriter
+DEFS
+\family default
+.
+ So you can easily find all the definition classes for a given project.
+ You can also add additional classes under this directory to be used from
+ the other definitions.
+ For example: instead of just extending the apb.metadata.Module class we are
+ creating a DefaultModule class for this project, that will hold definitions
+ common to all modules.
+ This conventions are not forced by APB but they are recommend practices.
+\end_layout
+
+\begin_layout Standard
+On the other hand we have changed the dependencies invocation to refer to
+ the Math object instead of referring to the jar file.
+ Now each time you do a modification in any of the modules, APB will analyze
+ what it needs to run in order to create an uptodate version of the build.
+\end_layout
+
+\begin_layout Standard
+Let's try it:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\scriptsize},frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+$ apb PlayWithMath.package
+\end_layout
+
+\begin_layout Plain Layout
+
+[Math.compile]                  Compiling   1 file
+\end_layout
+
+\begin_layout Plain Layout
+
+[Math.package]                  Building: ..../lib/samples-math-1.0.jar
+\end_layout
+
+\begin_layout Plain Layout
+
+[PlayWithMath.compile]          Compiling   1 file
+\end_layout
+
+\begin_layout Plain Layout
+
+[PlayWithMath.package]          Building: ..../lib/samples-play-with-math-1.0.jar
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+BUILD COMPLETED in 1021 milliseconds.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb PlayWithMath.package
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+BUILD COMPLETED in 200 milliseconds.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ touch play-with-math/src/Play.java
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb PlayWithMath.package
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+[PlayWithMath.compile]          Compiling   1 file
+\end_layout
+
+\begin_layout Plain Layout
+
+[PlayWithMath.package]          Building: ..../lib/samples-play-with-math-1.0.jar
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+BUILD COMPLETED in 603 milliseconds.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ touch math/src/Math.java
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb PlayWithMath.package
+\end_layout
+
+\begin_layout Plain Layout
+
+the 
+\end_layout
+
+\begin_layout Plain Layout
+
+[Math.compile]                  Compiling   1 file
+\end_layout
+
+\begin_layout Plain Layout
+
+[Math.package]                  Building: ..../lib/samples-math-1.0.jar
+\end_layout
+
+\begin_layout Plain Layout
+
+[PlayWithMath.compile]          Compiling   1 file
+\end_layout
+
+\begin_layout Plain Layout
+
+[PlayWithMath.package]          Building: ..../lib/samples-play-with-math-1.0.jar
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+BUILD COMPLETED in 1021 milliseconds.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As you see APB will process al the required steps based on the timestamps
+ of the different files.
+ APB manages 2 graphs of dependencies the dependencies between targets (like
+ ANT) and the dependencies between Modules.
+\end_layout
+
+\begin_layout Standard
+If you want to force the build (avoiding timestamp checking) you can use
+ the 
+\family typewriter
+\series bold
+-f
+\family default
+\series default
+ (
+\family typewriter
+\series bold
+--force-build
+\family default
+\series default
+) option when running APB, if you don't want APB to go and build the dependant
+ Modules you can use the 
+\family typewriter
+\series bold
+-n
+\family default
+\series default
+ (
+\family typewriter
+\series bold
+--non-recursive
+\family default
+\series default
+) option.
+\end_layout
+
+\begin_layout Section
+Running Tests
+\end_layout
+
+\begin_layout Standard
+Let's take a first look at the test running capabilities of APB.
+ The following is the modified version of the 
+\family typewriter
+Math
+\family default
+ Module that includes an associated TestModule: 
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+import apb.metadata.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+public class PlayWithMath
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends DefaultModule
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+        dependencies(new Math());
+\end_layout
+
+\begin_layout Plain Layout
+
+        pkg.mainClass = "Play";
+\end_layout
+
+\begin_layout Plain Layout
+
+        pkg.addClassPath = true;
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+What have we changed ? 
 \end_layout
 
 \end_body

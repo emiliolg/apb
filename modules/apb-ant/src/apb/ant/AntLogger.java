@@ -48,14 +48,14 @@ class AntLogger
 
     //~ Methods ..............................................................................................
 
-    @Override public void log(Level level, String msg, Object... args)
+    @Override public void log(@NotNull Level level, @NotNull String msg, Object... args)
     {
         int l = convertLevel(level);
         msg = StringUtils.appendIndenting(Apb.makeStandardHeader() + ' ', msg);
         antTask.log(args.length == 0 ? msg : String.format(msg, args), l);
     }
 
-    @Override public void setLevel(Level level)
+    @Override public void setLevel(@NotNull Level level)
     {
         // Ignore
     }

@@ -24,15 +24,20 @@ import org.jetbrains.annotations.NotNull;
 // Date: Oct 27, 2008
 // Time: 2:26:47 PM
 
+/**
+ * Holder of proxy values
+ * @exclude
+ */
+
 public class Proxy
 {
     //~ Instance fields ......................................................................................
 
-    private final int port;
-
     @NotNull private final String host;
     @NotNull private final String nonProxyHosts;
     @NotNull private final String password;
+
+    private final int             port;
     @NotNull private final String protocol;
     @NotNull private final String username;
 

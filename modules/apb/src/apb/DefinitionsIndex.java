@@ -44,6 +44,7 @@ import org.jetbrains.annotations.Nullable;
  * So it can be used for command completion and tools
  * The index is cached in a serialized file under $HOME/.apb/.definitions.idx
  * to avoid construction every time.
+ * @exclude
  */
 public class DefinitionsIndex
     implements Iterable<ModuleInfo>

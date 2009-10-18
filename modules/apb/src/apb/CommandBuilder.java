@@ -59,7 +59,7 @@ class CommandBuilder
     private CommandBuilder(Class<? extends ProjectElement> c)
     {
         commands = new TreeMap<String, Command>();
-        commands.putAll(extensionCommands);
+        addExtensionCommands(c);
         commands.putAll(buildCommands(c));
         commands.put(HELP_COMMAND.getName(), HELP_COMMAND);
     }
@@ -139,17 +139,26 @@ class CommandBuilder
         }
     }
 
+    private void addExtensionCommands(Class<? extends ProjectElement> c)
+    {
+        for (Command cmd : extensionCommands) {
+            if (cmd.getTargetElementClass().isAssignableFrom(c)) {
+                commands.put(cmd.getName(), cmd);
+            }
+        }
+    }
+
     //~ Static fields/initializers ...........................................................................
 
     private static final Command HELP_COMMAND = new HelpCommand();
 
-    private static final Map<String, Command> extensionCommands;
+    private static final List<Command> extensionCommands;
 
     static {
-        extensionCommands = new HashMap<String, Command>();
+        extensionCommands = new ArrayList<Command>();
 
         for (Command cmd : ServiceLoader.load(Command.class)) {
-            extensionCommands.put(cmd.getQName(), cmd);
+            extensionCommands.add(cmd);
         }
     }
 
@@ -160,16 +169,16 @@ class CommandBuilder
     {
         public HelpCommand()
         {
-            super("help", "List the available commands with a brief description", false);
+            super("help", "List the available commands with a brief description.", false);
         }
 
         public void invoke(ProjectElement projectElement)
         {
             System.err.println("Commands for '" + projectElement.getName() + "' : ");
 
-            final Collection<Command> cmds = projectElement.getHelper().listCommands().values();
+            final ProjectElementHelper helper = projectElement.getHelper();
 
-            for (Command cmd : cmds) {
+            for (Command cmd : helper.listCommands()) {
                 if (!cmd.hasNameSpace()) {
                     printSpaces();
                     printCommand(cmd);
@@ -178,7 +187,7 @@ class CommandBuilder
 
             String lastNameSpace = null;
 
-            for (Command cmd : cmds) {
+            for (Command cmd : helper.listCommands()) {
                 if (cmd.hasNameSpace()) {
                     final String ns = cmd.getNameSpace();
 
@@ -205,11 +214,6 @@ class CommandBuilder
         {
             System.err.printf(cmd.hasNameSpace() ? "  %-18s: %s\n" : "%-20s: %s\n", cmd.getName(),
                               cmd.getDescription());
-
-            for (String option : cmd.getOptions()) {
-                printSpaces();
-                System.err.printf("%22s%s\n", "", option);
-            }
         }
     }
 

@@ -18,9 +18,14 @@
 
 package apb.testrunner;
 
+import java.io.File;
+
+import apb.utils.ClassUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import org.testng.TestNG;
 import org.testng.annotations.Test;
 //
 // User: emilio
@@ -40,13 +45,13 @@ public class TestNGTestSetCreator
         return testClass.isAnnotationPresent(Test.class) ? new TestNGTestSet(testClass, singleTest) : null;
     }
 
-    @NotNull public Class<Object> getTestClass()
-    {
-        return Object.class;
-    }
-
     @NotNull public String getName()
     {
         return "TestNG";
+    }
+
+    @NotNull public File getTestFrameworkJar()
+    {
+        return ClassUtils.jarFromClass(TestNG.class);
     }
 }

@@ -19,7 +19,7 @@
 package apb.testrunner;
 
 //
-public class TestSetFailedException
+class TestSetFailedException
     extends Exception
 {
     //~ Constructors .........................................................................................

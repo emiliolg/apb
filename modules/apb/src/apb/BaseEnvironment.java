@@ -55,15 +55,15 @@ final class BaseEnvironment
      */
     @Nullable File projectsHome;
 
+    /**
+     * The current ProjectBuilder
+     */
+    private ProjectBuilder currentProjectBuilder;
+
     private boolean failOnError = true;
     private boolean forceBuild;
 
     private boolean nonRecursive;
-
-    /**
-     * Processing and messaging options
-     */
-    private boolean quiet;
 
     /**
      * Override properties are argument properties
@@ -72,9 +72,9 @@ final class BaseEnvironment
     @NotNull private final Map<String, String> overrideProperties;
 
     /**
-     * The current ProjectBuilder
+     * Processing and messaging options
      */
-    private ProjectBuilder currentProjectBuilder;
+    private boolean quiet;
 
     //~ Constructors .........................................................................................
 
@@ -113,7 +113,7 @@ final class BaseEnvironment
     public void setQuiet()
     {
         quiet = true;
-        logger.setLevel(Logger.Level.WARNING);
+        getLogger().setLevel(Logger.Level.WARNING);
     }
 
     /**
@@ -191,7 +191,7 @@ final class BaseEnvironment
 
     protected void setVerbose()
     {
-        logger.setLevel(Logger.Level.VERBOSE);
+        getLogger().setLevel(Logger.Level.VERBOSE);
     }
 
     void register(ProjectBuilder pb)

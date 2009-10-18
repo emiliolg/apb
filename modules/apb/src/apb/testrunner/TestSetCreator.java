@@ -18,6 +18,7 @@
 
 package apb.testrunner;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -31,6 +32,10 @@ import org.jetbrains.annotations.Nullable;
 // Time: 3:00:44 PM
 
 //
+/**
+ * The driver that creates set of tests to be run by the testrunner
+ * @exclude
+ */
 public interface TestSetCreator<T>
 {
     //~ Methods ..............................................................................................
@@ -38,12 +43,16 @@ public interface TestSetCreator<T>
     @Nullable TestSet<T> createTestSet(@NotNull Class<T> testClass, @NotNull String singleTest)
         throws TestSetFailedException;
 
-    @NotNull Class<T> getTestClass();
-
     @NotNull String getName();
+
+    @NotNull File getTestFrameworkJar();
 
     //~ Inner Classes ........................................................................................
 
+    /**
+     * A factory for TestSetCreator implementations
+     * @exclude
+     */
     static class Factory
     {
         @NotNull private final Map<String, TestSetCreator> registry;

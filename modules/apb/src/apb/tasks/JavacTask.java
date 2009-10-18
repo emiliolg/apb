@@ -155,6 +155,14 @@ public class JavacTask
 
         return this;
     }
+
+    /**
+     * Add ProcessorPath libraries
+     * THIS IS NOT RECOMMENDED!!
+     * Note that passing -processorpath or -processor is unnecessary if (1) processors are defined in JARs
+     * in your project's classpath, (2) they are registered ServiceLoader-style. In such a case they are all run automatically.
+     * @param libraries The libraries to be added
+     */
     public JavacTask withProcessorPath(List<Library> libraries)
     {
         for (Library library : libraries) {
@@ -232,22 +240,10 @@ public class JavacTask
 
             final List<String> options = new ArrayList<String>();
 
-            // Set annotation processor classpath ...
-            options.add("-processorpath");
-            final StringBuilder processorsPath = new StringBuilder();
-            final File apbJar = Apb.applicationJarFile(false);
-            if(apbJar!=null)
-            {
-                processorsPath.append(apbJar);
+            if (!processorPath.isEmpty()) {
+                options.add("-processorpath");
+                options.add(FileUtils.makePath(processorPath));
             }
-            for (final File jarFile : processorPath) {
-                if(processorsPath.length()>0)
-                {
-                    processorsPath.append(File.pathSeparator);
-                }
-                processorsPath.append(jarFile.getAbsolutePath());
-            }
-            options.add(processorsPath.toString());
 
             if (debug) {
                 options.add("-g");

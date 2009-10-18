@@ -33,7 +33,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class JUnitTestSet
+final class JUnitTestSet
     extends TestSet<Object>
 {
     //~ Instance fields ......................................................................................

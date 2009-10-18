@@ -51,7 +51,7 @@ public class Clone
 
     public Clone()
     {
-        super("module", "clone", "Generate a new Module based on a specified one.", false);
+        super(Module.class, "module", "clone", "Generate a new Module based on a specified one.", false);
     }
 
     //~ Methods ..............................................................................................
@@ -73,7 +73,7 @@ public class Clone
 
     private void clone(ModuleHelper module)
     {
-        final Class<?> moduleClass = module.getElement().getClass();
+        final Class<?> moduleClass = module.getModule().getClass();
         File           newDir = getNewProjectDir(module.getProjectDirectory());
         String         newModule = getNewModuleName(moduleClass);
 

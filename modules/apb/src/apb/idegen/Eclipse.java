@@ -24,7 +24,9 @@ import apb.metadata.ProjectElement;
 // Date: Mar 18, 2009
 // Time: 4:11:52 PM
 
-//
+/**
+ * @exclude
+ */
 public class Eclipse
     extends IdegenCommand
 {

@@ -20,7 +20,6 @@ import java.io.File;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,7 +37,7 @@ import org.jetbrains.annotations.Nullable;
 // Time: 1:13:23 PM
 
 //
-public class TestRunner
+class TestRunner
 {
     //~ Instance fields ......................................................................................
 
@@ -66,11 +65,11 @@ public class TestRunner
 
     //~ Methods ..............................................................................................
 
-    public static Set<String> listTests(ClassLoader testsClassLoader, Invocation creator, File basedir,
+    public static Set<String> listTests(ClassLoader testsClassLoader, String creatorClass, File basedir,
                                         List<String> includes, List<String> excludes, String singleTest)
         throws TestSetFailedException
     {
-        final TestSetCreator<?> testCreator = (TestSetCreator) creator.instantiate(testsClassLoader);
+        final TestSetCreator<?> testCreator = TestLauncher.instatiateCreator(creatorClass, testsClassLoader);
         return loadTests(testsClassLoader, testCreator, basedir, includes, excludes, singleTest).keySet();
     }
 
@@ -79,11 +78,11 @@ public class TestRunner
         return Math.min(r1, r2);
     }
 
-    public int run(Invocation creator, TestReport report, ClassLoader testsClassLoader, String singleTest)
+    public int run(String creator, TestReport report, ClassLoader testsClassLoader, String singleTest)
         throws TestSetFailedException
     {
-        return run((TestSetCreator<?>) creator.instantiate(testsClassLoader), report, testsClassLoader,
-                   singleTest);
+        return run((TestSetCreator<?>) TestLauncher.instatiateCreator(creator, testsClassLoader), report,
+                   testsClassLoader, singleTest);
     }
 
     public int run(TestSetCreator<?> creator, TestReport report, ClassLoader testsClassLoader,
@@ -140,26 +139,6 @@ public class TestRunner
         return verbose;
     }
 
-    private static <T> Set<String> listTestsNames(ClassLoader testsClassLoader, TestSetCreator<T> creator,
-                                                  File basedir, List<String> includes, List<String> excludes)
-        throws TestSetFailedException
-    {
-        Set<String> testSets = new HashSet<String>();
-
-        // Load tests
-        for (String file : collectTests(basedir, excludes, includes)) {
-            Class<T> testClass = loadTestClass(testsClassLoader, file, creator.getTestClass());
-
-            if (Modifier.isAbstract(testClass.getModifiers())) {
-                continue;
-            }
-
-            testSets.add(testClass.getName());
-        }
-
-        return testSets;
-    }
-
     private static <T> Map<String, TestSet> loadTests(ClassLoader testsClassLoader, TestSetCreator<T> creator,
                                                       File basedir, List<String> includes,
                                                       List<String> excludes, String singleTest)
@@ -187,7 +166,7 @@ public class TestRunner
                                                      String suite, String singleTest)
         throws TestSetFailedException
     {
-        final Class<T> testClass = loadTestClass(testsClassLoader, suite, creator.getTestClass());
+        final Class<T> testClass = loadTestClass(testsClassLoader, suite);
 
         if (Modifier.isAbstract(testClass.getModifiers())) {
             return null;
@@ -197,29 +176,24 @@ public class TestRunner
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> Class<T> loadTestClass(ClassLoader classLoader, String file, Class<T> testClass)
+    private static <T> Class<T> loadTestClass(ClassLoader classLoader, String file)
         throws TestSetFailedException
     {
         try {
             String className = file.replace(File.separatorChar, '.');
             className = className.substring(0, className.length() - ".class".length());
-            final Class<?>    c;
+
             final Thread      currentThread = Thread.currentThread();
             final ClassLoader prevClassloader = currentThread.getContextClassLoader();
 
             try {
                 currentThread.setContextClassLoader(classLoader);
-                c = classLoader.loadClass(className);
+                return (Class<T>) classLoader.loadClass(className);
             }
             finally {
                 currentThread.setContextClassLoader(prevClassloader);
             }
 
-            if (testClass.isAssignableFrom(c)) {
-                return (Class<T>) c;
-            }
-
-            throw new TestSetFailedException("Invalid type for class: " + c.getName());
         }
         catch (ClassNotFoundException e) {
             throw new TestSetFailedException(e);

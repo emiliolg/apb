@@ -18,6 +18,10 @@
 
 package apb.testrunner;
 
+import java.io.File;
+
+import apb.utils.ClassUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -25,7 +29,10 @@ import org.jetbrains.annotations.Nullable;
 // Date: Nov 10, 2008
 // Time: 3:05:51 PM
 
-//
+/**
+ * The Creator for Junit tests
+ * @exclude
+ */
 public class JunitTestSetCreator
     implements TestSetCreator<Object>
 {
@@ -38,13 +45,13 @@ public class JunitTestSetCreator
         return JUnitTestSet.buildTestSet(testClass, singleTest);
     }
 
-    @NotNull public Class<Object> getTestClass()
-    {
-        return Object.class;
-    }
-
     @NotNull public String getName()
     {
         return "junit";
+    }
+
+    @NotNull public File getTestFrameworkJar()
+    {
+        return ClassUtils.jarFromClass(junit.framework.Test.class);
     }
 }

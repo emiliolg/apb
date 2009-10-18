@@ -43,12 +43,11 @@ import static java.util.Arrays.asList;
 import static apb.Apb.exit;
 
 import static apb.utils.StringUtils.isEmpty;
-//
-// User: emilio
-// Date: Nov 12, 2008
-// Time: 7:00:13 PM
 
-//
+/**
+ * Apb testrunner main class
+ * @exclude
+ */
 public class Main
 {
     //~ Methods ..............................................................................................

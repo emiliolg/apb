@@ -36,7 +36,6 @@ public class InfoTest
         throws DefinitionException
     {
         final File source = new File(dataFile("projects/DEFS/Info.java"));
-        long       ts = source.lastModified();
         String     dir = dataFile("projects/info");
         String     outputBase = dataFile("projects/output/info");
 
@@ -44,7 +43,6 @@ public class InfoTest
         checkOutput("Helper          'Info'",  //
                     "Is top level    'true'",  //
                     "Is test module  'false'",  //
-                    "LastModified    '" + ts + "'",  //
                     "Dir File        '" + dir + "'",  //
                     "Source File     '" + source.getPath() + "'",  //
                     "Project dir     '" + source.getParent() + "'",  //
@@ -58,17 +56,16 @@ public class InfoTest
                     "clean: Deletes all output directories (compiled code and packages).",  //
                     "compile: Compile classes and place them in the output directory.",  //
                     "compile-tests: Compile test classes.",  //
-                    "default: Creates a jar file containing the compiled classes and resources of the module.",  //
-                    "help: List the available commands with a brief description",  //
+                    "help: List the available commands with a brief description.",  //
                     "idegen:eclipse: Generate eclipse project and module files.",  //
                     "idegen:idea: Generate idea project and module files.",  //
                     "info: ",  //
-                    "javadoc: Generates the Standard Java Documentation (Javadoc) for the module.",  //
+                    "javadoc: Generates the Java Documentation (Javadoc) for the module.",  //
                     "module:clone: Generate a new Module based on a specified one.",  //
-                    "package: Creates a jar file containing the compiled classes and resources of the module.",  //
+                    "package: Creates a jar file with the module classes and resources.",  //
                     "resources: Copy (eventually filtering) resources to the output directory.",  //
-                    "run-minimal-tests: Run test with the annotation @Test(group=\"minimal\") generating reports and (optional) coverage information.",  //
-                    "run-tests: Test the compiled sources, generating reports and (optional) coverage information.",  //
+                    "run-minimal-tests: Run test with the annotation @Test(group=\"minimal\")",  //
+                    "run-tests: Test the module (generating reports and  coverage info).",  //
                     "--- Modules ---",  //
                     "hello-world",  //
                     "info",  //

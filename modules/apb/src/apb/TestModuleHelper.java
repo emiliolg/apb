@@ -30,12 +30,20 @@ import apb.testrunner.output.TestReport;
 import apb.testrunner.output.TestReportBroadcaster;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static java.util.Arrays.asList;
+
+import static apb.testrunner.TestLauncher.instatiateCreator;
 //
 // User: emilio
 // Date: Dec 2, 2008
 // Time: 5:26:23 PM
 
-//
+/**
+ * Provides additional functionality for {@link apb.metadata.TestModule} objects
+ *
+ */
+
 public class TestModuleHelper
     extends ModuleHelper
 {
@@ -54,11 +62,17 @@ public class TestModuleHelper
 
     //~ Methods ..............................................................................................
 
+    /**
+     * Returns the TestModule associated to this helper
+     */
     public TestModule getModule()
     {
         return (TestModule) super.getModule();
     }
 
+    /**
+     * Returns the Module this Module is testing
+     */
     @NotNull public ModuleHelper getModuleToTest()
     {
         Module m = getModule().getModuleToTest();
@@ -70,11 +84,17 @@ public class TestModuleHelper
         return m.getHelper();
     }
 
+    /**
+      * Returns true if this is a test module, false otherwise
+      */
     @Override public boolean isTestModule()
     {
         return true;
     }
 
+    /**
+     * Get the directory where the tests specified for this modules are going to be run
+     */
     @NotNull public File getWorkingDirectory()
     {
         if (workingDirectory == null) {
@@ -84,6 +104,9 @@ public class TestModuleHelper
         return workingDirectory;
     }
 
+    /**
+     * Get the directory where the tests reports must be written
+     */
     @NotNull public File getReportsDir()
     {
         if (reportsDir == null) {
@@ -93,6 +116,9 @@ public class TestModuleHelper
         return reportsDir;
     }
 
+    /**
+     * Get the directory where the coverage reports must be written
+     */
     @NotNull public File getCoverageDir()
     {
         if (coverageDir == null) {
@@ -102,21 +128,35 @@ public class TestModuleHelper
         return coverageDir;
     }
 
+    /**
+     * Get the set of classes to test.
+     * This classes are the one that will be considered to define test coverage.
+     */
     @NotNull public List<File> getClassesToTest()
     {
         return Collections.singletonList(getModuleToTest().getOutput());
     }
 
+    /**
+     * Returns true if coverage is enabled, false otherwise
+     */
     public boolean isCoverageEnabled()
     {
         return getModule().coverage.enable;
     }
 
+    /**
+     * Get the directories where sources associated to the classes to test are located.
+     */
     public List<File> getSourcesToTest()
     {
         return getModuleToTest().getSourceDirs();
     }
 
+    /**
+     * Run all the tests for the specified groups
+     * If no groups are specified, all tests will be run
+     */
     public void runTests(String... groups)
     {
         if (groups.length > 0) {
@@ -133,9 +173,31 @@ public class TestModuleHelper
         testLauncher.execute();
     }
 
+    /**
+     * Clean all generated tests reports
+     */
     public void cleanTestReports()
     {
         CoreTasks.delete(FileSet.fromDir(getReportsDir()), FileSet.fromDir(getCoverageDir())).execute();
+    }
+
+    public String getTestCreator()
+    {
+        final TestModule m = getModule();
+        return m.testType.creatorClass(m.customCreator);
+    }
+
+    @Override protected List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
+    {
+        final List<File> result = super.classPath(useJars, addModuleOutput, compile);
+        File             testFrameworkJar =
+            instatiateCreator(getTestCreator(), getClass().getClassLoader()).getTestFrameworkJar();
+
+        if (!result.contains(testFrameworkJar)) {
+            result.add(testFrameworkJar);
+        }
+
+        return result;
     }
 
     private TestReport buildReports()

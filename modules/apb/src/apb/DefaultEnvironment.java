@@ -43,14 +43,9 @@ abstract class DefaultEnvironment
     //~ Instance fields ......................................................................................
 
     /**
-     * The logger to display messages
-     */
-    @NotNull protected final Logger logger;
-
-    /**
      * The base property map
      */
-    @NotNull protected final Map<String, String> properties;
+    @NotNull final Map<String, String> properties;
 
     @Nullable private File basedir;
 
@@ -59,6 +54,11 @@ abstract class DefaultEnvironment
      * It is initialized in a lazy way
      */
     @Nullable private List<File> extClassPath;
+
+    /**
+     * The logger to display messages
+     */
+    @NotNull private final Logger logger;
 
     //~ Constructors .........................................................................................
 
@@ -284,11 +284,6 @@ abstract class DefaultEnvironment
     @NotNull public final File fileFromBase(@NotNull String name)
     {
         final File file = new File(expand(name));
-        return fileFromBase(file);
-    }
-
-    @NotNull public File fileFromBase(@NotNull File file)
-    {
         return FileUtils.normalizeFile(file.isAbsolute() ? file : new File(getBaseDir(), file.getPath()));
     }
 
@@ -312,15 +307,6 @@ abstract class DefaultEnvironment
     {
         final File child = new File(expand(name));
         return child.isAbsolute() ? child : new File(getModuleHelper().getGeneratedSource(), child.getPath());
-    }
-
-    /**
-     * Return current ModuleHelper
-     * @return current Module Helper
-     */
-    @NotNull public ModuleHelper getModuleHelper()
-    {
-        throw new IllegalStateException("Not current Module");
     }
 
     /**
@@ -352,11 +338,17 @@ abstract class DefaultEnvironment
         return logger;
     }
 
+    /**
+     * @exclude
+     */
     @Nullable protected String overrideProperty(@NotNull String id)
     {
         return null;
     }
 
+    /**
+     * @exclude
+     */
     @Nullable protected String retrieveProperty(@NotNull String id)
     {
         return retrieveLocalProperty(id);
@@ -374,6 +366,15 @@ abstract class DefaultEnvironment
     abstract ProjectBuilder getCurrentProjectBuilder();
 
     /**
+     * Return current ModuleHelper
+     * @return current Module Helper
+     */
+    @NotNull ModuleHelper getModuleHelper()
+    {
+        throw new IllegalStateException("Not current Module");
+    }
+
+    /**
      * Get a property defined in THIS environment (Not inherited)
      * @param id The property name
      * @return The propertu value
@@ -382,4 +383,8 @@ abstract class DefaultEnvironment
     {
         return properties.get(id);
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    static final String EXT_PATH_PROPERTY = "ext.path";
 }

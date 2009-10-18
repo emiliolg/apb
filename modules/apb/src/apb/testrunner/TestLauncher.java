@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,18 +15,17 @@
 // limitations under the License
 //
 
+
 package apb.testrunner;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import static java.lang.Character.isLowerCase;
 import java.net.MalformedURLException;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import static java.util.Arrays.asList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,26 +41,41 @@ import apb.BuildException;
 import apb.Environment;
 import apb.Proxy;
 import apb.TestModuleHelper;
+
 import apb.metadata.CoverageInfo;
 import apb.metadata.TestModule;
-import static apb.tasks.CoreTasks.java;
+
 import apb.tasks.JavaTask;
+
+import apb.testrunner.output.TestReport;
+
+import apb.utils.ClassUtils;
+import apb.utils.FileUtils;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static java.lang.Character.isLowerCase;
+import static java.util.Arrays.asList;
+
+import static apb.tasks.CoreTasks.java;
+
 import static apb.testrunner.TestRunner.listTests;
 import static apb.testrunner.TestRunner.worseResult;
-import apb.testrunner.output.TestReport;
+
 import static apb.utils.CollectionUtils.listToString;
-import apb.utils.FileUtils;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
 import static apb.utils.StringUtils.isNotEmpty;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Nov 5, 2008
 // Time: 5:37:49 PM
 
-//
+/**
+ * The launcher of tests from apb
+ * @exclude
+ */
 public class TestLauncher
 {
     //~ Instance fields ......................................................................................
@@ -86,7 +101,6 @@ public class TestLauncher
     @NotNull private final Set<File>       classPath;
     @NotNull private final CoverageInfo    coverage;
     @NotNull private final CoverageBuilder coverageBuilder;
-    private final String                   creatorClass;
 
     /**
      * Enable assertions when running the tests
@@ -96,9 +110,17 @@ public class TestLauncher
     /**
      * Enable the java debugger in the forked process
      */
-    private final boolean              enableDebugger;
+    private final boolean enableDebugger;
+
+    /**
+     * The environment
+     */
     @NotNull private final Environment env;
-    private final Map<String, String>  environmentVariables;
+
+    /**
+     * The environment variables to be used in the test
+     */
+    private final Map<String, String> environmentVariables;
 
     /**
      * The list of tests to exclude
@@ -124,22 +146,46 @@ public class TestLauncher
      * List of additional args to pass to the tests.
      */
     @NotNull private final List<String> javaArgs;
-    private final int                   maxMemory;
+
+    /**
+     * The memory (in megabytes) to be used by the forked process
+     */
+    private final int maxMemory;
 
     /**
      * List of System properties to pass to the tests.
      */
     @NotNull private final Map<String, String> properties;
 
+    /**
+     * The report to be generated
+     */
     @NotNull private final TestReport report;
-    @Nullable private File            reportDir;
 
     /**
-     * To be able to run a simple TestCase
+     * The file where the report will be generated
      */
-    @NotNull private String          singleTest = "";
+    @Nullable private File reportDir;
+
+    /*
+    * To be able to run a simple TestCase
+    */
+    @NotNull private String singleTest = "";
+
+    /**
+     * The list of elements to be included in the system classpath
+     */
     @NotNull private final Set<File> systemClassPath = new LinkedHashSet<File>();
-    @NotNull private final File      testClasses;
+
+    /**
+     * The test classes to be run
+     */
+    @NotNull private final File testClasses;
+
+    /**
+     * The test creator
+     */
+    @NotNull private final String testCreator;
 
     /**
      * The list of test groups to execute
@@ -192,15 +238,26 @@ public class TestLauncher
             fork = true;
         }
 
-        this.coverageBuilder = new CoverageBuilder(module);
-        this.coverageBuilder.setEnabled(isCoverageEnabled());
+        coverageBuilder = new CoverageBuilder(module);
+        coverageBuilder.setEnabled(isCoverageEnabled());
         maxMemory = testModule.memory;
         environmentVariables = testModule.environment();
         workingDirectory = testModule.workingDirectory;
-        creatorClass = testModule.testType.creatorClass(testModule.customCreator);
+        testCreator = module.getTestCreator();
     }
 
     //~ Methods ..............................................................................................
+
+    public static TestSetCreator instatiateCreator(@NotNull String      creatorClassName,
+                                                   @NotNull ClassLoader classLoader)
+    {
+        try {
+            return (TestSetCreator) ClassUtils.newInstance(classLoader, creatorClassName);
+        }
+        catch (Exception e) {
+            throw new BuildException("Cannot instatiate: '" + creatorClassName + "'", e);
+        }
+    }
 
     public void addSystemClassPath(final Collection<File> jars)
     {
@@ -336,12 +393,6 @@ public class TestLauncher
         return coverage.enable && !enableDebugger;
     }
 
-    @NotNull private Invocation testCreator()
-        throws Exception
-    {
-        return new Invocation(creatorClass);
-    }
-
     private ClassLoader createClassLoader(Collection<File> classPathUrls)
     {
         try {
@@ -364,7 +415,7 @@ public class TestLauncher
             reportSpecsFile = reportSpecs();
             return forkPerSuite
                    ? executeEachSuite(reportSpecsFile)
-                   : invokeRunner(testCreator(), reportSpecsFile, null, listToString(testGroups, ":"));
+                   : invokeRunner(testCreator, reportSpecsFile, null, listToString(testGroups, ":"));
         }
         catch (Exception e) {
             throw new BuildException(e);
@@ -385,8 +436,7 @@ public class TestLauncher
         cp.add(testClasses);
         ClassLoader cl = createClassLoader(cp);
 
-        final Invocation  creator = testCreator();
-        final Set<String> tests = listTests(cl, creator, testClasses, includes, excludes, singleTest);
+        final Set<String> tests = listTests(cl, testCreator, testClasses, includes, excludes, singleTest);
 
         //report = report.init(reportDir);
         report.startRun(tests.size());
@@ -396,15 +446,16 @@ public class TestLauncher
         for (String testSet : tests) {
             result =
                 worseResult(result,
-                            invokeRunner(creator, reportSpecsFile, testSet, listToString(testGroups, ":")));
+                            invokeRunner(testCreator, reportSpecsFile, testSet,
+                                         listToString(testGroups, ":")));
         }
 
         report.stopRun();
         return result;
     }
 
-    private int invokeRunner(@NotNull Invocation creator, @NotNull File reportSpecsFile,
-                             @Nullable String suite, @NotNull String groups)
+    private int invokeRunner(@NotNull String creator, @NotNull File reportSpecsFile, @Nullable String suite,
+                             @NotNull String groups)
     {
         // Create Arguments for Java Command
         List<String> args = new ArrayList<String>();
@@ -555,7 +606,7 @@ public class TestLauncher
             final Set<File> cp = new HashSet<File>(classPath);
             cp.add(testClasses);
             final ClassLoader loader = createClassLoader(cp);
-            return runner.run(testCreator(), report, loader, singleTest);
+            return runner.run(testCreator, report, loader, singleTest);
         }
         catch (Exception e) {
             env.handle(e);

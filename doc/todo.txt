@@ -1,0 +1,14 @@
+Todo list for apb
+
+*	Fix a problem with expansion cache when changing de set of problems
+	(May be keep an index by project ??)
+
+*	Documentation
+
+*	Allow invoking ant tasks (See asf)
+
+*	Allow calling the test module directly
+
+*	Commands for creating default modules
+
+*	Eclipse plugin

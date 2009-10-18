@@ -23,12 +23,11 @@ import java.util.List;
 import apb.testrunner.output.TestReport;
 
 import org.jetbrains.annotations.NotNull;
-//
-// User: emilio
-// Date: Nov 7, 2008
-// Time: 10:29:25 AM
 
-//
+/**
+ * A set of tests to be run
+ * @exclude
+ */
 public abstract class TestSet<T>
 {
     //~ Instance fields ......................................................................................
@@ -59,7 +58,7 @@ public abstract class TestSet<T>
     }
 
     public boolean run(@NotNull ClassLoader testsClassLoader, @NotNull TestReport report,
-                    @NotNull List<String> testGroups)
+                       @NotNull List<String> testGroups)
         throws TestSetFailedException
     {
         try {

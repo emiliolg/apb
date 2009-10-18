@@ -38,7 +38,6 @@ import javax.xml.parsers.ParserConfigurationException;
 import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
-import apb.ModuleHelper;
 
 import apb.metadata.Library;
 import apb.metadata.LocalLibrary;
@@ -64,8 +63,9 @@ import static apb.utils.FileUtils.makeRelative;
 // Date: Oct 7, 2008
 // Time: 12:50:45 PM
 
-//
-//Todo Check generation when using an absolute path to the project file
+/**
+ * @exclude
+ */
 public class IdeaTask
 {
     //~ Methods ..............................................................................................
@@ -186,6 +186,9 @@ public class IdeaTask
 
     //~ Inner Classes ........................................................................................
 
+    /**
+     * @exclude
+     */
     public static class Project
         extends IdegenTask.Project
     {
@@ -259,8 +262,7 @@ public class IdeaTask
 
             if (jarFile != null) {
                 final String       path = jarFile.getPath();
-                File               srcFile =
-                    new File(path.substring(0, path.length() - 4) + ModuleHelper.SRC_JAR);
+                File               srcFile = new File(path.substring(0, path.length() - 4) + "-src.jar");
                 final LocalLibrary library = new LocalLibrary(makePath(base, jarFile), false);
 
                 if (srcFile.exists()) {
@@ -406,7 +408,8 @@ public class IdeaTask
     }
 
     /**
-     * Generat the module (.iml) file
+     * Generate the module (.iml) file
+     * @exclude
      */
     static class Module
         extends IdegenTask.Module
@@ -761,6 +764,7 @@ public class IdeaTask
             if (url != null) {
                 final String protocol;
                 final String endMarker;
+
                 if (url.isDirectory()) {
                     protocol = "file";
                     endMarker = "";
@@ -770,13 +774,12 @@ public class IdeaTask
                     endMarker = "!/";
                 }
 
-
                 if (library instanceof LocalLibrary && ((LocalLibrary) library).sourcePaths() != null) {
                     final LocalLibrary localLibrary = (LocalLibrary) library;
-                    for (String sourcePath : localLibrary.sourcePaths())
-                    {
+
+                    for (String sourcePath : localLibrary.sourcePaths()) {
                         final String endMarkerSource = "!/" + sourcePath;
-                        Element element = createElement(createElement(lib, tag), "root");
+                        Element      element = createElement(createElement(lib, tag), "root");
                         element.setAttribute(URL_ATTRIBUTE, relativeUrl(protocol, url) + endMarkerSource);
                     }
                 }

@@ -28,7 +28,6 @@ import java.util.TreeSet;
 import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
-import apb.ModuleHelper;
 
 import apb.metadata.Library;
 import apb.metadata.PackageType;
@@ -48,11 +47,11 @@ public abstract class IdegenTask
     //~ Instance fields ......................................................................................
 
     @NotNull protected Environment env;
-    @NotNull protected final File  modulesHome;
-    @Nullable protected File       template;
-    protected long                 lastModified;
 
     @NotNull protected final String id;
+    protected long                  lastModified;
+    @NotNull protected final File   modulesHome;
+    @Nullable protected File        template;
 
     //~ Constructors .........................................................................................
 
@@ -120,14 +119,14 @@ public abstract class IdegenTask
     public abstract static class Module
         extends IdegenTask
     {
-        protected boolean                      testModule;
-        @Nullable protected File               output;
         @NotNull protected final List<String>  contentDirs;
         @NotNull protected final List<String>  excludes;
         @NotNull protected final List<Library> libraries;
         @NotNull protected final List<String>  moduleDependencies;
-        @NotNull protected final List<File>    sourceDirs;
+        @Nullable protected File               output;
         @NotNull protected PackageType         packageType;
+        @NotNull protected final List<File>    sourceDirs;
+        protected boolean                      testModule;
         boolean                                includeEmptyDirs;
 
         public Module(String id, File modulesHome)
@@ -199,16 +198,12 @@ public abstract class IdegenTask
 
         public Module usingModules(String... modules)
         {
-            moduleDependencies.addAll(asList(modules));
-            return this;
+            return usingModules(asList(modules));
         }
 
-        public Module usingModules(Iterable<ModuleHelper> modules)
+        public Module usingModules(List<String> modules)
         {
-            for (ModuleHelper module : modules) {
-                moduleDependencies.add(module.getId());
-            }
-
+            moduleDependencies.addAll(modules);
             return this;
         }
 
@@ -223,9 +218,9 @@ public abstract class IdegenTask
     public abstract static class Project
         extends IdegenTask
     {
-        @NotNull protected final File        projectDirectory;
-        @NotNull protected final Set<String> modules;
         @NotNull protected String            jdkName;
+        @NotNull protected final Set<String> modules;
+        @NotNull protected final File        projectDirectory;
 
         public Project(@NotNull String id, @NotNull File modulesHome, File projectDirectory)
         {

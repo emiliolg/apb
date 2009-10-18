@@ -23,13 +23,17 @@ import java.util.TreeSet;
 
 import apb.metadata.Project;
 import apb.metadata.ProjectElement;
+
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Oct 10, 2008
 // Time: 12:33:47 PM
 
-//
+/**
+ * Provides additional functionality for {@link apb.metadata.Project} objects
+ *
+ */
 public class ProjectHelper
     extends ProjectElementHelper
 {
@@ -45,6 +49,9 @@ public class ProjectHelper
 
     //~ Methods ..............................................................................................
 
+    /**
+     * Returns the Project associated to this helper
+     */
     public Project getProject()
     {
         return (Project) getElement();
@@ -61,7 +68,7 @@ public class ProjectHelper
         return result;
     }
 
-    protected void build(ProjectBuilder pb, String commandName)
+    @Override void build(ProjectBuilder pb, String commandName)
     {
         for (ProjectElement component : getProject().components()) {
             pb.build(component.getHelper(), commandName);

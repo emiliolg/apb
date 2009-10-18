@@ -20,6 +20,8 @@ package apb;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
@@ -29,11 +31,9 @@ import java.util.TreeMap;
 import apb.compiler.InMemJavaC;
 
 import apb.metadata.DependencyList;
-import apb.metadata.Module;
-import apb.metadata.Project;
 import apb.metadata.ProjectElement;
-import apb.metadata.TestModule;
 
+import apb.utils.ClassUtils;
 import apb.utils.DebugOption;
 
 import org.jetbrains.annotations.NotNull;
@@ -47,7 +47,9 @@ import static apb.utils.FileUtils.JAVA_EXT;
 // Date: Aug 21, 2009
 // Time: 10:09:03 AM
 
-//
+/**
+ * This class is the entry point for the building process
+ */
 public class ProjectBuilder
 {
     //~ Instance fields ......................................................................................
@@ -63,25 +65,14 @@ public class ProjectBuilder
     @NotNull private final ArtifactsCache artifactsCache;
 
     /**
-     * Track execution
-     */
-    private final boolean track;
-
-    /**
      * The initial Environment
      */
     @NotNull private final Environment baseEnvironment;
 
     /**
-     * The java compiler
-     */
-    @NotNull private final InMemJavaC javac;
-
-    /**
      * The stack of executions
      */
     @NotNull private final LinkedList<Context> contextStack;
-    @NotNull private final Logger              logger;
 
     /**
      * A Map that contains all constructed Helpers
@@ -89,12 +80,28 @@ public class ProjectBuilder
     @NotNull private final Map<String, ProjectElementHelper> helpers;
 
     /**
+     * The java compiler
+     */
+    @NotNull private final InMemJavaC javac;
+    @NotNull private final Logger     logger;
+
+    /**
      * The project path where files are searched
      */
     private final Set<File> projectPath;
 
+    /**
+     * Track execution
+     */
+    private final boolean track;
+
     //~ Constructors .........................................................................................
 
+    /**
+     * Create a new Project Builder
+     * @param env  The base Environment for this builder
+     * @param projectPath  The path used to search project definition files
+     */
     public ProjectBuilder(Environment env, Set<File> projectPath)
     {
         baseEnvironment = env;
@@ -114,38 +121,43 @@ public class ProjectBuilder
 
     //~ Methods ..............................................................................................
 
-    public static void forward(@NotNull String command, Iterable<? extends Module> modules)
+    /**
+     * Forwards a command invocation to the given set of modules
+     * @param command The command to be executed
+     * @param modules  The list of modules to aply the command to
+     */
+    public static void forward(@NotNull String command, Iterable<? extends ProjectElement> modules)
     {
-        for (Module module : modules) {
+        for (ProjectElement module : modules) {
             forward(command, module.getHelper());
         }
     }
 
-    public static void forward(@NotNull String command, @NotNull ModuleHelper module)
+    /**
+     * Forwards a command invocation to a given module
+     * @param command The command to be executed
+     * @param module  The module to aply the command to
+     */
+    public static void forward(@NotNull String command, @NotNull ProjectElementHelper module)
     {
         getInstance().build(module, command);
     }
 
     // @Todo create an accesor
+    /**
+     * @exclude
+     */
     public static ProjectElementHelper register(ProjectElement element)
     {
         return getInstance().findOrCreate(element);
     }
 
+    /**
+     * @exclude
+     */
     public static File getArtifact(String group, String name, String relativeUrl, File target)
     {
         return getInstance().artifactsCache.getArtifact(group, relativeUrl + "/" + name, target);
-    }
-
-    @Nullable public ProjectElementHelper constructProjectElement(Environment env, @NotNull File path,
-                                                                  @NotNull File file)
-    {
-        try {
-            return loadProjectElement(env, path, file);
-        }
-        catch (Throwable e) {
-            return null;
-        }
     }
 
     /**
@@ -178,17 +190,6 @@ public class ProjectBuilder
         build(projectElement, command);
     }
 
-    @NotNull public File sourceFile(ProjectElement element)
-    {
-        final File file = javac.sourceFile(element.getClass());
-
-        if (file == null) {
-            throw new IllegalStateException("Cannot find source file for: " + element.getClass());
-        }
-
-        return file;
-    }
-
     /**
      * Get the current command being run or null if no one
      */
@@ -197,14 +198,42 @@ public class ProjectBuilder
         return contextStack.isEmpty() ? "" : contextStack.getLast().getCommand();
     }
 
+    /**
+     * Get the name of the current project or module being built
+     */
     @NotNull public String getCurrentName()
     {
         return currentName;
     }
 
+    /**
+     * Get the base environment for this builder
+     */
     @NotNull public Environment getBaseEnvironment()
     {
         return baseEnvironment;
+    }
+
+    @Nullable ProjectElementHelper constructProjectElement(Environment env, @NotNull File path,
+                                                           @NotNull File file)
+    {
+        try {
+            return loadProjectElement(env, path, file);
+        }
+        catch (Throwable e) {
+            return null;
+        }
+    }
+
+    @NotNull File sourceFile(ProjectElement element)
+    {
+        final File file = javac.sourceFile(element.getClass());
+
+        if (file == null) {
+            throw new IllegalStateException("Cannot find source file for: " + element.getClass());
+        }
+
+        return file;
     }
 
     void build(@NotNull ProjectElementHelper element, @NotNull String commandName)
@@ -222,7 +251,7 @@ public class ProjectBuilder
         if (command != null && element.notExecuted(command)) {
             for (Command cmd : command.getDependencies()) {
                 if (element.notExecuted(cmd)) {
-                    final String cmdName = cmd.getQName();
+                    final String cmdName = cmd.getName();
                     startExecution(element.getName(), cmdName);
                     element.markExecuted(cmd);
                     cmd.invoke(element.getElement());
@@ -287,19 +316,31 @@ public class ProjectBuilder
 
     private ProjectElementHelper createHelper(ProjectElement element)
     {
-        ProjectElementHelper result;
+        try {
+            return (ProjectElementHelper) findConstructor(element).newInstance(this, element);
+        }
+        catch (InstantiationException e) {
+            throw new BuildException(e);
+        }
+        catch (IllegalAccessException e) {
+            throw new BuildException(e);
+        }
+        catch (InvocationTargetException e) {
+            throw new BuildException(e.getCause());
+        }
+    }
 
-        if (element instanceof TestModule) {
-            result = new TestModuleHelper(this, (TestModule) element);
-        }
-        else if (element instanceof Module) {
-            result = new ModuleHelper(this, (Module) element);
-        }
-        else {
-            result = new ProjectHelper(this, (Project) element);
-        }
+    private Constructor findConstructor(ProjectElement element)
+    {
+        final Class<?> elementClass = element.getClass();
 
-        return result;
+        try {
+            Class<?> helperClass = elementClass.getMethod("getHelper").getReturnType();
+            return ClassUtils.findConstructor(helperClass, this, element);
+        }
+        catch (NoSuchMethodException e) {
+            throw new BuildException(e);
+        }
     }
 
     private void initHelpers()
@@ -436,18 +477,18 @@ public class ProjectBuilder
 
     //~ Static fields/initializers ...........................................................................
 
-    public static final int HEADER_LENGTH = 30;
+    private static final int HEADER_LENGTH = 30;
 
-    public static final String PROJECTS_HOME_PROP_KEY = "projects-home";
-    private static final long  MB = (1024 * 1024);
+    private static final String PROJECTS_HOME_PROP_KEY = "projects-home";
+    private static final long   MB = (1024 * 1024);
 
     //~ Inner Classes ........................................................................................
 
     private static class Context
     {
-        private final long   startTime;
         private final String command;
         private final String element;
+        private final long   startTime;
 
         public Context(String element, String command)
         {

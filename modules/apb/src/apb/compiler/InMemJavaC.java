@@ -58,13 +58,13 @@ public class InMemJavaC
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final Environment env;
+    @NotNull private final Map<File, Class> classesByFile;
 
     @NotNull private final JavaCompiler compiler;
 
-    @NotNull private final Map<File, Class>      classesByFile;
-    @NotNull private final MemoryClassLoader     memoryClassLoader;
+    @NotNull private final Environment           env;
     @NotNull private final MemoryJavaFileManager fileManager;
+    @NotNull private final MemoryClassLoader     memoryClassLoader;
 
     //~ Constructors .........................................................................................
 
@@ -199,9 +199,9 @@ public class InMemJavaC
     static class MemoryJavaOutput
         extends SimpleJavaFileObject
     {
+        private final String            className;
         private final long              lastModified;
         private final MemoryClassLoader memoryClassLoader;
-        private final String            className;
 
         public MemoryJavaOutput(FileObject fileObject, String className, MemoryClassLoader memoryClassLoader)
         {

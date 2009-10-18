@@ -18,6 +18,10 @@
 
 package apb.metadata;
 
+import apb.ProjectHelper;
+
+import org.jetbrains.annotations.NotNull;
+
 /**
  * This class defines a Module for the building system
  * Every Module definition must inherit (directly or indirectly) from this class
@@ -40,6 +44,11 @@ public class Project
     private ProjectElementList components = new ProjectElementList();
 
     //~ Methods ..............................................................................................
+
+    @NotNull @Override public ProjectHelper getHelper()
+    {
+        return (ProjectHelper) super.getHelper();
+    }
 
     public ProjectElementList components()
     {

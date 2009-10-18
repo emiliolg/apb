@@ -56,7 +56,10 @@ import static apb.utils.CollectionUtils.addIfNotNull;
 // Date: Sep 15, 2008
 // Time: 2:03:05 PM
 
-//
+/**
+ * Provides additional functionality for {@link apb.metadata.Module} objects
+ *
+ */
 public class ModuleHelper
     extends ProjectElementHelper
 {
@@ -65,7 +68,6 @@ public class ModuleHelper
     @Nullable private Iterable<Library> allLibraries;
 
     @Nullable private Iterable<ModuleHelper> dependencies;
-    @Nullable private Iterable<ModuleHelper> directDependencies;
 
     @Nullable private File                       generatedSource;
     @Nullable private File                       output;
@@ -86,6 +88,9 @@ public class ModuleHelper
 
     //~ Methods ..............................................................................................
 
+    /**
+     * Returns the Module associated to this helper
+     */
     public Module getModule()
     {
         return (Module) getElement();
@@ -131,8 +136,17 @@ public class ModuleHelper
     }
 
     /**
+     * Get current module package name
+     * @return current module package name
+     */
+    public String getPackageName()
+    {
+        return trimDashes(getModule().pkg.name);
+    }
+
+    /**
      * Get current module package (.jar, .war etc) file
-     * @return current module pacjage file
+     * @return current module package file
      */
     @NotNull public File getPackageFile()
     {
@@ -162,43 +176,65 @@ public class ModuleHelper
         return sourcePackageFile;
     }
 
+    /**
+     * Get the {@link apb.metadata.PackageInfo} object for this Module
+     */
     @NotNull public PackageInfo getPackageInfo()
     {
         return getModule().pkg;
     }
 
+    /**
+     * Returns true if this module must produce a package (jar, war, etc) file
+     */
     public boolean hasPackage()
     {
         return getPackageType() != PackageType.NONE;
     }
 
+    /**
+     * Returns the type of package file this module has to produce
+     */
     @NotNull public PackageType getPackageType()
     {
         return getPackageInfo().type;
     }
 
+    /**
+     * Get the {@link apb.metadata.ResourcesInfo} object for this Module
+     */
     @NotNull public ResourcesInfo getResourcesInfo()
     {
         return getModule().resources;
     }
 
-    @NotNull public Iterable<ModuleHelper> getDirectDependencies()
+    /**
+     * Get the {@link apb.metadata.JavadocInfo} object for this Module
+     */
+    public JavadocInfo getJavadocInfo()
     {
-        if (directDependencies == null) {
-            ArrayList<ModuleHelper> list = new ArrayList<ModuleHelper>();
-
-            for (Dependency dependency : getModule().dependencies()) {
-                if (dependency.isModule()) {
-                    list.add(dependency.asModule().getHelper());
-                }
-            }
-
-            directDependencies = list;
-        }
-
-        return directDependencies;
+        return getModule().javadoc;
     }
 
+    /**
+     * Get the {@link apb.metadata.CompileInfo} object for this Module
+     */
+    public CompileInfo getCompileInfo()
+    {
+        return getModule().compiler;
+    }
+
+    /**
+     * Returns true if this is a test module, false otherwise
+     */
+    public boolean isTestModule()
+    {
+        return false;
+    }
+
+    /**
+     * All libraries used by this Module
+     */
     @NotNull public Iterable<Library> getAllLibraries()
     {
         if (allLibraries == null) {
@@ -220,6 +256,9 @@ public class ModuleHelper
         return allLibraries;
     }
 
+    /**
+     * All (direct and indirect) Modules this Module depends on
+     */
     @NotNull public Iterable<ModuleHelper> getDependencies()
     {
         if (dependencies == null) {
@@ -237,6 +276,9 @@ public class ModuleHelper
         return dependencies;
     }
 
+    /**
+     * The list of TestModules for this Module
+     */
     @NotNull public Iterable<TestModuleHelper> getTestModules()
     {
         if (testModules == null) {
@@ -252,16 +294,43 @@ public class ModuleHelper
         return testModules;
     }
 
+    /**
+     * The classpath needed to compile this module
+     */
     public List<File> compileClassPath()
     {
         return classPath(false, false, true);
     }
 
-    public boolean isTestModule()
+    /**
+     * The classpath needed to run this module
+     */
+    public List<File> runtimePath()
     {
-        return false;
+        return classPath(false, true, false);
     }
 
+    /**
+     * The classpath that mut be included in the jar manifest
+     */
+    public List<String> manifestClassPath()
+    {
+        List<String> files = new ArrayList<String>();
+
+        if (getPackageInfo().addClassPath) {
+            for (File file : classPath(true, false, false)) {
+                files.add(file.getPath());
+            }
+
+            files.addAll(getPackageInfo().extraClassPathEntries());
+        }
+
+        return files;
+    }
+
+    /**
+     * The list of directories whre source files for this Module can be found
+     */
     public List<File> getSourceDirs()
     {
         List<File> sourceDirs = new ArrayList<File>();
@@ -269,21 +338,6 @@ public class ModuleHelper
         sourceDirs.add(getSourceDir());
         sourceDirs.add(getGeneratedSource());
         return sourceDirs;
-    }
-
-    public JavadocInfo getJavadocInfo()
-    {
-        return getModule().javadoc;
-    }
-
-    public CompileInfo getCompileInfo()
-    {
-        return getModule().compiler;
-    }
-
-    public String getPackageName()
-    {
-        return trimDashes(getModule().pkg.name);
     }
 
     public Set<String> listAllModules()
@@ -307,31 +361,9 @@ public class ModuleHelper
         return result;
     }
 
-    public List<File> runtimePath()
-    {
-        return classPath(false, true, false);
-    }
-
-    public List<String> manifestClassPath()
-    {
-        List<String> files = new ArrayList<String>();
-
-        if (getPackageInfo().addClassPath) {
-            for (File file : classPath(true, false, false)) {
-                files.add(file.getPath());
-            }
-
-            files.addAll(getPackageInfo().extraClassPathEntries());
-        }
-
-        return files;
-    }
-
-    @NotNull @Override public ModuleHelper getModuleHelper()
-    {
-        return this;
-    }
-
+    /**
+     * Default implementation of a clean action for the current module
+     */
     public void clean()
     {
         delete(getOutput()).execute();
@@ -346,6 +378,9 @@ public class ModuleHelper
         }
     }
 
+    /**
+     * Default implementation of a package action for the current module
+     */
     public void createPackage()
     {
         final PackageInfo packageInfo = getPackageInfo();
@@ -384,6 +419,9 @@ public class ModuleHelper
         }
     }
 
+    /**
+     * Default implementation of a compile action for the current module
+     */
     public void compile()
     {
         CompileInfo   info = getCompileInfo();
@@ -406,7 +444,7 @@ public class ModuleHelper
                            .processing(info.getProcessingOption().paramValue())  //
                            .usingDefaultFormatter(info.defaultErrorFormatter)  //
                            .excludeFromWarning(info.warnExcludes())  //
-                           .useName(getName()).withProcessorPath(info.processorPath());
+                           .useName(getName());
 
         if (!info.warnGenerated) {
             javac.excludeFromWarning(getGeneratedSource());
@@ -415,6 +453,9 @@ public class ModuleHelper
         javac.execute();
     }
 
+    /**
+     * Default implementation of a javadoc action for the current module
+     */
     public void generateJavadoc()
     {
         JavadocInfo info = getJavadocInfo();
@@ -434,6 +475,7 @@ public class ModuleHelper
                                    .withLinks(info.links())  //
                                    .withOfflineLinks(info.offlineLinks())  //
                                    .withGroups(info.groups())  //
+                                   .useExcludeDoclet(info.useExcludeDoclet)  //
                                    .includeAuthorInfo(info.author)  //
                                    .includeDeprecatedInfo(info.deprecated)  //
                                    .includeVersionInfo(info.version)  //
@@ -452,33 +494,41 @@ public class ModuleHelper
                                    .execute();
     }
 
-    protected void build(ProjectBuilder pb, String commandName)
+    protected List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
     {
-        Command command = findCommand(commandName);
+        List<File> result = new ArrayList<File>();
 
-        if (command == null) {
-            throw new BuildException("Invalid command: " + commandName);
+        // Add output dir
+        if (addModuleOutput) {
+            result.add(getOutput());
         }
 
-        if (command.isRecursive() && !isNonRecursive()) {
-            for (ModuleHelper dep : getDependencies()) {
-                pb.execute(dep, commandName);
+        // Add dependencies from modules
+        for (Dependency dependency : getModule().dependencies()) {
+            if (dependency.mustInclude(compile)) {
+                if (dependency.isModule()) {
+                    ModuleHelper m = dependency.asModule().getHelper();
+                    result.add(useJars && m.hasPackage() ? m.getPackageFile() : m.getOutput());
+                }
+                else if (dependency.isLibrary()) {
+                    addIfNotNull(result, dependency.asLibrary().getArtifact(this, PackageType.JAR));
+                }
             }
         }
-        else {
-            for (Command cmd : command.getDirectDependencies()) {
-                pb.build(this, cmd.getQName());
-            }
-        }
 
-        pb.execute(this, commandName);
+        return result;
     }
 
-    Collection<File> deepClassPath(DependencyList dependencies, boolean useJars)
+    @NotNull @Override ModuleHelper getModuleHelper()
+    {
+        return this;
+    }
+
+    Collection<File> deepClassPath(DependencyList dependencyList, boolean useJars)
     {
         Set<File> result = new HashSet<File>();
 
-        for (Dependency dependency : dependencies) {
+        for (Dependency dependency : dependencyList) {
             if (dependency.isModule()) {
                 result.addAll(dependency.asModule().getHelper().deepClassPath(useJars, true));
             }
@@ -568,8 +618,10 @@ public class ModuleHelper
         switch (packageInfo.includeDependencies) {
         case DIRECT:
 
-            for (ModuleHelper dep : getDirectDependencies()) {
-                result.add(dep.getModule());
+            for (Dependency dep : getModule().dependencies()) {
+                if (dep.isModule()) {
+                    result.add(dep.asModule());
+                }
             }
 
             break;
@@ -591,31 +643,6 @@ public class ModuleHelper
         return result;
     }
 
-    private List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
-    {
-        List<File> result = new ArrayList<File>();
-
-        // Add output dir
-        if (addModuleOutput) {
-            result.add(getOutput());
-        }
-
-        // Add dependencies from modules
-        for (Dependency dependency : getModule().dependencies()) {
-            if (dependency.mustInclude(compile)) {
-                if (dependency.isModule()) {
-                    ModuleHelper m = dependency.asModule().getHelper();
-                    result.add(useJars && m.hasPackage() ? m.getPackageFile() : m.getOutput());
-                }
-                else if (dependency.isLibrary()) {
-                    addIfNotNull(result, dependency.asLibrary().getArtifact(this, PackageType.JAR));
-                }
-            }
-        }
-
-        return result;
-    }
-
     /**
      * Topological sort dependent modules using a Depth First Search
      * @param elements All descendant elements
@@ -625,16 +652,20 @@ public class ModuleHelper
     {
         visited.add(this);
 
-        for (ModuleHelper dependency : getDirectDependencies()) {
-            if (!visited.contains(dependency)) {
-                dependency.tsort(elements, visited);
-                elements.add(dependency);
+        for (Dependency dependency : getModule().dependencies()) {
+            if (dependency.isModule()) {
+                final ModuleHelper m = dependency.asModule().getHelper();
+
+                if (!visited.contains(m)) {
+                    m.tsort(elements, visited);
+                    elements.add(m);
+                }
             }
         }
     }
 
     //~ Static fields/initializers ...........................................................................
 
-    public static final String  SRC_JAR = "-src.jar";
+    private static final String SRC_JAR = "-src.jar";
     private static final String MODULE_PROP_KEY = "module";
 }

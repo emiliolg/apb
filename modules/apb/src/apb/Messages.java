@@ -28,6 +28,10 @@ import org.jetbrains.annotations.NonNls;
 // Time: 4:41:31 PM
 
 //
+/**
+ * I18n class
+ * @exclude
+ */
 public class Messages
 {
     //~ Methods ..............................................................................................

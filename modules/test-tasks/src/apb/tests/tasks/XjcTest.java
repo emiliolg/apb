@@ -21,13 +21,13 @@ package apb.tests.tasks;
 import java.io.File;
 import java.io.IOException;
 
-import apb.Environment;
 import apb.Apb;
+
+import apb.tasks.XjcTask;
 
 import apb.tests.testutils.FileAssert;
 
-import static apb.tasks.CoreTasks.*;
-import apb.tasks.XjcTask;
+import static apb.tasks.CoreTasks.xjc;
 //
 // User: emilio
 // Date: Sep 3, 2009
@@ -42,7 +42,7 @@ public class XjcTest
     public void testBin()
         throws IOException
     {
-        Apb.getEnv().putProperty(XjcTask.XJC_CMD, dataPath("jaxb/bin/xjc") );
+        Apb.getEnv().putProperty(XjcTask.XJC_CMD, dataPath("jaxb/bin/xjc"));
         final File schema = new File(dataFile(SCHEMADIR), "po.xsd");
         xjc(schema).to(SRCDIR)  //
                    .usingPackage("apb.po")  //
@@ -56,7 +56,7 @@ public class XjcTest
     public void testJar()
         throws IOException
     {
-        env.putProperty(Environment.EXT_PATH_PROPERTY, dataPath("jaxb/lib"));
+        env.putProperty("ext.path", dataPath("jaxb/lib"));
 
         final File schema = new File(dataFile(SCHEMADIR), "po.xsd");
         xjc(schema.getPath()).to(SRCDIR)  //

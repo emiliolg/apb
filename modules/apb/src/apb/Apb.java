@@ -24,6 +24,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import apb.utils.ClassUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,31 +41,7 @@ public class Apb
 
     public static File applicationJarFile()
     {
-        return applicationJarFile(true);
-    }
-
-    public static File applicationJarFile(boolean failOnNotFound)
-    {
-        final String className = Apb.class.getName();
-
-        // Strip the package name (plus the connecting dot) from the class name
-        // and append the .class extension
-        final String classFileName = className.substring(className.lastIndexOf('.') + 1) + ".class";
-
-        String url = Apb.class.getResource(classFileName).toExternalForm();
-        int    ind = url.lastIndexOf('!');
-
-        File result = null;
-        if ((ind == -1 || !url.startsWith(JAR_FILE_URL_PREFIX))) {
-            if(failOnNotFound)
-            {
-                throw new BuildException("Can't not find 'apb' jar " + url);
-            }
-        }else
-        {
-            result= new File(url.substring(JAR_FILE_URL_PREFIX.length(), ind));
-        }
-        return result;
+        return ClassUtils.jarFromClass(Apb.class);
     }
 
 
@@ -213,8 +191,6 @@ public class Apb
 
     private static final InheritableThreadLocal<Environment> currentEnvironment =
         new InheritableThreadLocal<Environment>();
-
-    private static final String JAR_FILE_URL_PREFIX = "jar:file:";
 
     //~ Inner Classes ........................................................................................
 

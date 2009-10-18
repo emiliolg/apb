@@ -18,12 +18,15 @@
 
 package apb.utils;
 
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+
+import apb.BuildException;
 //
 // User: emilio
 // Date: Nov 6, 2008
@@ -85,7 +88,7 @@ public class ClassUtils
         return findMethod(false, clazz, methodName, params).invoke(null, params);
     }
 
-    private static Constructor<?> findConstructor(Class<?> clazz, Object... params)
+    public static Constructor<?> findConstructor(Class<?> clazz, Object... params)
         throws NoSuchMethodException
     {
         for (Constructor<?> c : clazz.getConstructors()) {
@@ -95,7 +98,26 @@ public class ClassUtils
             }
         }
 
+        for (Constructor<?> c : clazz.getDeclaredConstructors()) {
+            if (match(c.getParameterTypes(), params)) {
+                c.setAccessible(true);
+                return c;
+            }
+        }
+
         throw new NoSuchMethodException("new " + clazz.getName() + argumentTypesToString(params));
+    }
+
+    public static File jarFromClass(Class<?> aClass)
+    {
+        String url = aClass.getResource("").toExternalForm();
+        int    ind = url.lastIndexOf('!');
+
+        if (ind == -1 || !url.startsWith(JAR_FILE_URL_PREFIX)) {
+            throw new BuildException("Can't not find 'apb' jar " + url);
+        }
+
+        return new File(url.substring(JAR_FILE_URL_PREFIX.length(), ind));
     }
 
     private static Method findMethod(boolean nonPublic, Class<?> clazz, String methodName, Object... params)
@@ -127,6 +149,8 @@ public class ClassUtils
             }
 
             if (params[i] != null && !type.isInstance(params[i])) {
+                System.out.println("params = " + params[i]);
+                System.out.println("type = " + type);
                 return false;
             }
         }
@@ -154,6 +178,8 @@ public class ClassUtils
     }
 
     //~ Static fields/initializers ...........................................................................
+
+    public static final String JAR_FILE_URL_PREFIX = "jar:file:";
 
     private static final Map<Class, Class> wrappers = new HashMap<Class, Class>();
 

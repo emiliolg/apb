@@ -84,21 +84,6 @@ public class Module
     @BuildProperty public final CompileInfo compiler = new CompileInfo();
 
     /**
-     * All the info for Javadoc
-     */
-    @BuildProperty public JavadocInfo javadoc = new JavadocInfo();
-
-    /**
-     * All the info for the package (Jar,War, etc)
-     */
-    @BuildProperty public final PackageInfo pkg = new PackageInfo();
-
-    /**
-     * All the info for processing resources
-     */
-    @BuildProperty public ResourcesInfo resources = new ResourcesInfo();
-
-    /**
      * The directory where the generated source files for this module are placed
      */
     @BuildProperty public String generatedSource = "$output-base/gsrc";
@@ -107,6 +92,11 @@ public class Module
      * The "group" (Usually organization name) for this element.
      */
     @BuildProperty public String group = "";
+
+    /**
+     * All the info for Javadoc
+     */
+    @BuildProperty public JavadocInfo javadoc = new JavadocInfo();
 
     /**
      * The directory for the output classes
@@ -120,6 +110,16 @@ public class Module
      */
     @BuildProperty(order = 1)
     public String outputBase = "output/$moduledir";
+
+    /**
+     * All the info for the package (Jar,War, etc)
+     */
+    @BuildProperty public final PackageInfo pkg = new PackageInfo();
+
+    /**
+     * All the info for processing resources
+     */
+    @BuildProperty public ResourcesInfo resources = new ResourcesInfo();
 
     /**
      * The directory where the source files for this module are placed
@@ -209,8 +209,7 @@ public class Module
 
     @BuildTarget(
                  depends = { "compile-tests", "package" },
-                 description =
-                 "Test the compiled sources, generating reports and (optional) coverage information.",
+                 description = "Test the module (generating reports and  coverage info).",
                  recursive = false
                 )
     public void runTests()
@@ -220,8 +219,7 @@ public class Module
 
     @BuildTarget(
                  depends = "compile-tests",
-                 description =
-                 "Run test with the annotation @Test(group=\"minimal\") generating reports and (optional) coverage information.",
+                 description = "Run test with the annotation @Test(group=\"minimal\")",
                  recursive = false
                 )
     public void runMinimalTests()
@@ -232,8 +230,7 @@ public class Module
     @BuildTarget(
                  depends = "compile",
                  name = "package",
-                 description =
-                 "Creates a jar file containing the compiled classes and resources of the module."
+                 description = "Creates a jar file with the module classes and resources."
                 )
     public void packageit()
     {
@@ -241,7 +238,7 @@ public class Module
     }
 
     @BuildTarget(
-                 description = "Generates the Standard Java Documentation (Javadoc) for the module.",
+                 description = "Generates the Java Documentation (Javadoc) for the module.",
                  recursive = false
                 )
     public void javadoc()

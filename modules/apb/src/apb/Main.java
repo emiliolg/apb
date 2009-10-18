@@ -35,10 +35,17 @@ import static java.util.Arrays.asList;
 import static apb.Messages.BUILD_COMPLETED;
 import static apb.Messages.BUILD_FAILED;
 
+/**
+ * Apb main class
+ */
 public class Main
 {
     //~ Methods ..............................................................................................
 
+    /**
+     * Apb entry point when invoked from the command line
+     * @param args Arguments to apb
+     */
     public static void main(String[] args)
         throws Throwable
     {

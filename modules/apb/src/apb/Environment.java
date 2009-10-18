@@ -30,12 +30,17 @@ import org.jetbrains.annotations.Nullable;
 // Date: Aug 22, 2009
 // Time: 11:48:41 AM
 
+/**
+ * This interface allows the application to interface with
+ * the environment in which the application is running.
+ * There is a top level <code>Environment</code> for APB itself and one per Module
+ * being built.
+ * The current <code>Environment</code> can be obtained from the <code>Apb.getEnv()</code> method.
+ *
+ * @see     Apb#getEnv()
+ */
 public interface Environment
 {
-    //~ Instance fields ......................................................................................
-
-    String EXT_PATH_PROPERTY = "ext.path";
-
     //~ Methods ..............................................................................................
 
     /**
@@ -171,6 +176,12 @@ public interface Environment
      */
     @NotNull String getProperty(@NotNull String id, @NotNull String defaultValue);
 
+    /**
+     * Returns true if the specified property has an associated value in the current environment,
+     * false otherwise
+     *
+     * @param id The id of the property to search
+     */
     boolean hasProperty(@NotNull String id);
 
     /**
@@ -202,13 +213,6 @@ public interface Environment
     @NotNull File fileFromBase(@NotNull String name);
 
     /**
-     * Returns a File object whose path is relative to the basedir
-     * @param file The (Usually relative to the basedir) file name.
-     * @return A file whose path is relative to the basedir.
-     */
-    @NotNull File fileFromBase(@NotNull File file);
-
-    /**
      * Returns a File object whose path is relative to the source directory of the current module
      * @param name The (Usually relative to the source directory of the module) file name.
      * @return A file whose path is relative to the source directory of the current module.
@@ -228,6 +232,9 @@ public interface Environment
      */
     Collection<File> getExtClassPath();
 
+    /**
+     * Returns true if Apb has to abort execution when an error was detected or not.
+     */
     boolean isFailOnError();
 
     /**
@@ -243,9 +250,20 @@ public interface Environment
      */
     @Nullable String getOptionalProperty(String id);
 
+    /**
+     * Assign a new value for the specified property in the current environment
+     * @param name  The property id
+     * @param value The new value to assign to the specified property
+     */
     void putProperty(@NotNull String name, @NotNull String value);
 
+    /**
+     * Returns the Logger associated to the current Environment
+     */
     Logger getLogger();
 
+    /**
+     * Control wheter to execute commands for the current target or for all dependencies of the current target
+     */
     void setNonRecursive(boolean b);
 }

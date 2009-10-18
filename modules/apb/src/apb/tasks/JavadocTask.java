@@ -33,12 +33,14 @@ import apb.Proxy;
 import apb.metadata.JavadocInfo;
 import apb.metadata.ResourcesInfo;
 
+import apb.processors.ExcludeDoclet;
+
 import apb.utils.FileUtils;
 import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
 
-import static apb.tasks.CoreTasks.exec;
+import static apb.tasks.CoreTasks.*;
 
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.StringUtils.nChars;
@@ -53,49 +55,50 @@ public class JavadocTask
 {
     //~ Instance fields ......................................................................................
 
-    private boolean author;
-    private boolean deprecated;
-    private boolean deprecatedList;
-    private boolean help;
-    private boolean index;
-    private boolean linkSource;
-    private boolean since;
-    private boolean splitindex;
-    private boolean tree;
-    private boolean use;
-    private boolean version;
+    //
+    @NotNull private final List<String> additionalOptions;
+    @NotNull private final List<String> args;
 
-    private File outputDirectory;
+    private boolean author;
+
+    @NotNull private String bottom = "";
+    @NotNull private String classPath = "";
+    private boolean         deprecated;
+    private boolean         deprecatedList;
+
+    @NotNull private String                        doclet = "";
+    @NotNull private String                        doctitle = "";
+    @NotNull private String                        encoding = "";
+    private boolean                                excludeDoclet;
+    @NotNull private final List<String>            excludes;
+    @NotNull private String                        footer = "";
+    @NotNull private final List<JavadocInfo.Group> groups;
+    @NotNull private String                        header = "";
+    private boolean                                help;
+    private boolean                                index;
+    @NotNull private final List<String>            links;
+    private boolean                                linkSource;
+
+    private Locale locale = null;
 
     /**
      * Max memory in megabytes
      */
-    private int maxMemory = 256;
+    private int                                          maxMemory = 256;
+    @NotNull private final List<JavadocInfo.OfflineLink> offlineLinks;
+
+    private File                        outputDirectory;
+    @NotNull private String             overview = "";
+    @NotNull private final List<String> packages;
+    private boolean                     since;
+    @NotNull private final List<File>   sourcesDir;
+    private boolean                     splitindex;
+    private boolean                     tree;
+    private boolean                     use;
+    private boolean                     version;
 
     @NotNull private JavadocInfo.Visibility visibility;
-
-    //
-    @NotNull private final List<String>                  additionalOptions;
-    @NotNull private final List<String>                  args;
-    @NotNull private final List<String>                  excludes;
-    @NotNull private final List<JavadocInfo.Group>       groups;
-    @NotNull private final List<String>                  links;
-    @NotNull private final List<JavadocInfo.OfflineLink> offlineLinks;
-    @NotNull private final List<String>                  packages;
-    @NotNull private final List<File>                    sourcesDir;
-
-    private Locale locale = null;
-
-    @NotNull private String bottom = "";
-    @NotNull private String classPath = "";
-
-    @NotNull private String doclet = "";
-    @NotNull private String doctitle = "";
-    @NotNull private String encoding = "";
-    @NotNull private String footer = "";
-    @NotNull private String header = "";
-    @NotNull private String overview = "";
-    @NotNull private String windowTitle = "";
+    @NotNull private String                 windowTitle = "";
 
     //~ Constructors .........................................................................................
 
@@ -157,6 +160,12 @@ public class JavadocTask
     public JavadocTask withVisibility(@NotNull JavadocInfo.Visibility level)
     {
         visibility = level;
+        return this;
+    }
+
+    public JavadocTask useExcludeDoclet(boolean b)
+    {
+        excludeDoclet = b;
         return this;
     }
 
@@ -372,7 +381,13 @@ public class JavadocTask
             addArgument("-classpath", classPath);
         }
 
-        addArgument("-doclet", doclet);
+        if (excludeDoclet) {
+            addArgument("-doclet", ExcludeDoclet.class.getName());
+            addArgument("-docletpath", Apb.applicationJarFile().getPath());
+        }
+        else if (!doclet.isEmpty()) {
+            addArgument("-doclet", doclet);
+        }
 
         addArgument("-overview", overview);
 

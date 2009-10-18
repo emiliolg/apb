@@ -19,12 +19,15 @@
 package apb.idegen;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
 import apb.ProjectElementHelper;
 import apb.TestModuleHelper;
 
+import apb.metadata.Dependency;
 import apb.metadata.ProjectElement;
 //
 // User: emilio
@@ -32,6 +35,9 @@ import apb.metadata.ProjectElement;
 // Time: 4:11:52 PM
 
 //
+/**
+ * @exclude
+ */
 public class Idea
     extends IdegenCommand
 {
@@ -60,7 +66,7 @@ public class Idea
                 createTask(mod, info, targetDir).withPackageType(mod.getPackageType()).execute();
 
                 for (TestModuleHelper testModule : mod.getTestModules()) {
-                    ProjectBuilder.forward(getQName(), testModule);
+                    ProjectBuilder.forward(getName(), testModule);
                 }
             }
         }
@@ -76,20 +82,28 @@ public class Idea
                   .usingModules(helper.listAllModules())  //
                   .usingTemplate(info.projectTemplate)  //
                   .useJdk(info.jdkName)  //
-                  .ifOlder(helper.lastModified())  //
+                  .ifOlder(helper.getSourceFile().lastModified())  //
                   .execute();
     }
 
     private IdegenTask.Module createTask(ModuleHelper mod, final IdeaInfo info, final File dir)
     {
+        final List<String> deps = new ArrayList<String>();
+
+        for (Dependency d : mod.getModule().dependencies()) {
+            if (d.isModule()) {
+                deps.add(d.asModule().getId());
+            }
+        }
+
         return IdegenTask.generateModule(mod.getId()).on(dir)  //
                          .usingSources(mod.getSourceDirs())  //
                          .usingOutput(mod.getOutput())  //
                          .includeEmptyDirs(info.includeEmptyDirs)  //
                          .usingTemplate(info.moduleTemplate)  //
-                         .usingModules(mod.getDirectDependencies())  //
+                         .usingModules(deps)  //
                          .usingLibraries(mod.getAllLibraries())  //
                          .withContentDirs(info.contentDirs())  //
-                         .ifOlder(mod.lastModified());
+                         .ifOlder(mod.getSourceFile().lastModified());
     }
 }

@@ -25,6 +25,10 @@ import libraries.Junit3;
 public final class Apb
     extends ApbModule
 {
+    //~ Static fields/initializers ...........................................................................
+
+    public static final Module MODULE = new Apb();
+
     //~ Instance initializers ................................................................................
 
     {
@@ -42,16 +46,13 @@ public final class Apb
         pkg.services("javax.annotation.processing.Processor", "apb.processors.NotNullProcessor");
 
         javadoc.generateDeprecatedList = false;
-        javadoc.includes("apb");
-        javadoc.excludes("apb.compiler", "apb.annotations", "apb.processors", "apb.sunapi");
+        javadoc.includes("apb", "apb.testrunner.output");
+        javadoc.excludes("apb.compiler", "apb.annotations", "apb.processors", "apb.sunapi", "apb.testrunner");
         javadoc.links("http://java.sun.com/javase/6/docs/api");
+        javadoc.useExcludeDoclet = true;
 
         compiler.warnExcludes("apb/sunapi/*");
 
         tests(TestTasks.MODULE);
     }
-
-    //~ Static fields/initializers ...........................................................................
-
-    public static final Module MODULE = new Apb();
 }

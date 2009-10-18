@@ -32,6 +32,9 @@ import org.jetbrains.annotations.NotNull;
 // Time: 2:43:30 PM
 
 //
+/**
+ * @exclude
+ */
 public class OptionCompletion
 {
     //~ Instance fields ......................................................................................
