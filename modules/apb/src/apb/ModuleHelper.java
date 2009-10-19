@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb;
 
@@ -36,16 +38,21 @@ import apb.metadata.PackageInfo;
 import apb.metadata.PackageType;
 import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
-import static apb.tasks.CoreTasks.*;
+
 import apb.tasks.FileSet;
 import apb.tasks.JarTask;
 import apb.tasks.JavacTask;
-import static apb.utils.CollectionUtils.addIfNotNull;
+
 import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.tasks.CoreTasks.*;
+
+import static apb.utils.CollectionUtils.addIfNotNull;
 //
 // User: emilio
 // Date: Sep 15, 2008
@@ -439,6 +446,7 @@ public class ModuleHelper
                            .processing(info.getProcessingOption().paramValue())  //
                            .usingDefaultFormatter(info.defaultErrorFormatter)  //
                            .excludeFromWarning(info.warnExcludes())  //
+                           .instrumentNotNull(info.instrumentNotNull)  //
                            .useName(getName());
 
         if (!info.warnGenerated) {

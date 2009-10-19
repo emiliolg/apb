@@ -28,8 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apb.utils.CollectionUtils;
-import static apb.utils.CollectionUtils.stringToList;
+
 import org.jetbrains.annotations.NotNull;
+
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassAdapter;
 import org.objectweb.asm.ClassReader;
@@ -40,16 +41,12 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
+import static apb.utils.CollectionUtils.stringToList;
+
 public class NotNullInstrumentTask
     extends Task
 {
     //~ Methods ..............................................................................................
-
-    public static void process()
-    {
-        final NotNullInstrumentTask task = new NotNullInstrumentTask();
-        task.execute();
-    }
 
     @NotNull public static String getClassesProperty()
     {
@@ -59,14 +56,13 @@ public class NotNullInstrumentTask
     public static void setClassesToProcess(Iterable<String> fileNames)
     {
         if (fileNames != null) {
-            System.setProperty(getClassesProperty(),
-                               CollectionUtils.listToString(fileNames));
+            System.setProperty(getClassesProperty(), CollectionUtils.listToString(fileNames));
         }
     }
 
     public void execute()
     {
-        final String  classesProperty = getClassesProperty();
+        final String classesProperty = getClassesProperty();
         final String classes = System.getProperty(classesProperty);
         System.setProperty(classesProperty, "");
 
@@ -78,6 +74,7 @@ public class NotNullInstrumentTask
     private void instrumentClass(@NotNull final String classPath)
     {
         final File classFile = new File(classPath);
+
         if (classFile.getName().endsWith(".class")) {
             try {
                 final InputStream fis = new FileInputStream(classFile);
@@ -123,7 +120,7 @@ class NotNullClassInstrumenter
 {
     //~ Instance fields ......................................................................................
 
-    private String className;
+    private String  className;
     private boolean isModified;
 
     //~ Constructors .........................................................................................
@@ -161,8 +158,9 @@ class NotNullClassInstrumenter
 
         MethodVisitor v = cv.visitMethod(access, name, desc, signature, exceptions);
         return new MethodAdapter(v) {
-
-            @Override public AnnotationVisitor visitParameterAnnotation(int parameter, String anno, boolean visible) {
+            @Override public AnnotationVisitor visitParameterAnnotation(int parameter, String anno,
+                                                                        boolean visible)
+            {
                 final AnnotationVisitor result = mv.visitParameterAnnotation(parameter, anno, visible);
 
                 if (NotNullClassInstrumenter.isReferenceType(args[parameter]) &&
@@ -173,17 +171,19 @@ class NotNullClassInstrumenter
                 return result;
             }
 
-            @Override  public AnnotationVisitor visitAnnotation(String anno, boolean isRuntime) {
+            @Override public AnnotationVisitor visitAnnotation(String anno, boolean isRuntime)
+            {
                 final AnnotationVisitor av = mv.visitAnnotation(anno, isRuntime);
-                if (isReferenceType(returnType) &&
-                        anno.equals(NOT_NULL_ANNOATATION_SIGNATURE)) {
+
+                if (isReferenceType(returnType) && anno.equals(NOT_NULL_ANNOATATION_SIGNATURE)) {
                     isResultNotNull = true;
                 }
 
                 return av;
             }
 
-            @Override  public void visitCode() {
+            @Override public void visitCode()
+            {
                 if (isResultNotNull || !notNullParams.isEmpty()) {
                     startGeneratedCodeLabel = new Label();
                     mv.visitLabel(startGeneratedCodeLabel);
@@ -210,14 +210,14 @@ class NotNullClassInstrumenter
                     throwLabel = new Label();
                     mv.visitLabel(throwLabel);
                     generateThrow(ILLEGAL_STATE_EXCEPTION_SIGNATURE,
-                            "@NotNull method " + className + "." + name + " must not return null",
-                            codeStart);
-
+                                  "@NotNull method " + className + "." + name + " must not return null",
+                                  codeStart);
                 }
             }
 
-            @Override  public void visitLocalVariable(String name, String desc, String signature, Label start, Label end,
-                                           int index) {
+            @Override public void visitLocalVariable(String name, String desc, String signature, Label start,
+                                                     Label end, int index)
+            {
                 boolean isStatic = (access & 8) != 0;
                 boolean isParameter = isStatic ? index < args.length : index <= args.length;
                 mv.visitLocalVariable(name, desc, signature,
@@ -225,7 +225,8 @@ class NotNullClassInstrumenter
                                       ? start : startGeneratedCodeLabel, end, index);
             }
 
-            public void visitInsn(int opcode) {
+            public void visitInsn(int opcode)
+            {
                 if (opcode == Opcodes.ARETURN && isResultNotNull) {
                     mv.visitInsn(Opcodes.DUP);
                     mv.visitJumpInsn(Opcodes.IFNULL, throwLabel);
@@ -234,7 +235,8 @@ class NotNullClassInstrumenter
                 mv.visitInsn(opcode);
             }
 
-            private void generateThrow(String exceptionClass, String descr, Label end) {
+            private void generateThrow(String exceptionClass, String descr, Label end)
+            {
                 mv.visitTypeInsn(Opcodes.NEW, exceptionClass);
                 mv.visitInsn(Opcodes.DUP);
                 mv.visitLdcInsn(descr);
@@ -247,10 +249,9 @@ class NotNullClassInstrumenter
             }
 
             private final List<Integer> notNullParams = new ArrayList<Integer>();
-            private boolean isResultNotNull = false;
-            public Label throwLabel;
-            private Label startGeneratedCodeLabel;
-
+            private boolean             isResultNotNull = false;
+            public Label                throwLabel;
+            private Label               startGeneratedCodeLabel;
         };
     }
 

@@ -27,7 +27,6 @@ import java.util.Map;
 
 import apb.tasks.FileSet;
 import apb.tasks.JavaTask;
-import apb.tasks.NotNullInstrumentTask;
 
 import apb.tests.testutils.FileAssert;
 
@@ -74,23 +73,36 @@ public class JavaTest
     public void testNotNull()
         throws IOException
     {
-        String p = NotNullInstrumentTask.getClassesProperty();
-
         final FileSet set = FileSet.fromDir("$module-src").including(SUM_ARGS + ".java");
+        final File    classFile = new File(basedir, SUM_ARGS + ".class");
+
         javac(set).to("$basedir")  //
                   .withClassPath("$apb-jar")  //
-                  .withAnnotationOptions(NotNullInstrumentTask.CLASSES_PROPERTY, p)  //
+                  .instrumentNotNull(true)  //
                   .execute();
-        NotNullInstrumentTask.process();
 
-        FileAssert.assertExists(new File(basedir, SUM_ARGS + ".class"));
+        FileAssert.assertExists(classFile);
 
         List<String> output = new ArrayList<String>();
-        JavaTask     j =
-            java(makeClassName(SUM_ARGS), "1", "2", "null").outputTo(output).redirectErrorStream(true);
-        j.execute();
+        java(makeClassName(SUM_ARGS), "1", "2", "null").outputTo(output).redirectErrorStream(true).execute();
 
         assertTrue("Exception not thrown", output.get(0).contains("IllegalArgumentException"));
+
+        delete(classFile).execute();
+
+        // now do not instrument
+
+        javac(set).to("$basedir")  //
+                  .withClassPath("$apb-jar")  //
+                  .instrumentNotNull(false)  //
+                  .execute();
+
+        FileAssert.assertExists(classFile);
+
+        output.clear();
+        java(makeClassName(SUM_ARGS), "1", "2", "null").outputTo(output).redirectErrorStream(true).execute();
+
+        assertEquals("3", output.get(0));
     }
 
     public void testTouch()

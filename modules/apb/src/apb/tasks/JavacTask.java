@@ -33,6 +33,7 @@ import apb.compiler.JavaC;
 import apb.metadata.Library;
 import apb.metadata.PackageType;
 
+import apb.utils.ClassUtils;
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -55,28 +56,29 @@ public class JavacTask
 {
     //~ Instance fields ......................................................................................
 
-    private boolean            debug;
-    private boolean            deprecated;
-    private boolean            failOnWarning;
-    private boolean            lint;
-    private boolean            trackUnusedDependencies;
-    private boolean            warn;
-    private DiagnosticReporter reporter;
-
-    @NotNull private final File          targetDir;
-    @NotNull private final List<File>    classPath;
-    @NotNull private final List<File>    processorPath;
-    @NotNull private final List<File>    extraLibraries;
-    @NotNull private final List<FileSet> fileSets;
-    @NotNull private final List<File>    sourceDirs;
-
     @NotNull private final Map<String, String> annnotationOptions;
+    @NotNull private final List<File>          classPath;
 
-    @NotNull private String lintOptions;
-    @NotNull private String name;
-    @NotNull private String processing;
-    @NotNull private String source;
-    @NotNull private String target;
+    private boolean                      debug;
+    private boolean                      deprecated;
+    @NotNull private final List<File>    extraLibraries;
+    private boolean                      failOnWarning;
+    @NotNull private final List<FileSet> fileSets;
+    private boolean                      instrumentNotNull;
+    private boolean                      lint;
+
+    @NotNull private String           lintOptions;
+    @NotNull private String           name;
+    @NotNull private String           processing;
+    @NotNull private final List<File> processorPath;
+    private DiagnosticReporter        reporter;
+    @NotNull private String           source;
+    @NotNull private final List<File> sourceDirs;
+    @NotNull private String           target;
+
+    @NotNull private final File targetDir;
+    private boolean             trackUnusedDependencies;
+    private boolean             warn;
 
     //~ Constructors .........................................................................................
 
@@ -213,29 +215,7 @@ public class JavacTask
             env.logInfo("Compiling %3d file%s\n", files.size(), (files.size() > 1) ? "s" : "");
 
             if (env.isVerbose()) {
-                for (File file : FileUtils.removePrefix(sourceDirs, files)) {
-                    logVerbose("         %s\n", file);
-                }
-
-                logVerbose("ClassPath: \n");
-
-                for (File file : classPath) {
-                    logVerbose("         %s\n", file);
-                }
-
-                logVerbose("Extra Libraries: \n");
-
-                for (File file : extraLibraries) {
-                    logVerbose("         %s\n", file);
-                }
-
-                logVerbose("Source:\n");
-
-                for (FileSet dir : fileSets) {
-                    logVerbose("         %s\n", dir.getDir());
-                }
-
-                logVerbose("Target directory: %s\n", targetDir);
+                logInfo(files);
             }
 
             final List<String> options = new ArrayList<String>();
@@ -299,11 +279,11 @@ public class JavacTask
             if (!status) {
                 env.handle("Compilation failed");
             }
-            else if (trackUnusedDependencies) {
-                final List<File> unused = jc.unusedPathElements(classPath);
+            else {
+                checkUnusedDependencies(jc);
 
-                if (!unused.isEmpty()) {
-                    throw new UnusedLibrariesException(name, unused);
+                if (instrumentNotNull) {
+                    createNotNullInstrumentTask().execute();
                 }
             }
         }
@@ -448,6 +428,12 @@ public class JavacTask
         return this;
     }
 
+    public JavacTask instrumentNotNull(boolean b)
+    {
+        instrumentNotNull = b;
+        return this;
+    }
+
     private static void validateDir(File dir)
     {
         if (dir.exists()) {
@@ -457,6 +443,54 @@ public class JavacTask
         }
         else if (!dir.mkdirs()) {
             throw new IllegalArgumentException("Can not create directory: " + dir.getPath());
+        }
+    }
+
+    private void logInfo(List<File> files)
+    {
+        for (File file : FileUtils.removePrefix(sourceDirs, files)) {
+            logVerbose("         %s\n", file);
+        }
+
+        logVerbose("ClassPath: \n");
+
+        for (File file : classPath) {
+            logVerbose("         %s\n", file);
+        }
+
+        logVerbose("Extra Libraries: \n");
+
+        for (File file : extraLibraries) {
+            logVerbose("         %s\n", file);
+        }
+
+        logVerbose("Source:\n");
+
+        for (FileSet dir : fileSets) {
+            logVerbose("         %s\n", dir.getDir());
+        }
+
+        logVerbose("Target directory: %s\n", targetDir);
+    }
+
+    private void checkUnusedDependencies(JavaC jc)
+    {
+        if (trackUnusedDependencies) {
+            final List<File> unused = jc.unusedPathElements(classPath);
+
+            if (!unused.isEmpty()) {
+                throw new UnusedLibrariesException(name, unused);
+            }
+        }
+    }
+
+    private Task createNotNullInstrumentTask()
+    {
+        try {
+            return (Task) ClassUtils.newInstance("apb.tasks.NotNullInstrumentTask");
+        }
+        catch (Exception e) {
+            throw new BuildException(e);
         }
     }
 
