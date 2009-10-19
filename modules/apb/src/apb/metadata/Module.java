@@ -23,9 +23,12 @@ import java.util.List;
 
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
-import static apb.tasks.CoreTasks.copy;
+
 import apb.tasks.FileSet;
+
 import org.jetbrains.annotations.NotNull;
+
+import static apb.tasks.CoreTasks.copy;
 
 /**
  * This class defines a Module for the building system
@@ -81,6 +84,21 @@ public class Module
     @BuildProperty public final CompileInfo compiler = new CompileInfo();
 
     /**
+     * All the info for Javadoc
+     */
+    @BuildProperty public JavadocInfo javadoc = new JavadocInfo();
+
+    /**
+     * All the info for the package (Jar,War, etc)
+     */
+    @BuildProperty public final PackageInfo pkg = new PackageInfo();
+
+    /**
+     * All the info for processing resources
+     */
+    @BuildProperty public ResourcesInfo resources = new ResourcesInfo();
+
+    /**
      * The directory where the generated source files for this module are placed
      */
     @BuildProperty public String generatedSource = "$output-base/gsrc";
@@ -89,11 +107,6 @@ public class Module
      * The "group" (Usually organization name) for this element.
      */
     @BuildProperty public String group = "";
-
-    /**
-     * All the info for Javadoc
-     */
-    @BuildProperty public JavadocInfo javadoc = new JavadocInfo();
 
     /**
      * The directory for the output classes
@@ -107,16 +120,6 @@ public class Module
      */
     @BuildProperty(order = 1)
     public String outputBase = "output/$moduledir";
-
-    /**
-     * All the info for the package (Jar,War, etc)
-     */
-    @BuildProperty public final PackageInfo pkg = new PackageInfo();
-
-    /**
-     * All the info for processing resources
-     */
-    @BuildProperty public ResourcesInfo resources = new ResourcesInfo();
 
     /**
      * The directory where the source files for this module are placed
@@ -133,12 +136,10 @@ public class Module
      */
     protected final DependencyList dependencies = new DependencyList();
 
-
     /*
      * The list of test modules
      */
     final List<TestModule> tests = new ArrayList<TestModule>();
-
 
     //~ Methods ..............................................................................................
 
@@ -183,16 +184,6 @@ public class Module
     public void compile()
     {
         getHelper().compile();
-// This should be done differently...
-//        Using an extension
-// if not it is imposibly to boot build apb....!!!!!
-//
-// Also the flag is a compilerflag and not a Module Flag !!!!
-//
-//        if(enableNotNullInstrumentation)
-//        {
-//            NotNullInstrumentTask.process();
-//        }
     }
 
     @BuildTarget(

@@ -63,6 +63,7 @@ import static apb.tasks.CoreTasks.java;
 import static apb.testrunner.TestRunner.listTests;
 import static apb.testrunner.TestRunner.worseResult;
 
+import static apb.utils.ClassUtils.jarFromClass;
 import static apb.utils.CollectionUtils.listToString;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
@@ -91,18 +92,6 @@ public class TestLauncher
     boolean forkPerSuite;
 
     /**
-     * The classes to be tested
-     */
-    @NotNull private final Set<File> classesToTest;
-
-    /**
-     * The classpath for the tests
-     */
-    @NotNull private final Set<File>       classPath;
-    @NotNull private final CoverageInfo    coverage;
-    @NotNull private final CoverageBuilder coverageBuilder;
-
-    /**
      * Enable assertions when running the tests
      */
     private final boolean enableAssertions;
@@ -113,21 +102,6 @@ public class TestLauncher
     private final boolean enableDebugger;
 
     /**
-     * The environment
-     */
-    @NotNull private final Environment env;
-
-    /**
-     * The environment variables to be used in the test
-     */
-    private final Map<String, String> environmentVariables;
-
-    /**
-     * The list of tests to exclude
-     */
-    @NotNull private List<String> excludes;
-
-    /**
      * Fail if no tests are found
      */
     private final boolean failIfEmpty;
@@ -135,7 +109,34 @@ public class TestLauncher
     /**
      * Fail the build when a test fails
      */
-    private final boolean failOnError;
+    private final boolean                  failOnError;
+    @NotNull private final CoverageBuilder coverageBuilder;
+    @NotNull private final CoverageInfo    coverage;
+
+    /**
+     * The environment
+     */
+    @NotNull private final Environment env;
+
+    /**
+     * The file where the report will be generated
+     */
+    @Nullable private File reportDir;
+
+    /**
+     * The test classes to be run
+     */
+    @NotNull private final File testClasses;
+
+    /**
+     * The memory (in megabytes) to be used by the forked process
+     */
+    private final int maxMemory;
+
+    /**
+     * The list of tests to exclude
+     */
+    @NotNull private List<String> excludes;
 
     /**
      * The list of tests to include
@@ -148,9 +149,14 @@ public class TestLauncher
     @NotNull private final List<String> javaArgs;
 
     /**
-     * The memory (in megabytes) to be used by the forked process
+     * The list of test groups to execute
      */
-    private final int maxMemory;
+    @NotNull private final List<String> testGroups;
+
+    /**
+     * The environment variables to be used in the test
+     */
+    private final Map<String, String> environmentVariables;
 
     /**
      * List of System properties to pass to the tests.
@@ -158,14 +164,19 @@ public class TestLauncher
     @NotNull private final Map<String, String> properties;
 
     /**
-     * The report to be generated
+     * The classes to be tested
      */
-    @NotNull private final TestReport report;
+    @NotNull private final Set<File> classesToTest;
 
     /**
-     * The file where the report will be generated
+     * The classpath for the tests
      */
-    @Nullable private File reportDir;
+    @NotNull private final Set<File> classPath;
+
+    /**
+     * The list of elements to be included in the system classpath
+     */
+    @NotNull private final Set<File> systemClassPath = new LinkedHashSet<File>();
 
     /*
     * To be able to run a simple TestCase
@@ -173,25 +184,15 @@ public class TestLauncher
     @NotNull private String singleTest = "";
 
     /**
-     * The list of elements to be included in the system classpath
-     */
-    @NotNull private final Set<File> systemClassPath = new LinkedHashSet<File>();
-
-    /**
-     * The test classes to be run
-     */
-    @NotNull private final File testClasses;
-
-    /**
      * The test creator
      */
     @NotNull private final String testCreator;
+    private final String          workingDirectory;
 
     /**
-     * The list of test groups to execute
+     * The report to be generated
      */
-    @NotNull private final List<String> testGroups;
-    private final String                workingDirectory;
+    @NotNull private final TestReport report;
 
     //~ Constructors .........................................................................................
 
@@ -550,9 +551,7 @@ public class TestLauncher
 
         Set<File> path = new LinkedHashSet<File>();
         path.add(appJar);
-
-        // TODO search apb-test dynamically
-        path.add(new File(appJar.getParent(), "apb-test.jar"));
+        path.add(jarFromClass(apb.annotation.Test.class));
 
         if (isCoverageEnabled()) {
             path.add(new File(appJar.getParent(), "emma.jar"));

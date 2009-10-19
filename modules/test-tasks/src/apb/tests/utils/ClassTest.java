@@ -18,9 +18,15 @@
 
 package apb.tests.utils;
 
+import java.io.File;
 import java.util.Date;
 
+import apb.Apb;
+
+import apb.metadata.PackageInfo;
+
 import apb.utils.ClassUtils;
+import apb.utils.FileUtils;
 
 import junit.framework.TestCase;
 //
@@ -89,5 +95,24 @@ public class ClassTest
         }
 
         assertEquals("java.lang.String.substring(java.lang.String, null)", msg);
+    }
+
+    public void testJar()
+        throws Exception
+    {
+        File libDir = FileUtils.normalizeFile(new File(Apb.getEnv().getProperty("apb-jar")).getParentFile());
+
+        File f = ClassUtils.jarFromClass(Apb.class);
+        assertEquals(new File(libDir, "apb.jar"), f);
+
+        f = ClassUtils.jarFromClass(PackageInfo.IncludeDependencies.class);
+        assertEquals(new File(libDir, "apb.jar"), f);
+
+        f = ClassUtils.jarFromClass(apb.annotation.Test.class);
+        assertEquals(new File(libDir, "apb-test.jar"), f);
+
+        final Apb[] array = new Apb[0];
+        f = ClassUtils.jarFromClass(array.getClass());
+        assertEquals(new File(libDir, "apb.jar"), f);
     }
 }

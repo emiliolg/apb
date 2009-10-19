@@ -100,6 +100,8 @@ public class NameUtils
     {
         int dot = className.lastIndexOf('.');
         className = dot == -1 ? className : className.substring(dot + 1);
+        int semicolon = className.lastIndexOf(';');
+        className = semicolon == -1 ? className : className.substring(0, semicolon);
         return className;
     }
 

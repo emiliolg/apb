@@ -791,7 +791,5 @@ public class IdeaTask
                 }
             }
         }
-
-        //Todo Check generation when using an absolute path to the project file
     }
 }
