@@ -67,15 +67,15 @@ public class ModuleHelper
 {
     //~ Instance fields ......................................................................................
 
+    @Nullable private File generatedSource;
+    @Nullable private File output;
+    @Nullable private File packageFile;
+    @Nullable private File source;
+    @Nullable private File sourcePackageFile;
+
     @Nullable private Iterable<Library> allLibraries;
 
-    @Nullable private Iterable<ModuleHelper> dependencies;
-
-    @Nullable private File                       generatedSource;
-    @Nullable private File                       output;
-    @Nullable private File                       packageFile;
-    @Nullable private File                       source;
-    @Nullable private File                       sourcePackageFile;
+    @Nullable private Iterable<ModuleHelper>     dependencies;
     @Nullable private Iterable<TestModuleHelper> testModules;
 
     //~ Constructors .........................................................................................
@@ -415,7 +415,7 @@ public class ModuleHelper
             // generate sources jar
             if (packageInfo.generateSourcesJar) {
                 jar(getSourcePackageFile()).fromDir(getSourceDir())  //
-                                           .excluding(FileUtils.DEFAULT_EXCLUDES)  //
+                                           .excluding(Constants.DEFAULT_EXCLUDES)  //
                                            .execute();
             }
         }

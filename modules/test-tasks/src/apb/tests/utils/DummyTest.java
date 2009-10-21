@@ -18,6 +18,7 @@
 
 package apb.tests.utils;
 
+import apb.Constants;
 import apb.Messages;
 
 import apb.sunapi.Base64;
@@ -29,7 +30,6 @@ import apb.tests.testutils.FileAssert;
 import apb.utils.ClassUtils;
 import apb.utils.CollectionUtils;
 import apb.utils.ColorUtils;
-import apb.utils.Constants;
 import apb.utils.NameUtils;
 import apb.utils.StringUtils;
 

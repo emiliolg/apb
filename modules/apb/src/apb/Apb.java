@@ -44,7 +44,6 @@ public class Apb
         return ClassUtils.jarFromClass(Apb.class);
     }
 
-
     /**
      * Load the projectpath list.
      */
@@ -59,7 +58,7 @@ public class Apb
         }
 
         if (isEmpty(path)) {
-            path = "./project-definitions";
+            path = "./DEFS";
         }
 
         for (String p : path.split(File.pathSeparator)) {

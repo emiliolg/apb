@@ -32,7 +32,7 @@ import apb.Environment;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static apb.utils.Constants.*;
+import static apb.Constants.UTF8;
 //
 // User: emilio
 // Date: Nov 14, 2008
@@ -132,6 +132,11 @@ public class JUnitTestReport
     }
 
     //~ Static fields/initializers ...........................................................................
+
+    private static final String XML_HEADER_START = "<?xml";
+    private static final String XML_HEADER_END = "?>";
+    private static final String XML_HEADER =
+        XML_HEADER_START + " version=\"1.0\" encoding=\"" + UTF8 + "\" " + XML_HEADER_END;
 
     private static final String HTML_REPORT = "report.html";
     private static final String STYLE_SHEET = "/resources/junit-noframes.xsl";

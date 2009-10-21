@@ -104,8 +104,8 @@ abstract class DelegatedEnvironment
     {
         // Optimization to use parent extClassPath if the property was not present in this environment.
 
-        return retrieveLocalProperty(EXT_PATH_PROPERTY) != null ? super.getExtClassPath()
-                                                                : parent.getExtClassPath();
+        return retrieveLocalProperty(Constants.EXT_PATH_PROPERTY) != null ? super.getExtClassPath()
+                                                                          : parent.getExtClassPath();
     }
 
     /**

@@ -24,6 +24,9 @@ import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
 
+import static apb.Constants.DEFAULT_REPOSITORY;
+import static apb.Constants.REPOSITORY_PROPERTY;
+
 import static apb.tasks.CoreTasks.download;
 //
 // User: emilio
@@ -79,20 +82,15 @@ class ArtifactsCache
         String repo = "";
 
         while (repo.isEmpty() && !group.isEmpty()) {
-            repo = env.getProperty(REPOSITORY + "." + group, "");
+            repo = env.getProperty(REPOSITORY_PROPERTY + "." + group, "");
             int dot = group.lastIndexOf('.');
             group = dot == -1 ? "" : group.substring(0, dot);
         }
 
         if (repo.isEmpty()) {
-            repo = env.getProperty(REPOSITORY, DEFAULT_REPOSITORY);
+            repo = env.getProperty(REPOSITORY_PROPERTY, DEFAULT_REPOSITORY);
         }
 
         return repo;
     }
-
-    //~ Static fields/initializers ...........................................................................
-
-    private static final String REPOSITORY = "repository";
-    private static final String DEFAULT_REPOSITORY = "http://mirrors.ibiblio.org/pub/mirrors/maven2";
 }

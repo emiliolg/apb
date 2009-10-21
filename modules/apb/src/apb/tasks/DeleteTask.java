@@ -21,8 +21,6 @@ package apb.tasks;
 import java.io.File;
 import java.util.List;
 
-import apb.utils.FileUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -90,10 +88,6 @@ public class DeleteTask
 
     private boolean removeDir(File d)
     {
-        if (FileUtils.DEFAULT_SRC_EXCLUDES.contains(d.getName())) {
-            return true;
-        }
-
         String[] list = d.list();
 
         if (list == null) {

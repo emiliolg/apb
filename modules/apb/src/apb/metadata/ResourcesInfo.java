@@ -21,8 +21,6 @@ package apb.metadata;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import apb.utils.Constants;
 //
 // User: emilio
 // Date: Oct 1, 2008
@@ -135,5 +133,5 @@ public class ResourcesInfo
     public static final List<String> DEFAULT_DO_NOT_FILTER =
         Arrays.asList("jpg", "jpeg", "gif", "bmp", "png");
 
-    public static final String DEFAULT_ENCODING = Constants.UTF8;
+    public static final String DEFAULT_ENCODING = apb.Constants.UTF8;
 }

@@ -217,7 +217,7 @@ abstract class DefaultEnvironment
     {
         if (extClassPath == null) {
             final ArrayList<File> files = new ArrayList<File>();
-            String                path = getProperty(EXT_PATH_PROPERTY, "");
+            String                path = getProperty(Constants.EXT_PATH_PROPERTY, "");
 
             if (!path.isEmpty()) {
                 for (String p : path.split(File.pathSeparator)) {
@@ -383,8 +383,4 @@ abstract class DefaultEnvironment
     {
         return properties.get(id);
     }
-
-    //~ Static fields/initializers ...........................................................................
-
-    static final String EXT_PATH_PROPERTY = "ext.path";
 }

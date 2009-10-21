@@ -21,7 +21,6 @@ package apb.utils;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -161,11 +160,13 @@ public class CollectionUtils
      */
     @NotNull public static List<String> stringToList(@Nullable String string, @NotNull String sep)
     {
-        if (string == null || string.isEmpty()) {
-            return Collections.emptyList();
+        List<String> result = new ArrayList<String>();
+
+        if (string != null && !string.isEmpty()) {
+            result.addAll(asList(string.split(sep)));
         }
 
-        return asList(string.split(sep));
+        return result;
     }
 
     /**

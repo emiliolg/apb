@@ -82,7 +82,7 @@ public class Main
             throw new IOException(String.format("Cannot create directory: %s\n", dir.getPath()));
         }
 
-        File properties = new File(dir, FileUtils.APB_PROPERTIES);
+        File properties = new File(dir, Constants.APB_PROPERTIES);
 
         if (!properties.exists()) {
             File apbHome = Apb.getHome();

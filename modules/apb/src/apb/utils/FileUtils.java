@@ -54,10 +54,15 @@ import java.util.TreeSet;
 import apb.Apb;
 import apb.BuildException;
 import apb.Os;
+
 import apb.tasks.FileSet;
+
+import org.jetbrains.annotations.NotNull;
+
+import static apb.Constants.*;
+
 import static apb.utils.StringUtils.isEmpty;
 import static apb.utils.StringUtils.isNotEmpty;
-import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Sep 8, 2008
@@ -779,7 +784,9 @@ public class FileUtils
                     final File dest = new File(target, f);
 
                     long destLastMod;
-                    if (!checkTimestamp || (destLastMod=dest.lastModified())==0 || source.lastModified() > destLastMod) {
+
+                    if (!checkTimestamp || (destLastMod = dest.lastModified()) == 0 ||
+                            source.lastModified() > destLastMod) {
                         result.put(source, dest);
                     }
                 }
@@ -925,52 +932,6 @@ public class FileUtils
             }
         };
 
-    public static final String APB_PROPERTIES = "apb.properties";
-
-    private static final String APB_DIR = ".apb";
-
     public static final String JAVA_HOME = System.getenv("JAVA_HOME");
     public static final String java_home = System.getProperty("java.home");
-
-    public static final String JAVA_EXT = ".java";
-
-    private static final int MB = 1024 * 1024;
-
-    public static final List<String> DEFAULT_SRC_EXCLUDES = Arrays.asList(
-
-                                                                          //Oracle ADE
-                                                                          ".ade_path");
-
-    public static final List<String> DEFAULT_EXCLUDES =
-        Arrays.asList(
-
-                      // Miscellaneous typical temporary files
-                      "**/*~", "**/#*#", "**/.#*", "**/%*%", "**/._*",
-
-                      // CVS
-                      "**/CVS", "**/CVS/**", "**/.cvsignore",
-
-                      // SCCS
-                      "**/SCCS", "**/SCCS/**",
-
-                      // Visual SourceSafe
-                      "**/vssver.scc",
-
-                      // Subversion
-                      "**/.svn", "**/.svn/**",
-
-                      // Oracle ADE
-                      "**/.ade_path", "**/.ade_path/**",
-
-                      // Arch
-                      "**/.arch-ids", "**/.arch-ids/**",
-
-                      //Bazaar
-                      "**/.bzr", "**/.bzr/**",
-
-                      //SurroundSCM
-                      "**/.MySCMServerInfo",
-
-                      // Mac
-                      "**/.DS_Store");
 }

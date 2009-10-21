@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Set;
 
 import apb.Apb;
+import apb.Constants;
 import apb.DefinitionsIndex;
 import apb.ModuleInfo;
 
@@ -47,8 +48,8 @@ public class IndexTest
     {
         final long ts = (System.currentTimeMillis() - 10000) / 1000 * 1000;
 
-        final File indexFile = new File(tmpFile("definitions.dir"));
-        env.putProperty("definitions.dir", indexFile.getPath());
+        final File indexFile = new File(tmpFile(Constants.DEFINITIONS_CACHE));
+        env.putProperty(Constants.DEFINITIONS_CACHE_PROPERTY, indexFile.getPath());
         env.putProperty("project.path", makePath(projectPath));
 
         final Set<File> path = Apb.loadProjectPath();

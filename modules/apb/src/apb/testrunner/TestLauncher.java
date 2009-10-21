@@ -63,7 +63,6 @@ import static apb.tasks.CoreTasks.java;
 import static apb.testrunner.TestRunner.listTests;
 import static apb.testrunner.TestRunner.worseResult;
 
-import static apb.utils.ClassUtils.jarFromClass;
 import static apb.utils.CollectionUtils.listToString;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
@@ -551,7 +550,9 @@ public class TestLauncher
 
         Set<File> path = new LinkedHashSet<File>();
         path.add(appJar);
-        path.add(jarFromClass(apb.annotation.Test.class));
+
+        // TODO search apb-test dynamically
+        path.add(new File(appJar.getParent(), "apb-test.jar"));
 
         if (isCoverageEnabled()) {
             path.add(new File(appJar.getParent(), "emma.jar"));

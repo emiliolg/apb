@@ -23,8 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import apb.utils.Constants;
-
 /**
  * Javadoc configuration information.
  */
@@ -38,43 +36,15 @@ public class JavadocInfo
     public boolean author = false;
 
     /**
-     * Specifies the text to be placed at the bottom of each output file.
-     * The text will be placed at the bottom of the page, below the lower navigation bar.
-     */
-    public String bottom = "";
-
-    /**
      * Generates documentation for deprecated APIs.
      */
     public boolean deprecated = true;
-
-    /**
-     * Specifies the class file that starts the doclet used in generating the documentation. Use the fully-qualified name.
-     */
-    public String doclet = "";
-
-    /**
-     * Specifies the encoding of the generated HTML files
-     */
-    public String encoding = DEFAULT_ENCODING;
-
-    /**
-     * Specifies the footer text to be placed at the bottom of each output file.
-     * The footer will be placed to the right of the lower navigation bar
-     */
-    public String footer = "$description<br>$version";
 
     /**
      * Generates the file containing the list of deprecated APIs (deprecated-list.html)
      * and the link in the navigation bar to that page.
      */
     public boolean generateDeprecatedList = true;
-
-    /**
-     * Specifies the header text to be placed at the top of each output file.
-     * The header will be placed to the right of the upper navigation bar
-     */
-    public String header = "$description<br>$version";
 
     /**
      * Includes the HELP link in the navigation bars at the top and bottom of each page of output.
@@ -93,26 +63,6 @@ public class JavadocInfo
     public boolean linkSource = false;
 
     /**
-     * Specifies the locale that javadoc uses when generating documentation
-     */
-    public Locale locale = null;
-
-    /**
-     * The max memory in megabytes used by the javadoc command
-     */
-    public int memory = 256;
-
-    /**
-     * The directory to generate the javadoc output
-     */
-    public String output = "$output-base/javadoc";
-
-    /**
-     * Specifies that javadoc should retrieve the text for the overview documentation from the "source" file specified
-     */
-    public String overview = "";
-
-    /**
      * Includes in the generated docs the "Since" sections associated with the @since tags.
      */
     public boolean since = true;
@@ -122,12 +72,6 @@ public class JavadocInfo
      * plus a file for any index entries that start with non-alphabetical characters.
      */
     public boolean splitIndexPerLetter = false;
-
-    /**
-     * Specifies the title to be placed near the top of the overview summary file.
-     * The title will be placed as a centered, level-one heading directly beneath the upper navigation bar.
-     */
-    public String title = "$description $version<br>API Specification";
 
     /**
      * Includes the class/interface hierarchy pages in the generated docs.
@@ -152,9 +96,58 @@ public class JavadocInfo
     public boolean version = false;
 
     /**
-     * Document classes with the given visibility
+     * The max memory in megabytes used by the javadoc command
      */
-    public Visibility visibility = Visibility.PROTECTED;
+    public int memory = 256;
+
+    /**
+     * Specifies the locale that javadoc uses when generating documentation
+     */
+    public Locale locale = null;
+
+    /**
+     * Specifies the text to be placed at the bottom of each output file.
+     * The text will be placed at the bottom of the page, below the lower navigation bar.
+     */
+    public String bottom = "";
+
+    /**
+     * Specifies the class file that starts the doclet used in generating the documentation. Use the fully-qualified name.
+     */
+    public String doclet = "";
+
+    /**
+     * Specifies the encoding of the generated HTML files
+     */
+    public String encoding = DEFAULT_ENCODING;
+
+    /**
+     * Specifies the footer text to be placed at the bottom of each output file.
+     * The footer will be placed to the right of the lower navigation bar
+     */
+    public String footer = "$description<br>$version";
+
+    /**
+     * Specifies the header text to be placed at the top of each output file.
+     * The header will be placed to the right of the upper navigation bar
+     */
+    public String header = "$description<br>$version";
+
+    /**
+     * The directory to generate the javadoc output
+     */
+    public String output = "$output-base/javadoc";
+
+    /**
+     * Specifies that javadoc should retrieve the text for the overview documentation from the "source" file specified
+     */
+    public String overview = "";
+
+    /**
+     * Specifies the title to be placed near the top of the overview summary file.
+     * The title will be placed as a centered, level-one heading directly beneath the upper navigation bar.
+     */
+    public String title = "$description $version<br>API Specification";
 
     /**
      * Specifies the title to be placed in the HTML <title> tag.
@@ -162,6 +155,11 @@ public class JavadocInfo
      * that someone creates for this page.
      */
     public String windowTitle = "";
+
+    /**
+     * Document classes with the given visibility
+     */
+    public Visibility visibility = Visibility.PROTECTED;
 
     /**
      * A set of additional options to be passed to the javadoc command
@@ -283,7 +281,7 @@ public class JavadocInfo
 
     //~ Static fields/initializers ...........................................................................
 
-    public static final String DEFAULT_ENCODING = Constants.UTF8;
+    public static final String DEFAULT_ENCODING = apb.Constants.UTF8;
 
     //~ Enums ................................................................................................
 
@@ -299,8 +297,8 @@ public class JavadocInfo
 
     public static class Group
     {
-        public String[] packages;
         public String   title;
+        public String[] packages;
 
         public Group(String title, String... packages)
         {

@@ -60,7 +60,7 @@ public class DirectoryScanner
         this.baseDir = baseDir;
         this.includes = StringUtils.normalizePaths(includes);
         this.excludes = StringUtils.normalizePaths(excludes);
-        this.excludes.addAll(StringUtils.normalizePaths(FileUtils.DEFAULT_EXCLUDES));
+        this.excludes.addAll(StringUtils.normalizePaths(apb.Constants.DEFAULT_EXCLUDES));
         this.followSymlinks = followSymlinks;
 
         if (baseDir.isFile()) {

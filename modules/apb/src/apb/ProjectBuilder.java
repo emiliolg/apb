@@ -40,8 +40,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static apb.Logger.Level.VERBOSE;
-
-import static apb.utils.FileUtils.JAVA_EXT;
 //
 // User: emilio
 // Date: Aug 21, 2009
@@ -65,14 +63,25 @@ public class ProjectBuilder
     @NotNull private final ArtifactsCache artifactsCache;
 
     /**
+     * Track execution
+     */
+    private final boolean track;
+
+    /**
      * The initial Environment
      */
     @NotNull private final Environment baseEnvironment;
 
     /**
+     * The java compiler
+     */
+    @NotNull private final InMemJavaC javac;
+
+    /**
      * The stack of executions
      */
     @NotNull private final LinkedList<Context> contextStack;
+    @NotNull private final Logger              logger;
 
     /**
      * A Map that contains all constructed Helpers
@@ -80,20 +89,9 @@ public class ProjectBuilder
     @NotNull private final Map<String, ProjectElementHelper> helpers;
 
     /**
-     * The java compiler
-     */
-    @NotNull private final InMemJavaC javac;
-    @NotNull private final Logger     logger;
-
-    /**
      * The project path where files are searched
      */
     private final Set<File> projectPath;
-
-    /**
-     * Track execution
-     */
-    private final boolean track;
 
     //~ Constructors .........................................................................................
 
@@ -431,14 +429,16 @@ public class ProjectBuilder
         throws DefinitionException
     {
         // Strip JAVA_EXT
-        if (projectElement.endsWith(JAVA_EXT)) {
-            projectElement = projectElement.substring(0, projectElement.length() - JAVA_EXT.length());
+        if (projectElement.endsWith(Constants.JAVA_EXT)) {
+            projectElement =
+                projectElement.substring(0, projectElement.length() - Constants.JAVA_EXT.length());
         }
 
         File f = new File(projectElement);
 
         // Replace 'dots' by file separators BUT ONLY IN THE FILE NAME.
-        File file = new File(f.getParentFile(), f.getName().replace('.', File.separatorChar) + JAVA_EXT);
+        File file =
+            new File(f.getParentFile(), f.getName().replace('.', File.separatorChar) + Constants.JAVA_EXT);
 
         try {
             return file.exists() ? file : searchInProjectPath(file.getPath());
@@ -486,9 +486,9 @@ public class ProjectBuilder
 
     private static class Context
     {
+        private final long   startTime;
         private final String command;
         private final String element;
-        private final long   startTime;
 
         public Context(String element, String command)
         {

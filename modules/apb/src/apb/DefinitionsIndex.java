@@ -21,13 +21,17 @@ package apb;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +42,12 @@ import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static apb.Constants.*;
+
+import static apb.utils.CollectionUtils.stringToList;
+import static apb.utils.FileUtils.normalizeFile;
+import static apb.utils.FileUtils.uptodate;
 
 /**
  * This class manages an index of Definitions for Module/Project data
@@ -51,28 +61,17 @@ public class DefinitionsIndex
 {
     //~ Instance fields ......................................................................................
 
+    /**
+     * The list of Modules
+     */
     @NotNull private final Collection<ModuleInfo> modules;
-    private final File                            definitionsDir;
-    @NotNull private final Map<File, ModulesInfo> mdir;
-
-    @NotNull private final String[] excludeDirs;
 
     //~ Constructors .........................................................................................
 
     public DefinitionsIndex(@NotNull Environment e, Set<File> projectPath)
     {
-        modules = new TreeSet<ModuleInfo>();
-        mdir = new TreeMap<File, ModulesInfo>();
-        String excludes = e.getProperty("project.path.exclude", DEFAULT_EXCLUDES);
-
-        if (!excludes.equals(DEFAULT_EXCLUDES)) {
-            excludes += "," + DEFAULT_EXCLUDES;
-        }
-
-        excludeDirs = excludes.split(",");
-        final String d = e.getProperty("definitions.dir", "");
-        definitionsDir = d.isEmpty() ? new File(FileUtils.getApbDir(), DEFINITIONS_IDX) : new File(d);
-        loadCache(e, projectPath);
+        Loader loader = new Loader(e, projectPath);
+        modules = loader.buildModulesList();
     }
 
     //~ Methods ..............................................................................................
@@ -134,132 +133,208 @@ public class DefinitionsIndex
         return result.toString();
     }
 
-    private void storeEntries()
+    //~ Inner Classes ........................................................................................
+
+    static class Loader
     {
-        try {
-            File       modulesDir = getDefinitionsDir();
-            final File dir = modulesDir.getParentFile();
+        @NotNull private final Environment  e;
+        @NotNull private final File         cacheFile;
+        @Nullable private final PrintStream debugFile;
+        @NotNull private final Set<String>  excludeDirs;
+        @NotNull private final Set<File>    projectPath;
 
-            if (!dir.exists() && !dir.mkdirs()) {
-                throw new IOException("Cannot create directory: " + dir);
-            }
-
-            ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(modulesDir));
-
-            oos.writeInt(mdir.size());
-
-            for (ModulesInfo item : mdir.values()) {
-                oos.writeObject(item);
-            }
-
-            oos.close();
+        public Loader(Environment e, Iterable<File> path)
+        {
+            debugFile = initDebugFile();
+            this.e = e;
+            projectPath = normalize(path);
+            cacheFile = definitionsCacheFile(e);
+            excludeDirs = excludeDirectories(e);
+            debug("About to build index for: %s\n", projectPath);
         }
-        catch (IOException e) {
-            throw new BuildException("Cannot write definitions cache. Cause: " + e.getMessage());
+
+        private static PrintStream initDebugFile()
+        {
+            try {
+                if (System.getenv("APB_DEBUG_COMPLETION") != null) {
+                    return new PrintStream(new File(FileUtils.getApbDir(), "debug"));
+                }
+            }
+            catch (FileNotFoundException e1) {}
+
+            return null;
         }
-    }
 
-    private void loadCache(Environment e, final Set<File> projectPath)
-    {
-        loadEntries();
+        private static File definitionsCacheFile(Environment e)
+        {
+            final String d = e.getProperty(DEFINITIONS_CACHE_PROPERTY, "");
+            return d.isEmpty() ? new File(FileUtils.getApbDir(), DEFINITIONS_CACHE) : new File(d);
+        }
 
-        boolean mustStore = false;
+        private static Set<String> excludeDirectories(Environment e)
+        {
+            final Set<String> excludeDirs =
+                new HashSet<String>(stringToList(e.getProperty(PROJECT_PATH_EXCLUDE_PROPERTY, ""), ","));
+            excludeDirs.addAll(DEFAULT_DIR_EXCLUDES);
+            return excludeDirs;
+        }
 
-        for (File pdir : projectPath) {
-            ModulesInfo info = mdir.get(pdir);
-            List<File>  files = new ArrayList<File>();
-            listDefinitionFiles(pdir, files);
-            final long lastModified = FileUtils.lastModified(files);
+        private static void storeEntries(Map<File, ModulesInfo> indexByPath,
+                                         @NotNull final File    definitionsCacheFile)
+        {
+            try {
+                final File dir = definitionsCacheFile.getParentFile();
 
-            if (info == null || lastModified > info.getLastScanTime()) {
-                if (!mustStore) {
-                    e.logVerbose("Regenerating definitions cache");
+                if (!dir.exists() && !dir.mkdirs()) {
+                    throw new IOException("Cannot create directory: " + dir);
                 }
 
-                mustStore = true;
-                info = new ModulesInfo(pdir, lastModified);
-                ProjectBuilder pb = new ProjectBuilder(e, projectPath);
-                info.loadModulesInfo(e, pb, files);
-                mdir.put(pdir, info);
-            }
+                ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(definitionsCacheFile));
 
-            info.establishPath();
-        }
+                oos.writeInt(indexByPath.size());
 
-        if (mustStore) {
-            storeEntries();
-        }
-
-        for (ModulesInfo modulesInfo : mdir.values()) {
-            for (ModuleInfo module : modulesInfo.getModules()) {
-                modules.add(module);
-            }
-        }
-    }
-
-    private void listDefinitionFiles(File dir, final List<File> files)
-    {
-        dir.listFiles(new FileFilter() {
-                public boolean accept(File pathname)
-                {
-                    if (pathname.isDirectory()) {
-                        if (isNotExcluded(pathname.getName())) {
-                            listDefinitionFiles(pathname, files);
-                        }
-                    }
-                    else if (pathname.getName().endsWith(".java")) {
-                        files.add(pathname);
-                    }
-
-                    return true;
+                for (ModulesInfo item : indexByPath.values()) {
+                    oos.writeObject(item);
                 }
 
-                private boolean isNotExcluded(String dirName)
-                {
-                    if (dirName != null) {
-                        for (String excludeDir : excludeDirs) {
-                            if (excludeDir.equals(dirName)) {
-                                return false;
+                oos.close();
+            }
+            catch (IOException ioe) {
+                throw new BuildException("Cannot write definitions cache. Cause: " + ioe.getMessage());
+            }
+        }
+
+        private Set<File> normalize(Iterable<File> path)
+        {
+            Set<File> result = new LinkedHashSet<File>();
+
+            for (File file : path) {
+                if (file.isDirectory()) {
+                    result.add(normalizeFile(file.getAbsoluteFile()));
+                }
+            }
+
+            return result;
+        }
+
+        private List<File> listDefinitionFiles(File pdir)
+        {
+            long       ts = System.currentTimeMillis();
+            List<File> files = new ArrayList<File>();
+            addFiles(pdir, files);
+            debug("Dir: %s, Scanned in %d ms\n", pdir, System.currentTimeMillis() - ts);
+            return files;
+        }
+
+        private void debug(final String msg, Object... args)
+        {
+            if (debugFile != null) {
+                debugFile.printf(msg, args);
+                debugFile.flush();
+            }
+        }
+
+        private void addFiles(File dir, final List<File> files)
+        {
+            dir.listFiles(new FileFilter() {
+                    public boolean accept(File pathname)
+                    {
+                        if (pathname.isDirectory()) {
+                            if (isNotExcluded(pathname.getName())) {
+                                addFiles(pathname, files);
                             }
                         }
+                        else if (pathname.getName().endsWith(".java")) {
+                            files.add(pathname);
+                        }
+
+                        return true;
                     }
+                });
+        }
 
-                    return true;
-                }
-            });
-    }
+        private boolean isNotExcluded(String dirName)
+        {
+            return dirName == null || !excludeDirs.contains(dirName);
+        }
 
-    @NotNull private File getDefinitionsDir()
-    {
-        return definitionsDir;
-    }
+        private Collection<ModuleInfo> buildModulesList()
+        {
+            Collection<ModuleInfo> result = new TreeSet<ModuleInfo>();
 
-    private void loadEntries()
-    {
-        File modulesDir = getDefinitionsDir();
+            for (ModulesInfo modulesInfo : loadCache().values()) {
+                if (projectPath.contains(modulesInfo.getPath())) {
+                    debug("Path %s. Modules: %s\n", modulesInfo.getPath(), modulesInfo.getModules());
 
-        try {
-            ObjectInputStream ois = new ObjectInputStream(new FileInputStream(modulesDir));
-            int               size = ois.readInt();
-
-            for (int i = 0; i < size; i++) {
-                Object item = ois.readObject();
-
-                if (item instanceof ModulesInfo) {
-                    ModulesInfo info = (ModulesInfo) item;
-                    mdir.put(info.getPath(), info);
+                    for (ModuleInfo module : modulesInfo.getModules()) {
+                        result.add(module);
+                    }
                 }
             }
 
-            ois.close();
+            return result;
         }
-        catch (IOException ignore) {}
-        catch (ClassNotFoundException ignore) {}
+
+        private Map<File, ModulesInfo> loadCache()
+        {
+            final Map<File, ModulesInfo> result = loadEntries();
+
+            boolean mustStore = false;
+
+            for (File pdir : projectPath) {
+                ModulesInfo info = result.get(pdir);
+
+                List<File> files = listDefinitionFiles(pdir);
+
+                if (info == null || !uptodate(files, info.getLastScanTime())) {
+                    mustStore = true;
+                    info = rebuild(pdir, files);
+                    result.put(pdir, info);
+                }
+
+                info.establishPath();
+            }
+
+            if (mustStore) {
+                storeEntries(result, cacheFile);
+            }
+
+            return result;
+        }
+
+        private ModulesInfo rebuild(File pdir, List<File> files)
+        {
+            long           ts = System.currentTimeMillis();
+            ModulesInfo    info = new ModulesInfo(pdir, System.currentTimeMillis());
+            ProjectBuilder pb = new ProjectBuilder(e, projectPath);
+            info.loadModulesInfo(e, pb, files);
+            debug("Dir: %s, Info build in %d ms\n", pdir, System.currentTimeMillis() - ts);
+            return info;
+        }
+
+        private Map<File, ModulesInfo> loadEntries()
+        {
+            Map<File, ModulesInfo> result = new TreeMap<File, ModulesInfo>();
+
+            try {
+                ObjectInputStream ois = new ObjectInputStream(new FileInputStream(cacheFile));
+                int               size = ois.readInt();
+
+                for (int i = 0; i < size; i++) {
+                    Object item = ois.readObject();
+
+                    if (item instanceof ModulesInfo) {
+                        ModulesInfo info = (ModulesInfo) item;
+                        result.put(info.getPath(), info);
+                    }
+                }
+
+                ois.close();
+            }
+            catch (IOException ignore) {}
+            catch (ClassNotFoundException ignore) {}
+
+            return result;
+        }
     }
-
-    //~ Static fields/initializers ...........................................................................
-
-    private static final String DEFAULT_EXCLUDES = ".svn";
-
-    public static final String DEFINITIONS_IDX = ".definitions.idx";
 }
