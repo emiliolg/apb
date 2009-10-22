@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,24 +15,27 @@
 //
 
 
-
+import apb.metadata.Library;
 import apb.metadata.Module;
 
 import libraries.Asm;
 import libraries.Junit3;
+import libraries.ToolsJar;
 
 public final class Apb
     extends ApbModule
 {
-    //~ Static fields/initializers ...........................................................................
-
-    public static final Module MODULE = new Apb();
-
     //~ Instance initializers ................................................................................
 
     {
         description = "APB Project Builder";
         dependencies(Junit3.LIB, Asm.LIB, ApbTest.MODULE);
+
+        Library toolsJar = ToolsJar.LIB;
+
+        if (toolsJar != null) {
+            dependencies(toolsJar);
+        }
 
         pkg.mainClass = "apb.Main";
         pkg.name = "apb";
@@ -55,4 +57,8 @@ public final class Apb
 
         tests(TestTasks.MODULE);
     }
+
+    //~ Static fields/initializers ...........................................................................
+
+    public static final Module MODULE = new Apb();
 }

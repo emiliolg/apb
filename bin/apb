@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # ============================================================================
 # Unix startup script for apb (A Project Builder)
 # ============================================================================
@@ -6,45 +8,53 @@
 #
 # This function will find the real file following symbolic links if necessary
 #
+
 function followLinks()
 {
-	local result=$1
+	local result="$1"
 	while [ -L "$result" ]
 	do
 	    # if it is a link follow it
 
-	    local tmp=$(expr "$(/bin/ls -l "$result")" : ".*$result -> \(.*\)")
-
+	    local tmp="$(ls -ld "$result")"
+            tmp="${tmp##* -> }"
 	    # Now check if it is an absolute reference. If not prepends the original directory
-	    if expr "$tmp" : / > /dev/null
+	    if [[ "$tmp" == /* ]]
 	    then
 		result="$tmp"
 	    else
-		result="$(dirname $result)/$tmp"
+		result="${result%/*}/$tmp"
 	    fi
 	done
-	echo $result
+	echo "$result"
 }
 
 # find the real home directory of APB so you can create symbolic links to it
 
-APB_HOME=$(dirname $(followLinks $(type -p $0)))/..
-APB_JAR=$APB_HOME/lib/apb.jar
+APB_HOME="$(followLinks "$(type -p "$0")")"
+APB_HOME="${APB_HOME%/*/*}"
+APB_JAR="$APB_HOME/lib/apb.jar"
 
 # fix path under cygnus
 
 case "$OSTYPE" in
-  cygwin*) APB_JAR=$(cygpath --windows "$APB_JAR");;
+  cygwin*) APB_JAR="$(cygpath --windows "$APB_JAR")";;
 esac
 
 #
 # Check which JAVA to use
 #
-if [ -z $APB_JAVA_HOME ]
+if [ -z "$APB_JAVA_HOME" ]
+then
+	APB_JAVA_HOME="$JDK_HOME"
+fi
+
+if [ -z "$APB_JAVA_HOME" ]
 then
 	JAVA=java
 else
-	JAVA=$APB_JAVA_HOME/bin/java
+	JAVA="$APB_JAVA_HOME/bin/java"
+	APB_CP="$APB_JAVA_HOME/lib/tools.jar"
 fi
 
 #
@@ -56,6 +66,6 @@ then
 else
 	APB_MEMORY="-Xmx${APB_MEMORY}m"
 fi
-# launch APB
 
-$JAVA $APB_MEMORY -jar $APB_JAR $*
+# launch APB
+exec "$JAVA" $APB_MEMORY ${APB_CP:+-cp "$APB_CP"} -jar "$APB_JAR" "$@"
