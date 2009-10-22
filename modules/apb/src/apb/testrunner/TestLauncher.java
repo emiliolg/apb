@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +14,18 @@
 // limitations under the License
 //
 
-
 package apb.testrunner;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import static java.lang.Character.isLowerCase;
 import java.net.MalformedURLException;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import static java.util.Arrays.asList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,41 +36,27 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 import apb.Proxy;
 import apb.TestModuleHelper;
-
 import apb.metadata.CoverageInfo;
 import apb.metadata.TestModule;
-
-import apb.tasks.JavaTask;
-
-import apb.testrunner.output.TestReport;
-
-import apb.utils.ClassUtils;
-import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import static java.lang.Character.isLowerCase;
-import static java.util.Arrays.asList;
-
 import static apb.tasks.CoreTasks.java;
-
+import apb.tasks.JavaTask;
 import static apb.testrunner.TestRunner.listTests;
 import static apb.testrunner.TestRunner.worseResult;
-
+import apb.testrunner.output.TestReport;
+import apb.utils.ClassUtils;
 import static apb.utils.CollectionUtils.listToString;
+import apb.utils.FileUtils;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
 import static apb.utils.StringUtils.isNotEmpty;
-//
-// User: emilio
-// Date: Nov 5, 2008
-// Time: 5:37:49 PM
 
 /**
  * The launcher of tests from apb
@@ -91,6 +77,18 @@ public class TestLauncher
     boolean forkPerSuite;
 
     /**
+     * The classes to be tested
+     */
+    @NotNull private final Set<File> classesToTest;
+
+    /**
+     * The classpath for the tests
+     */
+    @NotNull private final Set<File>       classPath;
+    @NotNull private final CoverageInfo    coverage;
+    @NotNull private final CoverageBuilder coverageBuilder;
+
+    /**
      * Enable assertions when running the tests
      */
     private final boolean enableAssertions;
@@ -101,6 +99,21 @@ public class TestLauncher
     private final boolean enableDebugger;
 
     /**
+     * The environment
+     */
+    @NotNull private final Environment env;
+
+    /**
+     * The environment variables to be used in the test
+     */
+    private final Map<String, String> environmentVariables;
+
+    /**
+     * The list of tests to exclude
+     */
+    @NotNull private List<String> excludes;
+
+    /**
      * Fail if no tests are found
      */
     private final boolean failIfEmpty;
@@ -108,34 +121,7 @@ public class TestLauncher
     /**
      * Fail the build when a test fails
      */
-    private final boolean                  failOnError;
-    @NotNull private final CoverageBuilder coverageBuilder;
-    @NotNull private final CoverageInfo    coverage;
-
-    /**
-     * The environment
-     */
-    @NotNull private final Environment env;
-
-    /**
-     * The file where the report will be generated
-     */
-    @Nullable private File reportDir;
-
-    /**
-     * The test classes to be run
-     */
-    @NotNull private final File testClasses;
-
-    /**
-     * The memory (in megabytes) to be used by the forked process
-     */
-    private final int maxMemory;
-
-    /**
-     * The list of tests to exclude
-     */
-    @NotNull private List<String> excludes;
+    private final boolean failOnError;
 
     /**
      * The list of tests to include
@@ -148,14 +134,9 @@ public class TestLauncher
     @NotNull private final List<String> javaArgs;
 
     /**
-     * The list of test groups to execute
+     * The memory (in megabytes) to be used by the forked process
      */
-    @NotNull private final List<String> testGroups;
-
-    /**
-     * The environment variables to be used in the test
-     */
-    private final Map<String, String> environmentVariables;
+    private final int maxMemory;
 
     /**
      * List of System properties to pass to the tests.
@@ -163,19 +144,14 @@ public class TestLauncher
     @NotNull private final Map<String, String> properties;
 
     /**
-     * The classes to be tested
+     * The report to be generated
      */
-    @NotNull private final Set<File> classesToTest;
+    @NotNull private final TestReport report;
 
     /**
-     * The classpath for the tests
+     * The file where the report will be generated
      */
-    @NotNull private final Set<File> classPath;
-
-    /**
-     * The list of elements to be included in the system classpath
-     */
-    @NotNull private final Set<File> systemClassPath = new LinkedHashSet<File>();
+    @Nullable private File reportDir;
 
     /*
     * To be able to run a simple TestCase
@@ -183,15 +159,25 @@ public class TestLauncher
     @NotNull private String singleTest = "";
 
     /**
+     * The list of elements to be included in the system classpath
+     */
+    @NotNull private final Set<File> systemClassPath = new LinkedHashSet<File>();
+
+    /**
+     * The test classes to be run
+     */
+    @NotNull private final File testClasses;
+
+    /**
      * The test creator
      */
     @NotNull private final String testCreator;
-    private final String          workingDirectory;
 
     /**
-     * The report to be generated
+     * The list of test groups to execute
      */
-    @NotNull private final TestReport report;
+    @NotNull private final List<String> testGroups;
+    private final String                workingDirectory;
 
     //~ Constructors .........................................................................................
 
@@ -438,8 +424,11 @@ public class TestLauncher
 
         final Set<String> tests = listTests(cl, testCreator, testClasses, includes, excludes, singleTest);
 
-        //report = report.init(reportDir);
-        report.startRun(tests.size());
+        final File dir = reportDir;
+
+        final TestReport testReport = dir == null ? report : report.init(dir);
+
+        testReport.startRun(tests.size());
 
         int result = TestRunner.OK;
 
@@ -450,7 +439,7 @@ public class TestLauncher
                                          listToString(testGroups, ":")));
         }
 
-        report.stopRun();
+        testReport.stopRun();
         return result;
     }
 
