@@ -54,7 +54,7 @@ then
 	JAVA=java
 else
 	JAVA="$APB_JAVA_HOME/bin/java"
-	APB_CP="$APB_JAVA_HOME/lib/tools.jar"
+#	APB_CP="$APB_JAVA_HOME/lib/tools.jar"
 fi
 
 #
@@ -68,4 +68,5 @@ else
 fi
 
 # launch APB
-exec "$JAVA" $APB_MEMORY ${APB_CP:+-cp "$APB_CP"} -jar "$APB_JAR" "$@"
+#exec "$JAVA" $APB_MEMORY ${APB_CP:+-cp "$APB_CP"} -jar "$APB_JAR" "$@"
+exec "$JAVA" $APB_MEMORY -jar "$APB_JAR" "$@"
