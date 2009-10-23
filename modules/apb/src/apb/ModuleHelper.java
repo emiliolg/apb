@@ -30,7 +30,6 @@ import java.util.TreeSet;
 
 import apb.metadata.CompileInfo;
 import apb.metadata.Dependency;
-import apb.metadata.DependencyList;
 import apb.metadata.JavadocInfo;
 import apb.metadata.Library;
 import apb.metadata.Module;
@@ -242,7 +241,7 @@ public class ModuleHelper
         if (allLibraries == null) {
             List<Library> list = new ArrayList<Library>();
 
-            for (Dependency dependency : getModule().dependencies()) {
+            for (Dependency dependency : getDirectDependencies()) {
                 if (dependency.isLibrary()) {
                     list.add(dependency.asLibrary());
                 }
@@ -497,6 +496,15 @@ public class ModuleHelper
                                    .execute();
     }
 
+    /**
+     * Get the direct (first level) Module dependencies
+     * @return
+     */
+    public Iterable<Dependency> getDirectDependencies()
+    {
+        return getModule().dependencies();
+    }
+
     protected List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
     {
         List<File> result = new ArrayList<File>();
@@ -507,7 +515,7 @@ public class ModuleHelper
         }
 
         // Add dependencies from modules
-        for (Dependency dependency : getModule().dependencies()) {
+        for (Dependency dependency : getDirectDependencies()) {
             if (dependency.mustInclude(compile)) {
                 if (dependency.isModule()) {
                     ModuleHelper m = dependency.asModule().getHelper();
@@ -530,7 +538,7 @@ public class ModuleHelper
     /**
     * todo this should be replaced by runtimepath or compileclasspath....
     */
-    Collection<File> deepClassPath(DependencyList dependencyList, boolean useJars)
+    Collection<File> deepClassPath(Iterable<Dependency> dependencyList, boolean useJars)
     {
         Set<File> result = new HashSet<File>();
 
@@ -551,7 +559,7 @@ public class ModuleHelper
      */
     Collection<File> deepClassPath(boolean useJars, boolean addModuleOutput)
     {
-        Collection<File> result = deepClassPath(getModule().dependencies(), useJars);
+        Collection<File> result = deepClassPath(getDirectDependencies(), useJars);
 
         if (addModuleOutput) {
             result.add(useJars && hasPackage() ? getPackageFile() : getOutput());
@@ -624,7 +632,7 @@ public class ModuleHelper
         switch (packageInfo.includeDependencies) {
         case DIRECT:
 
-            for (Dependency dep : getModule().dependencies()) {
+            for (Dependency dep : getDirectDependencies()) {
                 if (dep.isModule()) {
                     result.add(dep.asModule());
                 }
@@ -658,7 +666,7 @@ public class ModuleHelper
     {
         visited.add(this);
 
-        for (Dependency dependency : getModule().dependencies()) {
+        for (Dependency dependency : getDirectDependencies()) {
             if (dependency.isModule()) {
                 final ModuleHelper m = dependency.asModule().getHelper();
 

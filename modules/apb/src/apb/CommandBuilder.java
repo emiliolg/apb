@@ -142,7 +142,7 @@ class CommandBuilder
     private void addExtensionCommands(Class<? extends ProjectElement> c)
     {
         for (Command cmd : extensionCommands) {
-            if (cmd.getTargetElementClass().isAssignableFrom(c)) {
+            if (cmd.isApplicableTo(c)) {
                 commands.put(cmd.getName(), cmd);
             }
         }

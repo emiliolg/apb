@@ -1,4 +1,4 @@
-#LyX 1.6.0 created this file. For more info see http://www.lyx.org/
+#LyX 1.6.4.1 created this file. For more info see http://www.lyx.org/
 \lyxformat 345
 \begin_document
 \begin_header
@@ -40,13 +40,17 @@
 \paperfontsize default
 \spacing single
 \use_hyperref false
-\papersize default
-\use_geometry false
+\papersize letterpaper
+\use_geometry true
 \use_amsmath 1
 \use_esint 1
 \cite_engine basic
 \use_bibtopic false
 \paperorientation portrait
+\leftmargin 3cm
+\topmargin 3cm
+\rightmargin 2cm
+\bottommargin 3cm
 \secnumdepth 3
 \tocdepth 3
 \paragraph_separation indent
@@ -602,7 +606,7 @@ Let's take a look at the HelloWorld.java file to figure out what is happening.
 
 \begin_layout Standard
 \begin_inset listings
-lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget,@DefaultTarget}},stringstyle={\ttfamily\color{MediumGray}}"
 inline false
 status open
 
@@ -1187,13 +1191,6 @@ Let's see what happens if we try APB over it, let's first use help to list
 \end_layout
 
 \begin_layout Standard
-\begin_inset Newpage pagebreak
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
 \begin_inset listings
 lstparams "basicstyle={\scriptsize},frame=single,language={[apb]shell},showstringspaces=false"
 inline false
@@ -1672,10 +1669,6 @@ APB offers a more natural way to do that instead of saying that the PlayWithMath
 better-math
 \family default
  directory:
-\begin_inset Newpage pagebreak
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -1776,6 +1769,13 @@ On the other hand we have changed the dependencies invocation to refer to
 
 \begin_layout Standard
 Let's try it:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+
 \end_layout
 
 \begin_layout Standard
@@ -1978,10 +1978,6 @@ Let's take a first look at the test running capabilities of APB.
 Math
 \family default
  Module that includes an associated TestModule: 
-\begin_inset Newpage pagebreak
-\end_inset
-
-
 \end_layout
 
 \begin_layout Standard
@@ -2001,7 +1997,7 @@ import apb.metadata.*;
 
 \begin_layout Plain Layout
 
-public class PlayWithMath
+public class Math
 \end_layout
 
 \begin_layout Plain Layout
@@ -2021,17 +2017,12 @@ public class PlayWithMath
 
 \begin_layout Plain Layout
 
-        dependencies(new Math());
+		description = "A simple Math library";
 \end_layout
 
 \begin_layout Plain Layout
 
-        pkg.mainClass = "Play";
-\end_layout
-
-\begin_layout Plain Layout
-
-        pkg.addClassPath = true;
+		tests(new TestMath());
 \end_layout
 
 \begin_layout Plain Layout
@@ -2054,7 +2045,787 @@ public class PlayWithMath
 \end_layout
 
 \begin_layout Standard
-What have we changed ? 
+Here we are just saying that the Math module must be tested using the 
+\family typewriter
+TestMath
+\family default
+ module, let's take a look at the 
+\family typewriter
+TestMath
+\family default
+ module:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+import apb.metadata.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+public class TestMath
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends TestModule
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+It just extends from 
+\family typewriter
+apb.metadata.TestModule
+\family default
+ and because we're just using all the default values, we don't need to define
+ anything else.
+ Apb will look under the directory 
+\family typewriter
+test-math/src
+\family default
+ for test classes using the default test framework (JUnit).
+ If the defaults will no suite your needs, you just need to give appropiate
+ values to the TestModule instance variables.
+\end_layout
+
+\begin_layout Standard
+Let's run the tests, you should get an output like the following one:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\scriptsize},frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb Math.run-tests
+\end_layout
+
+\begin_layout Plain Layout
+
+[Math.compile]                  Compiling   1 file
+\end_layout
+
+\begin_layout Plain Layout
+
+[TestMath.compile]              Compiling   1 file
+\end_layout
+
+\begin_layout Plain Layout
+
+[Math.package]                  Building: ..../lib/samples-math-1.0.jar
+\end_layout
+
+\begin_layout Plain Layout
+
+[TestMath.run]                  Suite ( 1/ 1): math.test.FractionTest     
+   3 tests run in ....
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+BUILD COMPLETED in 753 milliseconds.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+You can configure the way you want your report results to look alike, wheter
+ you want the standard Error and Output to be displayed, enable remote debugging
+ of your tests, etc.
+ Look at 
+\begin_inset CommandInset ref
+LatexCommand prettyref
+reference "cha:Using-APB-to"
+
+\end_inset
+
+ for more info.
+\end_layout
+
+\begin_layout Section
+Code Coverage
+\end_layout
+
+\begin_layout Standard
+Just too have a taste of APB code coverage facilities (Based on EMMA).
+ Modified the 
+\family typewriter
+TestMath
+\family default
+ Module as listed below:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+import apb.metadata.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+public class TestMath
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends TestModule
+\end_layout
+
+\begin_layout Plain Layout
+
+{{
+\end_layout
+
+\begin_layout Plain Layout
+
+    coverage.enable = true;
+\end_layout
+
+\begin_layout Plain Layout
+
+    coverage.ensure = 80; 
+\end_layout
+
+\begin_layout Plain Layout
+
+}}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+And run the tests again, you should get an output like the following one:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\scriptsize},breaklines=true,frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb Math.run-tests
+\end_layout
+
+\begin_layout Plain Layout
+
+[TestMath.run]         Suite ( 1/ 1): math.test.FractionTest        3 tests
+ run in ....
+\end_layout
+
+\begin_layout Plain Layout
+
+[TestMath.run]         Coverage summary Information: CLASS=100%, METHOD=80%,
+ BLOCK=81%, LINE=88%
+\end_layout
+
+\begin_layout Plain Layout
+
+BUILD COMPLETED in 1128 milliseconds.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+APB projects
+\end_layout
+
+\begin_layout Standard
+In APB a project is nothing but a set of component where this components
+ can be any Object that inherits from 
+\family typewriter
+ProjectElement
+\family default
+, In particular Modules and other Projects.
+\end_layout
+
+\begin_layout Standard
+Projects allow you to exercise commands over a set of Modules.
+\end_layout
+
+\begin_layout Standard
+For example let's take a look at the 
+\family typewriter
+\series bold
+MathProject
+\family default
+\series default
+ definition file:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget}},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+import apb.metadata.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+public class MathProject
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends Project
+\end_layout
+
+\begin_layout Plain Layout
+
+{{
+\end_layout
+
+\begin_layout Plain Layout
+
+    components(new Math(), new PlayWithMath());
+\end_layout
+
+\begin_layout Plain Layout
+
+}}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+So here we define that the 
+\family typewriter
+\series bold
+MathProject
+\family default
+\series default
+ is composed by the 
+\family typewriter
+\series bold
+Math
+\family default
+\series default
+ and 
+\family typewriter
+\series bold
+PlayWithMath
+\family default
+\series default
+ modules.
+ So if we request APB to execute a given command over the 
+\family typewriter
+\series bold
+MathProject
+\family default
+\series default
+, the command will be applied over both Modules.
+\end_layout
+
+\begin_layout Section
+Generate Project Description files for your IDE
+\end_layout
+
+\begin_layout Standard
+Let's try generating an Intellij Idea project for MathProject:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\scriptsize},breaklines=true,frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb MathProject.idegen:idea
+\end_layout
+
+\begin_layout Plain Layout
+
+[Math.idegen:idea]              Writing: /Users/emilio/apb/samples/better-math/ID
+EA/math.iml
+\end_layout
+
+\begin_layout Plain Layout
+
+[TestMath.idegen:idea]          Writing: /Users/emilio/apb/samples/better-math/ID
+EA/test-math.iml
+\end_layout
+
+\begin_layout Plain Layout
+
+[PlayWithMath.idegen:idea]      Writing: /Users/emilio/apb/samples/better-math/ID
+EA/play-with-math.iml
+\end_layout
+
+\begin_layout Plain Layout
+
+[MathProject.idegen:idea]       Writing: /Users/emilio/apb/samples/better-math/ID
+EA/DEFS.iml
+\end_layout
+
+\begin_layout Plain Layout
+
+[MathProject.idegen:idea]       Writing: /Users/emilio/apb/samples/better-math/ID
+EA/math-project.ipr
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+BUILD COMPLETED in 695 milliseconds.
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+You can now open the math-project.ipr file in Intelli, you should get a project
+ tree similar to the one shown below:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Graphics
+	filename /Users/emilio/Desktop/Screen shot 2009-10-22 at 17.06.13 .png
+	scale 70
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As you see there is one Intellij Module generated for each APB Module (including
+ the TestModule) plus an extra Module (DEFS in this case) that includes
+ the sources for the APB Module definitions.
+\end_layout
+
+\begin_layout Section
+Summary
+\end_layout
+
+\begin_layout Standard
+In this chapter we have introduce the use of APB predefined Modules and
+ use them to define some simple projects taking advantage of APB defaults.In
+ the following chapters we will dive into more detailed APB functionality
+ .
+\end_layout
+
+\begin_layout Chapter
+Using Build Properties
+\end_layout
+
+\begin_layout Standard
+APB property management allows for configuting and tailoring the execution
+ of your builds.
+ It is a simple concept but it provides some degrees of flexibility so it
+ worths to understand their behaviour.
+\end_layout
+
+\begin_layout Section
+A first example
+\end_layout
+
+\begin_layout Standard
+Let's go back to our 
+\begin_inset Quotes eld
+\end_inset
+
+Hello World
+\begin_inset Quotes erd
+\end_inset
+
+ example but now modified to use Properties.
+ Let's take a look at the one in the 
+\family typewriter
+samples/hello-properties
+\family default
+ directory:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget,@BuildProperty,@DefaultTarget}},numbers=left,numberstyle={\tiny},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+import apb.metadata.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+import static apb.tasks.CoreTasks.*;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+public class HelloWorld
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends ProjectElement
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+    @BuildProperty String who = "John";
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+    @BuildTarget(description = "Greetings from APB")
+\end_layout
+
+\begin_layout Plain Layout
+
+    public void hello()
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+        printf("Hello $who!
+\backslash
+n");
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+    @BuildTarget(
+\end_layout
+
+\begin_layout Plain Layout
+
+                 depends = "hello",
+\end_layout
+
+\begin_layout Plain Layout
+
+                 description = "Good Bye from APB"
+\end_layout
+
+\begin_layout Plain Layout
+
+                )
+\end_layout
+
+\begin_layout Plain Layout
+
+    public void bye()
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+        printf("Good Bye ${who}!
+\backslash
+n");
+\end_layout
+
+\begin_layout Plain Layout
+
+        if (who.equals("John"))
+\end_layout
+
+\begin_layout Plain Layout
+
+            printf("Send greeting to Jane
+\backslash
+n");
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+This example shows some concepts about properties .As we see in line 7 a
+ property is just an instance variable that has been annotated with the
+ 
+\family typewriter
+\series bold
+@BuildProperty
+\family default
+\series default
+ annotation.It can be used as a normal instance variableas in the 
+\family typewriter
+\series bold
+if
+\family default
+\series default
+ in line 22, or it can be included in an String constant as in lines 12
+ and 21, in the later case it will be expanded to the actual value using
+ the 
+\family typewriter
+\series bold
+apb.Environment.expand
+\family default
+\series default
+ method.
+ Because variable expansion in String is not an embedded feature in Java,
+ APB will do it on some key places as for example when invoking methods
+ of APB built-in tasks.
+\end_layout
+
+\begin_layout Standard
+Let's tun the example to ge a taste of it:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Newpage pagebreak
+\end_inset
+
+Let's run it:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize},frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+$ apb HelloWorld.bye
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld.hello]              Hello John! 
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld.bye]                Good Bye John!
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld.bye]                Send greeting to Jane
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb -Dwho=Emilio HelloWorld.hello
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld.hello]              Hello Emilio! 
+\end_layout
+
+\begin_layout Plain Layout
+
+[HelloWorld.bye]                Good Bye Emilio! 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As expected in the first run the value of the 
+\family typewriter
+\series bold
+who
+\family default
+\series default
+ property is 
+\begin_inset Quotes eld
+\end_inset
+
+John
+\begin_inset Quotes erd
+\end_inset
+
+ and APB will display the appropiate output.
+ In the second case we are using anl APB feature that is the posibility
+ to 
+\emph on
+override
+\emph default
+ the value of a property when invoking APB.
+ For doing that we just use the 
+\family typewriter
+\series bold
+-D
+\family default
+\series default
+ command line option.
+ This is a very useful feature because it allows the user to change the
+ behaviour of a build in a very simple way.
+ This is particulary useful for test properties, so in this way you can
+ enable debugging when running a test, controlling which tests are you going
+ to run, etc.
+\end_layout
+
+\begin_layout Section
+A first example
+\end_layout
+
+\begin_layout Chapter
+Using APB to run your tests
+\begin_inset CommandInset label
+LatexCommand label
+name "cha:Using-APB-to"
+
+\end_inset
+
+
 \end_layout
 
 \end_body

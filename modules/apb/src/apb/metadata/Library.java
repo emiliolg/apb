@@ -21,23 +21,21 @@ package apb.metadata;
 import java.io.File;
 
 import apb.Environment;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * A class representing a Library that will be fetched from a repository
  */
-abstract public class Library
+public abstract class Library
     implements Dependency
 {
     //~ Instance fields ......................................................................................
 
-    protected @NotNull
-    final String group;
-    protected @NotNull
-    final String id;
-    protected @NotNull
-    final String version;
+    @NotNull protected final String group;
+    @NotNull protected final String id;
+    @NotNull protected final String version;
 
     //~ Constructors .........................................................................................
 
@@ -52,9 +50,11 @@ abstract public class Library
 
     //~ Methods ..............................................................................................
 
+    @Nullable public abstract File getArtifact(@NotNull Environment env, @NotNull PackageType type);
+
     @NotNull public String getName()
     {
-        return group + ( group.isEmpty() ? "" :  ".") + version + ( version.isEmpty() ? "" :  ".") + id;
+        return group + (group.isEmpty() ? "" : ".") + version + (version.isEmpty() ? "" : ".") + id;
     }
 
     public String toString()
@@ -82,11 +82,13 @@ abstract public class Library
         return this;
     }
 
-    @Nullable
-    abstract public File getArtifact(@NotNull Environment env, @NotNull PackageType type);
-
     public boolean mustInclude(boolean compile)
     {
         return true;
+    }
+
+    public String getSubPath(PackageType type)
+    {
+        return "";
     }
 }

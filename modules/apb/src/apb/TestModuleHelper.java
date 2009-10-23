@@ -19,9 +19,12 @@
 package apb;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import apb.metadata.Dependency;
+import apb.metadata.LocalLibrary;
 import apb.metadata.Module;
 import apb.metadata.TestModule;
 
@@ -208,17 +211,26 @@ public class TestModuleHelper
         return m.testType.creatorClass(m.customCreator);
     }
 
-    @Override protected List<File> classPath(boolean useJars, boolean addModuleOutput, boolean compile)
+    @Override public Iterable<Dependency> getDirectDependencies()
     {
-        final List<File> result = super.classPath(useJars, addModuleOutput, compile);
-        File             testFrameworkJar =
-            instatiateCreator(getTestCreator(), getClass().getClassLoader()).getTestFrameworkJar();
+        List<Dependency> result = new ArrayList<Dependency>(getModule().dependencies());
+        result.add(testFrameworkLibrary());
+        return result;
+    }
 
-        if (!result.contains(testFrameworkJar)) {
-            result.add(testFrameworkJar);
+    private LocalLibrary testFrameworkLibrary()
+    {
+        String jar =
+            instatiateCreator(getTestCreator(), getClass().getClassLoader()).getTestFrameworkJar().getPath();
+
+        LocalLibrary l = new LocalLibrary(jar);
+
+        // Set sources if possible
+        if (jar.endsWith(".jar")) {
+            l.setSources(jar.substring(0, jar.length() - ".jar".length()) + "-sources.jar");
         }
 
-        return result;
+        return l;
     }
 
     private TestReport buildReports()

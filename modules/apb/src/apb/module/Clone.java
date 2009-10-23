@@ -51,7 +51,7 @@ public class Clone
 
     public Clone()
     {
-        super(Module.class, "module", "clone", "Generate a new Module based on a specified one.", false);
+        super("module", "clone", "Generate a new Module based on a specified one.", false, Module.class);
     }
 
     //~ Methods ..............................................................................................

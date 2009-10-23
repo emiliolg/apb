@@ -16,28 +16,14 @@
 //
 
 
-package apb.idegen;
+import apb.metadata.*;
 
-import apb.Command;
-
-import apb.metadata.Module;
-import apb.metadata.Project;
-
-import org.jetbrains.annotations.NotNull;
-//
-// User: emilio
-// Date: Aug 19, 2009
-// Time: 5:42:56 PM
-
-//
-public abstract class IdegenCommand
-    extends Command
+public class MathProject
+    extends Project
 {
-    //~ Constructors .........................................................................................
+    //~ Instance initializers ................................................................................
 
-    public IdegenCommand(@NotNull String name)
     {
-        super("idegen", name, "Generate " + name + " project and module files.", true, Project.class,
-              Module.class);
+        components(new Math(), new PlayWithMath());
     }
 }

@@ -771,24 +771,13 @@ public class IdeaTask
                 }
                 else {
                     protocol = "jar";
-                    endMarker = "!/";
+                    endMarker = "!/" + library.getSubPath(type);
                 }
 
-                if (library instanceof LocalLibrary && ((LocalLibrary) library).sourcePaths() != null) {
-                    final LocalLibrary localLibrary = (LocalLibrary) library;
+                removeOldElements(lib, tag);
+                Element el = createElement(createElement(lib, tag), "root");
 
-                    for (String sourcePath : localLibrary.sourcePaths()) {
-                        final String endMarkerSource = "!/" + sourcePath;
-                        Element      element = createElement(createElement(lib, tag), "root");
-                        element.setAttribute(URL_ATTRIBUTE, relativeUrl(protocol, url) + endMarkerSource);
-                    }
-                }
-                else {
-                    removeOldElements(lib, tag);
-                    Element el = createElement(createElement(lib, tag), "root");
-
-                    el.setAttribute(URL_ATTRIBUTE, relativeUrl(protocol, url) + endMarker);
-                }
+                el.setAttribute(URL_ATTRIBUTE, relativeUrl(protocol, url) + endMarker);
             }
         }
     }

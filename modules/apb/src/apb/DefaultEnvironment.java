@@ -31,7 +31,11 @@ import apb.utils.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static java.lang.Character.isJavaIdentifierPart;
+
 import static apb.Logger.Level.*;
+
+import static apb.utils.StringUtils.isEmpty;
 
 // User: emilio
 // Date: Aug 24, 2009
@@ -73,7 +77,12 @@ abstract class DefaultEnvironment
     @Nullable public final String getOptionalProperty(@NotNull String id)
     {
         String result = overrideProperty(id);
-        return result != null ? result : retrieveProperty(id);
+
+        if (result == null) {
+            result = id.startsWith(ENV) ? System.getenv(id.substring(ENV.length())) : retrieveProperty(id);
+        }
+
+        return result;
     }
 
     public final void putProperty(@NotNull String name, @NotNull String value)
@@ -98,7 +107,7 @@ abstract class DefaultEnvironment
      */
     @NotNull public final String expand(@Nullable String string)
     {
-        if (apb.utils.StringUtils.isEmpty(string)) {
+        if (isEmpty(string)) {
             return "";
         }
 
@@ -112,9 +121,7 @@ abstract class DefaultEnvironment
             char chr = string.charAt(i);
 
             if (insideId) {
-                insideId =
-                    closeWithBrace
-                    ? chr != '}' : java.lang.Character.isJavaIdentifierPart(chr) || chr == '.' || chr == '-';
+                insideId = closeWithBrace ? chr != '}' : isPropertyIdPart(chr);
 
                 if (insideId) {
                     id.append(chr);
@@ -383,4 +390,13 @@ abstract class DefaultEnvironment
     {
         return properties.get(id);
     }
+
+    private static boolean isPropertyIdPart(char chr)
+    {
+        return isJavaIdentifierPart(chr) || chr == '.' || chr == '-';
+    }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final String ENV = "ENV.";
 }

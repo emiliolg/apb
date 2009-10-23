@@ -21,6 +21,7 @@ package apb;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -158,24 +159,40 @@ class PropertyExpansor
     static class FieldHelper
         implements Comparable<FieldHelper>
     {
-        private final BuildProperty annotation;
-        private Environment         env;
-        private final Field         field;
-        private final int           order;
-        private final String        parent;
+        private final boolean              property;
+        @NotNull private final Class<?>    elementType;
+        @NotNull private final Environment env;
+        @NotNull private final Field       field;
+        private final int                  order;
+        @NotNull private final String      parent;
 
         FieldHelper(Environment env, String parent, Field field)
         {
+            this.env = env;
             this.field = field;
             this.parent = parent;
-            annotation = field.getAnnotation(BuildProperty.class);
-            order = annotation == null ? Integer.MAX_VALUE : annotation.order();
-            this.env = env;
+            BuildProperty annotation = field.getAnnotation(BuildProperty.class);
+
+            property = annotation != null;
+
+            if (property) {
+                order = annotation.order();
+                elementType = annotation.elementType();
+            }
+            else {
+                order = Integer.MAX_VALUE;
+                elementType = Object.class;
+            }
         }
 
-        public Class<?> getType()
+        @NotNull public Class<?> getType()
         {
             return field.getType();
+        }
+
+        @NotNull public Class<?> getElementType()
+        {
+            return elementType;
         }
 
         public int compareTo(FieldHelper o)
@@ -229,7 +246,7 @@ class PropertyExpansor
 
         boolean isProperty()
         {
-            return annotation != null;
+            return property;
         }
 
         String expand(String propertyName, Object fieldValue)
@@ -273,6 +290,11 @@ class PropertyExpansor
                     innerMap.put(this, fieldValue);
                 }
             }
+        }
+
+        private boolean isCollection()
+        {
+            return Collection.class.isAssignableFrom(getType());
         }
 
         private Object convert(String value, Class<?> type)

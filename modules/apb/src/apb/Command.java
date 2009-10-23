@@ -30,6 +30,8 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static java.util.Arrays.asList;
+
 /**
  * This class defined commands to be run over a Module or Project.
  * Apb automatically implements instances of this class for each method annotated as a {@link apb.metadata.BuildTarget}.
@@ -40,43 +42,40 @@ public abstract class Command
 {
     //~ Instance fields ......................................................................................
 
-    @Nullable private List<Command> dependencies;
+    private final boolean recursive;
+
+    @Nullable private List<Command>       dependencies;
+    @NotNull private final List<Class<?>> targetElementClasses;
 
     @NotNull private final String description;
 
-    @NotNull private final String                          name;
-    @Nullable private final String                         nameSpace;
-    private final boolean                                  recursive;
-    @NotNull private final Class<? extends ProjectElement> targetElementClass;
+    @NotNull private final String name;
+    @NotNull private final String nameSpace;
 
     //~ Constructors .........................................................................................
 
     /**
      * Constructs a command with the specified arguments
-     * @param targetElementClass The class of ProjectElements this command can be applied
      * @param nameSpace    The namespace of the command.
      *                     (All commands in a given extension must have the same namespace)
      * @param name         The name of the command (The name must be nique inside a given  namespace)
      * @param description  A description for the command
      * @param recursive    Wheter APB must invoke the command recursively to all module dependencies.
+     * @param targetElementClasses The classes of ProjectElements this command can be applied
      */
-    protected Command(Class<? extends ProjectElement> targetElementClass, @NotNull String nameSpace,
-                      @NotNull String name, @NotNull String description, boolean recursive)
+    protected Command(@NotNull String nameSpace, @NotNull String name, @NotNull String description,
+                      boolean recursive, Class<?>... targetElementClasses)
     {
-        this.targetElementClass = targetElementClass;
         this.name = name;
         this.description = description;
         this.nameSpace = nameSpace;
         this.recursive = recursive;
+        this.targetElementClasses = asList(targetElementClasses);
     }
 
     Command(@NotNull String name, @NotNull String description, boolean recursive)
     {
-        this.name = name;
-        this.description = description;
-        nameSpace = null;
-        this.recursive = recursive;
-        targetElementClass = ProjectElement.class;
+        this("", name, description, recursive, ProjectElement.class);
     }
 
     //~ Methods ..............................................................................................
@@ -93,7 +92,7 @@ public abstract class Command
      */
     @NotNull public final String getName()
     {
-        return nameSpace == null ? name : nameSpace + ":" + name;
+        return nameSpace.isEmpty() ? name : nameSpace + ":" + name;
     }
 
     /**
@@ -112,7 +111,7 @@ public abstract class Command
 
     @Override public int hashCode()
     {
-        return 31 * name.hashCode() + (nameSpace != null ? nameSpace.hashCode() : 0);
+        return 31 * name.hashCode() + nameSpace.hashCode();
     }
 
     public final String toString()
@@ -127,7 +126,7 @@ public abstract class Command
      */
     @NotNull public final String getNameSpace()
     {
-        return nameSpace == null ? "" : nameSpace;
+        return nameSpace;
     }
 
     /**
@@ -136,7 +135,7 @@ public abstract class Command
      */
     public final boolean hasNameSpace()
     {
-        return nameSpace != null && !nameSpace.isEmpty();
+        return !nameSpace.isEmpty();
     }
 
     /**
@@ -152,12 +151,15 @@ public abstract class Command
         return getName().compareTo(o.getName());
     }
 
-    /**
-     * Return the class of objects this command can be applied to
-     */
-    @NotNull public Class<? extends ProjectElement> getTargetElementClass()
+    public boolean isApplicableTo(@NotNull final Class<? extends ProjectElement> c)
     {
-        return targetElementClass;
+        for (Class<?> targetClass : targetElementClasses) {
+            if (targetClass.isAssignableFrom(c)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @NotNull Iterable<Command> getDependencies()
@@ -182,7 +184,7 @@ public abstract class Command
      */
     final boolean isDefault()
     {
-        return nameSpace == null && name.equals(DEFAULT_COMMAND);
+        return nameSpace.isEmpty() && name.equals(DEFAULT_COMMAND);
     }
 
     /**

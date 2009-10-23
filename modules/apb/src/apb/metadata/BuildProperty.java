@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +13,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License
+//
+
 
 package apb.metadata;
 
-import static java.lang.annotation.ElementType.FIELD;
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -29,17 +32,23 @@ import java.lang.annotation.Target;
  * </ul>
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(FIELD)
+@Target(ElementType.FIELD)
 public @interface BuildProperty
 {
     /**
      * A description for the property
      */
     String description() default "";
+
     /**
      * The order attribute is used to force a property to be processes before.<br>
      * So if you want to ensure that a given Property is processed before others, give the property a low
      * order value.
      */
     int order() default 10000;
+
+    /**
+     * The type of the element if the property is a Collection
+     */
+    Class<?> elementType() default Object.class;
 }

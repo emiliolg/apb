@@ -33,74 +33,98 @@ public class LocalLibrary
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull public final String  path;
-    @Nullable public final String runtimePath;
-    private final boolean         optional;
-    @Nullable private String      sourcesPath;
-    private String[] sourcePaths;
+    /**
+     * The path to the library
+     */
+    @NotNull public final String path;
+    @Nullable public String      runtimePath;
+    private final boolean        optional;
+
+    /**
+     * The path to the javadoc
+     */
+    @Nullable private String docPath;
+
+    /**
+     * The path to Sources;
+     */
+    @Nullable private String sourcesPath;
+
+    /**
+     * An (optional) subpath inside the sources jar
+     */
+    @NotNull private String sourcesSubPath;
 
     //~ Constructors .........................................................................................
 
-    public LocalLibrary(@NotNull String path, boolean optional)
-    {
-        this(path, null, optional);
-    }
-
-    protected LocalLibrary(@NotNull String path)
+    public LocalLibrary(@NotNull String path)
     {
         this(path, false);
     }
 
-    protected LocalLibrary(@NotNull String path, String runtimePath)
-    {
-        this(path, runtimePath, false);
-    }
-
-    protected LocalLibrary(@NotNull String path, String runtimePath, boolean optional)
+    public LocalLibrary(@NotNull String path, boolean optional)
     {
         super("", path, "");
         this.path = path;
         this.optional = optional;
-        this.runtimePath = runtimePath;
         NameRegistry.intern(this);
     }
 
     //~ Methods ..............................................................................................
 
+    /**
+     * Allow to return a subpath inside a Jar for Sources...
+     * @param type
+     */
+    @Override public String getSubPath(PackageType type)
+    {
+        return type == PackageType.SRC ? sourcesSubPath : super.getSubPath(type);
+    }
+
     @Nullable public File getArtifact(@NotNull Environment env, @NotNull PackageType type)
     {
-        return type == PackageType.SRC ? (sourcesPath == null ? null : fileFromBase(env, sourcesPath, true))
-                                       : fileFromBase(env, path, false);
+        switch (type) {
+        case SRC:
+            return fileFromBase(env, sourcesPath, true);
+        case DOC:
+            return fileFromBase(env, docPath, true);
+        default:
+            return fileFromBase(env, path, false);
+        }
     }
 
     public void setSources(@NotNull String sources)
     {
+        setSources(sources, "");
+    }
+
+    public void setSources(@NotNull String sources, @NotNull String subPath)
+    {
         sourcesPath = sources;
+        sourcesSubPath = subPath;
     }
 
-    public String[] sourcePaths()
+    public void setDoc(@NotNull String doc)
     {
-        return sourcePaths;
+        docPath = doc;
     }
 
-    public void sourcePaths(String... sourcePaths)
+    protected void setRuntimePath(@Nullable String runtimePath)
     {
-        this.sourcePaths = sourcePaths;
+        this.runtimePath = runtimePath;
     }
 
-    @Nullable private File fileFromBase(@NotNull Environment env, @NotNull String p, boolean ignore)
+    @Nullable private File fileFromBase(@NotNull Environment env, @Nullable String filePath, boolean ignore)
     {
-        final File result;
+        File result = null;
 
-        final File lib = env.fileFromBase(p);
+        if (filePath != null) {
+            final File lib = env.fileFromBase(filePath);
 
-        if (lib.exists()) {
-            result = lib;
-        }
-        else {
-            result = null;
-
-            if (!optional && !ignore) {
+            if (lib.exists()) {
+                result = lib;
+            }
+            else if (!optional && !ignore) {
                 env.handle("Library not found: " + lib);
             }
         }

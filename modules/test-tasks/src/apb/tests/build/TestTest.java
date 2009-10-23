@@ -75,7 +75,6 @@ public class TestTest
                     SEPAR,  //
                     MODULE_TESTS_MATH,  //
                     SEPAR,  //
-                    EMMA,  //
                     COVERAGE,  //
                     SOME_TESTS_HAVE_FAILED,  //
                     CHECK + reportDir);
@@ -102,7 +101,6 @@ public class TestTest
     private static final String SUITE_1_1_RUN =
         "Suite ( 1/ 1): math.test.FractionTest                                 4 tests run\\+";
     private static final String COVERAGE = "Coverage summary Information\\+";
-    private static final String EMMA = "EMMA\\+\\+";
     private static final String SEPAR = "-------------------------------------------------\\+";
     private static final String TEST_DIVIDE_FAILED1 = "Test: testDivide: FAILED";
     private static final String TEST_DIVIDE_FAILED2 = "expected:<1/1> but was:<4/16>";

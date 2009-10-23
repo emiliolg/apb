@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.testrunner;
 
@@ -53,18 +55,18 @@ class CoverageBuilder
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final List<File> classesToTest;
-
-    @NotNull private final CoverageInfo coverage;
-
     private boolean coverageEnabled;
 
+    @NotNull private final CoverageInfo coverage;
+    @Nullable private CoverageReport    textReport;
+
     @NotNull private final Environment env;
-    @NotNull private final List<File>  filesDoDelete = new ArrayList<File>();
     @NotNull private final File        outputDir;
-    @NotNull private final List<File>  sourcesToTest;
     @NotNull private final File        testClasses;
-    @Nullable private CoverageReport   textReport;
+
+    @NotNull private final List<File> classesToTest;
+    @NotNull private final List<File> filesDoDelete = new ArrayList<File>();
+    @NotNull private final List<File> sourcesToTest;
 
     //~ Constructors .........................................................................................
 
@@ -260,7 +262,12 @@ class CoverageBuilder
             Set<String> excludes = new LinkedHashSet<String>(coverage.excludes());
             excludes.add("apb.*");
             excludes.add("junit.*");
+            excludes.add("org.objectweb.asm.*");
             excludes.removeAll(coverage.includes());
+
+            for (String p : excludes) {
+                ps.println("-" + p);
+            }
 
             for (String p : coverage.excludes()) {
                 ps.println("-" + p);

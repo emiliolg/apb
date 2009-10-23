@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,17 +15,21 @@
 // limitations under the License
 //
 
+
 package apb.metadata;
 
 import java.util.ArrayList;
-import static java.util.Arrays.asList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import apb.TestModuleHelper;
+
 import apb.testrunner.output.TestReport;
+
 import org.jetbrains.annotations.NotNull;
+
+import static java.util.Arrays.asList;
 
 /**
  * This class defines a TestModule for the building system
@@ -58,26 +63,7 @@ import org.jetbrains.annotations.NotNull;
 public class TestModule
     extends Module
 {
-    //~ Instance initializers ................................................................................
-
-    {
-        /**
-         * By default tests do not generate any jar
-         */
-        pkg.type = PackageType.NONE;
-    }
-
     //~ Instance fields ......................................................................................
-
-    /**
-     *  Info for coverage
-     */
-    @BuildProperty public CoverageInfo coverage = new CoverageInfo();
-
-    /**
-     * A custom creator classname
-     */
-    @BuildProperty public String customCreator;
 
     /**
      * Whether to enable assertions when running the tests
@@ -110,9 +96,29 @@ public class TestModule
     @BuildProperty public boolean forkPerSuite;
 
     /**
+     * Wheter to show output in reports or not
+     */
+    @BuildProperty public boolean showOutput;
+
+    /**
+     * Indicates whether deep classpath is used for running tests
+     */
+    public boolean useDeepClasspath = true;
+
+    /**
+     *  Info for coverage
+     */
+    @BuildProperty public CoverageInfo coverage = new CoverageInfo();
+
+    /**
      * Max. memory allocate for the tests (in megabytes).
      */
     @BuildProperty public int memory = 256;
+
+    /**
+     * A custom creator classname
+     */
+    @BuildProperty public String customCreator;
 
     /**
       * The directory to generate the reports output
@@ -123,9 +129,9 @@ public class TestModule
     public String runOnly = "";
 
     /**
-     * Wheter to show output in reports or not
+     * Working directory for running the tests
      */
-    @BuildProperty public boolean showOutput;
+    @BuildProperty public String workingDirectory = "$output-base";
 
     /**
      * The type of runner for the test
@@ -133,20 +139,9 @@ public class TestModule
     public final TestType testType = TestType.JUNIT;
 
     /**
-     * Indicates whether deep classpath is used for running tests
+     * The list of modules & libraries that if required by test-module, must run on the System ClassPath
      */
-    public boolean useDeepClasspath = true;
-
-    /**
-     * Working directory for running the tests
-     */
-    @BuildProperty public String workingDirectory = "$output-base";
-
-    /**
-     * test reports
-     * Environment variables to be set when running the tests
-     */
-    private final Map<String, String> environment = new HashMap<String, String>();
+    private final DependencyList systemDependencies = new DependencyList();
 
     /**
      * The list of tests files to exclude.
@@ -156,6 +151,7 @@ public class TestModule
     /**
      * The list of tests groups to include.
      */
+    @BuildProperty(elementType = String.class)
     private final List<String> groups = new ArrayList<String>();
 
     /**
@@ -170,9 +166,20 @@ public class TestModule
     private final List<String> javaArgs = new ArrayList<String>();
 
     /**
-     * The module being tested
+     * test reports
      */
-    private Module moduleToTest;
+    private final List<TestReport.Builder> reports = new ArrayList<TestReport.Builder>();
+
+    /**
+     * The list of properties to copy from the apb to the test to be run
+     */
+    private final List<String> useProperties = new ArrayList<String>();
+
+    /**
+     * test reports
+     * Environment variables to be set when running the tests
+     */
+    private final Map<String, String> environment = new HashMap<String, String>();
 
     /**
      * Properties to be set when running the tests
@@ -180,19 +187,18 @@ public class TestModule
     private final Map<String, String> properties = new HashMap<String, String>();
 
     /**
-     * test reports
+     * The module being tested
      */
-    private final List<TestReport.Builder> reports = new ArrayList<TestReport.Builder>();
+    private Module moduleToTest;
 
-    /**
-     * The list of modules & libraries that if required by test-module, must run on the System ClassPath
-     */
-    private final DependencyList systemDependencies = new DependencyList();
+    //~ Instance initializers ................................................................................
 
-    /**
-     * The list of properties to copy from the apb to the test to be run
-     */
-    private final List<String> useProperties = new ArrayList<String>();
+    {
+        /**
+         * By default tests do not generate any jar
+         */
+        pkg.type = PackageType.NONE;
+    }
 
     //~ Methods ..............................................................................................
 
