@@ -18,11 +18,10 @@
 
 package apb.idegen;
 
-import apb.Command;
-
-import apb.metadata.Module;
-
 import org.jetbrains.annotations.NotNull;
+
+import apb.Command;
+import apb.metadata.ProjectElement;
 //
 // User: emilio
 // Date: Aug 19, 2009
@@ -36,6 +35,6 @@ public abstract class IdegenCommand
 
     public IdegenCommand(@NotNull String name)
     {
-        super(Module.class, "idegen", name, "Generate " + name + " project and module files.", true);
+        super(ProjectElement.class, "idegen", name, "Generate " + name + " project and module files.", true);
     }
 }
