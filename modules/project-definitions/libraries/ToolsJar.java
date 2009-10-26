@@ -16,29 +16,21 @@
 
 package libraries;
 
-import apb.metadata.Library;
-import apb.metadata.LocalLibrary;
-import org.jetbrains.annotations.Nullable;
-
-import javax.tools.JavaCompiler;
-import javax.tools.ToolProvider;
 import java.io.File;
 import java.net.URI;
 import java.net.URL;
 
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
+
+import org.jetbrains.annotations.Nullable;
+
+import apb.metadata.Library;
+import apb.metadata.LocalLibrary;
+
 public class ToolsJar
     extends LocalLibrary
 {
-    private static boolean isNecessary() {
-        try {
-            Class.forName("com.sun.javadoc.Doc");
-        } catch (ClassNotFoundException ignore) {
-            return true;
-        }
-        return false;
-    }
-
-
     //~ Constructors .........................................................................................
 
     private ToolsJar()
@@ -47,6 +39,20 @@ public class ToolsJar
     }
 
     //~ Methods ..............................................................................................
+
+    private static boolean isNecessary()
+    {
+        final ClassLoader extLoader = ClassLoader.getSystemClassLoader().getParent();
+
+        try {
+            Class.forName("com.sun.javadoc.Doc", false, extLoader);
+        }
+        catch (ClassNotFoundException ignore) {
+            return true;
+        }
+
+        return false;
+    }
 
     private static File getToolsFile()
     {
@@ -76,6 +82,5 @@ public class ToolsJar
 
     //~ Static fields/initializers ...........................................................................
 
-    @Nullable
-    public static final Library LIB = isNecessary() ? new ToolsJar() : null;
+    @Nullable public static final Library LIB = isNecessary() ? new ToolsJar() : null;
 }
