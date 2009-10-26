@@ -22,10 +22,11 @@ else
    ospath() { echo "$1"; }
 fi
 
-APB_DIR=$(ospath "$(dirname $(type -p $0))")
-SRC_DIR=$(ospath "$APB_DIR/modules/apb/src")
-LIB_DIR=$(ospath "$APB_DIR/lib")
-OUT_DIR=$(ospath "$APB_DIR/modules/output/apb/classes")
+APB_DIR="$(type -p "$0")"
+APB_DIR="$(ospath "${APB_DIR%/*}")"
+SRC_DIR="$(ospath "$APB_DIR/modules/apb/src")"
+LIB_DIR="$(ospath "$APB_DIR/lib")"
+OUT_DIR="$(ospath "$APB_DIR/modules/output/apb/classes")"
 
 DEBUG="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"
 rm -rf $LIB_DIR/apb.jar $LIB_DIR/apb-src.jar $LIB_DIR/ant-apb.jar $APB_DIR/modules/output
