@@ -50,6 +50,7 @@ public class ClassTest
         assertEquals("", o);
     }
 
+    @SuppressWarnings("deprecation")
     public void testMethodInvoke()
         throws Exception
     {
@@ -111,5 +112,12 @@ public class ClassTest
         final Apb[] array = new Apb[0];
         f = ClassUtils.jarFromClass(array.getClass());
         assertEquals(new File(libDir, "apb.jar"), f);
+    }
+
+    public void testToolsJar()
+        throws Exception
+    {
+        File toolsJar = ClassUtils.toolsJar();
+        assertTrue(toolsJar == null || toolsJar.getPath().endsWith("tools.jar"));
     }
 }

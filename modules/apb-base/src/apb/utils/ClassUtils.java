@@ -26,7 +26,11 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.tools.ToolProvider;
+
 import apb.BuildException;
+
+import org.jetbrains.annotations.Nullable;
 //
 // User: emilio
 // Date: Nov 6, 2008
@@ -118,6 +122,31 @@ public class ClassUtils
         }
 
         return new File(url.substring(JAR_FILE_URL_PREFIX.length(), ind));
+    }
+
+    /**
+     * Return the jar that contains the tools if different from the standard jar file
+     * Null otherwise
+     */
+    @Nullable public static File toolsJar()
+    {
+        Class<?> javaCompiler = ToolProvider.getSystemJavaCompiler().getClass();
+
+        Class<?> topClazz = javaCompiler.getDeclaringClass();
+        File     result = null;
+
+        try {
+            File toolsJar = jarFromClass(topClazz == null ? javaCompiler : topClazz);
+
+            if (!toolsJar.equals(jarFromClass(Class.class))) {
+                result = toolsJar;
+            }
+        }
+        catch (Throwable e) {
+            result = null;
+        }
+
+        return result;
     }
 
     private static Method findMethod(boolean nonPublic, Class<?> clazz, String methodName, Object... params)

@@ -33,6 +33,7 @@ import apb.metadata.Dependency;
 import apb.metadata.IncludeDependencies;
 import apb.metadata.JavadocInfo;
 import apb.metadata.Library;
+import apb.metadata.LocalLibrary;
 import apb.metadata.Module;
 import apb.metadata.PackageInfo;
 import apb.metadata.PackageType;
@@ -43,6 +44,7 @@ import apb.tasks.FileSet;
 import apb.tasks.JarTask;
 import apb.tasks.JavacTask;
 
+import apb.utils.ClassUtils;
 import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
@@ -248,7 +250,7 @@ public class ModuleHelper
                 }
             }
 
-            for (Library l : getCompileInfo().extraLibraries()) {
+            for (Library l : getExtraLibraries()) {
                 list.add(l);
             }
 
@@ -435,7 +437,7 @@ public class ModuleHelper
                            .sourceVersion(info.source)  //
                            .targetVersion(info.target)  //
                            .withAnnotationOptions(info.annotationOptions())  //
-                           .withExtraLibraries(info.extraLibraries())  //
+                           .withExtraLibraries(getExtraLibraries())  //
                            .debug(info.debug)  //
                            .deprecated(info.deprecated)  //
                            .lint(info.lint)  //
@@ -596,6 +598,21 @@ public class ModuleHelper
                 mergedProviders.addAll(providers);
             }
         }
+    }
+
+    private List<Library> getExtraLibraries()
+    {
+        final List<Library> result = new ArrayList<Library>(getCompileInfo().extraLibraries());
+
+        if (getCompileInfo().useTools) {
+            File toolsJar = ClassUtils.toolsJar();
+
+            if (toolsJar != null) {
+                result.add(new LocalLibrary(toolsJar.getPath()));
+            }
+        }
+
+        return result;
     }
 
     private List<FileSet> getSourceFileSets(CompileInfo info)

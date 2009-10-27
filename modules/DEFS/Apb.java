@@ -32,6 +32,7 @@ public final class Apb
     {
         description = "APB Project Builder";
         dependencies(ApbBase.MODULE, ApbTest.MODULE, Junit3.LIB, Asm.LIB);
+        compiler.useTools = true;
 
         pkg.mainClass = "apb.Main";
         pkg.name = "apb";

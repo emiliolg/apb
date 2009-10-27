@@ -67,6 +67,11 @@ public class CompileInfo
     @BuildProperty public boolean lint = false;
 
     /**
+     * Wheter to use the tools library (Usually tools.jar)
+     */
+    public boolean useTools;
+
+    /**
      * Wheter to validate that all dependencies are being used
      * If it's true and there are some unused dependencies it will fail with the list of unused ones
      */
