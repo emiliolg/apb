@@ -21,8 +21,9 @@ package apb;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -36,6 +37,8 @@ import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
 
+import static apb.utils.CollectionUtils.listToString;
+import static apb.utils.CollectionUtils.stringToList;
 import static apb.utils.StringUtils.isNotEmpty;
 //
 // User: emilio
@@ -71,7 +74,7 @@ class PropertyExpansor
         // Expand the inner level
         for (Map.Entry<FieldHelper, Object> entry : innerMap.entrySet()) {
             final FieldHelper field = entry.getKey();
-            expandProperties(helper, field.getCompoundName(), entry.getValue());
+            expandProperties(helper, field.name, entry.getValue());
         }
 
         if (StringUtils.isNotEmpty(parent)) {
@@ -164,13 +167,12 @@ class PropertyExpansor
         @NotNull private final Environment env;
         @NotNull private final Field       field;
         private final int                  order;
-        @NotNull private final String      parent;
+        @NotNull private final String      name;
 
         FieldHelper(Environment env, String parent, Field field)
         {
             this.env = env;
             this.field = field;
-            this.parent = parent;
             BuildProperty annotation = field.getAnnotation(BuildProperty.class);
 
             property = annotation != null;
@@ -183,6 +185,16 @@ class PropertyExpansor
                 order = Integer.MAX_VALUE;
                 elementType = Object.class;
             }
+
+            // Assign name
+            StringBuilder result = new StringBuilder();
+
+            if (isNotEmpty(parent)) {
+                result.append(parent).append('.');
+            }
+
+            result.append(NameUtils.idFromMember(field));
+            name = result.toString();
         }
 
         @NotNull public Class<?> getType()
@@ -203,7 +215,7 @@ class PropertyExpansor
 
         @Override public String toString()
         {
-            return getCompoundName();
+            return name;
         }
 
         Object getFieldValue(Object object)
@@ -222,7 +234,7 @@ class PropertyExpansor
             return fieldValue;
         }
 
-        <T> void setFieldValue(T result, Object fieldValue)
+        void setFieldValue(Object result, Object fieldValue)
         {
             try {
                 field.set(result, fieldValue);
@@ -232,59 +244,84 @@ class PropertyExpansor
             }
         }
 
-        String getCompoundName()
-        {
-            StringBuilder result = new StringBuilder();
-
-            if (isNotEmpty(parent)) {
-                result.append(parent).append('.');
-            }
-
-            result.append(NameUtils.idFromMember(field));
-            return result.toString();
-        }
-
         boolean isProperty()
         {
             return property;
         }
 
-        String expand(String propertyName, Object fieldValue)
+        @NotNull String setExpandedValue(Object object, String fieldValue)
         {
-            final String value;
+            String value = "";
 
-            try {
-                value =
-                    fieldValue == null ? null
-                                       : canonize(propertyName, env.expand(String.valueOf(fieldValue)));
-            }
-            catch (BuildException e) {
-                if (e.getCause() instanceof PropertyException) {
-                    PropertyException p = (PropertyException) e.getCause();
-                    p.setSource("When initializing field: " + getCompoundName());
+            if (isNotEmpty(fieldValue)) {
+                value = expand(fieldValue);
+
+                // Special handling to canonize basedir
+                if (BASEDIR.equals(name)) {
+                    value = FileUtils.normalizePath(new File(value));
                 }
 
-                throw e;
+                if (!value.equals(fieldValue)) {
+                    setFieldValue(object, value);
+                }
             }
 
             return value;
         }
 
-        <T> void expandProperty(T object, Map<FieldHelper, Object> innerMap)
+        String setExpandedList(List<String> list)
+        {
+            String value = "";
+
+            if (list != null && !list.isEmpty()) {
+                for (ListIterator<String> it = list.listIterator(); it.hasNext();) {
+                    String       s = it.next();
+                    final String v = expand(s);
+
+                    if (!v.equals(s)) {
+                        it.set(v);
+                    }
+                }
+
+                value = listToString(list);
+            }
+
+            return value;
+        }
+
+        void expandProperty(Object object, Map<FieldHelper, Object> innerMap)
         {
             Object fieldValue = getFieldValue(object);
-            setFieldValue(object, fieldValue);
 
             if (isProperty()) {
                 final Class<?> type = getType();
 
-                if (type.equals(String.class) || type.isPrimitive() || type.isEnum()) {
-                    final String propertyName = getCompoundName();
-                    final String v = env.getOptionalProperty(propertyName);
-                    final String value = v != null ? v : expand(propertyName, fieldValue);
+                if (isBasicType(type) || isList() && isBasicType(getElementType())) {
+                    final String v = env.getOptionalProperty(name);
 
-                    setFieldValue(object, convert(value, type));
-                    env.putProperty(propertyName, value);
+                    if (v != null) {
+                        if (isList()) {
+                            setListValue((List) fieldValue, v);
+                        }
+                        else {
+                            setFieldValue(object, convert(v, type));
+                        }
+                    }
+                    else {
+                        String value;
+
+                        if (isString(type)) {
+                            value = setExpandedValue(object, (String) fieldValue);
+                        }
+                        else if (isList() && isString(getElementType())) {
+                            value = setExpandedList(asStringList(fieldValue));
+                        }
+                        else {
+                            value = toString(fieldValue);
+                        }
+
+                        env.putProperty(name, value);
+                    }
                 }
                 else if (fieldValue != null) {
                     innerMap.put(this, fieldValue);
@@ -292,26 +329,94 @@ class PropertyExpansor
             }
         }
 
-        private boolean isCollection()
+        @SuppressWarnings("unchecked")
+        void setListValue(List list, String vs)
         {
-            return Collection.class.isAssignableFrom(getType());
+            list.clear();
+
+            for (String v : stringToList(vs)) {
+                list.add(convert(v, getElementType()));
+            }
         }
 
+        @SuppressWarnings("unchecked")
+        private List<String> asStringList(Object o)
+        {
+            return (List<String>) o;
+        }
+
+        private String expand(String fieldValue)
+        {
+            try {
+                return env.expand(fieldValue);
+            }
+            catch (BuildException e) {
+                if (e.getCause() instanceof PropertyException) {
+                    PropertyException p = (PropertyException) e.getCause();
+                    p.setSource("When initializing field: " + name);
+                }
+
+                throw e;
+            }
+        }
+
+        private String toString(Object fieldValue)
+        {
+            return fieldValue == null
+                   ? "" : isList() ? listToString((List) fieldValue) : String.valueOf(fieldValue);
+        }
+
+        private boolean isBasicType(Class<?> type)
+        {
+            return isString(type) || type.isPrimitive() || type.isEnum() || isPrimitiveWrapper(type);
+        }
+
+        private boolean isString(Class<?> type)
+        {
+            return type.equals(String.class);
+        }
+
+        private boolean isList()
+        {
+            return List.class.isAssignableFrom(getType());
+        }
+
+        private boolean isPrimitiveWrapper(Class<?> type)
+        {
+            return type.equals(Boolean.class) || type.equals(Character.class) || type.equals(Byte.class) ||
+                   type.equals(Short.class) || type.equals(Integer.class) || type.equals(Long.class) ||
+                   type.equals(Float.class) || type.equals(Double.class);
+        }
+
+        // todo process wrappers also
         private Object convert(String value, Class<?> type)
         {
             Object result = value;
 
             if (type != String.class) {
-                if (type == Boolean.TYPE) {
+                if (type == Boolean.TYPE || type.equals(Boolean.class)) {
                     result = Boolean.parseBoolean(value);
                 }
-                else if (type == Integer.TYPE) {
-                    try {
-                        result = Integer.parseInt(value);
-                    }
-                    catch (NumberFormatException e) {
-                        result = 0;
-                    }
+                else if (type == Character.TYPE || type.equals(Character.class)) {
+                    result = value.length() == 0 ? 0 : value.charAt(0);
+                }
+                else if (type == Integer.TYPE || type.equals(Integer.class)) {
+                    result = (int) toInt(value);
+                }
+                else if (type == Byte.TYPE || type.equals(Byte.class)) {
+                    result = (byte) toInt(value);
+                }
+                else if (type == Short.TYPE || type.equals(Short.class)) {
+                    result = (short) toInt(value);
+                }
+                else if (type == Long.TYPE || type.equals(Long.class)) {
+                    result = toInt(value);
+                }
+                else if (type == Float.TYPE || type.equals(Float.class)) {
+                    result = (float) toDouble(value);
+                }
+                else if (type == Double.TYPE || type.equals(Double.class)) {
+                    result = toDouble(value);
                 }
                 else if (type.isEnum()) {
                     final Object[] enums = type.getEnumConstants();
@@ -332,10 +437,32 @@ class PropertyExpansor
             return result;
         }
 
-        private String canonize(String propertyName, String value)
+        private long toInt(String value)
         {
-            // Special handling to canonize basedir
-            return propertyName.equals(BASEDIR) ? FileUtils.normalizePath(new File(value)) : value;
+            long result;
+
+            try {
+                result = Long.parseLong(value);
+            }
+            catch (NumberFormatException e) {
+                result = 0;
+            }
+
+            return result;
+        }
+
+        private double toDouble(String value)
+        {
+            double result;
+
+            try {
+                result = Double.parseDouble(value);
+            }
+            catch (NumberFormatException e) {
+                result = 0;
+            }
+
+            return result;
         }
     }
 }

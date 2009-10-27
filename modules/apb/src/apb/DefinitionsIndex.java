@@ -70,8 +70,11 @@ public class DefinitionsIndex
 
     public DefinitionsIndex(@NotNull Environment e, Set<File> projectPath)
     {
+        boolean b = Apb.failOnAbsentProperty();
+        Apb.setFailOnAbsentProperty(false);
         Loader loader = new Loader(e, projectPath);
         modules = loader.buildModulesList();
+        Apb.setFailOnAbsentProperty(b);
     }
 
     //~ Methods ..............................................................................................

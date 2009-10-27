@@ -146,14 +146,17 @@ public class Main
                 b.build(env, argParts[0], argParts[1]);
             }
             catch (DefinitionException d) {
-                String causeMsg = d.getCause().getMessage();
+                e = d.getCause();
+                String causeMsg = e.getMessage();
 
-                if (d.getCause() instanceof FileNotFoundException) {
+                if (e instanceof FileNotFoundException) {
                     causeMsg = "File not found: " + causeMsg;
+                }
+                else if (causeMsg == null) {
+                    causeMsg = e.toString();
                 }
 
                 env.logSevere("%s\nCause: %s\n", d.getMessage(), causeMsg);
-                e = d.getCause();
             }
             catch (BuildException b) {
                 e = b.getCause() == null ? b : b.getCause();

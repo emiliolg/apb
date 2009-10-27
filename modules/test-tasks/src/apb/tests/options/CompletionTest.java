@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import apb.Apb;
+import apb.Constants;
 import apb.DefinitionsIndex;
 import apb.OptionCompletion;
 
@@ -49,8 +50,8 @@ public class CompletionTest
 
     public void testModules()
     {
-        final File indexFile = new File(tmpFile("definitions.dir"));
-        env.putProperty("definitions.dir", indexFile.getPath());
+        final File indexFile = new File(tmpFile(Constants.DEFINITIONS_CACHE));
+        env.putProperty(Constants.DEFINITIONS_CACHE_PROPERTY, indexFile.getPath());
         env.putProperty("project.path", makePath(projectPath));
 
         List<OptionParser.Option> options = emptyList();
@@ -67,7 +68,8 @@ public class CompletionTest
         assertEquals("Samples.clean Samples.compile Samples.compile-tests", result);
 
         result = oc.execute(0, asList(""));
-        assertEquals("Chat HelloWorld Info Math Samples submod.Mod tests.Math", result);
+        assertEquals("Chat HelloWorld Info Math PlayWithMath Properties Samples submod.Mod tests.Math",
+                     result);
 
         result = oc.execute(0, asList("tests.Ma"));
         final List<String> list = new ArrayList<String>(IndexTest.MATH_EXPECTED_COMMANDS);

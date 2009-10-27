@@ -22,8 +22,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -58,13 +56,13 @@ public class InMemJavaC
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final Map<File, Class> classesByFile;
+    @NotNull private final Environment env;
 
     @NotNull private final JavaCompiler compiler;
 
-    @NotNull private final Environment           env;
-    @NotNull private final MemoryJavaFileManager fileManager;
+    @NotNull private final Map<File, Class>      classesByFile;
     @NotNull private final MemoryClassLoader     memoryClassLoader;
+    @NotNull private final MemoryJavaFileManager fileManager;
 
     //~ Constructors .........................................................................................
 
@@ -167,30 +165,30 @@ public class InMemJavaC
         return memoryClassLoader.getClassFromSource(source);
     }
 
-    /**
-     * Invoke the main Method over the compiled class
-     * @param clazz The clazz to invoke main over
-     * @param args  The arguments to pass to the main method
-     */
-    private static void invokeMain(Class<?> clazz, String[] args)
-    {
-        try {
-            Method         m = clazz.getMethod("main", String[].class);
-            final Object[] a = { args };
-            m.invoke(null, a);
-        }
-        catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
-        catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        }
-        catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     //~ Inner Classes ........................................................................................
+
+    //    /**
+    //     * Invoke the main Method over the compiled class
+    //     * @param clazz The clazz to invoke main over
+    //     * @param args  The arguments to pass to the main method
+    //     */
+    //    private static void invokeMain(Class<?> clazz, String[] args)
+    //    {
+    //        try {
+    //            Method         m = clazz.getMethod("main", String[].class);
+    //            final Object[] a = { args };
+    //            m.invoke(null, a);
+    //        }
+    //        catch (NoSuchMethodException e) {
+    //            throw new RuntimeException(e);
+    //        }
+    //        catch (InvocationTargetException e) {
+    //            throw new RuntimeException(e);
+    //        }
+    //        catch (IllegalAccessException e) {
+    //            throw new RuntimeException(e);
+    //        }
+    //    }
 
     /**
      * This class is an implementation of a {@link javax.tools.SimpleJavaFileObject} that stores the generated classes in
@@ -199,9 +197,9 @@ public class InMemJavaC
     static class MemoryJavaOutput
         extends SimpleJavaFileObject
     {
-        private final String            className;
         private final long              lastModified;
         private final MemoryClassLoader memoryClassLoader;
+        private final String            className;
 
         public MemoryJavaOutput(FileObject fileObject, String className, MemoryClassLoader memoryClassLoader)
         {
@@ -323,7 +321,7 @@ public class InMemJavaC
             path = path.replace(File.separatorChar, '.');
 
             for (String className : classMap.keySet()) {
-                if (path.endsWith(className)) {
+                if (path.equals(className) || path.endsWith("." + className)) {
                     return className;
                 }
             }

@@ -55,8 +55,8 @@ public class IndexTest
         final Set<File> path = Apb.loadProjectPath();
 
         DefinitionsIndex index = new DefinitionsIndex(env, path);
-        assertEquals(asList("Chat", "HelloWorld", "Info", "Math", "Samples", "submod.Mod", "tests.Math")
-                     .toString(), index.toString());
+        assertEquals(asList("Chat", "HelloWorld", "Info", "Math", "PlayWithMath", "Properties", "Samples",
+                            "submod.Mod", "tests.Math").toString(), index.toString());
         FileAssert.assertExists(indexFile);
         indexFile.setLastModified(ts);
 

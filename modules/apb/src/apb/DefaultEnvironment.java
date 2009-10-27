@@ -271,7 +271,13 @@ abstract class DefaultEnvironment
         String result = getOptionalProperty(id);
 
         if (result == null) {
-            handle(new PropertyException(id));
+            Throwable e = new PropertyException(id);
+
+            if (isFailOnError() && Apb.failOnAbsentProperty()) {
+                throw new BuildException(e);
+            }
+
+            logSevere(e.getMessage());
             result = "";
         }
 

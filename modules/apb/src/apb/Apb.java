@@ -153,6 +153,23 @@ public class Apb
         avoidSystemExit = b;
     }
 
+    /**
+     * Fail if a property is absent
+     * @return true if must fail when a property is absent
+     */
+    public static boolean failOnAbsentProperty()
+    {
+        return failOnAbsentProperty;
+    }
+
+    /**
+     * Set the behaviour to take when a property is absent
+     */
+    public static void setFailOnAbsentProperty(boolean b)
+    {
+        failOnAbsentProperty = b;
+    }
+
     static Environment setCurrentEnv(Environment e)
     {
         Environment result = currentEnvironment.get();
@@ -185,6 +202,8 @@ public class Apb
     }
 
     //~ Static fields/initializers ...........................................................................
+
+    private static boolean failOnAbsentProperty = true;
 
     private static boolean avoidSystemExit;
 

@@ -498,7 +498,6 @@ public class ModuleHelper
 
     /**
      * Get the direct (first level) Module dependencies
-     * @return
      */
     public Iterable<Dependency> getDirectDependencies()
     {

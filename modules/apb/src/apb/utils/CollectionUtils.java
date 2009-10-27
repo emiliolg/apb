@@ -119,12 +119,12 @@ public class CollectionUtils
      * @param sep
      * @return A String with the elements of the Iterable separated by the specified separator
      */
-    @NotNull public static String listToString(@Nullable Iterable<String> collection, @NotNull String sep)
+    @NotNull public static String listToString(@Nullable Iterable<?> collection, @NotNull String sep)
     {
         StringBuilder result = new StringBuilder();
 
         if (collection != null) {
-            for (String s : collection) {
+            for (Object s : collection) {
                 if (result.length() > 0) {
                     result.append(sep);
                 }
@@ -141,7 +141,7 @@ public class CollectionUtils
      * @param collection
      * @return A String with the elements of the Iterable separated by ','
      */
-    @NotNull public static String listToString(@Nullable Iterable<String> collection)
+    @NotNull public static String listToString(@Nullable Iterable<?> collection)
     {
         return listToString(collection, DEFAULT_SEP);
     }

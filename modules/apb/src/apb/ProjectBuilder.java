@@ -181,6 +181,10 @@ public class ProjectBuilder
         catch (DependencyList.NullDependencyException e) {
             throw new DefinitionException(element, e);
         }
+        catch (InstantiationException e) {
+            throw new DefinitionException(element,
+                                          new InstantiationException("Cannot instatiate Module object"));
+        }
         catch (Throwable e) {
             throw new DefinitionException(element, e);
         }
@@ -364,8 +368,9 @@ public class ProjectBuilder
         env.putProperty(PROJECTS_HOME_PROP_KEY, projectDirectory.getAbsolutePath());
 
         try {
-            final ProjectElement element =
-                javac.loadClass(projectDirectory, file).asSubclass(ProjectElement.class).newInstance();
+            final Class<? extends ProjectElement> aClass =
+                javac.loadClass(projectDirectory, file).asSubclass(ProjectElement.class);
+            final ProjectElement                  element = aClass.newInstance();
             currentName = element.getName();
             initHelpers();
             element.getHelper().setTopLevel(true);
