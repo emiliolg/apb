@@ -98,7 +98,7 @@ public class JavadocTest
         super.setUp();
         javadocDir = new File(basedir, "javadoc");
 
-        final File apbJar = new File("$apb-jar");
+        final File apbJar = env.fileFromBase("$apb-jar");
         classpath = asList(apbJar, new File(apbJar.getParentFile(), "junit-3.8.2.jar"));
     }
 

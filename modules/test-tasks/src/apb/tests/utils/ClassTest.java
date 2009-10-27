@@ -23,7 +23,7 @@ import java.util.Date;
 
 import apb.Apb;
 
-import apb.metadata.PackageInfo;
+import apb.metadata.IncludeDependencies;
 
 import apb.utils.ClassUtils;
 import apb.utils.FileUtils;
@@ -105,11 +105,8 @@ public class ClassTest
         File f = ClassUtils.jarFromClass(Apb.class);
         assertEquals(new File(libDir, "apb.jar"), f);
 
-        f = ClassUtils.jarFromClass(PackageInfo.IncludeDependencies.class);
+        f = ClassUtils.jarFromClass(IncludeDependencies.class);
         assertEquals(new File(libDir, "apb.jar"), f);
-
-        f = ClassUtils.jarFromClass(apb.annotation.Test.class);
-        assertEquals(new File(libDir, "apb-test.jar"), f);
 
         final Apb[] array = new Apb[0];
         f = ClassUtils.jarFromClass(array.getClass());

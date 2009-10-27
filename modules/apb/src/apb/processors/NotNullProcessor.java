@@ -38,8 +38,6 @@ import javax.lang.model.util.Elements;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 
-import apb.tasks.NotNullInstrumentTask;
-
 @SupportedAnnotationTypes({ "org.jetbrains.annotations.NotNull" })
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class NotNullProcessor

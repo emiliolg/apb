@@ -16,7 +16,7 @@
 //
 
 
-package apb.processors;  // Copyright 2008-2009 Emilio Lopez-Gabeiras
+package apb.processors;
 
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
