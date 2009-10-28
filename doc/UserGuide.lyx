@@ -2713,14 +2713,7 @@ apb.Environment.expand
 \end_layout
 
 \begin_layout Standard
-Let's tun the example to ge a taste of it:
-\end_layout
-
-\begin_layout Standard
-\begin_inset Newpage pagebreak
-\end_inset
-
-Let's run it:
+Let's run the example to ge a taste of it:
 \end_layout
 
 \begin_layout Standard
@@ -2814,7 +2807,580 @@ override
 \end_layout
 
 \begin_layout Section
-A first example
+Supported types in Properties
+\end_layout
+
+\begin_layout Standard
+APB can handle propertiesof different types, not only Strings, in particular:
+\end_layout
+
+\begin_layout Itemize
+Strings (
+\family typewriter
+java.lang.String
+\family default
+ class)
+\end_layout
+
+\begin_layout Itemize
+Any java primitive type (boolean, char, byte, short, int, long, float &
+ double)
+\end_layout
+
+\begin_layout Itemize
+The wrappers of the primitive types (
+\family typewriter
+java.lang.Boolean
+\family default
+, 
+\family typewriter
+java.lang.Character
+\family default
+, etc).
+\end_layout
+
+\begin_layout Itemize
+Enum types.
+\end_layout
+
+\begin_layout Itemize
+Lists (
+\family typewriter
+java.util.List
+\family default
+ class) of any of the above types.
+ For example:
+\family typewriter
+ List<String>
+\end_layout
+
+\begin_layout Itemize
+Inner objects that contain any of the supported types, including other 
+\family typewriter
+inner
+\family default
+ objects.
+\end_layout
+
+\begin_layout Standard
+We'll discuss the last two cases in more detail in the following section.
+\end_layout
+
+\begin_layout Standard
+In the simpler cases APB will take care of converting the value to a String
+ using the toString method for the type when expanding the value inside
+ another String (using the '$' notation).
+\end_layout
+
+\begin_layout Standard
+When overriding the property from the command line (-D option) APB will
+ take care of converting the specified String value to the appropiate type
+ using the most suitable convention for the type.
+ In particular when you override a boolean property it would take 'true'
+ as the intended value (-Dxxx is equivalent to -Dxxx=true), in the case
+ of enumerations the conversion is case insensitive.
+\end_layout
+
+\begin_layout Standard
+When trying to override a property if the conversion from the String value
+ results in an error, then 0 will be assumed for the numeric types, false
+ for booleans, and the first enum constant for enumerations.
+\begin_inset Newpage pagebreak
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Using Lists
+\end_layout
+
+\begin_layout Standard
+Lists of any of the atomic types can be used as properties.
+ When defining a property that is a list you need to specified the type
+ of the element as an option in the 
+\family typewriter
+\series bold
+@BuildProperty
+\family default
+\series default
+ annotation (the reason for that is the infamous erasure in Java generics).
+ Apb then will handle expansion, overriding, etc.
+ Let's take a look at an example (
+\family typewriter
+PropertyLists
+\family default
+ in the 
+\family typewriter
+samples/hello-properties
+\family default
+ directory):
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget,@BuildProperty,@DefaultTarget}},numbers=left,numberstyle={\tiny},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+public class PropertyLists
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends ProjectElement
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+    @BuildProperty(elementType=String.class)
+\end_layout
+
+\begin_layout Plain Layout
+
+    final List<String> colors = new ArrayList<String>(asList("Red", "Green",
+ "Blue"));
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+    @BuildTarget public void colors()
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+        for (String c : colors)
+\end_layout
+
+\begin_layout Plain Layout
+
+            printf("%s
+\backslash
+n", c);
+\end_layout
+
+\begin_layout Plain Layout
+
+        printf("Colors: '$colors'");
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Here we define a 
+\family typewriter
+\series bold
+BuildProperty
+\family default
+\series default
+ of type 
+\family typewriter
+List<String>
+\family default
+ as you see we have to specify that the 
+\family typewriter
+elementType
+\family default
+ for the property is of type 
+\family typewriter
+String.class
+\family default
+ (to overcome the type erasure problem), also the instance is declared 
+\family typewriter
+final
+\family default
+ (the recommended practice for List properties to avoid changing it by mistake),
+ the list is initialized with some values (Notice that the List returned
+ from the 
+\family typewriter
+asList
+\family default
+ invocation is used as the constructor parameter for the 
+\family typewriter
+ArrayList
+\family default
+ constructor and it is not assigned directly to the instance variable, to
+ avoid overriding of the list values later on).
+\end_layout
+
+\begin_layout Standard
+Then the colors 
+\family typewriter
+\series bold
+BuildTarget
+\family default
+\series default
+ prints the list elements one by one and then in line 12 it prints them
+ together using property expansion.
+\end_layout
+
+\begin_layout Standard
+Let's take a look at the output from the above code:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize},frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+$ apb PropertyLists.colors
+\end_layout
+
+\begin_layout Plain Layout
+
+[PropertyLists.colors]          Red
+\end_layout
+
+\begin_layout Plain Layout
+
+[PropertyLists.colors]          Green
+\end_layout
+
+\begin_layout Plain Layout
+
+[PropertyLists.colors]          Blue
+\end_layout
+
+\begin_layout Plain Layout
+
+[PropertyLists.colors]          Colors: 'Red,Green,Blue'
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb -Dcolors=Black,White PropertyLists.colors
+\end_layout
+
+\begin_layout Plain Layout
+
+[PropertyLists.colors]          Black
+\end_layout
+
+\begin_layout Plain Layout
+
+[PropertyLists.colors]          White
+\end_layout
+
+\begin_layout Plain Layout
+
+[PropertyLists.colors]          Colors: 'Black,White'
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As expected in the first run the values specified in the Module are printed,
+ notice that when expanding the colors property in an 
+\family typewriter
+String
+\family default
+ the individual values are converted to 
+\family typewriter
+String
+\family default
+ and then output separated by 
+\emph on
+comma
+\emph default
+.
+\end_layout
+
+\begin_layout Standard
+In the second run the colors property is overriden from the command line.
+ Here also 
+\emph on
+comma
+\emph default
+ is used to separate the different property values.
+\end_layout
+
+\begin_layout Section
+Inner Objects
+\end_layout
+
+\begin_layout Standard
+You can specify an instance variable of an arbitray class as a BuildProperty.
+ When doing so APB will recurse into the inner object doing property processing
+ of the inner object instance variables (If case any of them is declared
+ as a BuildProperty).
+ The way to reference this inner property values is to prefix them with
+ the inner object property name follow by a dot ('.').
+ Let's take a look at an example:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "frame=single,keywordstyle={\bf\color{DarkBlue}},keywordstyle={[2]\it\color{Wheat}},language=Java,morekeywords={[2] {@BuildTarget,@BuildProperty,@DefaultTarget}},numbers=left,numberstyle={\tiny},stringstyle={\ttfamily\color{MediumGray}}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+public class Inner
+\end_layout
+
+\begin_layout Plain Layout
+
+    extends ProjectElement
+\end_layout
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+    @BuildProperty final Car main = new Car("BMW", 2007);
+\end_layout
+
+\begin_layout Plain Layout
+
+    @BuildProperty final Car second = new Car("Honda", 2003);
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+    @BuildTarget public void cars()
+\end_layout
+
+\begin_layout Plain Layout
+
+    {
+\end_layout
+
+\begin_layout Plain Layout
+
+        printf("main:   %s %d
+\backslash
+n", main.brand, main.year);
+\end_layout
+
+\begin_layout Plain Layout
+
+        printf("second: %s %d
+\backslash
+n", second.brand, second.year);
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+    static class Car {
+\end_layout
+
+\begin_layout Plain Layout
+
+        @BuildProperty String brand;
+\end_layout
+
+\begin_layout Plain Layout
+
+        @BuildProperty int year;
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+        Car(String b, int y)	{ brand = b; year = y;}
+\end_layout
+
+\begin_layout Plain Layout
+
+    }
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Here we define two 
+\family typewriter
+\series bold
+BuildProperties
+\family default
+\series default
+ of type 
+\family typewriter
+Car
+\family default
+ (An inner type defined as an inner sublcass in this example).
+ The 
+\family typewriter
+Car
+\family default
+ class itself defines two build properties (The brand and year of the car).
+\end_layout
+
+\begin_layout Standard
+The cars 
+\family typewriter
+\series bold
+BuildTarget
+\family default
+\series default
+ prints the values for the brand and year of both cars.
+\end_layout
+
+\begin_layout Standard
+Let's take a look at the output from the above code:
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize},frame=single,language={[apb]shell},showstringspaces=false"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+$ apb Inner.cars
+\end_layout
+
+\begin_layout Plain Layout
+
+[Inner.cars]                    main:   BMW 2007
+\end_layout
+
+\begin_layout Plain Layout
+
+[Inner.cars]                    second: Honda 2003
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+$ apb -Dmain.year=2008 -Dsecond.brand=VW Inner.cars
+\end_layout
+
+\begin_layout Plain Layout
+
+[Inner.cars]                    main:   BMW 2008
+\end_layout
+
+\begin_layout Plain Layout
+
+[Inner.cars]                    second: VW 2003
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+As expected in the first run the values specified in the Module are printed,
+ notice that when expanding the colors property in an 
+\family typewriter
+String
+\family default
+ the individual values are converted to 
+\family typewriter
+String
+\family default
+ and then output separated by 
+\emph on
+comma
+\emph default
+.
+\end_layout
+
+\begin_layout Standard
+In the second run some attributes of the cars properties are overriden from
+ the command line.
+ As you see the names are qualified using a familiar dot syntax.
 \end_layout
 
 \begin_layout Chapter
