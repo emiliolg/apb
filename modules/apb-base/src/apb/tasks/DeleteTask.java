@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +14,10 @@
 // limitations under the License
 //
 
-
 package apb.tasks;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import org.jetbrains.annotations.NotNull;
@@ -80,6 +79,16 @@ public class DeleteTask
         }
     }
 
+    private static boolean isSymbolicLink(File file)
+    {
+        try {
+            return !file.getAbsolutePath().equals(file.getCanonicalPath());
+        }
+        catch (IOException e) {
+            return true;
+        }
+    }
+
     private boolean removeFile(File f)
     {
         env.logInfo("Deleting file %s\n", f.getAbsolutePath());
@@ -88,24 +97,27 @@ public class DeleteTask
 
     private boolean removeDir(File d)
     {
-        String[] list = d.list();
+        // If it is a symbolic link, then dont recurse, just delete it
+        if (!isSymbolicLink(d)) {
+            String[] list = d.list();
 
-        if (list == null) {
-            list = new String[0];
-        }
-
-        for (String s : list) {
-            File f = new File(d, s);
-
-            if (f.isDirectory()) {
-                logVerbose("Deleting directory %s\n", f.getAbsolutePath());
-                removeDir(f);
+            if (list == null) {
+                list = new String[0];
             }
-            else {
-                logVerbose("Deleting: %s\n", f.getAbsolutePath());
 
-                if (!f.delete()) {
-                    env.handle("Unable to delete file " + f.getAbsolutePath());
+            for (String s : list) {
+                File f = new File(d, s);
+
+                if (f.isDirectory()) {
+                    logVerbose("Deleting directory %s\n", f.getAbsolutePath());
+                    removeDir(f);
+                }
+                else {
+                    logVerbose("Deleting: %s\n", f.getAbsolutePath());
+
+                    if (!f.delete()) {
+                        env.handle("Unable to delete file " + f.getAbsolutePath());
+                    }
                 }
             }
         }

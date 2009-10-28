@@ -20,18 +20,15 @@ package apb.tasks;
 
 import java.io.File;
 import java.util.ArrayList;
+import static java.util.Arrays.asList;
 import java.util.Collections;
 import java.util.List;
 
-import apb.Apb;
-
-import apb.utils.DirectoryScanner;
-
 import org.jetbrains.annotations.NotNull;
 
-import static java.util.Arrays.asList;
-
+import apb.Apb;
 import static apb.utils.CollectionUtils.expandAll;
+import apb.utils.DirectoryScanner;
 //
 // User: emilio
 // Date: Sep 9, 2009
@@ -41,8 +38,6 @@ import static apb.utils.CollectionUtils.expandAll;
 public class FileSet
 {
     //~ Instance fields ......................................................................................
-
-    boolean singleFile = true;
 
     private boolean followSymLinks;
 
