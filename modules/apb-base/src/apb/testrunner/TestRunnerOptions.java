@@ -227,7 +227,9 @@ class TestRunnerOptions
                     result = (TestSetCreator) o;
                 }
             }
-            catch (Exception e) {}
+            catch (Exception e) {
+                //ignore
+            }
 
             if (result == null) {
                 System.err.println("Invalid creator class: " + creatorClass);

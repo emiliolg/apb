@@ -139,7 +139,7 @@ public class TestLauncher
     @NotNull private List<String> includes;
 
     /**
-     * List of additional args to pass to the tests.
+     * List of additional args to pass to the Java VM.
      */
     @NotNull private final List<String> javaArgs;
 
@@ -507,16 +507,13 @@ public class TestLauncher
         }
 
         args.add("--creator");
-        args.add(creator.toString());
+        args.add(creator);
 
         args.add("--report-specs-file");
         args.add(reportSpecsFile.getAbsolutePath());
 
         // Add the test directory
         args.add(testClasses.getAbsolutePath());
-
-        // add extra java args
-        args.addAll(javaArgs);
 
         // Escape '$' signs in the arguments.
         // This must be done after ALL arguments are added
@@ -534,6 +531,11 @@ public class TestLauncher
             for (String arg : DEBUG_ARGUMENTS) {
                 java.addJavaArg(arg);
             }
+        }
+
+        //Add extra java args.
+        for(String arg : javaArgs) {
+            java.addJavaArg(arg);
         }
 
         java.enableAssertions(enableAssertions);
