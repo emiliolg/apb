@@ -29,6 +29,9 @@ LIB_DIR="$(ospath "$APB_DIR/lib")"
 OUT_DIR="$(ospath "$APB_DIR/modules/output/apb-base/classes")"
 
 DEBUG="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005"
+
+export APB_PROJECT_PATH=$APB_DIR/modules/DEFS
+
 rm -rf $LIB_DIR/apb.jar $LIB_DIR/apb-src.jar $LIB_DIR/ant-apb.jar $APB_DIR/modules/output
 
 if [ "$1" != "clean" ]
