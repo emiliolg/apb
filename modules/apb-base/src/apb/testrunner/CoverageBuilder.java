@@ -31,20 +31,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;
-
 import apb.coverage.CoverageReport;
-
 import apb.metadata.CoverageInfo;
-
 import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NonNls;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import static apb.utils.FileUtils.*;
 
@@ -128,8 +125,12 @@ class CoverageBuilder
 
                 final int min = coverage.ensure;
 
-                if (min > 0 && Collections.min(coverageInfo.values()) < min) {
-                    env.handle("Coverage below minimum value of: " + min + "% !!.");
+                if (min > 0) {
+                    int coverage = Collections.min(coverageInfo.values());
+
+                    if (coverage < min) {
+                        env.handle("Coverage (" + coverage + "%) below minimum value of: " + min + "% !!");
+                    }
                 }
             }
 
