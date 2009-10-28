@@ -528,7 +528,13 @@ public class ModuleHelper
             if (dependency.mustInclude(compile)) {
                 if (dependency.isModule()) {
                     ModuleHelper m = dependency.asModule().getHelper();
-                    result.add(useJars && m.hasPackage() ? m.getPackageFile() : m.getOutput());
+
+                    if (!useJars) {
+                        result.add(m.getOutput());
+                    }
+                    else if (m.hasPackage()) {
+                        result.add(m.getPackageFile());
+                    }
                 }
                 else if (dependency.isLibrary()) {
                     addIfNotNull(result, dependency.asLibrary().getArtifact(this, PackageType.JAR));

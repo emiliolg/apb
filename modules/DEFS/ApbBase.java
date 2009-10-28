@@ -17,7 +17,6 @@
 
 
 
-import apb.metadata.Module;
 import apb.metadata.PackageType;
 
 public final class ApbBase
@@ -26,15 +25,9 @@ public final class ApbBase
     //~ Instance initializers ................................................................................
 
     {
-        //dependencies(Junit3.LIB, Asm.LIB, ApbTest.MODULE);
-
         pkg.type = PackageType.NONE;
         resources.excludes("**/package.html");
 
         compiler.warnExcludes("apb/sunapi/*");
     }
-
-    //~ Static fields/initializers ...........................................................................
-
-    public static final Module MODULE = new ApbBase();
 }

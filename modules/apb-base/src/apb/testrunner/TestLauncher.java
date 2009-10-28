@@ -548,16 +548,13 @@ public class TestLauncher
         final File appJar = Apb.applicationJarFile();
 
         Set<File> path = new LinkedHashSet<File>();
-        path.add(appJar);
-
-        // TODO search apb-test dynamically
-        path.add(new File(appJar.getParent(), "apb-test.jar"));
 
         if (isCoverageEnabled()) {
             path.add(new File(appJar.getParent(), "emma.jar"));
             path.addAll(classPath);
         }
         else {
+            path.add(appJar);
             final Set<File> scp = new LinkedHashSet<File>(systemClassPath);
             scp.retainAll(classPath);
             path.addAll(scp);

@@ -17,8 +17,6 @@
 
 
 
-import apb.metadata.Module;
-
 import libraries.Asm;
 import libraries.Junit3;
 
@@ -31,7 +29,7 @@ public final class Apb
 
     {
         description = "APB Project Builder";
-        dependencies(ApbBase.MODULE, ApbTest.MODULE, Junit3.LIB, Asm.LIB);
+        dependencies(new ApbBase(), Junit3.LIB, Asm.LIB);
         compiler.useTools = true;
 
         pkg.mainClass = "apb.Main";
@@ -54,10 +52,6 @@ public final class Apb
 
         compiler.warnExcludes("apb/sunapi/*");
 
-        tests(TestTasks.MODULE);
+        tests(new TestTasks());
     }
-
-    //~ Static fields/initializers ...........................................................................
-
-    public static final Module MODULE = new Apb();
 }

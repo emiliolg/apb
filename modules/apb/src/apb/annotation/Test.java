@@ -16,18 +16,28 @@
 //
 
 
+package apb.annotation;
 
-public final class ApbTest
-    extends ApbModule
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * An annotation used to define tests groups
+ * User: diegor
+ * Date: Apr 30, 2009
+ * Time: 9:47:47 AM
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(METHOD)
+public @interface Test
 {
-    //~ Instance initializers ................................................................................
+    /** Specifies test groups */
+    String[] groups() default ALL;
 
-    {
-        description = "APB Tests extensions";
-        pkg.name = "apb-test";
-    }
+    boolean skip() default false;
 
     //~ Static fields/initializers ...........................................................................
 
-    public static final ApbTest MODULE = new ApbTest();
+    static final String ALL = "*";
 }

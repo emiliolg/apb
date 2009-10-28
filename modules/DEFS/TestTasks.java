@@ -54,8 +54,4 @@ public class TestTasks
 
         idegen.contentDirs("$moduledir/data");
     }
-
-    //~ Static fields/initializers ...........................................................................
-
-    public static final TestModule MODULE = new TestTasks();
 }

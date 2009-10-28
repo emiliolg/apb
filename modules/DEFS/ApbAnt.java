@@ -32,7 +32,7 @@ public final class ApbAnt
 
     {
         description = "APB Ant Tasks";
-        dependencies(ApbBase.MODULE, Ant.LIB);
+        dependencies(new Apb(), new ApbBase(), Ant.LIB);
 
         pkg.name = "ant-apb";
         pkg.addClassPath = true;

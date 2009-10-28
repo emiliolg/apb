@@ -25,7 +25,7 @@ public class ApbModule
     //~ Instance initializers ................................................................................
 
     {
-        version = "1.0";
+        version = "1.1";
 
         compiler.lint = true;
         compiler.failOnWarning = true;

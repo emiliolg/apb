@@ -25,7 +25,7 @@ public final class ApbTestNG
     //~ Instance initializers ................................................................................
 
     {
-        dependencies(ApbBase.MODULE, TestNG.LIB);
+        dependencies(new Apb(), new ApbBase(), TestNG.LIB);
         description = "APB TestNG Report Executor";
         pkg.name = "apb-testng";
         pkg.services("apb.testrunner.TestSetCreator", "apb.testrunner.TestNGTestSetCreator");
