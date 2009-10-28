@@ -18,6 +18,7 @@
 
 package apb.annotation;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -29,7 +30,7 @@ import java.lang.annotation.Target;
  * Time: 9:47:47 AM
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(METHOD)
+@Target(ElementType.METHOD)
 public @interface Test
 {
     /** Specifies test groups */
