@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,23 +31,17 @@ import java.util.TimeZone;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import apb.Environment;
-
-import apb.utils.StringUtils;
-import apb.utils.XmlUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Text;
-//
-// User: emilio
-// Date: Jun 23, 2009
-// Time: 7:08:04 PM
 
-//
+import apb.Environment;
+import apb.utils.StringUtils;
+import apb.utils.XmlUtils;
+
 public class XmlTestReport
     extends BaseTestReport
 {
@@ -76,9 +69,9 @@ public class XmlTestReport
     private Document doc;
 
     /**
-     * The wrapper for the whole testsuite.
+     * tests that failed.
      */
-    private Element rootElement;
+    private final Set<String> failedTests = new HashSet<String>();
 
     /**
      * Element for the current test.
@@ -89,11 +82,6 @@ public class XmlTestReport
      * Timing helper.
      */
     private final Map<String, Long> testStarts = new HashMap<String, Long>();
-
-    /**
-     * tests that failed.
-     */
-    private final Set<String> failedTests = new HashSet<String>();
 
     //~ Constructors .........................................................................................
 
@@ -110,7 +98,7 @@ public class XmlTestReport
 
         doc = getDocumentBuilder().newDocument();
 
-        rootElement = doc.createElement(TESTSUITE);
+        final Element rootElement = doc.createElement(TESTSUITE);
         doc.appendChild(rootElement);
 
         rootElement.setAttribute(ATTR_NAME, suiteName);
@@ -132,6 +120,7 @@ public class XmlTestReport
     {
         if (suiteOpen) {
             super.endSuite();
+            final Element rootElement = doc.getDocumentElement();
             rootElement.setAttribute(ATTR_TESTS, "" + getSuiteTestsRun());
             rootElement.setAttribute(ATTR_FAILURES, "" + getSuiteTestFailures());
             rootElement.setAttribute(ATTR_SKIPPED, "" + getSuiteTestSkipped());
@@ -146,7 +135,7 @@ public class XmlTestReport
     public void startTest(@NotNull String testName)
     {
         super.startTest(testName);
-        testStarts.put(testName, System.currentTimeMillis());
+        testStarts.put(qualify(testName), System.currentTimeMillis());
     }
 
     public void endTest()
@@ -154,25 +143,27 @@ public class XmlTestReport
         super.endTest();
         final String test = getCurrentTest();
 
-        if (!testStarts.containsKey(test)) {
+        final String fullTestName = qualify(test);
+
+        if (!testStarts.containsKey(fullTestName)) {
             startTest(test);
         }
 
         Element currentTest;
 
-        if (!failedTests.contains(test)) {
+        if (!failedTests.contains(fullTestName)) {
             currentTest = doc.createElement(TESTCASE);
             currentTest.setAttribute(ATTR_NAME, test == null ? UNKNOWN : test);
             currentTest.setAttribute(ATTR_CLASSNAME, getCurrentSuite());
-            rootElement.appendChild(currentTest);
-            testElements.put(test, currentTest);
+            doc.getDocumentElement().appendChild(currentTest);
+            testElements.put(fullTestName, currentTest);
         }
         else {
-            currentTest = testElements.get(test);
+            currentTest = testElements.get(fullTestName);
         }
 
-        long ellapsed = System.currentTimeMillis() - testStarts.get(test);
-        currentTest.setAttribute(ATTR_TIME, "" + (ellapsed / ONE_SECOND));
+        long elapsed = System.currentTimeMillis() - testStarts.get(fullTestName);
+        currentTest.setAttribute(ATTR_TIME, "" + (elapsed / ONE_SECOND));
     }
 
     public void failure(@NotNull Throwable t)
@@ -191,7 +182,7 @@ public class XmlTestReport
     protected void printOutput(String title, String content)
     {
         Element nested = doc.createElement(title);
-        rootElement.appendChild(nested);
+        doc.getDocumentElement().appendChild(nested);
         nested.appendChild(doc.createCDATASection(content));
     }
 
@@ -213,6 +204,11 @@ public class XmlTestReport
         }
     }
 
+    private String qualify(String test)
+    {
+        return getCurrentSuite() + '-' + test;
+    }
+
     private String getHostname()
     {
         try {
@@ -227,12 +223,12 @@ public class XmlTestReport
     {
         if (test != null) {
             endTest();
-            failedTests.add(test);
+            failedTests.add(qualify(test));
         }
 
         Element nested = doc.createElement(type);
 
-        Element currentTest = test != null ? testElements.get(test) : rootElement;
+        Element currentTest = test != null ? testElements.get(qualify(test)) : doc.getDocumentElement();
 
         currentTest.appendChild(nested);
 
@@ -271,8 +267,8 @@ public class XmlTestReport
     public static class Builder
         implements TestReport.Builder
     {
-        @Nullable private Boolean showOutput;
         @NotNull private String   output = "test-output";
+        @Nullable private Boolean showOutput;
 
         public Builder showOutput(boolean b)
         {
