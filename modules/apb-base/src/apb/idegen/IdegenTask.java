@@ -120,6 +120,7 @@ public abstract class IdegenTask
         extends IdegenTask
     {
         protected boolean                      testModule;
+        @Nullable protected File               moduleRoot;
         @Nullable protected File               output;
         @NotNull protected final List<String>  contentDirs;
         @NotNull protected final List<String>  excludes;
@@ -142,7 +143,11 @@ public abstract class IdegenTask
             contentDirs = new ArrayList<String>();
         }
 
-        public abstract void execute();
+        @NotNull public Module usingModuleRoot(@NotNull File f)
+        {
+            moduleRoot = f;
+            return this;
+        }
 
         public Module usingSources(@NotNull List<File> sources)
         {

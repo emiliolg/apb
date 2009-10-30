@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -151,6 +153,23 @@ public class IdeaTask
     {
         env.logInfo("Writing: %s\n", ideaFile);
         XmlUtils.writeDocument(document, ideaFile);
+    }
+
+    // Is there a simpler way to accomplish this ?
+    private static boolean inside(@NotNull File directory, @NotNull File descendant)
+    {
+        File file = descendant;
+
+        do {
+            if (file.equals(directory)) {
+                return true;
+            }
+
+            file = file.getParentFile();
+        }
+        while (file != null);
+
+        return false;
     }
 
     //~ Static fields/initializers ...........................................................................
@@ -437,26 +456,44 @@ public class IdeaTask
 
                     assignOutputFolder(component);
 
-                    for (File source : sourceDirs) {
-                        if (source.exists() || includeEmptyDirs) {
-                            Element content =
-                                findContent(component, URL_ATTRIBUTE, relativeUrl("file", source));
+                    Set<File> contents = new LinkedHashSet<File>();
+                    File      modRoot = moduleRoot;
 
-                            removeOldElements(content, SOURCE_FOLDER);
-
-                            removeOldElements(content, EXCLUDE_FOLDER);
-
-                            addExcludeFolders(content);
-
-                            addSourceFolder(content, source);
-                        }
+                    if (modRoot != null) {
+                        contents.add(modRoot);
                     }
 
                     for (String c : contentDirs) {
-                        File contentDir = env.fileFromBase(c);
+                        final File contentDir = env.fileFromBase(c);
 
-                        if (contentDir.exists() || includeEmptyDirs) {
+                        if (includeEmptyDirs || !contents.contains(contentDir) && contentDir.exists()) {
+                            contents.add(contentDir);
+                        }
+                    }
+
+                    final List<File> sources = new ArrayList<File>(sourceDirs);
+
+                    for (File contentDir : contents) {
+                        Element element =
                             findContent(component, URL_ATTRIBUTE, relativeUrl("file", contentDir));
+
+                        for (Iterator<File> itr = sources.iterator(); itr.hasNext();) {
+                            File source = itr.next();
+
+                            if (inside(contentDir, source)) {
+                                if (includeEmptyDirs || source.exists()) {
+                                    addSourceDir(element, source);
+                                    itr.remove();
+                                }
+                            }
+                        }
+                    }
+
+                    for (File source : sources) {
+                        if (source.exists() || includeEmptyDirs) {
+                            Element content =
+                                findContent(component, URL_ATTRIBUTE, relativeUrl("file", source));
+                            addSourceDir(content, source);
                         }
                     }
 
@@ -465,6 +502,14 @@ public class IdeaTask
                     writeDocument(env, ideaFile, document);
                 }
             }
+        }
+
+        private void addSourceDir(Element contentRoot, File source)
+        {
+            removeOldElements(contentRoot, SOURCE_FOLDER);
+            removeOldElements(contentRoot, EXCLUDE_FOLDER);
+            addExcludeFolders(contentRoot);
+            addSourceFolder(contentRoot, source);
         }
 
         /**

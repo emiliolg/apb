@@ -97,6 +97,7 @@ public class Idea
         }
 
         return IdegenTask.generateModule(mod.getId()).on(dir)  //
+                         .usingModuleRoot(mod.getDirFile()) //
                          .usingSources(mod.getSourceDirs())  //
                          .usingOutput(mod.getOutput())  //
                          .includeEmptyDirs(info.includeEmptyDirs)  //
