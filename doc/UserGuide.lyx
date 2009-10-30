@@ -626,15 +626,7 @@ import static apb.tasks.CoreTasks.*;
 
 \begin_layout Plain Layout
 
-@DefaultTarget(
-\begin_inset Quotes eld
-\end_inset
-
-hello
-\begin_inset Quotes erd
-\end_inset
-
-)
+@DefaultTarget("hello")
 \end_layout
 
 \begin_layout Plain Layout
@@ -868,23 +860,7 @@ public class Chat
 
 \begin_layout Plain Layout
 
-    @BuildTarget(depends=
-\begin_inset Quotes erd
-\end_inset
-
-hello
-\begin_inset Quotes erd
-\end_inset
-
-, before=
-\begin_inset Quotes erd
-\end_inset
-
-bye
-\begin_inset Quotes erd
-\end_inset
-
-)
+    @BuildTarget(depends="hello", before="bye")
 \end_layout
 
 \begin_layout Plain Layout
@@ -2483,7 +2459,7 @@ You can now open the math-project.ipr file in Intelli, you should get a project
 
 \begin_layout Standard
 \begin_inset Graphics
-	filename /Users/emilio/Desktop/Screen shot 2009-10-22 at 17.06.13 .png
+	filename images/IdeaTree.png
 	scale 70
 
 \end_inset
@@ -3384,6 +3360,10 @@ In the second run some attributes of the cars properties are overriden from
 \end_layout
 
 \begin_layout Chapter
+The default build cycle in more detail
+\end_layout
+
+\begin_layout Chapter
 Using APB to run your tests
 \begin_inset CommandInset label
 LatexCommand label
@@ -3392,6 +3372,22 @@ name "cha:Using-APB-to"
 \end_inset
 
 
+\end_layout
+
+\begin_layout Chapter
+APB Core Tasks
+\end_layout
+
+\begin_layout Chapter
+Using APB with ANT
+\end_layout
+
+\begin_layout Chapter
+Working with Repositories
+\end_layout
+
+\begin_layout Chapter
+Extending APB
 \end_layout
 
 \end_body
