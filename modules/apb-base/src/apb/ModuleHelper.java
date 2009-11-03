@@ -402,23 +402,32 @@ public class ModuleHelper
                                      .withClassPath(manifestClassPath())  //
                                      .withServices(services).excluding(packageInfo.excludes());
 
-            // prepare dependencies included in package
+            // generate sources jar
+            final JarTask srcJar;
 
+            if (packageInfo.generateSourcesJar) {
+                srcJar = jar(getSourcePackageFile()).fromDir(getSourceDir()).excluding(Constants.DEFAULT_EXCLUDES);
+            } else {
+                srcJar = null;
+            }
+
+
+            // prepare dependencies included in package
             if (!additionalDeps.isEmpty()) {
                 for (Module m : additionalDeps) {
                     logVerbose("Adding module '%s'.\n", m.toString());
                     jarTask.addDir(m.getHelper().getOutput());
+                    if (srcJar != null) {
+                        srcJar.addDir(m.getHelper().getSourceDir());
+                    }
                 }
             }
 
-            // run task
+            // run tasks
             jarTask.execute();
 
-            // generate sources jar
-            if (packageInfo.generateSourcesJar) {
-                jar(getSourcePackageFile()).fromDir(getSourceDir())  //
-                                           .excluding(Constants.DEFAULT_EXCLUDES)  //
-                                           .execute();
+            if (srcJar != null) {
+                srcJar.execute();
             }
         }
     }
