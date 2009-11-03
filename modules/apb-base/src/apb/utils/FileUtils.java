@@ -428,6 +428,11 @@ public class FileUtils
 
         parentFile.mkdirs();
 
+        if (!append && file.exists() && !file.canWrite() && !file.delete()) {
+            throw new BuildException("Can not recreate: '" + file + "'.");
+        }
+
+
         try {
             return new FileOutputStream(file, append);
         }
