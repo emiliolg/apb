@@ -457,11 +457,6 @@ public class IdeaTask
                     assignOutputFolder(component);
 
                     Set<File> contents = new LinkedHashSet<File>();
-                    File      modRoot = moduleRoot;
-
-                    if (modRoot != null) {
-                        contents.add(modRoot);
-                    }
 
                     for (String c : contentDirs) {
                         final File contentDir = env.fileFromBase(c);

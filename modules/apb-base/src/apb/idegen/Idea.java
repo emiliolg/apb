@@ -20,7 +20,9 @@ package apb.idegen;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
@@ -86,7 +88,7 @@ public class Idea
                   .execute();
     }
 
-    private IdegenTask.Module createTask(ModuleHelper mod, final IdeaInfo info, final File dir)
+    private static IdegenTask.Module createTask(ModuleHelper mod, final IdeaInfo info, final File dir)
     {
         final List<String> deps = new ArrayList<String>();
 
@@ -97,14 +99,24 @@ public class Idea
         }
 
         return IdegenTask.generateModule(mod.getId()).on(dir)  //
-                         .usingModuleRoot(mod.getDirFile()) //
                          .usingSources(mod.getSourceDirs())  //
                          .usingOutput(mod.getOutput())  //
                          .includeEmptyDirs(info.includeEmptyDirs)  //
                          .usingTemplate(info.moduleTemplate)  //
                          .usingModules(deps)  //
                          .usingLibraries(mod.getAllLibraries())  //
-                         .withContentDirs(info.contentDirs())  //
+                         .withContentDirs(buildContentDirs(info, mod))  //
                          .ifOlder(mod.getSourceFile().lastModified());
+    }
+
+    private static List<String> buildContentDirs(IdeaInfo info, ModuleHelper mod)
+    {
+        final List<String> result = new ArrayList<String>();
+
+        result.add(mod.getDirFile().getPath());
+        result.add(mod.getModule().outputBase);
+        result.addAll(info.contentDirs());
+
+        return result;
     }
 }
