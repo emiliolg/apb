@@ -27,7 +27,6 @@ import java.util.Set;
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
 import apb.ProjectElementHelper;
-import apb.TestModuleHelper;
 
 import apb.metadata.Dependency;
 import apb.metadata.ProjectElement;
@@ -66,10 +65,7 @@ public class Idea
             }
             else {
                 createTask(mod, info, targetDir).withPackageType(mod.getPackageType()).execute();
-
-                for (TestModuleHelper testModule : mod.getTestModules()) {
-                    ProjectBuilder.forward(getName(), testModule);
-                }
+                ProjectBuilder.forward(getName(), mod.getTestModule());
             }
         }
 

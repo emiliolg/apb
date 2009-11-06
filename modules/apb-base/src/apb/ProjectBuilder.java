@@ -120,25 +120,15 @@ public class ProjectBuilder
     //~ Methods ..............................................................................................
 
     /**
-     * Forwards a command invocation to the given set of modules
-     * @param command The command to be executed
-     * @param modules  The list of modules to aply the command to
-     */
-    public static void forward(@NotNull String command, Iterable<? extends ProjectElement> modules)
-    {
-        for (ProjectElement module : modules) {
-            forward(command, module.getHelper());
-        }
-    }
-
-    /**
      * Forwards a command invocation to a given module
      * @param command The command to be executed
      * @param module  The module to aply the command to
      */
-    public static void forward(@NotNull String command, @NotNull ProjectElementHelper module)
+    public static void forward(@NotNull String command, @Nullable ProjectElementHelper module)
     {
-        getInstance().build(module, command);
+        if (module != null) {
+            getInstance().build(module, command);
+        }
     }
 
     // @Todo create an accesor

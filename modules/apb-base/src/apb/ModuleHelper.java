@@ -19,6 +19,8 @@
 package apb;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -77,8 +79,8 @@ public class ModuleHelper
 
     @Nullable private Iterable<Library> allLibraries;
 
-    @Nullable private Iterable<ModuleHelper>     dependencies;
-    @Nullable private Iterable<TestModuleHelper> testModules;
+    @Nullable private Iterable<ModuleHelper> dependencies;
+    @Nullable private TestModuleHelper       testModule;
 
     //~ Constructors .........................................................................................
 
@@ -281,21 +283,11 @@ public class ModuleHelper
     }
 
     /**
-     * The list of TestModules for this Module
+     * The TestModule for this Module
      */
-    @NotNull public Iterable<TestModuleHelper> getTestModules()
+    @Nullable public TestModuleHelper getTestModule()
     {
-        if (testModules == null) {
-            List<TestModuleHelper> list = new ArrayList<TestModuleHelper>();
-
-            for (TestModule testModule : getModule().tests()) {
-                list.add(testModule.getHelper());
-            }
-
-            testModules = list;
-        }
-
-        return testModules;
+        return testModule;
     }
 
     /**
@@ -351,15 +343,19 @@ public class ModuleHelper
         for (ModuleHelper mod : getDependencies()) {
             result.add(mod.getId());
 
-            for (TestModuleHelper t : mod.getTestModules()) {
-                result.add(t.getId());
+            final TestModuleHelper tm = mod.getTestModule();
+
+            if (tm != null) {
+                result.add(tm.getId());
             }
         }
 
         result.add(getId());
 
-        for (TestModuleHelper t : getTestModules()) {
-            result.add(t.getId());
+        final TestModuleHelper tm = getTestModule();
+
+        if (tm != null) {
+            result.add(tm.getId());
         }
 
         return result;
@@ -552,6 +548,33 @@ public class ModuleHelper
         }
 
         return result;
+    }
+
+    @Override void init()
+    {
+        super.init();
+        Class<? extends TestModule> tmClass = getModule().test;
+
+        if (tmClass != null) {
+            try {
+                Constructor<? extends TestModule> c = tmClass.getDeclaredConstructor();
+                c.setAccessible(true);
+                testModule = c.newInstance().getHelper();
+                testModule.setModuleToTest(this);
+            }
+            catch (InstantiationException e) {
+                throw new BuildException(e);
+            }
+            catch (IllegalAccessException e) {
+                throw new BuildException(e);
+            }
+            catch (NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+            catch (InvocationTargetException e) {
+                throw new RuntimeException(e.getCause());
+            }
+        }
     }
 
     @NotNull @Override ModuleHelper getModuleHelper()

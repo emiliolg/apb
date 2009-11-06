@@ -52,6 +52,6 @@ public final class Apb
 
         compiler.warnExcludes("apb/sunapi/*");
 
-        tests(new TestTasks());
+        test = TestTasks.class;
     }
 }

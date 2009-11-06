@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import apb.metadata.Dependency;
+import apb.metadata.DependencyList;
 import apb.metadata.LocalLibrary;
 import apb.metadata.Module;
 import apb.metadata.TestModule;
@@ -56,9 +57,10 @@ public class TestModuleHelper
 {
     //~ Instance fields ......................................................................................
 
-    @Nullable private File coverageDir;
-    @Nullable private File reportsDir;
-    @Nullable private File workingDirectory;
+    @Nullable private File         coverageDir;
+    @Nullable private File         reportsDir;
+    @Nullable private File         workingDirectory;
+    @Nullable private ModuleHelper moduleToTest;
 
     //~ Constructors .........................................................................................
 
@@ -82,13 +84,11 @@ public class TestModuleHelper
      */
     @NotNull public ModuleHelper getModuleToTest()
     {
-        Module m = getModule().getModuleToTest();
-
-        if (m == null) {
+        if (moduleToTest == null) {
             throw new IllegalStateException("'moduleToTest' not initialized");
         }
 
-        return m.getHelper();
+        return moduleToTest;
     }
 
     /**
@@ -216,6 +216,15 @@ public class TestModuleHelper
         List<Dependency> result = new ArrayList<Dependency>(getModule().dependencies());
         result.add(testFrameworkLibrary());
         return result;
+    }
+
+    public void setModuleToTest(@NotNull ModuleHelper moduleToTest)
+    {
+        this.moduleToTest = moduleToTest;
+        final DependencyList deps = getModule().dependencies();
+        final Module         m = moduleToTest.getModule();
+        deps.add(m);
+        deps.addAll(m.dependencies());
     }
 
     private LocalLibrary testFrameworkLibrary()

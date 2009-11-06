@@ -18,9 +18,6 @@
 
 package apb.metadata;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
 
@@ -77,6 +74,11 @@ public class Module
     implements Dependency
 {
     //~ Instance fields ......................................................................................
+
+    /*
+     * The list of test modules
+     */
+    public Class<? extends TestModule> test;
 
     /**
      * Info for the compiler
@@ -136,21 +138,11 @@ public class Module
      */
     protected final DependencyList dependencies = new DependencyList();
 
-    /*
-     * The list of test modules
-     */
-    final List<TestModule> tests = new ArrayList<TestModule>();
-
     //~ Methods ..............................................................................................
 
     public DependencyList dependencies()
     {
         return dependencies;
-    }
-
-    public List<TestModule> tests()
-    {
-        return tests;
     }
 
     @NotNull @Override public ModuleHelper getHelper()
@@ -162,7 +154,7 @@ public class Module
     public void clean()
     {
         getHelper().clean();
-        ProjectBuilder.forward("clean", tests());
+        ProjectBuilder.forward("clean", getHelper().getTestModule());
     }
 
     @BuildTarget(description = "Copy (eventually filtering) resources to the output directory.")
@@ -193,7 +185,7 @@ public class Module
                 )
     public void compileTests()
     {
-        ProjectBuilder.forward("compile", tests());
+        ProjectBuilder.forward("compile", getHelper().getTestModule());
     }
 
     @BuildTarget(
@@ -203,7 +195,7 @@ public class Module
                 )
     public void runTests()
     {
-        ProjectBuilder.forward("run", tests());
+        ProjectBuilder.forward("run", getHelper().getTestModule());
     }
 
     @BuildTarget(
@@ -213,7 +205,7 @@ public class Module
                 )
     public void runMinimalTests()
     {
-        ProjectBuilder.forward("run-minimal", tests());
+        ProjectBuilder.forward("run-minimal", getHelper().getTestModule());
     }
 
     @BuildTarget(
@@ -267,18 +259,6 @@ public class Module
     protected final void dependencies(Dependencies... dependencyList)
     {
         dependencies.addAll(dependencyList);
-    }
-
-    /**
-     * Method used to associate tests when defining a module
-     * @param testList The list of tests to be set
-     */
-    protected final void tests(TestModule... testList)
-    {
-        for (TestModule test : testList) {
-            test.setModuleToTest(this);
-            tests.add(NameRegistry.intern(test));
-        }
     }
 
     protected LocalLibrary localLibrary(String path)

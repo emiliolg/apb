@@ -23,6 +23,6 @@ public class Math
     //~ Instance initializers ................................................................................
 
     {
-        tests(new tests.Math());
+        test = tests.Math.class;
     }
 }

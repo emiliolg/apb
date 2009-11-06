@@ -186,11 +186,6 @@ public class TestModule
      */
     private final Map<String, String> properties = new HashMap<String, String>();
 
-    /**
-     * The module being tested
-     */
-    private Module moduleToTest;
-
     //~ Instance initializers ................................................................................
 
     {
@@ -347,28 +342,9 @@ public class TestModule
         getHelper().cleanTestReports();
     }
 
-    public Module getModuleToTest()
-    {
-        return moduleToTest;
-    }
-
     protected final void systemDependencies(Dependencies... dependencyList)
     {
         systemDependencies.addAll(dependencyList);
-    }
-
-    /**
-     * Define the module this test is testing
-     * Update the dependencies
-     * @param m The original module
-     */
-    void setModuleToTest(Module m)
-    {
-        if (moduleToTest == null) {
-            dependencies.add(m);
-            dependencies.addAll(m.dependencies());
-            moduleToTest = m;
-        }
     }
 
     //~ Static fields/initializers ...........................................................................
