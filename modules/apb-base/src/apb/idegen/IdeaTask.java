@@ -461,8 +461,10 @@ public class IdeaTask
                     for (String c : contentDirs) {
                         final File contentDir = env.fileFromBase(c);
 
-                        if (includeEmptyDirs || !contents.contains(contentDir) && contentDir.exists()) {
-                            contents.add(contentDir);
+                        if (includeEmptyDirs || contentDir.exists()) {
+                            if (filterDirs(contents, contentDir)) {
+                                contents.add(contentDir);
+                            }
                         }
                     }
 
@@ -497,6 +499,25 @@ public class IdeaTask
                     writeDocument(env, ideaFile, document);
                 }
             }
+        }
+
+        /**
+         * Checks if a content dir should be added. Also filter-out redundant dirs 
+         */
+        private static boolean filterDirs(Set<File> contents, File newContentDir)
+        {
+            boolean found = false;
+            for (Iterator<File> iterator = contents.iterator(); iterator.hasNext();) {
+                File content = iterator.next();
+                if (inside(newContentDir, content)) {
+                    iterator.remove();
+                    found = true;
+                } else if (!found && inside(content, newContentDir)) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private void addSourceDir(Element contentRoot, File source)
