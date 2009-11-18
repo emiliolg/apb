@@ -454,7 +454,8 @@ public class ModuleHelper
                            .usingDefaultFormatter(info.defaultErrorFormatter)  //
                            .excludeFromWarning(info.warnExcludes())  //
                            .instrumentNotNull(info.instrumentNotNull)  //
-                           .useName(getName());
+                           .useName(getName())
+                           .encoding(info.encoding);
 
         if (!info.warnGenerated) {
             javac.excludeFromWarning(getGeneratedSource());
