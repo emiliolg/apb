@@ -67,6 +67,7 @@ public class InfoTest
                     "run-minimal-tests: Run test with the annotation @Test(group=\"minimal\")",  //
                     "run-tests: Test the module (generating reports and  coverage info).",  //
                     "showdeps:graphviz: Output the dependency graph using graphviz",//
+                    "showdeps:html: Output the dependency graph using html",//
                     "--- Modules ---",  //
                     "hello-world",  //
                     "info",  //
