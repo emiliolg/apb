@@ -96,7 +96,7 @@ public class TestTest
 
     //~ Static fields/initializers ...........................................................................
 
-    private static final String MODULE_TESTS_MATH = "module = tests.Math\\+\\+";
+    private static final String MODULE_TESTS_MATH = "name = tests.Math\\+\\+";
 
     private static final String SUITE_1_1_RUN =
         "Suite ( 1/ 1): math.test.FractionTest                                 4 tests run\\+";

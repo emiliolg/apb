@@ -33,7 +33,7 @@ public abstract class BaseModule
     //~ Instance initializers ................................................................................
 
     {
-        outputBase = "$tmpdir/output/$moduledir";
+        outputBase = "$tmpdir/output/$dir";
         group = "tests";
         version = "1.0";
         pkg.dir = "$tmpdir/output/lib";

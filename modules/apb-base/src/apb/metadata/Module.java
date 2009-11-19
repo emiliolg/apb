@@ -116,17 +116,9 @@ public class Module
     @BuildProperty public String output = "$output-base/classes";
 
     /**
-     * A handy property that marks the base for all generated files
-     * You can modify this property or every property related to output directories
-     * (i.e: generatedSource, output, coverage-info.output, javadoc-info.output..)
-     */
-    @BuildProperty(order = 1)
-    public String outputBase = "output/$moduledir";
-
-    /**
      * The directory where the source files for this module are placed
      */
-    @BuildProperty public String source = "$moduledir/src";
+    @BuildProperty public String source = "$dir/src";
 
     /**
      * The module version

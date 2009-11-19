@@ -3800,7 +3800,7 @@ The directory where source files are placed.
 \begin_inset Text
 
 \begin_layout Plain Layout
-$moduledir/src
+$dir/src
 \end_layout
 
 \end_inset
@@ -3864,7 +3864,7 @@ By default all output directories are based on this value, so you can redefine
 \begin_inset Text
 
 \begin_layout Plain Layout
-output/$moduledir
+output/$dir
 \end_layout
 
 \end_inset
@@ -4137,7 +4137,7 @@ $output-base/coverage
 As you can see several default values are based on the 
 \family typewriter
 \series bold
-moduledir
+dir
 \family default
 \series default
  property.
@@ -4149,14 +4149,14 @@ ProjectElement.getDir
  the value of the 
 \family typewriter
 \series bold
-moduleid
+id
 \family default
 \series default
  property where subpackage are replaced by subdirectories.
  The 
 \family typewriter
 \series bold
-moduleid
+id
 \family default
 \series default
  is itself defined as the result of the 
@@ -4165,30 +4165,24 @@ ProjectElement.getId
 \family default
  method.
  that is defined as a canonized (lowercase, '-' separated) version of the
- 
+ module 
 \family typewriter
 \series bold
-module 
+name
 \family default
 \series default
-name.
+.
 \end_layout
 
 \begin_layout Standard
-So for example for a 
-\family typewriter
-\series bold
-module
-\family default
-\series default
- named 
+So for example for a module named 
 \family typewriter
 Math.java
 \family default
  the 
 \family typewriter
 \series bold
-moduleid
+id
 \family default
 \series default
  will become 
@@ -4198,7 +4192,7 @@ math
  and the 
 \family typewriter
 \series bold
-moduledir
+dir
 \family default
 \series default
  
@@ -4206,20 +4200,14 @@ moduledir
 math
 \family default
 .
- For a 
-\family typewriter
-\series bold
-module
-\family default
-\series default
- named 
+ For a module named 
 \family typewriter
 designer.DrawUtils
 \family default
  the 
 \family typewriter
 \series bold
-moduleid
+id
 \family default
 \series default
  will become 
@@ -4229,7 +4217,7 @@ designer.draw-utils
  and the 
 \family typewriter
 \series bold
-moduledir
+dir
 \family default
 \series default
  

@@ -67,12 +67,17 @@ public class ProjectElementHelper
         super(pb.getBaseEnvironment());
 
         this.element = element;
+
         executedCommands = new HashSet<Command>();
         infoMap = new TreeMap<String, Object>();
 
         sourceFile = pb.sourceFile(element);
         projectDirectory = findProjectDir(element, sourceFile);
         initialized = false;
+
+        putProperty(NAME_PROP_KEY, getName());
+        putProperty(ID_PROP_KEY, getId());
+        putProperty(DIR_PROP_KEY, element.getDir());
     }
 
     //~ Methods ..............................................................................................
@@ -282,6 +287,7 @@ public class ProjectElementHelper
 
     //~ Static fields/initializers ...........................................................................
 
-    static final String ID_SUFFIX = "id";
-    static final String DIR_SUFFIX = "dir";
+    static final String NAME_PROP_KEY = "name";
+    static final String ID_PROP_KEY = "id";
+    static final String DIR_PROP_KEY = "dir";
 }

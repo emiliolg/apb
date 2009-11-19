@@ -63,7 +63,7 @@ public final class Properties
     public List<MyEnum> l_e = new ArrayList<MyEnum>(asList(MyEnum.BETA, MyEnum.GAMMA));
 
     @BuildProperty(elementType = String.class)
-    public List<String> l_estr = new ArrayList<String>(asList("str1$id", "str2${id}value"));
+    public List<String> l_estr = new ArrayList<String>(asList("str1$prop1", "str2${prop1}value"));
 
     @BuildProperty(elementType = Float.class)
     public List<Float> l_f = new ArrayList<Float>(asList(10.0f, 20.0f));
@@ -84,7 +84,7 @@ public final class Properties
     @BuildProperty public MyEnum e = MyEnum.ALFA;
     @BuildProperty public Short  o_s = 1;
     @BuildProperty public short  s = 1;
-    @BuildProperty public String estr = "str$id ${id}value";
+    @BuildProperty public String estr = "str$prop1 ${prop1}value";
 
     @BuildProperty public String str = "str_value";
 

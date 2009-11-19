@@ -42,9 +42,6 @@ public class ProjectHelper
     ProjectHelper(ProjectBuilder pb, @NotNull Project project)
     {
         super(pb, project);
-        putProperty(PROJECT_PROP_KEY, getName());
-        putProperty(PROJECT_PROP_KEY + ID_SUFFIX, getId());
-        putProperty(PROJECT_PROP_KEY + DIR_SUFFIX, project.getDir());
     }
 
     //~ Methods ..............................................................................................
@@ -76,8 +73,4 @@ public class ProjectHelper
 
         pb.execute(this, commandName);
     }
-
-    //~ Static fields/initializers ...........................................................................
-
-    private static final String PROJECT_PROP_KEY = "project";
 }

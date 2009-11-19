@@ -45,7 +45,7 @@ public class PropertyTest
         throws DefinitionException
     {
         Map<String, String> ps = new LinkedHashMap<String, String>();
-        ps.put("id", ":ID_VALUE:");
+        ps.put("prop1", ":ID_VALUE:");
 
         init(ps);
 
@@ -97,7 +97,7 @@ public class PropertyTest
         throws DefinitionException
     {
         Map<String, String> ps = new LinkedHashMap<String, String>();
-        ps.put("id", ":ID_VALUE:");
+        ps.put("prop1", ":ID_VALUE:");
 
         init(ps);
 
@@ -149,7 +149,7 @@ public class PropertyTest
         throws DefinitionException
     {
         Map<String, String> ps = new LinkedHashMap<String, String>();
-        ps.put("id", ":ID_VALUE:");
+        ps.put("prop1", ":ID_VALUE:");
 
         ps.put("str", "override_str");
         ps.put("estr", "str:ID_VALUE: :ID_VALUE:val");
@@ -193,7 +193,7 @@ public class PropertyTest
         ps.put("inner.e", "GAMMA");
 
         init(ps);
-        ps.remove("id");
+        ps.remove("prop1");
 
         build("Properties", "info");
 
