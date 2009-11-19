@@ -36,7 +36,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import apb.utils.FileUtils;
+import apb.utils.StreamUtils;
 
 import org.xml.sax.SAXException;
 
@@ -61,8 +61,8 @@ public class Xslt
             transformer.transform(src, res);
         }
         finally {
-            FileUtils.close(fis);
-            FileUtils.close(fos);
+            StreamUtils.close(fis);
+            StreamUtils.close(fos);
         }
     }
 
@@ -77,7 +77,7 @@ public class Xslt
             return TransformerFactory.newInstance().newTemplates(src).newTransformer();
         }
         finally {
-            FileUtils.close(xslStream);
+            StreamUtils.close(xslStream);
         }
     }
 }

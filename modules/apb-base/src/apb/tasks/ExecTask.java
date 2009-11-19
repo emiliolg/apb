@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import static apb.utils.StreamUtils.buffered;
 //
 // User: emilio
 // Date: Oct 1, 2008
@@ -187,7 +188,7 @@ public class ExecTask
     @Nullable private Thread logStream(InputStream in, final boolean severe, final boolean background)
         throws IOException
     {
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+        final BufferedReader reader = buffered(new InputStreamReader(in));
 
         if (background) {
             final Runnable target =
@@ -230,7 +231,7 @@ public class ExecTask
     {
         List<String> o = output;
         assert o != null;
-        final BufferedReader out = new BufferedReader(new InputStreamReader(is));
+        final BufferedReader out = buffered(new InputStreamReader(is));
 
         String line;
 

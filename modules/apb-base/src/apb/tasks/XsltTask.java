@@ -45,6 +45,7 @@ import apb.Apb;
 import apb.BuildException;
 
 import apb.utils.FileUtils;
+import apb.utils.StreamUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -161,8 +162,8 @@ public class XsltTask
             throw new BuildException(e);
         }
         finally {
-            FileUtils.close(fis);
-            FileUtils.close(fos);
+            StreamUtils.close(fis);
+            StreamUtils.close(fos);
         }
     }
 
@@ -207,7 +208,7 @@ public class XsltTask
             throw new BuildException(e);
         }
         finally {
-            FileUtils.close(xslStream);
+            StreamUtils.close(xslStream);
         }
     }
 

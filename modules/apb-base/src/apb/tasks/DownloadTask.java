@@ -40,6 +40,7 @@ import apb.metadata.UpdatePolicy;
 import apb.utils.ClassUtils;
 import apb.utils.FileUtils;
 import apb.utils.StringUtils;
+import apb.utils.StreamUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -280,8 +281,8 @@ public class DownloadTask
             finished = true;
         }
         finally {
-            FileUtils.close(fos);
-            FileUtils.close(is);
+            StreamUtils.close(fos);
+            StreamUtils.close(is);
 
             // we have started to (over)write dest, but failed.
             // Try to delete the garbage we'd otherwise leave

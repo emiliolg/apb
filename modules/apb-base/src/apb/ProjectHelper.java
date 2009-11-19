@@ -70,8 +70,12 @@ public class ProjectHelper
 
     @Override void build(ProjectBuilder pb, String commandName)
     {
-        for (ProjectElement component : getProject().components()) {
-            pb.build(component.getHelper(), commandName);
+        final Command command = findCommand(commandName);
+
+        if (command == null || command.isRecursive()) {
+            for (ProjectElement component : getProject().components()) {
+                pb.build(component.getHelper(), commandName);
+            }
         }
 
         pb.execute(this, commandName);

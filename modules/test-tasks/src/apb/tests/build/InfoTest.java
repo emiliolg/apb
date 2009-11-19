@@ -66,6 +66,7 @@ public class InfoTest
                     "resources: Copy (eventually filtering) resources to the output directory.",  //
                     "run-minimal-tests: Run test with the annotation @Test(group=\"minimal\")",  //
                     "run-tests: Test the module (generating reports and  coverage info).",  //
+                    "showdeps:graphviz: Output the dependency graph using graphviz",//
                     "--- Modules ---",  //
                     "hello-world",  //
                     "info",  //
