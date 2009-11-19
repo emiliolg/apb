@@ -237,8 +237,8 @@ public class ProjectBuilder
 
     void execute(@NotNull ProjectElementHelper element, @NotNull String commandName)
     {
-        Environment prev = Apb.setCurrentEnv(element);
-        Command     command = element.findCommand(commandName);
+        final Environment prev = Apb.setCurrentEnv(element);
+        final Command     command = element.findCommand(commandName);
 
         if (command != null && element.notExecuted(command)) {
             for (Command cmd : command.getDependencies()) {

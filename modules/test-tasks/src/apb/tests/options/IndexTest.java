@@ -87,5 +87,5 @@ public class IndexTest
 
     static final List<String> MATH_EXPECTED_COMMANDS =
         asList("clean", "compile", "compile-tests", "help", "idegen:eclipse", "idegen:idea", "javadoc",
-               "module:clone", "package", "resources", "run-minimal-tests", "run-tests");
+               "module:clone", "package", "resources", "run-minimal-tests", "run-tests", "showdeps:graphviz");
 }

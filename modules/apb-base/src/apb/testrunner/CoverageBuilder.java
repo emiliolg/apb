@@ -41,7 +41,7 @@ import apb.Environment;
 import apb.TestModuleHelper;
 import apb.coverage.CoverageReport;
 import apb.metadata.CoverageInfo;
-import apb.utils.FileUtils;
+import apb.utils.StreamUtils;
 
 import static apb.utils.FileUtils.*;
 
@@ -210,7 +210,7 @@ class CoverageBuilder
             throw new RuntimeException(e);
         }
         finally {
-            FileUtils.close(reader);
+            StreamUtils.close(reader);
         }
     }
 

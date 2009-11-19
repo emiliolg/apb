@@ -39,6 +39,8 @@ public final class Apb
         pkg.includeDependencies = ALL;
 
         pkg.services("apb.Command", "apb.idegen.Idea", "apb.idegen.Eclipse");
+        pkg.services("apb.Command", "apb.showdeps.GraphViz");
+        pkg.services("apb.Command", "apb.showdeps.Html");
         pkg.services("apb.Command", "apb.module.Clone");
         pkg.services("apb.testrunner.TestSetCreator", "apb.testrunner.JunitTestSetCreator");
         pkg.services("javax.annotation.processing.Processor", "apb.processors.NotNullProcessor");
