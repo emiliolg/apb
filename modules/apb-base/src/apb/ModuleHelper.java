@@ -368,6 +368,7 @@ public class ModuleHelper
     {
         delete(getOutput()).execute();
         delete(getGeneratedSource()).execute();
+        delete(getJavadocInfo().output).execute();
 
         if (hasPackage()) {
             delete(getPackageFile()).execute();
