@@ -650,6 +650,14 @@ public class ModuleHelper
             }
         }
 
+        if (getCompileInfo().instrumentNotNull) {
+            File notNullAnnotations = Apb.applicationJarFile();
+
+            if (notNullAnnotations != null) {
+                result.add(new LocalLibrary(notNullAnnotations.getPath()));
+            }
+        }
+
         return result;
     }
 

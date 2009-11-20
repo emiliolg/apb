@@ -34,10 +34,6 @@ import org.jetbrains.annotations.NotNull;
 import static java.io.File.pathSeparator;
 
 import static apb.utils.FileUtils.makePath;
-//
-// User: emilio
-// Date: Sep 8, 2008
-// Time: 4:42:07 PM
 
 /**
  * A simple wrapper to JavaCompiler
