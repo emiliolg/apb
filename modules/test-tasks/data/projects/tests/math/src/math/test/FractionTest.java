@@ -59,8 +59,8 @@ public class FractionTest
         throws Exception
     {
         super.setUp();
-        String s = System.getProperty("module");
-        System.out.println("module = " + s);
+        String s = System.getProperty("name");
+        System.out.println("name = " + s);
     }
 
     //~ Static fields/initializers ...........................................................................

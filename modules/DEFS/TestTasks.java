@@ -48,10 +48,10 @@ public class TestTasks
 
         setenv("APB_PROJECT_PATH", "");
 
-        setProperty("datadir", "$basedir/$moduledir/data");
+        setProperty("datadir", "$basedir/$dir/data");
         setProperty("apb-jar", "$basedir/../lib/apb.jar");
         setProperty("module-src", "$basedir/$source");
 
-        idegen.contentDirs("$moduledir/data");
+        idegen.contentDirs("$dir/data");
     }
 }

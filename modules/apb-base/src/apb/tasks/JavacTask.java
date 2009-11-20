@@ -79,6 +79,7 @@ public class JavacTask
     @NotNull private String processing;
     @NotNull private String source;
     @NotNull private String target;
+    @NotNull private String encoding;
 
     //~ Constructors .........................................................................................
 
@@ -97,6 +98,7 @@ public class JavacTask
         lintOptions = "";
         processing = "";
         name = "";
+        encoding = "";
         annnotationOptions = new HashMap<String, String>();
     }
 
@@ -140,6 +142,12 @@ public class JavacTask
     public JavacTask sourceVersion(String v)
     {
         source = v;
+        return this;
+    }
+
+    public JavacTask encoding(String encodingValue)
+    {
+        encoding = encodingValue;
         return this;
     }
 
@@ -258,6 +266,11 @@ public class JavacTask
             if (!target.isEmpty()) {
                 options.add("-target");
                 options.add(target);
+            }
+
+            if (!encoding.isEmpty()) {
+                options.add("-encoding");
+                options.add(encoding);
             }
 
             for (Map.Entry<String, String> entry : annnotationOptions.entrySet()) {

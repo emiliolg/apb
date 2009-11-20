@@ -68,7 +68,7 @@ public class PackageInfo
     /**
      * The name of the package file without the extension
      */
-    @BuildProperty public String name = "${group}-${moduleid}-${version}";
+    @BuildProperty public String name = "${group}-${id}-${version}";
 
     /**
      * Additional dependencies added into the package.

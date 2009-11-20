@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import apb.Constants;
 import org.jetbrains.annotations.NotNull;
 
 import static java.util.Arrays.asList;
@@ -102,6 +103,11 @@ public class CompileInfo
      * Generate class files for specific VM version
      */
     @BuildProperty public String target = "";
+
+    /**
+     * The encoding to be used by the compiler
+     */
+    @BuildProperty public String encoding = Constants.UTF8;
 
     /**
      * The list of files to exclude from compilation.

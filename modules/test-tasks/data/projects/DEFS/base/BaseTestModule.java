@@ -33,7 +33,7 @@ public abstract class BaseTestModule
     //~ Instance initializers ................................................................................
 
     {
-        outputBase = "$tmpdir/output/$moduledir";
+        outputBase = "$tmpdir/output/$dir";
         group = "tests";
         version = "1.0";
         idegen.jdkName = "1.6";

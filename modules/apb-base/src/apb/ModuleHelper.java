@@ -87,9 +87,6 @@ public class ModuleHelper
     ModuleHelper(ProjectBuilder pb, Module module)
     {
         super(pb, module);
-        putProperty(MODULE_PROP_KEY, getName());
-        putProperty(MODULE_PROP_KEY + ID_SUFFIX, getId());
-        putProperty(MODULE_PROP_KEY + DIR_SUFFIX, module.getDir());
     }
 
     //~ Methods ..............................................................................................
@@ -368,6 +365,7 @@ public class ModuleHelper
     {
         delete(getOutput()).execute();
         delete(getGeneratedSource()).execute();
+        delete(getJavadocInfo().output).execute();
 
         if (hasPackage()) {
             delete(getPackageFile()).execute();
@@ -402,17 +400,19 @@ public class ModuleHelper
             final JarTask srcJar;
 
             if (packageInfo.generateSourcesJar) {
-                srcJar = jar(getSourcePackageFile()).fromDir(getSourceDir()).excluding(Constants.DEFAULT_EXCLUDES);
-            } else {
+                srcJar =
+                    jar(getSourcePackageFile()).fromDir(getSourceDir()).excluding(Constants.DEFAULT_EXCLUDES);
+            }
+            else {
                 srcJar = null;
             }
-
 
             // prepare dependencies included in package
             if (!additionalDeps.isEmpty()) {
                 for (Module m : additionalDeps) {
                     logVerbose("Adding module '%s'.\n", m.toString());
                     jarTask.addDir(m.getHelper().getOutput());
+
                     if (srcJar != null) {
                         srcJar.addDir(m.getHelper().getSourceDir());
                     }
@@ -454,7 +454,7 @@ public class ModuleHelper
                            .usingDefaultFormatter(info.defaultErrorFormatter)  //
                            .excludeFromWarning(info.warnExcludes())  //
                            .instrumentNotNull(info.instrumentNotNull)  //
-                           .useName(getName());
+                           .useName(getName()).encoding(info.encoding);
 
         if (!info.warnGenerated) {
             javac.excludeFromWarning(getGeneratedSource());
@@ -751,5 +751,4 @@ public class ModuleHelper
     //~ Static fields/initializers ...........................................................................
 
     private static final String SRC_JAR = "-src.jar";
-    private static final String MODULE_PROP_KEY = "module";
 }

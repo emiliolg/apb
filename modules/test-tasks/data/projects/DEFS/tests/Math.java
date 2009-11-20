@@ -32,7 +32,7 @@ public class Math
 
     {
         dependencies(localLibrary("../lib/junit-3.8.2.jar"));
-        useProperties("module");
+        useProperties("name");
 
         coverage.enable = true;
         coverage.ensure = 5;
