@@ -20,6 +20,6 @@ public class ShowDepsInfo {
     /**
      * The directory where the graph will be placed
      */
-    @BuildProperty public String dir = "$basedir/showdeps";
+    @BuildProperty public String dir = "$output-base/showdeps";
 
 }
