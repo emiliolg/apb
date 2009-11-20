@@ -67,9 +67,7 @@ public class Html
         inline("title", "Dependency Matrix");
         println("");
         begin("style", att("type", "text/css"));
-        print("td { width:");
-        print(String.valueOf(100f/all.size()));
-        println("%; text-align:center; }");
+        println("td { width:12pt; text-align:center; }");
         println("table { border-collapse:collapse; }");
         println("table, th, td { border: 1px solid black; }");
         end("style");
