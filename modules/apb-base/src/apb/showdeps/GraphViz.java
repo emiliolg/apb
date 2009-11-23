@@ -12,11 +12,10 @@ import apb.ProjectElementHelper;
 import apb.metadata.Module;
 import apb.metadata.Project;
 import apb.metadata.ProjectElement;
-import apb.metadata.TestModule;
 import static apb.utils.FileUtils.createOutputStream;
+import static apb.utils.StreamUtils.asyncTransfer;
 import static apb.utils.StreamUtils.buffered;
 import static apb.utils.StreamUtils.noClose;
-import static apb.utils.StreamUtils.asyncTransfer;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -31,7 +30,7 @@ import java.util.Set;
 public class GraphViz
         extends ShowDepsCommand {
 
-    private final Map<String,String> idMap = new HashMap<String,String>();
+    private final Map<ProjectElement,String> idMap = new HashMap<ProjectElement,String>();
     private final Set<String> usedIds = new HashSet<String>();
     private GraphVizInfo graphVizInfo;
 
@@ -42,13 +41,13 @@ public class GraphViz
 
 
     @NotNull
-    private String id(@NotNull final String id) {
-        String gid = idMap.get(id);
-        if(gid == null) {
-            gid = makeUniqueId(id);
-            idMap.put(id,gid);
+    private String id(@NotNull final ProjectElement element) {
+        String id = idMap.get(element);
+        if(id == null) {
+            id = makeUniqueId(element.getId());
+            idMap.put(element,id);
         }
-        return gid;
+        return id;
     }
 
     @NotNull
@@ -78,25 +77,24 @@ public class GraphViz
 
     @Override
     protected void visitDependency(final ProjectElement element, final Module module) {
-        print(id(element.getId()));
+        print(id(element));
         print(" -> ");
-        print(id(module.getId()));
+        print(id(module));
         println(";");
     }
 
 
     @Override
     protected void visitComponent(final Project project, final ProjectElement component) {
-        print(id(project.getId()));
+        print(id(project));
         print(" -> ");
-        print(id(component.getId()));
-        println("[style=dashed];");
+        print(id(component));
+        println("[style=dashed, weight=" + graphVizInfo.projectEdgeWeight + "];");
     }
 
     @Override
     protected void visitNode(final ProjectElement node) {
-        final String id = node.getId();
-        print(id(id));
+        print(id(node));
         print(" [label=\"");
         print(node.getId());
         print("\"");

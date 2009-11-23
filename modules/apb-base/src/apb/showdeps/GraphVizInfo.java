@@ -17,4 +17,6 @@ public class GraphVizInfo {
     @BuildProperty public String dotCommand = "dot";
     
     @BuildProperty public String outputType = "pdf";
+
+    @BuildProperty public double projectEdgeWeight = 1;
 }
