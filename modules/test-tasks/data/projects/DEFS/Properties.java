@@ -107,6 +107,8 @@ public final class Properties
         print("e");
 
         print("o-bool");
+        print("oBool");
+        print("o_bool");
         print("o-chr");
         print("o-b");
         print("o-s");

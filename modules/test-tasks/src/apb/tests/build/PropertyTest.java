@@ -62,6 +62,8 @@ public class PropertyTest
                     "d=1.0",  //
                     "e=ALFA",  //
                     "o-bool=true",  //
+                    "oBool=true",  //
+                    "o_bool=true",  //
                     "o-chr=a",  //
                     "o-b=1",  //
                     "o-s=1",  //
@@ -163,6 +165,8 @@ public class PropertyTest
         ps.put("d", "1000.0");
         ps.put("e", "BETA");
         ps.put("o-bool", "false");
+        ps.put("oBool", "false");
+        ps.put("o_bool", "false");
         ps.put("o-chr", "x");
         ps.put("o-b", "200");
         ps.put("o-s", "2000");

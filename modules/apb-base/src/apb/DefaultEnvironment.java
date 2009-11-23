@@ -49,7 +49,7 @@ abstract class DefaultEnvironment
     /**
      * The base property map
      */
-    @NotNull final Map<String, String> properties;
+    @NotNull final PropertyMap properties;
 
     @Nullable private File basedir;
 
@@ -69,7 +69,7 @@ abstract class DefaultEnvironment
     protected DefaultEnvironment(@NotNull Logger logger)
     {
         this.logger = logger;
-        properties = new TreeMap<String, String>();
+        properties = new PropertyMap();
     }
 
     //~ Methods ..............................................................................................
@@ -405,4 +405,37 @@ abstract class DefaultEnvironment
     //~ Static fields/initializers ...........................................................................
 
     private static final String ENV = "ENV.";
+
+    //~ Inner Classes ........................................................................................
+
+    /**
+    * A map that applies the idFromJavaId conversion to its keys
+     * (Not a full Map but only the needed methods).
+     */
+    static class PropertyMap
+    {
+        private TreeMap<String, String> delegated;
+
+        PropertyMap()
+        {
+            delegated = new TreeMap<String, String>();
+        }
+
+        void put(String id, String value)
+        {
+            delegated.put(apb.utils.NameUtils.idFromJavaId(id), value);
+        }
+
+        String get(String id)
+        {
+            return delegated.get(apb.utils.NameUtils.idFromJavaId(id));
+        }
+
+        void putAll(Map<String, String> map)
+        {
+            for (Map.Entry<String, String> e : map.entrySet()) {
+                put(e.getKey(), e.getValue());
+            }
+        }
+    }
 }

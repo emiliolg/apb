@@ -21,15 +21,13 @@ package apb;
 import java.io.File;
 import java.util.EnumSet;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.Properties;
 
 import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import static apb.utils.CollectionUtils.copyProperties;
 
 /**
  * This class represents an Environment that includes common services like:
@@ -66,15 +64,15 @@ final class BaseEnvironment
     private boolean quiet;
 
     /**
-     * Override properties are argument properties
-     * They take preference over the properties defined in project elements
-     */
-    @NotNull private final Map<String, String> overrideProperties;
-
-    /**
      * The current ProjectBuilder
      */
     private ProjectBuilder currentProjectBuilder;
+
+    /**
+     * Override properties are argument properties
+     * They take preference over the properties defined in project elements
+     */
+    @NotNull private final PropertyMap overrideProperties;
 
     //~ Constructors .........................................................................................
 
@@ -92,7 +90,7 @@ final class BaseEnvironment
 
         // Properties defined in the environment & in the command line
 
-        overrideProperties = new TreeMap<String, String>();
+        overrideProperties = new PropertyMap();
         loadSystemProperties(overrideProperties);
         overrideProperties.putAll(override);
 
@@ -194,6 +192,13 @@ final class BaseEnvironment
         getLogger().setLevel(Logger.Level.VERBOSE);
     }
 
+    static void copyProperties(PropertyMap m, Properties p)
+    {
+        for (String id : p.stringPropertyNames()) {
+            m.put(id, p.getProperty(id));
+        }
+    }
+
     void register(ProjectBuilder pb)
     {
         currentProjectBuilder = pb;
@@ -204,7 +209,7 @@ final class BaseEnvironment
         return currentProjectBuilder;
     }
 
-    private static void loadSystemProperties(Map<String, String> overrideProperties)
+    private static void loadSystemProperties(PropertyMap overrideProperties)
     {
         for (String entry : apbEnvironmentVariables) {
             String ename = entry;

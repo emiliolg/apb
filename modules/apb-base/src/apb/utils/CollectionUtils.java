@@ -22,8 +22,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 import apb.Environment;
 
@@ -69,13 +67,6 @@ public class CollectionUtils
         }
         else {
             return singletonList(element);
-        }
-    }
-
-    public static void copyProperties(Map<String, String> m, Properties p)
-    {
-        for (String id : p.stringPropertyNames()) {
-            m.put(id, p.getProperty(id));
         }
     }
 
