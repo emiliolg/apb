@@ -18,17 +18,18 @@
 
 package apb.tasks;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import apb.Apb;
 import apb.BuildException;
-
 import apb.utils.FileUtils;
-
+import apb.utils.SchemaUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import javax.xml.stream.XMLStreamException;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This task allow the invocation of the XML Binding Compiler (xjc)
@@ -138,6 +139,17 @@ public class XjcTask
 
     private void run()
     {
+        File schema = this.schema;
+        if (env.getBooleanProperty(XJC_SYMLINK_BUG, false)) {
+            try {
+                schema = SchemaUtils.copySchema(this.schema, env.fileFromBase("$output/" + schema.getName()));
+            } catch (XMLStreamException e) {
+                env.handle(e);
+            } catch (IOException e) {
+                env.handle(e);
+            }
+        }
+        
         //noinspection ResultOfMethodCallIgnored
         targetDir.mkdirs();
 
@@ -202,6 +214,7 @@ public class XjcTask
     private static final String JAXB_XJC_JAR_FILENAME = "jaxb-xjc.jar";
 
     public static final String XJC_CMD = "xjc-cmd";
+    public static final String XJC_SYMLINK_BUG = "xjc-symlink-bug";
 
     //~ Inner Classes ........................................................................................
 
