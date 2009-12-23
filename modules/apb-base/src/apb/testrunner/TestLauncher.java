@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import apb.ModuleHelper;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -229,7 +230,8 @@ public class TestLauncher
         environmentVariables = testModule.environment();
         workingDirectory = testModule.workingDirectory;
         testCreator = module.getTestCreator();
-        isApbTest = module.getModuleToTest().getPackageFile().equals(Apb.applicationJarFile());
+        final ModuleHelper moduleToTest = module.getModuleToTest();
+        isApbTest = moduleToTest.hasPackage() && moduleToTest.getPackageFile().equals(Apb.applicationJarFile());
     }
 
     //~ Methods ..............................................................................................
