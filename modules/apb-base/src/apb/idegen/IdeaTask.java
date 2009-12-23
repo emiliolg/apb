@@ -606,7 +606,7 @@ public class IdeaTask
 
         private String relativeUrl(@NotNull final String type, @NotNull File file)
         {
-            return type + "://$MODULE_DIR$/" + makeRelative(modulesHome, file).getPath();
+            return type + "://$MODULE_DIR$/" + makeRelative(modulesHome, file).getPath().replaceAll("\\\\", "/");
         }
 
         private Element getElementByNameAndAttribute(Element element, String name, String attribute,
