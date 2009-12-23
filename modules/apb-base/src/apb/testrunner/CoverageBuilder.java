@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb.testrunner;
 
 import java.io.BufferedReader;
@@ -24,6 +22,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.LinkedHashSet;
@@ -31,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -41,9 +39,12 @@ import apb.Environment;
 import apb.TestModuleHelper;
 import apb.coverage.CoverageReport;
 import apb.metadata.CoverageInfo;
+import apb.tasks.CoreTasks;
 import apb.utils.StreamUtils;
 
-import static apb.utils.FileUtils.*;
+import static apb.utils.FileUtils.listDirsWithFiles;
+import static apb.utils.FileUtils.makePath;
+import static apb.utils.FileUtils.makeRelative;
 
 /**
  * To be used from TestLauncher
@@ -52,18 +53,21 @@ class CoverageBuilder
 {
     //~ Instance fields ......................................................................................
 
-    private boolean coverageEnabled;
+    @NotNull private final List<File> classesToTest;
 
     @NotNull private final CoverageInfo coverage;
-    @Nullable private CoverageReport    textReport;
+
+    private boolean coverageEnabled;
 
     @NotNull private final Environment env;
+    @NotNull private final List<File>  filesDoDelete = new ArrayList<File>();
     @NotNull private final File        outputDir;
+    @Nullable private File             saveCoverageEc;
+    @Nullable private File             saveCoverageEm;
+    @NotNull private final List<File>  sourcesToTest;
     @NotNull private final File        testClasses;
-
-    @NotNull private final List<File> classesToTest;
-    @NotNull private final List<File> filesDoDelete = new ArrayList<File>();
-    @NotNull private final List<File> sourcesToTest;
+    @Nullable private CoverageReport   textReport;
+    @NotNull private final String      workingDirectory;
 
     //~ Constructors .........................................................................................
 
@@ -75,79 +79,87 @@ class CoverageBuilder
         outputDir = helper.getCoverageDir();
         sourcesToTest = helper.getSourcesToTest();
         classesToTest = helper.getClassesToTest();
+        workingDirectory = helper.getWorkingDirectory().getPath();
     }
 
     //~ Methods ..............................................................................................
 
-    @NotNull public List<String> addCommandLineArguments()
+    public void buildReport()
     {
-        List<String> args = new ArrayList<String>();
+        final List<String> args = new ArrayList<String>();
 
-        if (coverageEnabled) {
-            args.add(env.isVerbose() ? "-verbose" : "-quiet");
+        args.addAll(Arrays.asList("-sp", makePath(sourcesToTest), "-in", COVERAGE_EM, "-in", COVERAGE_EC));
 
-            for (CoverageReport report : processReports()) {
-                args.add("-r");
-                args.add(report.getType());
-                args.addAll(report.defines(outputDir));
-            }
-
-            if (coverage.dumpData) {
-                args.add("-sessiondata");
-                args.add("-out");
-                args.add(new File(outputDir, DATA_FILE).getAbsolutePath());
-            }
-
-            args.add("-f");
-            args.add("-ix");
-            args.add('@' + exclusionFileForTests());
-            args.add("-sp");
-            args.add(makePath(sourcesToTest));
-            args.add("-cp");
-            args.add(buildClassPath());
-            args.add(TESTRUNNER_MAIN);
+        for (CoverageReport report : processReports()) {
+            args.add("-r");
+            args.add(report.getType());
+            args.addAll(report.defines(outputDir));
         }
 
-        return args;
+        emma("report", args);
+    }
+
+    public void startRun()
+    {
+        if (coverageEnabled) {
+            instrument();
+        }
     }
 
     public void stopRun()
     {
-        if (coverageEnabled) {
-            final CoverageReport report = textReport;
+        if (!coverageEnabled) {
+            return;
+        }
 
-            if (report != null) {
-                EnumMap<CoverageReport.Column, Integer> coverageInfo = loadCoverageInfo(report);
+        buildReport();
 
-                if (!env.isQuiet()) {
-                    env.logInfo("Coverage summary Information: %s\n", formatLine(coverageInfo));
-                }
+        restoreEmmaFiles();
 
-                final int min = coverage.ensure;
+        final CoverageReport report = textReport;
 
-                if (min > 0) {
-                    int coverage = Collections.min(coverageInfo.values());
+        if (report != null) {
+            EnumMap<CoverageReport.Column, Integer> coverageInfo = loadCoverageInfo(report);
 
-                    if (coverage < min) {
-                        env.handle("Coverage (" + coverage + "%) below minimum value of: " + min + "% !!");
-                    }
-                }
+            if (!env.isQuiet()) {
+                env.logInfo("Coverage summary Information: %s\n", formatLine(coverageInfo));
             }
 
-            for (File file : filesDoDelete) {
-                file.delete();
+            final int min = coverage.ensure;
+
+            if (min > 0) {
+                int coverage = Collections.min(coverageInfo.values());
+
+                if (coverage < min) {
+                    env.handle("Coverage (" + coverage + "%) below minimum value of: " + min + "% !!");
+                }
             }
         }
-    }
 
-    @NotNull public String runnerMainClass()
-    {
-        return coverageEnabled ? EMMARUN : TESTRUNNER_MAIN;
+        for (File file : filesDoDelete) {
+            file.delete();
+        }
     }
 
     public void setEnabled(boolean b)
     {
         coverageEnabled = b;
+    }
+
+    public File emmaJar()
+    {
+        final File apbJar = Apb.applicationJarFile();
+        return new File(apbJar.getParent(), "emma.jar");
+    }
+
+    public Set<File> classPath()
+    {
+        return coverageEnabled ? Collections.singleton(getInstrDir()) : Collections.<File>emptySet();
+    }
+
+    public Set<File> runnerClassPath()
+    {
+        return coverageEnabled ? Collections.singleton(emmaJar()) : Collections.<File>emptySet();
     }
 
     private static String formatLine(Map<CoverageReport.Column, Integer> coverageInfo)
@@ -163,6 +175,102 @@ class CoverageBuilder
         }
 
         return builder.toString();
+    }
+
+    private static void restoreFile(File saveFile, File file)
+    {
+        file.delete();
+
+        if (saveFile != null) {
+            saveFile.renameTo(file);
+        }
+    }
+
+    @Nullable private static File moveOut(File file)
+    {
+        if (!file.exists()) {
+            return null;
+        }
+
+        final File tempFile = tempFileName(file.getName(), file.getParentFile());
+        file.renameTo(tempFile);
+        return tempFile;
+    }
+
+    @NotNull private static File tempFileName(String prefix, File dir)
+    {
+        File tempFile;
+
+        try {
+            tempFile = File.createTempFile(prefix, null, dir);
+        }
+        catch (IOException e) {
+            throw new BuildException("Cannot create temporary file", e);
+        }
+
+        tempFile.delete();
+        return tempFile;
+    }
+
+    private void clean()
+    {
+        CoreTasks.delete(getInstrDir()).execute();
+    }
+
+    private void backupEmmaFiles()
+    {
+        saveCoverageEm = moveOut(coverageEm());
+        saveCoverageEc = moveOut(coverageEc());
+    }
+
+    private void restoreEmmaFiles()
+    {
+        restoreFile(saveCoverageEm, coverageEm());
+        restoreFile(saveCoverageEc, coverageEc());
+    }
+
+    private File coverageEc()
+    {
+        return new File(workingDirectory, COVERAGE_EM);
+    }
+
+    private File coverageEm()
+    {
+        return new File(workingDirectory, COVERAGE_EC);
+    }
+
+    private void instrument()
+    {
+        backupEmmaFiles();
+        clean();
+        final File instrDir = getInstrDir();
+        instrDir.mkdirs();
+
+        final List<String> args = new ArrayList<String>();
+
+        args.addAll(Arrays.asList("-d", instrDir.getPath(), "-ip", makePath(classesToTest)));
+
+        final String filter = exclusionFileForTests();
+
+        //            if (filter != null) {
+        //                args.addAll(Arrays.asList("-ix", filter));
+        //            }
+
+        emma("instr", args);
+    }
+
+    private void emma(String command, List<String> args)
+    {
+        List<String> emmaArgs = new ArrayList<String>(args.size() + 2);
+        emmaArgs.add(command);
+        emmaArgs.add(env.isVerbose() ? "-verbose" : "-quiet");
+        emmaArgs.addAll(args);
+        CoreTasks.java("emma", emmaArgs).withClassPath(emmaJar().getPath()).onDir(workingDirectory).execute();
+    }
+
+    private File getInstrDir()
+    {
+        return new File(outputDir, "instr");
     }
 
     private String buildClassPath()
@@ -289,9 +397,6 @@ class CoverageBuilder
 
     //~ Static fields/initializers ...........................................................................
 
-    @NonNls private static final String EMMARUN = "emmarun";
-
-    @NonNls private static final String TESTRUNNER_MAIN = "apb.testrunner.Main";
-
-    @NonNls private static final String DATA_FILE = "coverage.es";
+    private static final String COVERAGE_EM = "coverage.em";
+    private static final String COVERAGE_EC = "coverage.ec";
 }

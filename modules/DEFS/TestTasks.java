@@ -36,7 +36,7 @@ public class TestTasks
     {
         coverage.enable = true;
 
-        coverage.ensure = 81;
+        coverage.ensure = 51;
 
         // Explicitily include apb. (It will be excluded by default otherwise)
         coverage.includes("apb.*");

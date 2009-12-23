@@ -41,7 +41,8 @@ public class Apb
 
     public static File applicationJarFile()
     {
-        return ClassUtils.jarFromClass(Apb.class);
+        // We should use an interface as parameter because these are not instrumented by emma.
+        return ClassUtils.jarFromClass(Logger.class);
     }
 
     /**

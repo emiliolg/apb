@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 package apb.testrunner;
 
@@ -36,33 +34,28 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 import apb.Proxy;
 import apb.TestModuleHelper;
-
 import apb.metadata.CoverageInfo;
 import apb.metadata.TestModule;
-
 import apb.tasks.JavaTask;
-
 import apb.testrunner.output.TestReport;
-
 import apb.utils.ClassUtils;
 import apb.utils.FileUtils;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import static java.lang.Character.isLowerCase;
 import static java.util.Arrays.asList;
 
 import static apb.tasks.CoreTasks.java;
-
 import static apb.testrunner.TestRunner.listTests;
 import static apb.testrunner.TestRunner.worseResult;
-
 import static apb.utils.CollectionUtils.listToString;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
@@ -87,6 +80,13 @@ public class TestLauncher
     boolean forkPerSuite;
 
     /**
+     * The classpath for the tests
+     */
+    @NotNull private final Set<File>       classPath;
+    @NotNull private final CoverageInfo    coverage;
+    @NotNull private final CoverageBuilder coverageBuilder;
+
+    /**
      * Enable assertions when running the tests
      */
     private final boolean enableAssertions;
@@ -97,56 +97,9 @@ public class TestLauncher
     private final boolean enableDebugger;
 
     /**
-     * Fail if no tests are found
-     */
-    private final boolean failIfEmpty;
-
-    /**
-     * Fail the build when a test fails
-     */
-    private final boolean                  failOnError;
-    @NotNull private final CoverageBuilder coverageBuilder;
-    @NotNull private final CoverageInfo    coverage;
-
-    /**
      * The environment
      */
     @NotNull private final Environment env;
-
-    /**
-     * The file where the report will be generated
-     */
-    @Nullable private File reportDir;
-
-    /**
-     * The test classes to be run
-     */
-    @NotNull private final File testClasses;
-
-    /**
-     * The memory (in megabytes) to be used by the forked process
-     */
-    private final int maxMemory;
-
-    /**
-     * The list of tests to exclude
-     */
-    @NotNull private List<String> excludes;
-
-    /**
-     * The list of tests to include
-     */
-    @NotNull private List<String> includes;
-
-    /**
-     * List of additional args to pass to the Java VM.
-     */
-    @NotNull private final List<String> javaArgs;
-
-    /**
-     * The list of test groups to execute
-     */
-    @NotNull private final List<String> testGroups;
 
     /**
      * The environment variables to be used in the test
@@ -154,24 +107,51 @@ public class TestLauncher
     private final Map<String, String> environmentVariables;
 
     /**
+     * The list of tests to exclude
+     */
+    @NotNull private List<String> excludes;
+
+    /**
+     * Fail if no tests are found
+     */
+    private final boolean failIfEmpty;
+
+    /**
+     * Fail the build when a test fails
+     */
+    private final boolean failOnError;
+
+    /**
+     * The list of tests to include
+     */
+    @NotNull private List<String> includes;
+
+    private final boolean isApbTest;
+
+    /**
+     * List of additional args to pass to the Java VM.
+     */
+    @NotNull private final List<String> javaArgs;
+
+    /**
+     * The memory (in megabytes) to be used by the forked process
+     */
+    private final int maxMemory;
+
+    /**
      * List of System properties to pass to the tests.
      */
     @NotNull private final Map<String, String> properties;
 
     /**
-     * The classes to be tested
+     * The report to be generated
      */
-    @NotNull private final Set<File> classesToTest;
+    @NotNull private final TestReport report;
 
     /**
-     * The classpath for the tests
+     * The file where the report will be generated
      */
-    @NotNull private final Set<File> classPath;
-
-    /**
-     * The list of elements to be included in the system classpath
-     */
-    @NotNull private final Set<File> systemClassPath = new LinkedHashSet<File>();
+    @Nullable private File reportDir;
 
     /*
     * To be able to run a simple TestCase
@@ -179,15 +159,25 @@ public class TestLauncher
     @NotNull private String singleTest = "";
 
     /**
+     * The list of elements to be included in the system classpath
+     */
+    @NotNull private final Set<File> systemClassPath = new LinkedHashSet<File>();
+
+    /**
+     * The test classes to be run
+     */
+    @NotNull private final File testClasses;
+
+    /**
      * The test creator
      */
     @NotNull private final String testCreator;
-    private final String          workingDirectory;
 
     /**
-     * The report to be generated
+     * The list of test groups to execute
      */
-    @NotNull private final TestReport report;
+    @NotNull private final List<String> testGroups;
+    private final String                workingDirectory;
 
     //~ Constructors .........................................................................................
 
@@ -197,7 +187,6 @@ public class TestLauncher
     {
         env = Apb.getEnv();
         this.classPath = new LinkedHashSet<File>(classPath);
-        this.classesToTest = new LinkedHashSet<File>(classesToTest);
         this.classPath.removeAll(classesToTest);
 
         report = reports;
@@ -240,6 +229,7 @@ public class TestLauncher
         environmentVariables = testModule.environment();
         workingDirectory = testModule.workingDirectory;
         testCreator = module.getTestCreator();
+        isApbTest = module.getModuleToTest().getPackageFile().equals(Apb.applicationJarFile());
     }
 
     //~ Methods ..............................................................................................
@@ -405,10 +395,11 @@ public class TestLauncher
 
     private int executeOutOfProcess()
     {
-        File reportSpecsFile = null;
+        File reportSpecsFile = reportSpecs();
+
+        coverageBuilder.startRun();
 
         try {
-            reportSpecsFile = reportSpecs();
             return forkPerSuite
                    ? executeEachSuite(reportSpecsFile)
                    : invokeRunner(testCreator, reportSpecsFile, null, listToString(testGroups, ":"));
@@ -417,11 +408,8 @@ public class TestLauncher
             throw new BuildException(e);
         }
         finally {
-            if (reportSpecsFile != null) {
-                reportSpecsFile.delete();
-            }
-
             coverageBuilder.stopRun();
+            reportSpecsFile.delete();
         }
     }
 
@@ -459,8 +447,6 @@ public class TestLauncher
         // Create Arguments for Java Command
         List<String> args = new ArrayList<String>();
 
-        args.addAll(coverageBuilder.addCommandLineArguments());
-
         // testrunner arguments
         if (env.isVerbose()) {
             args.add("-v");
@@ -470,13 +456,18 @@ public class TestLauncher
             args.add("-f");
         }
 
-        if (!isCoverageEnabled()) {
-            args.add("-c");
-            final Set<File> cp = new LinkedHashSet<File>(classPath);
-            cp.removeAll(systemClassPath);
-            cp.addAll(classesToTest);
-            args.add(makePath(cp));
+        args.add("-c");
+
+        final Set<File> cp = new LinkedHashSet<File>();
+
+        if (!isApbTest) {
+            cp.addAll(coverageBuilder.classPath());
         }
+
+        cp.addAll(classPath);
+        cp.removeAll(systemClassPath);
+
+        args.add(makePath(cp));
 
         if (suite == null) {
             args.add("-i");
@@ -521,11 +512,11 @@ public class TestLauncher
 
         // Execute  the java command
         JavaTask java =
-            java(coverageBuilder.runnerMainClass(), args).withClassPath(runnerClassPath())  //
-                                                         .maxMemory(maxMemory)  //
-                                                         .withProperties(properties)  //
-                                                         .withEnvironment(environmentVariables)  //
-                                                         .onDir(workingDirectory);
+            java(TESTRUNNER_MAIN, args).withClassPath(runnerClassPath())  //
+                                       .maxMemory(maxMemory)  //
+                                       .withProperties(properties)  //
+                                       .withEnvironment(environmentVariables)  //
+                                       .onDir(workingDirectory);
 
         if (enableDebugger) {
             for (String arg : DEBUG_ARGUMENTS) {
@@ -534,7 +525,7 @@ public class TestLauncher
         }
 
         //Add extra java args.
-        for(String arg : javaArgs) {
+        for (String arg : javaArgs) {
             java.addJavaArg(arg);
         }
 
@@ -545,29 +536,37 @@ public class TestLauncher
         return java.getExitValue();
     }
 
-    private String runnerClassPath()
+    private String[] runnerClassPath()
     {
         final File appJar = Apb.applicationJarFile();
 
         Set<File> path = new LinkedHashSet<File>();
 
-        if (isCoverageEnabled()) {
-            path.add(new File(appJar.getParent(), "emma.jar"));
-            path.addAll(classPath);
+        path.addAll(coverageBuilder.runnerClassPath());
+
+        if (isApbTest) {
+            path.addAll(coverageBuilder.classPath());
         }
-        else {
-            path.add(appJar);
-            final Set<File> scp = new LinkedHashSet<File>(systemClassPath);
-            scp.retainAll(classPath);
-            path.addAll(scp);
-        }
+
+        path.add(appJar);
+        final Set<File> scp = new LinkedHashSet<File>(systemClassPath);
+        scp.retainAll(classPath);
+        path.addAll(scp);
 
         path.addAll(env.getExtClassPath());
 
-        return makePath(path);
+        final String[] result = new String[path.size()];
+
+        int i = 0;
+
+        for (File file : path) {
+            result[i++] = file.getPath();
+        }
+
+        return result;
     }
 
-    private File reportSpecs()
+    @NotNull private File reportSpecs()
     {
         try {
             File               file = File.createTempFile("reps", null);
@@ -622,6 +621,8 @@ public class TestLauncher
     }
 
     //~ Static fields/initializers ...........................................................................
+
+    @NonNls private static final String TESTRUNNER_MAIN = "apb.testrunner.Main";
 
     private static final List<String> DEBUG_ARGUMENTS =
         Arrays.asList("-Xdebug", "-Xnoagent",

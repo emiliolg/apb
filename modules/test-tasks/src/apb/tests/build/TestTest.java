@@ -65,6 +65,7 @@ public class TestTest
         checkOutput(COMPILING_1_FILE,  //
                     COMPILING_1_FILE,  //
                     BUILDING + mathJar.getPath(),  //
+                    EMMA_COLLECTING,  //
                     SUITE_1_1_RUN,  //
                     SEPAR,  //
                     TEST_DIVIDE_FAILED1, TEST_DIVIDE_FAILED2, TEST_DIVIDE_FAILED3,  //
@@ -75,6 +76,7 @@ public class TestTest
                     SEPAR,  //
                     MODULE_TESTS_MATH,  //
                     SEPAR,  //
+                    EMMA_RUNTIME, //
                     COVERAGE,  //
                     SOME_TESTS_HAVE_FAILED,  //
                     CHECK + reportDir);
@@ -98,8 +100,10 @@ public class TestTest
 
     private static final String MODULE_TESTS_MATH = "name = tests.Math\\+\\+";
 
+    private static final String EMMA_COLLECTING = "EMMA: collecting runtime coverage data ...\\+";
     private static final String SUITE_1_1_RUN =
         "Suite ( 1/ 1): math.test.FractionTest                                 4 tests run\\+";
+    private static final String EMMA_RUNTIME = "EMMA: runtime coverage data\\+";
     private static final String COVERAGE = "Coverage summary Information\\+";
     private static final String SEPAR = "-------------------------------------------------\\+";
     private static final String TEST_DIVIDE_FAILED1 = "Test: testDivide: FAILED";
