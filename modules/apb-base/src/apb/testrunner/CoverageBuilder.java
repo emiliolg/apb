@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,9 +41,7 @@ import apb.metadata.CoverageInfo;
 import apb.tasks.CoreTasks;
 import apb.utils.StreamUtils;
 
-import static apb.utils.FileUtils.listDirsWithFiles;
 import static apb.utils.FileUtils.makePath;
-import static apb.utils.FileUtils.makeRelative;
 
 /**
  * To be used from TestLauncher
@@ -250,13 +247,18 @@ class CoverageBuilder
 
         args.addAll(Arrays.asList("-d", instrDir.getPath(), "-ip", makePath(classesToTest)));
 
-        final String filter = exclusionFileForTests();
+        File exclusionFile = exclusionFileForTests();
 
-        //            if (filter != null) {
-        //                args.addAll(Arrays.asList("-ix", filter));
-        //            }
+        if (exclusionFile != null) {
+            args.add("-ix");
+            args.add('@' + exclusionFile.getAbsolutePath());
+        }
 
         emma("instr", args);
+
+        if (exclusionFile != null) {
+            exclusionFile.delete();
+        }
     }
 
     private void emma(String command, List<String> args)
@@ -355,40 +357,30 @@ class CoverageBuilder
         return reports;
     }
 
-    @NotNull private String exclusionFileForTests()
+    @Nullable private File exclusionFileForTests()
     {
-        File testsDir = testClasses;
+        final Set<String> includes = coverage.includes();
+        final Set<String> excludes = coverage.excludes();
+
+        if (excludes.isEmpty() && includes.isEmpty()) {
+            return null;
+        }
 
         try {
             File        exclusionFile = createTempFile();
             PrintWriter ps = new PrintWriter(exclusionFile);
 
-            for (String p : coverage.includes()) {
+            for (String p : includes) {
                 ps.println("+" + p);
             }
 
             // Exclusion set
-            Set<String> excludes = new LinkedHashSet<String>(coverage.excludes());
-            excludes.add("apb.*");
-            excludes.add("junit.*");
-            excludes.add("org.objectweb.asm.*");
-            excludes.removeAll(coverage.includes());
-
             for (String p : excludes) {
                 ps.println("-" + p);
             }
 
-            for (String p : coverage.excludes()) {
-                ps.println("-" + p);
-            }
-
-            for (File dir : listDirsWithFiles(testsDir, ".class")) {
-                ps.printf("-%s.*Test\n",
-                          makeRelative(testsDir, dir).getPath().replace(File.separatorChar, '.'));
-            }
-
             ps.close();
-            return exclusionFile.getAbsolutePath();
+            return exclusionFile;
         }
         catch (IOException e) {
             throw new BuildException("Cannot create temporary file to store emma exclusions", e);
