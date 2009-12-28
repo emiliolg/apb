@@ -518,7 +518,7 @@ public class FileUtils
     @NotNull public static URL[] toURLArray(@NotNull Iterable<File> urls)
         throws MalformedURLException
     {
-        final Set<File> set = new HashSet<File>();
+        final Set<File> set = new LinkedHashSet<File>();
 
         for (File url : urls) {
             if (url != null) {
