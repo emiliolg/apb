@@ -32,10 +32,10 @@ import static apb.utils.ColorUtils.*;
 import static apb.utils.StringUtils.nChars;
 
 /**
- * Format a Compiler message, based on a Diagnostic
+ * Formats a Compiler message, based on a Diagnostic
  * Some dragons here...
- * It tries to use the internal JCDiagnostic class from the JDK thorugh reflection
- * If it fails it extract the message from the String
+ * It tries to use the internal JCDiagnostic class from the JDK through reflection
+ * If it fails it extracts the message from the String
  */
 
 class DiagnosticFormatter
@@ -44,7 +44,7 @@ class DiagnosticFormatter
 
     /**
      * If true the Diagnostic object is a JCDiagnostic class from the JDK
-     * then we can call its methods (getPrefix() and getText()
+     * then we can call its methods: getPrefix() and getText()
      */
     private boolean isJCDiagnostic;
 
@@ -68,7 +68,7 @@ class DiagnosticFormatter
     //~ Methods ..............................................................................................
 
     /**
-     * Returns a String with the formated Diagnostic info
+     * Returns a String with the formatted Diagnostic info
      * @return the formatted Diagnostic info
      */
 
@@ -86,7 +86,7 @@ class DiagnosticFormatter
     }
 
     /**
-     * Return a text with the description of the diagnostic
+     * Returns a text with the description of the diagnostic
      * It tries to invoke the 'getText' method of the JCDiagnostic object
      * if it fails it invokes the 'toString' method and applies a regular expression pattern
      * to extract the description of the diagnostic

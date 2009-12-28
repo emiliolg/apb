@@ -52,7 +52,7 @@ public class JavaC
     /**
      * Construct a JavaC instance
      * Intialize the underlying compiler.
-     * @param reporter
+     * @param reporter DiagnosticReporter for the Java Compiler
      */
     public JavaC(@NotNull DiagnosticReporter reporter)
     {
@@ -69,9 +69,10 @@ public class JavaC
      * @param sourceDirs The Source Directories where the above files reside
      * @param targetDir The target directory where the output will be generated
      * @param classPath The ClassPath where dependencies will be sought
-     * @param extraLibraries
-     *@param additionalOptions Additional Options for the compiler.
-     * @param trackUnusedPathElements Wheter to track unused path elements or not.   @return true if the compilation was succesful, false otherwise
+     * @param extraLibraries additional paths needed for this compilation action
+     * @param additionalOptions Additional Options for the compiler.
+     * @param trackUnusedPathElements Whether to track unused path elements or not.
+     * @return true if the compilation was successful, otherwise false 
      */
     public boolean compile(@NotNull List<File> files, @NotNull List<File> sourceDirs, @NotNull File targetDir,
                            @NotNull List<File> classPath, List<File> extraLibraries,
@@ -99,7 +100,7 @@ public class JavaC
     }
 
     /**
-     * Return the list of unused path Elements. For this to be meaningfull the compiler must be called with
+     * Return the list of unused path Elements. For this to be meaningful the compiler must be called with
      * trackUnusedPathElements in true
      * @param classPath The classPath to check against
      * @return The list of unusedPath elements from the provided path

@@ -62,8 +62,9 @@ public class DiagnosticReporter
     //~ Constructors .........................................................................................
 
     /**
-     * Cosntruct a DiagnosticReporter
-     * @param javacTask The original JavaTask
+     * Constructs a DiagnosticReporter
+     * @param javacTask The original {@link apb.tasks.JavacTask}
+     *
      */
     public DiagnosticReporter(JavacTask javacTask)
     {
@@ -84,7 +85,7 @@ public class DiagnosticReporter
      * Messages are grouped by file, so this method just add them to the 'ds' list
      * and then they are output by the  {@link #doReport } method
      *
-     * @param diagnostic  a diagnostic representing the problem that was found
+     * @param diagnostic  a {@link javax.tools.Diagnostic} representing the problem that was found
      */
     public void report(@Nullable Diagnostic<? extends JavaFileObject> diagnostic)
     {

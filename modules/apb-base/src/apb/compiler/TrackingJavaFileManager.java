@@ -56,6 +56,11 @@ public class TrackingJavaFileManager
 
     //~ Constructors .........................................................................................
 
+   /**
+    * Construct a TrackingJavaFileManager instance
+    * @param compiler the Java Compiler
+    * @param usedPathElements The set of used path elements (jars & dirs)
+    */
     protected TrackingJavaFileManager(@NotNull JavaCompiler compiler, @NotNull Set<File> usedPathElements)
     {
         super(compiler);
@@ -67,6 +72,13 @@ public class TrackingJavaFileManager
     /**
      * Implementation of {@link javax.tools.JavaFileManager#list} that wraps every JavaFileObject
      * returned to be able to track if the file was used.
+     *
+     * @param location     a location
+     * @param packageName  a package name
+     * @param kinds        return objects only of these kinds
+     * @param recurse      if true include sub packages
+     * @return an Iterable of file objects matching the given criteria
+     * @throws IOException if an I/O error occurred
      */
     @Override public Iterable<JavaFileObject> list(Location location, String packageName,
                                                    Set<JavaFileObject.Kind> kinds, boolean recurse)
@@ -85,6 +97,10 @@ public class TrackingJavaFileManager
     /**
      * Implements {@link javax.tools.JavaFileManager#inferBinaryName} invoking the default implementation
      * over the original JavaFileObject (Not the wrapped one).
+     * 
+     * @param location a location
+     * @param file a file object
+     * @return a binary name or {@code null} the file object is not
      */
     @Override public String inferBinaryName(Location location, JavaFileObject file)
     {

@@ -28,12 +28,19 @@ import javax.tools.StandardJavaFileManager;
 
 /**
  * A Default {@link javax.tools.JavaFileManager} that just forward everything to {@link javax.tools.StandardJavaFileManager}
+ * This forwards calls to a given compiler's file manager.
  * Plus add some simple defaults.
  */
 public class DefaultJavaFileManager
     extends ForwardingJavaFileManager<StandardJavaFileManager>
 {
     //~ Constructors .........................................................................................
+
+    /**
+     * Construct a DefaultJavaFileManager instance
+     *
+     * @param compiler An implementation of the JavaCompiler interface
+     */
 
     DefaultJavaFileManager(JavaCompiler compiler)
     {
@@ -43,7 +50,7 @@ public class DefaultJavaFileManager
     //~ Methods ..............................................................................................
 
     /**
-     * Forward the invocation
+     * Forward the invocation and gets file objects representing the given files
      *
      * @param files The files to be loaded
      * @return The loaded files
@@ -54,7 +61,8 @@ public class DefaultJavaFileManager
     }
 
     /**
-     * Wrap the IOException from close in a runtime one.
+     * Releases any resources opened by this file manager directly or indirectly.
+     * Wraps the IOException from close in a runtime one.
      */
     @Override public void close()
     {
