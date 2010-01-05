@@ -472,10 +472,15 @@ public class TestLauncher
         args.add(makePath(cp));
 
         if (suite == null) {
-            args.add("-i");
-            args.add(makePathFromStrings(includes));
-            args.add("-e");
-            args.add(makePathFromStrings(excludes));
+            if (!includes.isEmpty()) {
+                args.add("-i");
+                args.add(makePathFromStrings(includes));
+            }
+
+            if (!excludes.isEmpty()) {
+                args.add("-e");
+                args.add(makePathFromStrings(excludes));
+            }
         }
         else {
             args.add("-s");
