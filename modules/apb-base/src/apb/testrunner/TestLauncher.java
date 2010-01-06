@@ -560,8 +560,6 @@ public class TestLauncher
         scp.retainAll(classPath);
         path.addAll(scp);
 
-        path.addAll(env.getExtClassPath());
-
         final String[] result = new String[path.size()];
 
         int i = 0;
