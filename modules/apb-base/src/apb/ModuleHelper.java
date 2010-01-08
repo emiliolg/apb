@@ -590,7 +590,10 @@ public class ModuleHelper
                 result.addAll(dependency.asModule().getHelper().deepClassPath(useJars, true));
             }
             else if (dependency.isLibrary()) {
-                addIfNotNull(result, dependency.asLibrary().getArtifact(this, PackageType.JAR));
+                final Library library = dependency.asLibrary();
+                if (library.mustInclude(false)) {
+                    addIfNotNull(result, library.getArtifact(this, PackageType.JAR));
+                }
             }
         }
 
