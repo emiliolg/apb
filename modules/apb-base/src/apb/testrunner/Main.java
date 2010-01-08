@@ -24,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamClass;
 import java.net.MalformedURLException;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -79,7 +80,7 @@ public class Main
         final String            singleTest = options.getSingleTest();
 
         final String     reportSpecFile = options.getReportSpecFile();
-        final TestReport report = restoreOutput(reportSpecFile);
+        final TestReport report = restoreOutput(reportSpecFile, classloader);
 
         int r;
 
@@ -113,15 +114,18 @@ public class Main
         }
     }
 
-    @NotNull private static TestReport restoreOutput(@Nullable String file)
+    @NotNull private static TestReport restoreOutput(@Nullable String file, @NotNull final ClassLoader classloader)
     {
         TestReport result = null;
 
         if (file != null) {
             try {
-                ObjectInputStream is = new ObjectInputStream(new FileInputStream(file));
-                result = (TestReport) is.readObject();
-                is.close();
+                ObjectInputStream is = buildObjectInputStream(file, classloader);
+                try {
+                    result = (TestReport) is.readObject();
+                } finally {
+                    is.close();
+                }
             }
             catch (IOException e) {
                 throw new RuntimeException(e);
@@ -132,6 +136,25 @@ public class Main
         }
 
         return result == null ? TestReport.SIMPLE.build(Apb.getEnv()) : result;
+    }
+
+    private static ObjectInputStream buildObjectInputStream(final String file, final ClassLoader classloader)
+        throws IOException
+    {
+        return new ObjectInputStream(new FileInputStream(file)) {
+            @Override protected Class<?> resolveClass(ObjectStreamClass desc)
+                throws IOException, ClassNotFoundException
+            {
+                try {
+                    return Class.forName(desc.getName(), false, classloader);
+                }
+                catch (ClassNotFoundException ignore) {
+                    // fall through
+                }
+
+                return super.resolveClass(desc);
+            }
+        };
     }
 
     private static void saveOutput(@NotNull TestReport report, @Nullable String reportSpecFile)
