@@ -80,7 +80,7 @@ public class Main
         final String            singleTest = options.getSingleTest();
 
         final String     reportSpecFile = options.getReportSpecFile();
-        final TestReport report = restoreOutput(reportSpecFile, classloader);
+        final TestReport report = restoreOutput(reportSpecFile);
 
         int r;
 
@@ -114,18 +114,15 @@ public class Main
         }
     }
 
-    @NotNull private static TestReport restoreOutput(@Nullable String file, @NotNull final ClassLoader classloader)
+    @NotNull private static TestReport restoreOutput(@Nullable String file)
     {
         TestReport result = null;
 
         if (file != null) {
             try {
-                ObjectInputStream is = buildObjectInputStream(file, classloader);
-                try {
-                    result = (TestReport) is.readObject();
-                } finally {
-                    is.close();
-                }
+                ObjectInputStream is = buildObjectInputStream(file);
+                result = (TestReport) is.readObject();
+                is.close();
             }
             catch (IOException e) {
                 throw new RuntimeException(e);
@@ -138,9 +135,11 @@ public class Main
         return result == null ? TestReport.SIMPLE.build(Apb.getEnv()) : result;
     }
 
-    private static ObjectInputStream buildObjectInputStream(final String file, final ClassLoader classloader)
+    private static ObjectInputStream buildObjectInputStream(final String file)
         throws IOException
     {
+        final ClassLoader classloader = buildExtClassLoader();
+
         return new ObjectInputStream(new FileInputStream(file)) {
             @Override protected Class<?> resolveClass(ObjectStreamClass desc)
                 throws IOException, ClassNotFoundException
@@ -155,6 +154,13 @@ public class Main
                 return super.resolveClass(desc);
             }
         };
+    }
+
+    private static URLClassLoader buildExtClassLoader()
+        throws MalformedURLException
+    {
+        return new URLClassLoader(FileUtils.toURLArray(Apb.getEnv().getExtClassPath()),
+                                  Main.class.getClassLoader());
     }
 
     private static void saveOutput(@NotNull TestReport report, @Nullable String reportSpecFile)
