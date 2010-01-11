@@ -52,7 +52,7 @@ public class ClassUtils
         throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
                IllegalAccessException, InstantiationException
     {
-        Class<?> clazz = classLoader.loadClass(className);
+        Class<?> clazz =  Class.forName(className, false, classLoader);
 
         Object result;
 
