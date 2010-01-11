@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import apb.utils.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 //
@@ -81,8 +82,12 @@ public class DeleteTask
 
     private static boolean isSymbolicLink(File file)
     {
+        final File parent = FileUtils.normalizeFile(file).getParentFile();
         try {
-            return !file.getAbsolutePath().equals(file.getCanonicalPath());
+            if (parent != null) {
+                file = new File(parent.getCanonicalFile(), file.getName());
+            }
+            return !file.getPath().equals(file.getCanonicalPath());
         }
         catch (IOException e) {
             return true;
