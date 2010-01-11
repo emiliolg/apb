@@ -60,7 +60,6 @@ class CoverageBuilder
     @NotNull private final List<File>  filesDoDelete = new ArrayList<File>();
     @NotNull private final File        outputDir;
     @Nullable private File             saveCoverageEc;
-    @Nullable private File             saveCoverageEm;
     @NotNull private final List<File>  sourcesToTest;
     @NotNull private final File        testClasses;
     @Nullable private CoverageReport   textReport;
@@ -145,8 +144,7 @@ class CoverageBuilder
 
     public File emmaJar()
     {
-        final File apbJar = Apb.applicationJarFile();
-        return new File(apbJar.getParent(), "emma.jar");
+        return new File(Apb.applicationLibraryDir(), "emma.jar");
     }
 
     public Set<File> classPath()
@@ -209,29 +207,17 @@ class CoverageBuilder
         return tempFile;
     }
 
-    private void clean()
-    {
-        CoreTasks.delete(getInstrDir()).execute();
-    }
-
     private void backupEmmaFiles()
     {
-        saveCoverageEm = moveOut(coverageEm());
         saveCoverageEc = moveOut(coverageEc());
     }
 
     private void restoreEmmaFiles()
     {
-        restoreFile(saveCoverageEm, coverageEm());
         restoreFile(saveCoverageEc, coverageEc());
     }
 
     private File coverageEc()
-    {
-        return new File(workingDirectory, COVERAGE_EM);
-    }
-
-    private File coverageEm()
     {
         return new File(workingDirectory, COVERAGE_EC);
     }
@@ -239,7 +225,6 @@ class CoverageBuilder
     private void instrument()
     {
         backupEmmaFiles();
-        clean();
         final File instrDir = getInstrDir();
         instrDir.mkdirs();
 
