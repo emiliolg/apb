@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -90,12 +89,23 @@ public class Apb
         return result;
     }
 
+    public static File applicationLibraryDir()
+    {
+        return new File(getHome(), "lib");
+    }
+
     /**
      * Get the Apb home directory
      * Returns null if we cannot find it.
      */
     @Nullable public static File getHome()
     {
+        final String apbHome = System.getProperty("apb.home");
+
+        if (apbHome != null) {
+            return new File(apbHome);
+        }
+
         try {
             return applicationJarFile().getParentFile().getParentFile();
         }
