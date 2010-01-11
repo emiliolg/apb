@@ -466,8 +466,10 @@ public class TestLauncher
             cp.addAll(coverageBuilder.classPath());
         }
 
+        final String[] runnerPath = runnerClassPath();
+
         cp.addAll(classPath);
-        cp.removeAll(systemClassPath);
+        cp.removeAll(Arrays.asList(runnerPath));
 
         args.add(makePath(cp));
 
@@ -519,7 +521,7 @@ public class TestLauncher
 
         // Execute  the java command
         JavaTask java =
-            java(TESTRUNNER_MAIN, args).withClassPath(runnerClassPath())  //
+            java(TESTRUNNER_MAIN, args).withClassPath(runnerPath)  //
                                        .maxMemory(maxMemory)  //
                                        .withProperties(properties)  //
                                        .withEnvironment(environmentVariables)  //
@@ -545,8 +547,6 @@ public class TestLauncher
 
     private String[] runnerClassPath()
     {
-        final File appJar = Apb.applicationJarFile();
-
         Set<File> path = new LinkedHashSet<File>();
 
         path.addAll(coverageBuilder.runnerClassPath());
@@ -555,7 +555,9 @@ public class TestLauncher
             path.addAll(coverageBuilder.classPath());
         }
 
-        path.add(appJar);
+        path.add(Apb.applicationJarFile());
+        path.add(testFrameworkJar());
+        
         final Set<File> scp = new LinkedHashSet<File>(systemClassPath);
         scp.retainAll(classPath);
         path.addAll(scp);
@@ -569,6 +571,10 @@ public class TestLauncher
         }
 
         return result;
+    }
+
+    private File testFrameworkJar() {
+        return instatiateCreator(testCreator, this.getClass().getClassLoader()).getTestFrameworkJar();
     }
 
     @NotNull private File reportSpecs()
