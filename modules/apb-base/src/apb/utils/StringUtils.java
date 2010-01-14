@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -238,13 +239,9 @@ public class StringUtils
 
     public static String nChars(int n, char chr)
     {
-        StringBuilder str = new StringBuilder();
-
-        for (int i = 0; i < n; i++) {
-            str.append(chr);
-        }
-
-        return str.toString();
+        final char[] chars = new char[n];
+        Arrays.fill(chars, chr);
+        return new String(chars);
     }
 
     public static String getStackTrace(Throwable t)
@@ -289,19 +286,19 @@ public class StringUtils
      */
     public static String appendIndenting(@NotNull String header, @NotNull String msg)
     {
-        String indent = nChars(header.length(), ' ');
+        String spaces = nChars(header.length(), ' ');
         int    nl;
 
-        StringBuilder result = new StringBuilder(header);
+        StringBuilder result = new StringBuilder();
 
         while ((nl = msg.indexOf('\n')) >= 0) {
-            result.append(msg.substring(0, ++nl));
+            result.append(header).append(msg.substring(0, ++nl));
             msg = msg.substring(nl);
-            result.append(indent);
+            header = spaces;
         }
 
         if (!msg.isEmpty()) {
-            result.append(msg);
+            result.append(header).append(msg);
         }
 
         return result.toString();
