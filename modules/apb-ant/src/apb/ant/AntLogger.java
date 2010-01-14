@@ -37,11 +37,11 @@ class AntLogger
 {
     //~ Instance fields ......................................................................................
 
-    private Task antTask;
+    private final Task antTask;
 
     //~ Constructors .........................................................................................
 
-    public AntLogger(Task task)
+    AntLogger(Task task)
     {
         antTask = task;
     }
@@ -51,8 +51,16 @@ class AntLogger
     @Override public void log(@NotNull Level level, @NotNull String msg, Object... args)
     {
         int l = convertLevel(level);
+
+        if (args.length != 0) {
+            msg = String.format(msg, args);
+        }
+
         msg = StringUtils.appendIndenting(Apb.makeStandardHeader() + ' ', msg);
-        antTask.log(args.length == 0 ? msg : String.format(msg, args), l);
+
+        // Remove trailing \n, as Task.log() method will append one.
+        msg = removeTrailingNL(msg);
+        antTask.log(msg, l);
     }
 
     @Override public void setLevel(@NotNull Level level)
@@ -60,7 +68,24 @@ class AntLogger
         // Ignore
     }
 
-    private int convertLevel(@NotNull Level level)
+    private static String removeTrailingNL(String msg)
+    {
+        int len = msg.length();
+
+        //noinspection HardcodedLineSeparator
+        if (len > 0 && msg.charAt(len - 1) == '\n') {
+            len--;
+        }
+
+        //noinspection HardcodedLineSeparator
+        if (len > 0 && msg.charAt(len - 1) == '\r') {
+            len--;
+        }
+
+        return msg.substring(0, len);
+    }
+
+    private static int convertLevel(@NotNull Level level)
     {
         switch (level) {
         case INFO:
