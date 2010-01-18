@@ -36,10 +36,20 @@ import static apb.utils.StringUtils.isNotEmpty;
  */
 public class Apb
 {
+    //~ Constructors .........................................................................................
+
+    private Apb() {}
+
     //~ Methods ..............................................................................................
 
     public static File applicationJarFile()
     {
+        final String apbHome = System.getProperty("apb.home");
+
+        if (apbHome != null) {
+            return new File(new File(apbHome, "lib"), "apb.jar");
+        }
+
         // We should use an interface as parameter because these are not instrumented by emma.
         return ClassUtils.jarFromClass(Logger.class);
     }
@@ -91,7 +101,7 @@ public class Apb
 
     public static File applicationLibraryDir()
     {
-        return new File(getHome(), "lib");
+        return applicationJarFile().getParentFile();
     }
 
     /**
@@ -100,18 +110,7 @@ public class Apb
      */
     @Nullable public static File getHome()
     {
-        final String apbHome = System.getProperty("apb.home");
-
-        if (apbHome != null) {
-            return new File(apbHome);
-        }
-
-        try {
-            return applicationJarFile().getParentFile().getParentFile();
-        }
-        catch (BuildException e) {
-            return null;
-        }
+        return applicationLibraryDir().getParentFile();
     }
 
     public static Environment createBaseEnvironment()
