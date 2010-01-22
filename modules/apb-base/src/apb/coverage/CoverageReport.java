@@ -75,6 +75,15 @@ public class CoverageReport
 
     //~ Methods ..............................................................................................
 
+    /**
+     * Adds an order criteria to the CoverageReport by a given Column
+     *
+     * @param column The Column to use for ordering
+     *        Valid values are Column.NAME, Column.CLASS, Column.METHOD,
+     *        Column.BLOCK and Column.LINE.  See {@link Column}.
+     *
+     * @return a CoverageReport instance ordered by a given Column
+     */
     @NotNull public CoverageReport orderBy(@NotNull Column column)
     {
         CoverageReport result = cloneIfNecessary();
@@ -82,6 +91,15 @@ public class CoverageReport
         return result;
     }
 
+    /**
+     * Sets the descending order for a CoverageReport
+     * This method must be called after the 'sortBy' method
+     *
+     * @throws IllegalStateException  if there are no columns
+     *         set by the 'sortBy' method in advance
+     *
+     * @return an ordered CoverageReport instance
+     */
     @NotNull public CoverageReport descending()
     {
         if (order.isEmpty()) {
@@ -93,13 +111,31 @@ public class CoverageReport
         return result;
     }
 
-    @NotNull public CoverageReport depth(@NotNull Depth d)
+    /**
+     * Sets the depth to the CoverageReport by a given Column
+     *
+     * @param depth The Depth of the Coverage Report
+     *        Valid values are Depth.ALL, Depth.CLASS,
+     *        and Depth.METHOD.  See {@link Depth}.
+     *
+     * @return a CoverageReport instance ordered by a given Column
+     */
+    @NotNull public CoverageReport depth(@NotNull Depth depth)
     {
         CoverageReport result = cloneIfNecessary();
-        result.depth = d;
+        result.depth = depth;
         return result;
     }
 
+    /**
+     * Adds an order criteria to the CoverageReport by a given Columns
+     *
+     * @param cs Column objects separated by comas to use for ordering
+     *        Valid values are Column.NAME, Column.CLASS, Column.METHOD,
+     *        Column.BLOCK and Column.LINE.  See {@link Column}.
+     *
+     * @return a CoverageReport instance ordered by a given Column
+     */
     @NotNull public CoverageReport columns(@NotNull Column... cs)
     {
         CoverageReport result = cloneIfNecessary();
@@ -107,6 +143,13 @@ public class CoverageReport
         return result;
     }
 
+    /**
+     * Adds an output File to the CoverageReport
+     *
+     * @param outputFile A path to a file
+     *
+     * @return an updated CoverageReport instance with the output file
+     */
     @NotNull public CoverageReport outputTo(@NotNull String outputFile)
     {
         CoverageReport result = cloneIfNecessary();
@@ -114,13 +157,31 @@ public class CoverageReport
         return result;
     }
 
-    @NotNull public CoverageReport threshold(@NotNull Column c, int percentage)
+    /**
+     * Adds an threshold for a given CoverageReport Column
+     *
+     * @param column The Column to use for ordering
+     *        Valid values are Column.NAME, Column.CLASS, Column.METHOD,
+     *        Column.BLOCK and Column.LINE.  See {@link Column}.
+     *
+     * @param percentage The threshold. Valid values are from 0 to 100
+     *
+     * @return an updated CoverageReport instance with the Column´s threshold
+     */
+    @NotNull public CoverageReport threshold(@NotNull Column column, int percentage)
     {
         CoverageReport result = cloneIfNecessary();
-        result.thresholds.put(c, percentage);
+        result.thresholds.put(column, percentage);
         return result;
     }
 
+    /**
+     * Sets a fixed threshold for all the Columns of the CoverageReport
+     *
+     * @param percentage The threshold. Valid values are from 0 to 100
+     *
+     * @return an updated CoverageReport instance with the Column´s threshold
+     */
     @NotNull public CoverageReport threshold(int percentage)
     {
         CoverageReport result = cloneIfNecessary();
@@ -132,6 +193,15 @@ public class CoverageReport
         return result;
     }
 
+    /**
+     * Returns an output File instance
+     * if there is already an output file it is returned,
+     * else a new output file is created with the given outputDir
+     *
+     * @param outputDir A path to a file
+     *
+     * @return an output File  
+     */
     public File getOutputFile(File outputDir)
     {
         File out = output == null ? new File(outputDir, "coverage") : output;
@@ -143,16 +213,33 @@ public class CoverageReport
         return out;
     }
 
+    /**
+     * Returns the list of columns of the current CoverageReport
+     *
+     * @return a List of Column
+     *         See {@link Column}. 
+     */
     @NotNull public List<Column> getColumns()
     {
         return columns;
     }
 
+    /**
+     * Returns the current CoverageReport type
+     *
+     * @return a String containing the CoverageReport type
+     */
     @NotNull public String getType()
     {
         return type;
     }
 
+    /**
+     * Get the argument definitions for the current CoverageReport
+     *
+     * @return a List<String> containing the values of the following arguments:
+     *         depth, columns, sort, out.file and metrics (for type = HTML or TEXT)    
+     */
     @NotNull public List<String> defines(File outputDir)
     {
         String       prefix = "-Dreport." + type + ".";
