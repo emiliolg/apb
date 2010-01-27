@@ -166,7 +166,7 @@ public class CoverageReport
      *
      * @param percentage The threshold. Valid values are from 0 to 100
      *
-     * @return an updated CoverageReport instance with the Column´s threshold
+     * @return an updated CoverageReport instance with the Column's threshold
      */
     @NotNull public CoverageReport threshold(@NotNull Column column, int percentage)
     {
@@ -180,7 +180,7 @@ public class CoverageReport
      *
      * @param percentage The threshold. Valid values are from 0 to 100
      *
-     * @return an updated CoverageReport instance with the Column´s threshold
+     * @return an updated CoverageReport instance with the Column's threshold
      */
     @NotNull public CoverageReport threshold(int percentage)
     {
