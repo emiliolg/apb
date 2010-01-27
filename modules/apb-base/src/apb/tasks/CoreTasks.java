@@ -319,13 +319,19 @@ public class CoreTasks
         return new XsltTask.Builder(fileSets);
     }
 
-    public static XjcTask.Builder xjc(@NotNull String schema)
+    public static XjcTask.Builder xjc(@NotNull String... schemas)
     {
-        return xjc(Apb.getEnv().fileFromBase(schema));
+        final File[] files = new File[schemas.length];
+
+        for (int i = 0, length = schemas.length; i < length; i++) {
+            files[i] = Apb.getEnv().fileFromBase(schemas[i]);
+        }
+
+        return xjc(files);
     }
 
-    public static XjcTask.Builder xjc(@NotNull File schema)
+    public static XjcTask.Builder xjc(@NotNull File... schemas)
     {
-        return new XjcTask.Builder(schema);
+        return new XjcTask.Builder(schemas);
     }
 }

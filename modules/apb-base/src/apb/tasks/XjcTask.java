@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,21 +14,24 @@
 // limitations under the License
 //
 
-
 package apb.tasks;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.xml.stream.XMLStreamException;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import apb.Apb;
 import apb.BuildException;
 import apb.utils.FileUtils;
 import apb.utils.SchemaUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import javax.xml.stream.XMLStreamException;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This task allow the invocation of the XML Binding Compiler (xjc)
@@ -39,25 +41,24 @@ public class XjcTask
 {
     //~ Instance fields ......................................................................................
 
-    private boolean             packageAnnotations;
-    private boolean             timestamp;
-    @NotNull private final File schema;
-    @NotNull private final File targetDir;
-
     @NotNull private final List<File> externalBindings;
-    @NotNull private String           targetPackage;
+
+    private boolean               packageAnnotations;
+    @NotNull private final File[] schemas;
+    @NotNull private final File   targetDir;
+    @NotNull private String       targetPackage;
+    private boolean               timestamp;
 
     //~ Constructors .........................................................................................
 
     /**
      * Construt the XML Binding Compiler Task
-     * @param schemaFile  The xml schema to generate the java bindings for, relative the source folder
+     * @param schemaFiles  The xml schemas to generate the java bindings for, relative the source folder
      * @param target The directory where generated files will be placed
      */
-    private XjcTask(@NotNull File schemaFile, @NotNull File target)
+    private XjcTask(@NotNull File[] schemaFiles, @NotNull File target)
     {
-        super();
-        schema = schemaFile;
+        schemas = schemaFiles;
         targetDir = target;
         targetPackage = "";
         externalBindings = new ArrayList<File>();
@@ -121,35 +122,63 @@ public class XjcTask
     /**
      * Execute the task
      */
-    public void execute()
+    @Override public void execute()
     {
         if (mustBuild()) {
             run();
         }
     }
 
+    private static boolean isSymbolicLink(File file)
+    {
+        try {
+            return !file.getAbsolutePath().equals(file.getCanonicalPath());
+        }
+        catch (IOException e) {
+            return true;
+        }
+    }
+
+    private static boolean isAnySymlink(File[] files)
+    {
+        for (File file : files) {
+            if (isSymbolicLink(file)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private File targetFile() {
+        return new File(targetDir, schemas[0].getName() + ".touch");
+    }
+
     private boolean mustBuild()
     {
+        final File target = targetFile();
         final long ts;
-        File       dir = new File(targetDir, targetPackage.replace('.', File.separatorChar));
-
-        return env.forceBuild() || (ts = dir.lastModified()) == 0 || schema.lastModified() > ts ||
-               !FileUtils.uptodate(externalBindings, ts);
+        return env.forceBuild() || (ts = target.lastModified()) == 0 ||
+               !FileUtils.uptodate(externalBindings, ts) || !FileUtils.uptodate(Arrays.asList(schemas), ts);
     }
 
     private void run()
     {
-        File schema = this.schema;
-        if (env.getBooleanProperty(XJC_SYMLINK_BUG, false)) {
+        File[] schemas = this.schemas;
+
+        if (env.getBooleanProperty(XJC_SYMLINK_BUG, false) && isAnySymlink(schemas)) {
             try {
-                schema = SchemaUtils.copySchema(this.schema, env.fileFromBase("$output/" + schema.getName()));
-            } catch (XMLStreamException e) {
+                schemas =
+                    SchemaUtils.copySchema(schemas, env.fileFromBase("$output/" + schemas[0].getName()));
+            }
+            catch (XMLStreamException e) {
                 env.handle(e);
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 env.handle(e);
             }
         }
-        
+
         //noinspection ResultOfMethodCallIgnored
         targetDir.mkdirs();
 
@@ -163,7 +192,7 @@ public class XjcTask
             args.add("-npa");
         }
 
-        env.logInfo("Processing: %s\n", schema);
+        env.logInfo("Processing: %s\n", makeString(schemas));
 
         if (jar != null) {
             env.logInfo("Using     : %s\n", jar);
@@ -190,12 +219,49 @@ public class XjcTask
             args.add(binding.getPath());
         }
 
-        args.add(schema.getPath());
+        for (File schema : schemas) {
+            args.add(schema.getPath());
+        }
+
+        final File target = targetFile();
+        target.delete();
 
         final ExecTask command =
             jar == null ? CoreTasks.exec(env.getProperty(XJC_CMD, "xjc"), args)
                         : CoreTasks.javaJar(jar, args);
         command.execute();
+
+        if (command.getExitValue() == 0) {
+            touchFile(target);
+        }
+        else {
+            env.handle("Xjc task failed");
+        }
+    }
+
+    private static String makeString(File[] schemas) {
+        final StringBuilder sb = new StringBuilder();
+
+        for (File schema : schemas) {
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+            sb.append(schema.getName());
+        }
+
+        return sb.toString();
+    }
+
+    private void touchFile(File file)
+    {
+        file.delete();
+
+        try {
+            new FileOutputStream(file).close();
+        }
+        catch (IOException e) {
+            env.handle(e);
+        }
     }
 
     @Nullable private String findJar()
@@ -220,19 +286,25 @@ public class XjcTask
 
     public static class Builder
     {
-        @NotNull private final File from;
+        @NotNull private final File[] from;
 
         /**
          * Private constructor called from factory methods
-         * @param schema The Schema to generate files from.
+         * @param schemas The Schema to generate files from.
          */
 
-        Builder(@NotNull File schema)
+        Builder(@NotNull File[] schemas)
         {
-            from = schema;
+            from = schemas;
 
-            if (!schema.exists()) {
-                throw new BuildException("Non existent schema: " + schema);
+            if (schemas.length == 0) {
+                throw new BuildException("You must specify one schema file");
+            }
+
+            for (File file : schemas) {
+                if (!file.exists()) {
+                    throw new BuildException("Non existent schema: " + file);
+                }
             }
         }
 
