@@ -171,9 +171,6 @@ public class XjcTask
                 schemas =
                     SchemaUtils.copySchema(schemas, env.fileFromBase("$output/" + schemas[0].getName()));
             }
-            catch (XMLStreamException e) {
-                env.handle(e);
-            }
             catch (IOException e) {
                 env.handle(e);
             }

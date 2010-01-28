@@ -17,18 +17,27 @@
 package apb.utils;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Queue;
 import java.util.Set;
 
+import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+
+import org.jetbrains.annotations.Nullable;
+
+import apb.Apb;
 
 import static apb.utils.FileUtils.makeRelative;
 import static apb.utils.StreamUtils.buffered;
@@ -43,7 +52,7 @@ public class SchemaUtils
     //~ Methods ..............................................................................................
 
     public static File[] copySchema(final File[] schemas, final File targetDir)
-        throws XMLStreamException, IOException
+        throws IOException
     {
         final Set<File> fileSet = collectReferencedFiles(schemas);
 
@@ -63,18 +72,17 @@ public class SchemaUtils
 
     private static File findLongestCommonPrefix(final Set<File> fileSet)
     {
-        String candidate = null;
+        File candidate = null;
 
         for (final File file : fileSet) {
-            final String basePath =
-                file.isDirectory() ? file.getAbsolutePath() : file.getParentFile().getAbsolutePath();
-            candidate = longestCommonPrefix(candidate, basePath);
+            final File parentDir = file.getParentFile();
+            candidate = longestCommonPrefix(candidate, parentDir);
         }
 
-        return new File(candidate);
+        return candidate;
     }
 
-    private static String longestCommonPrefix(String a, String b)
+    private static File longestCommonPrefix(File a, File b)
     {
         //Fast path
         if (a == null) {
@@ -85,66 +93,116 @@ public class SchemaUtils
             return a;
         }
 
-        int i = 0;
-
-        for (int limit = Math.min(a.length(), b.length()); i < limit; i++) {
-            if (a.charAt(i) != b.charAt(i)) {
-                break;
+        while (!a.equals(b)) {
+            if (a.getPath().length() > b.getPath().length()) {
+                a = a.getParentFile();
+            }
+            else {
+                b = b.getParentFile();
             }
         }
 
-        return a.substring(0, i);
+        return a;
     }
 
     private static Set<File> collectReferencedFiles(File[] schemas)
-        throws XMLStreamException, FileNotFoundException
     {
+        final XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+
         final Set<File> fileSet = new HashSet<File>();
 
         for (File schema : schemas) {
-            collectReferencedFiles(schema, fileSet);
+            collectReferencedFiles(schema, fileSet, inputFactory);
         }
 
         return Collections.unmodifiableSet(fileSet);
     }
 
-    private static void collectReferencedFiles(final File schema, final Set<File> fileSet)
-        throws XMLStreamException, FileNotFoundException
+    private static void collectReferencedFiles(final File schema, final Set<File> fileSet,
+                                               final XMLInputFactory inputFactory)
     {
-        if (!fileSet.contains(schema)) {
-            fileSet.add(schema);
-            final XMLInputFactory inputFactory = XMLInputFactory.newInstance();
-            InputStream           is = null;
+        final Queue<File> pending = new ArrayDeque<File>();
+
+        pending.add(FileUtils.normalizeFile(schema));
+
+        File next;
+
+        while ((next = pending.poll()) != null) {
+            if (fileSet.add(next)) {
+                collectFiles(next, inputFactory, pending);
+            }
+        }
+    }
+
+    private static void collectFiles(File file, XMLInputFactory inputFactory, Queue<File> pending)
+    {
+        try {
+            final URL         doc = file.toURI().toURL();
+            final InputStream is = buffered(doc.openStream());
 
             try {
-                is = buffered(new FileInputStream(schema));
                 final XMLStreamReader sr = inputFactory.createXMLStreamReader(is);
 
-                for (int eventCode = sr.next(); sr.hasNext(); eventCode = sr.next()) {
-                    if (eventCode == XMLStreamReader.START_ELEMENT &&
-                            (IMPORT_TAG.equals(sr.getName()) || INCLUDE_TAG.equals(sr.getName()))) {
-                        final String location = getSchemaLocation(sr);
+                collectFiles(sr, doc, pending);
 
-                        if (location != null) {
-                            final File inclusion = new File(schema.getParentFile(), location);
-
-                            if (inclusion.exists()) {
-                                collectReferencedFiles(inclusion.getAbsoluteFile(), fileSet);
-                            }
-                        }
-                    }
-                }
+                sr.close();
             }
             finally {
                 close(is);
             }
         }
+        catch (IOException e) {
+            logException(e);
+        }
+        catch (XMLStreamException e) {
+            logException(e);
+        }
     }
 
-    private static String getSchemaLocation(final XMLStreamReader sr)
+    private static void collectFiles(XMLStreamReader sr, URL doc, Queue<File> pending)
+        throws XMLStreamException
+    {
+        while (sr.hasNext()) {
+            int eventCode = sr.next();
+
+            if (eventCode == XMLStreamConstants.START_ELEMENT &&
+                    (IMPORT_TAG.equals(sr.getName()) || INCLUDE_TAG.equals(sr.getName()))) {
+                processLocation(doc, pending, getSchemaLocation(sr));
+            }
+        }
+    }
+
+    private static void processLocation(URL doc, Queue<File> pending, String location)
+    {
+        if (location == null) {
+            return;
+        }
+
+        try {
+            URI locUri = new URI(location);
+
+            if (locUri.isAbsolute()) {
+                return;
+            }
+
+            locUri = locUri.resolve(doc.toURI());
+
+            pending.add(new File(locUri));
+        }
+        catch (URISyntaxException e) {
+            logException(e);
+        }
+    }
+
+    private static void logException(Exception e)
+    {
+        Apb.getEnv().logVerbose(e.toString());
+    }
+
+    @Nullable private static String getSchemaLocation(final XMLStreamReader sr)
     {
         for (int i = 0; i < sr.getAttributeCount(); i++) {
-            if (sr.getAttributeLocalName(i).equals("schemaLocation")) {
+            if ("schemaLocation".equals(sr.getAttributeLocalName(i))) {
                 return sr.getAttributeValue(i);
             }
         }
@@ -154,6 +212,6 @@ public class SchemaUtils
 
     //~ Static fields/initializers ...........................................................................
 
-    private static final QName IMPORT_TAG = new QName("http://www.w3.org/2001/XMLSchema", "import");
-    private static final QName INCLUDE_TAG = new QName("http://www.w3.org/2001/XMLSchema", "include");
+    private static final QName IMPORT_TAG = new QName(XMLConstants.W3C_XML_SCHEMA_NS_URI, "import");
+    private static final QName INCLUDE_TAG = new QName(XMLConstants.W3C_XML_SCHEMA_NS_URI, "include");
 }
