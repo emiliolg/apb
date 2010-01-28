@@ -81,6 +81,6 @@ public final class Info
     {
         dependencies(new HelloWorld(),  //
                      compile(new Math()),  //
-                     runtime(localLibrary("../lib/junit-3.8.2.jar")));
+                     runtime(localLibrary("../lib/junit-4.7.jar")));
     }
 }

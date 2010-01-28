@@ -18,19 +18,14 @@
 
 package apb.coverage;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static java.util.Arrays.asList;
+import java.io.File;
+import java.util.*;
 
 import static apb.coverage.CoverageReport.Column.*;
+import static java.util.Arrays.asList;
 
 /**
  * This class provides a way to specify a Coverage Report
@@ -166,7 +161,7 @@ public class CoverageReport
      *
      * @param percentage The threshold. Valid values are from 0 to 100
      *
-     * @return an updated CoverageReport instance with the Column's threshold
+     * @return an updated CoverageReport instance with the Columns threshold
      */
     @NotNull public CoverageReport threshold(@NotNull Column column, int percentage)
     {
@@ -180,7 +175,7 @@ public class CoverageReport
      *
      * @param percentage The threshold. Valid values are from 0 to 100
      *
-     * @return an updated CoverageReport instance with the Column's threshold
+     * @return an updated CoverageReport instance with the Columns threshold
      */
     @NotNull public CoverageReport threshold(int percentage)
     {

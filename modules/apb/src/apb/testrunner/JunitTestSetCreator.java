@@ -18,31 +18,46 @@
 
 package apb.testrunner;
 
-import java.io.File;
-
 import apb.utils.ClassUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-//
-// User: emilio
-// Date: Nov 10, 2008
-// Time: 3:05:51 PM
 
-/**
- * The Creator for Junit tests
- * @exclude
- */
+import java.io.File;
+import java.lang.reflect.Method;
+
 public class JunitTestSetCreator
     implements TestSetCreator<Object>
 {
-    //~ Methods ..............................................................................................
+    static boolean isJUnit4Test(@NotNull Class<?> clazz) {
+        final Method[] methods = clazz.getDeclaredMethods();
 
+        boolean result = clazz.isAnnotationPresent(org.junit.runner.RunWith.class);
+        if(!result)
+        {
+            for (final Method method : methods) {
+                if(method.isAnnotationPresent(org.junit.Test.class))
+                {
+                    result = true;
+                    break;
+                }
+            }
+        }
+        return result;
+    }
     @Nullable public TestSet<Object> createTestSet(@NotNull Class<Object> testClass,
                                                    @NotNull String        singleTest)
         throws TestSetFailedException
     {
-        return JUnitTestSet.buildTestSet(testClass, singleTest);
+
+       TestSet<Object> result;
+        if(isJUnit4Test(testClass))
+        {
+            result = JUnit4TestSet.buildTestSet(testClass, singleTest);
+        } else
+        {                                                          
+            result = JUnit3TestSet.buildTestSet(testClass, singleTest);
+        }
+        return result;
     }
 
     @NotNull public String getName()

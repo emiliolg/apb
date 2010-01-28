@@ -29,8 +29,8 @@ class TestResultWrapper
 {
     //~ Instance fields ......................................................................................
 
-    private final List<JUnitTestSet.TestListenerAdaptor> listeners =
-        new ArrayList<JUnitTestSet.TestListenerAdaptor>();
+    private final List<JUnit3TestSet.TestListenerAdaptor> listeners =
+        new ArrayList<JUnit3TestSet.TestListenerAdaptor>();
 
     //~ Methods ..............................................................................................
 
@@ -38,14 +38,14 @@ class TestResultWrapper
     {
         super.addListener(testListener);
 
-        if (testListener instanceof JUnitTestSet.TestListenerAdaptor) {
-            listeners.add((JUnitTestSet.TestListenerAdaptor) testListener);
+        if (testListener instanceof JUnit3TestSet.TestListenerAdaptor) {
+            listeners.add((JUnit3TestSet.TestListenerAdaptor) testListener);
         }
     }
 
     public void addSkipped()
     {
-        for (JUnitTestSet.TestListenerAdaptor listener : listeners) {
+        for (JUnit3TestSet.TestListenerAdaptor listener : listeners) {
             listener.addSkipped();
         }
     }

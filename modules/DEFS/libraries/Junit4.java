@@ -20,18 +20,18 @@ package libraries;
 
 import apb.metadata.RemoteLibrary;
 
-public class Junit3
+public class Junit4
     extends RemoteLibrary
 {
     //~ Constructors .........................................................................................
 
-    private Junit3()
+    private Junit4()
     {
-        super("junit", "junit", "3.8.2");
+        super("junit", "junit", "4.7");
         setTargetDir("../lib");
     }
 
     //~ Static fields/initializers ...........................................................................
 
-    public static final Junit3 LIB = new Junit3();
+    public static final Junit4 LIB = new Junit4();
 }

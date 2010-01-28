@@ -18,9 +18,9 @@
 
 package apb.tests.build;
 
-import java.io.File;
-
 import apb.DefinitionException;
+
+import java.io.File;
 //
 // User: emilio
 // Date: Sep 3, 2009
@@ -74,11 +74,11 @@ public class InfoTest
                     "math",  //
                     "tests.math",  //
                     "--- Libraries ---",  //
-                    "../lib/junit-3.8.2.jar",  //
+                    "../lib/junit-4.7.jar",  //
                     "--- Runtime Path ---",  //
                     outputBase + "/classes",  //
                     new File(outputDir, "hello-world/classes").getPath(),  //
-                    dataFile("lib/junit-3.8.2.jar"),  //
+                    dataFile("lib/junit-4.7.jar"),  //
                     "");
     }
 }
