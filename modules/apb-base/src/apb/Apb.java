@@ -110,7 +110,12 @@ public class Apb
      */
     @Nullable public static File getHome()
     {
-        return applicationLibraryDir().getParentFile();
+        try {
+			return applicationLibraryDir().getParentFile();
+		} catch (BuildException ignore) {
+			//Maybe we're being called from build.sh. Assume the current directory is the home.
+			return new File(System.getProperty("user.dir"));
+		}
     }
 
     public static Environment createBaseEnvironment()
