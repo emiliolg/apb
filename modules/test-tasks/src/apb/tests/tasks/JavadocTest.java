@@ -18,17 +18,15 @@
 
 package apb.tests.tasks;
 
+import apb.metadata.JavadocInfo;
+import apb.tests.testutils.FileAssert;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import apb.metadata.JavadocInfo;
-
-import apb.tests.testutils.FileAssert;
-
-import static java.util.Arrays.asList;
-
 import static apb.tasks.CoreTasks.javadoc;
+import static java.util.Arrays.asList;
 //
 // User: emilio
 // Date: Sep 3, 2009
@@ -99,7 +97,7 @@ public class JavadocTest
         javadocDir = new File(basedir, "javadoc");
 
         final File apbJar = env.fileFromBase("$apb-jar");
-        classpath = asList(apbJar, new File(apbJar.getParentFile(), "junit-3.8.2.jar"));
+        classpath = asList(apbJar, new File(apbJar.getParentFile(), "junit-4.7.jar"));
     }
 
     //~ Static fields/initializers ...........................................................................

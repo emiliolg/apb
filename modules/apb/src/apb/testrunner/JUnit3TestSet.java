@@ -33,7 +33,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-final class JUnitTestSet
+final class JUnit3TestSet
     extends TestSet<Object>
 {
     //~ Instance fields ......................................................................................
@@ -43,7 +43,7 @@ final class JUnitTestSet
 
     //~ Constructors .........................................................................................
 
-    private JUnitTestSet(Class<Object> testClass, Method method, TestSuite suite)
+    private JUnit3TestSet(Class<Object> testClass, Method method, TestSuite suite)
     {
         super(testClass);
 
@@ -79,7 +79,7 @@ final class JUnitTestSet
         }
     }
 
-    @Nullable static JUnitTestSet buildTestSet(Class<Object> testClass, String singleTest)
+    @Nullable static JUnit3TestSet buildTestSet(Class<Object> testClass, String singleTest)
     {
         final Method    method = getSuiteMethod(testClass);
         final TestSuite suite;
@@ -96,7 +96,7 @@ final class JUnitTestSet
             suite = null;
         }
 
-        return new JUnitTestSet(testClass, method, suite);
+        return new JUnit3TestSet(testClass, method, suite);
     }
 
     /**

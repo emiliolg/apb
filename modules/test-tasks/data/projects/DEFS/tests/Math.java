@@ -31,7 +31,7 @@ public class Math
     //~ Instance initializers ................................................................................
 
     {
-        dependencies(localLibrary("../lib/junit-3.8.2.jar"));
+        dependencies(localLibrary("../lib/junit-4.7.jar"));
         useProperties("name");
 
         coverage.enable = true;
