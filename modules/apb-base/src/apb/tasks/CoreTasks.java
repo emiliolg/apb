@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -319,7 +318,7 @@ public class CoreTasks
         return new XsltTask.Builder(fileSets);
     }
 
-    public static XjcTask.Builder xjc(@NotNull String... schemas)
+    public static XjcTask xjc(@NotNull String... schemas)
     {
         final File[] files = new File[schemas.length];
 
@@ -330,8 +329,8 @@ public class CoreTasks
         return xjc(files);
     }
 
-    public static XjcTask.Builder xjc(@NotNull File... schemas)
+    public static XjcTask xjc(@NotNull File... schemas)
     {
-        return new XjcTask.Builder(schemas);
+        return new XjcTask(schemas);
     }
 }

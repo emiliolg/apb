@@ -23,12 +23,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.xml.stream.XMLStreamException;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import apb.Apb;
 import apb.BuildException;
 import apb.utils.FileUtils;
 import apb.utils.SchemaUtils;
@@ -45,7 +42,7 @@ public class XjcTask
 
     private boolean               packageAnnotations;
     @NotNull private final File[] schemas;
-    @NotNull private final File   targetDir;
+    @NotNull private String       targetDir;
     @NotNull private String       targetPackage;
     private boolean               timestamp;
 
@@ -54,12 +51,11 @@ public class XjcTask
     /**
      * Construt the XML Binding Compiler Task
      * @param schemaFiles  The xml schemas to generate the java bindings for, relative the source folder
-     * @param target The directory where generated files will be placed
      */
-    private XjcTask(@NotNull File[] schemaFiles, @NotNull File target)
+    XjcTask(@NotNull File[] schemaFiles)
     {
         schemas = schemaFiles;
-        targetDir = target;
+        targetDir = "$generated-source";
         targetPackage = "";
         externalBindings = new ArrayList<File>();
         packageAnnotations = true;
@@ -67,6 +63,15 @@ public class XjcTask
     }
 
     //~ Methods ..............................................................................................
+
+    /**
+     * @param target The directory where generated files will be placed
+     */
+    public final XjcTask to(@NotNull String target)
+    {
+        targetDir = target;
+        return this;
+    }
 
     /**
      * Specify an external binding file
@@ -134,7 +139,7 @@ public class XjcTask
         try {
             return !file.getAbsolutePath().equals(file.getCanonicalPath());
         }
-        catch (IOException e) {
+        catch (IOException ignore) {
             return true;
         }
     }
@@ -150,16 +155,40 @@ public class XjcTask
         return false;
     }
 
-    private File targetFile() {
-        return new File(targetDir, schemas[0].getName() + ".touch");
+    private static String makeString(File[] schemas)
+    {
+        final StringBuilder sb = new StringBuilder();
+
+        for (File schema : schemas) {
+            if (sb.length() > 0) {
+                sb.append(", ");
+            }
+
+            sb.append(schema.getName());
+        }
+
+        return sb.toString();
+    }
+
+    @NotNull private File getTargetDir()
+    {
+        return env.fileFromBase(targetDir);
+    }
+
+    private File touchFile()
+    {
+        return new File(getTargetDir(), schemas[0].getName() + ".touch");
     }
 
     private boolean mustBuild()
     {
-        final File target = targetFile();
-        final long ts;
-        return env.forceBuild() || (ts = target.lastModified()) == 0 ||
-               !FileUtils.uptodate(externalBindings, ts) || !FileUtils.uptodate(Arrays.asList(schemas), ts);
+        if (env.forceBuild()) {
+            return true;
+        }
+
+        final long ts = touchFile().lastModified();
+        return ts == 0 || !FileUtils.uptodate(externalBindings, ts) ||
+               !FileUtils.uptodate(Arrays.asList(schemas), ts);
     }
 
     private void run()
@@ -176,8 +205,10 @@ public class XjcTask
             }
         }
 
+        final File target = getTargetDir();
+
         //noinspection ResultOfMethodCallIgnored
-        targetDir.mkdirs();
+        target.mkdirs();
 
         //If there is a jaxb xjc jar in ext, use that
         String jar = findJar();
@@ -204,7 +235,7 @@ public class XjcTask
         }
 
         args.add("-d");
-        args.add(targetDir.getPath());
+        args.add(target.getPath());
 
         if (!targetPackage.isEmpty()) {
             args.add("-p");
@@ -220,8 +251,9 @@ public class XjcTask
             args.add(schema.getPath());
         }
 
-        final File target = targetFile();
-        target.delete();
+        final File touchFile = touchFile();
+        //noinspection ResultOfMethodCallIgnored
+        touchFile.delete();
 
         final ExecTask command =
             jar == null ? CoreTasks.exec(env.getProperty(XJC_CMD, "xjc"), args)
@@ -229,28 +261,16 @@ public class XjcTask
         command.execute();
 
         if (command.getExitValue() == 0) {
-            touchFile(target);
+            touch(touchFile);
         }
         else {
             env.handle("Xjc task failed");
         }
     }
 
-    private static String makeString(File[] schemas) {
-        final StringBuilder sb = new StringBuilder();
-
-        for (File schema : schemas) {
-            if (sb.length() > 0) {
-                sb.append(", ");
-            }
-            sb.append(schema.getName());
-        }
-
-        return sb.toString();
-    }
-
-    private void touchFile(File file)
+    private void touch(File file)
     {
+        //noinspection ResultOfMethodCallIgnored
         file.delete();
 
         try {
@@ -278,53 +298,4 @@ public class XjcTask
 
     public static final String XJC_CMD = "xjc-cmd";
     public static final String XJC_SYMLINK_BUG = "xjc-symlink-bug";
-
-    //~ Inner Classes ........................................................................................
-
-    public static class Builder
-    {
-        @NotNull private final File[] from;
-
-        /**
-         * Private constructor called from factory methods
-         * @param schemas The Schema to generate files from.
-         */
-
-        Builder(@NotNull File[] schemas)
-        {
-            from = schemas;
-
-            if (schemas.length == 0) {
-                throw new BuildException("You must specify one schema file");
-            }
-
-            for (File file : schemas) {
-                if (!file.exists()) {
-                    throw new BuildException("Non existent schema: " + file);
-                }
-            }
-        }
-
-        /**
-         * Specify the target file where sources will be generated
-         * @param dirName The directory where to place generated files
-         */
-        @NotNull public XjcTask to(@NotNull String dirName)
-        {
-            return to(Apb.getEnv().fileFromBase(dirName));
-        }
-
-        /**
-         * Specify the target file where sources will be generated
-         * @param dir The directory where to place generated files
-         */
-        @NotNull public XjcTask to(@NotNull File dir)
-        {
-            if (dir.isFile()) {
-                throw new BuildException("Not a directory: '" + dir.getPath() + "'.");
-            }
-
-            return new XjcTask(from, dir);
-        }
-    }
 }
