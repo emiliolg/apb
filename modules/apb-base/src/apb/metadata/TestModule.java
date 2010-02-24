@@ -96,7 +96,7 @@ public class TestModule
     @BuildProperty public boolean forkPerSuite;
 
     /**
-     * Wheter to show output in reports or not
+     * Whether to show output in reports or not
      */
     @BuildProperty public boolean showOutput;
 
