@@ -51,23 +51,29 @@ public class SchemaUtils
 
     //~ Methods ..............................................................................................
 
-    public static File[] copySchema(final File[] schemas, final File targetDir)
+    public static void copySchema(final File[] schemas, final File[] bindings, final File targetDir)
         throws IOException
     {
-        final Set<File> fileSet = collectReferencedFiles(schemas);
+        final Set<File> fileSet = collectReferencedFiles(schemas, bindings);
 
         final File baseDir = findLongestCommonPrefix(fileSet);
 
         for (final File file : fileSet) {
-            final File targetFile = new File(targetDir, makeRelative(baseDir, file).getPath());
-            FileUtils.copyFile(file, targetFile, false);
+            FileUtils.copyFile(file, targetName(baseDir, targetDir, file), false);
         }
 
         for (int i = 0, length = schemas.length; i < length; i++) {
-            schemas[i] = new File(targetDir, makeRelative(baseDir, schemas[i]).getPath());
+            schemas[i] = targetName(baseDir, targetDir, schemas[i]);
         }
 
-        return schemas;
+        for (int i = 0, length = bindings.length; i < length; i++) {
+            bindings[i] = targetName(baseDir, targetDir, bindings[i]);
+        }
+    }
+
+    private static File targetName(File baseDir, File targetDir, File file)
+    {
+        return new File(targetDir, makeRelative(baseDir, file).getPath());
     }
 
     private static File findLongestCommonPrefix(final Set<File> fileSet)
@@ -105,7 +111,7 @@ public class SchemaUtils
         return a;
     }
 
-    private static Set<File> collectReferencedFiles(File[] schemas)
+    private static Set<File> collectReferencedFiles(File[] schemas, File[] bindings)
     {
         final XMLInputFactory inputFactory = XMLInputFactory.newInstance();
 
@@ -113,6 +119,10 @@ public class SchemaUtils
 
         for (File schema : schemas) {
             collectReferencedFiles(schema, fileSet, inputFactory);
+        }
+
+        for (File binding : bindings) {
+            collectReferencedFiles(binding, fileSet, inputFactory);
         }
 
         return Collections.unmodifiableSet(fileSet);
@@ -163,21 +173,24 @@ public class SchemaUtils
         throws XMLStreamException
     {
         while (sr.hasNext()) {
-            int eventCode = sr.next();
+            final int eventCode = sr.next();
 
-            if (eventCode == XMLStreamConstants.START_ELEMENT &&
-                    (IMPORT_TAG.equals(sr.getName()) || INCLUDE_TAG.equals(sr.getName()))) {
-                processLocation(doc, pending, getSchemaLocation(sr));
+            if (eventCode == XMLStreamConstants.START_ELEMENT) {
+                final QName srName = sr.getName();
+
+                if (IMPORT_TAG.equals(srName) || INCLUDE_TAG.equals(srName) || JAXB_TAG.equals(srName)) {
+                    final String location = getSchemaLocation(sr);
+
+                    if (location != null) {
+                        processLocation(doc, pending, location);
+                    }
+                }
             }
         }
     }
 
     private static void processLocation(URL doc, Queue<File> pending, String location)
     {
-        if (location == null) {
-            return;
-        }
-
         try {
             URI locUri = new URI(location);
 
@@ -185,7 +198,7 @@ public class SchemaUtils
                 return;
             }
 
-            locUri = locUri.resolve(doc.toURI());
+            locUri = doc.toURI().resolve(locUri);
 
             pending.add(new File(locUri));
         }
@@ -214,4 +227,5 @@ public class SchemaUtils
 
     private static final QName IMPORT_TAG = new QName(XMLConstants.W3C_XML_SCHEMA_NS_URI, "import");
     private static final QName INCLUDE_TAG = new QName(XMLConstants.W3C_XML_SCHEMA_NS_URI, "include");
+    private static final QName JAXB_TAG = new QName("http://java.sun.com/xml/ns/jaxb", "bindings");
 }

@@ -195,10 +195,12 @@ public class XjcTask
     {
         File[] schemas = this.schemas;
 
+        final File[] bindings = getBindings();
+
         if (env.getBooleanProperty(XJC_SYMLINK_BUG, false) && isAnySymlink(schemas)) {
             try {
-                schemas =
-                    SchemaUtils.copySchema(schemas, env.fileFromBase("$output/" + schemas[0].getName()));
+                SchemaUtils.copySchema(schemas, bindings,
+                                       env.fileFromBase("$output/" + schemas[0].getName()));
             }
             catch (IOException e) {
                 env.handle(e);
@@ -242,7 +244,7 @@ public class XjcTask
             args.add(targetPackage);
         }
 
-        for (File binding : externalBindings) {
+        for (File binding : bindings) {
             args.add("-b");
             args.add(binding.getPath());
         }
@@ -252,6 +254,7 @@ public class XjcTask
         }
 
         final File touchFile = touchFile();
+
         //noinspection ResultOfMethodCallIgnored
         touchFile.delete();
 
@@ -266,6 +269,14 @@ public class XjcTask
         else {
             env.handle("Xjc task failed");
         }
+    }
+
+    private File[] getBindings()
+    {
+        final List<File> bindingsList = externalBindings;
+        final File[]     bindings = new File[bindingsList.size()];
+        bindingsList.toArray(bindings);
+        return bindings;
     }
 
     private void touch(File file)
