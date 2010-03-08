@@ -68,6 +68,11 @@ public class JavadocInfo
     public boolean since = true;
 
     /**
+     * Generates javadoc for the generated sources.
+     */
+    public boolean includeGeneratedSource = false;
+    
+    /**
      * Splits the index file into multiple files, alphabetically, one file per letter,
      * plus a file for any index entries that start with non-alphabetical characters.
      */

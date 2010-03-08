@@ -468,6 +468,10 @@ public class ModuleHelper
 
         List<File> sources = new ArrayList<File>();
         sources.add(getSourceDir());
+        
+        if(info.includeGeneratedSource){
+            sources.add(getGeneratedSource());
+        }
 
         for (Module module : modulesToInclude(info.includeDependencies)) {
             sources.add(module.getHelper().getSourceDir());
