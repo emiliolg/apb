@@ -43,7 +43,6 @@ import apb.metadata.ResourcesInfo;
 import apb.metadata.TestModule;
 
 import apb.tasks.FileSet;
-import apb.tasks.JarTask;
 import apb.tasks.JavacTask;
 
 import apb.utils.ClassUtils;
@@ -379,48 +378,31 @@ public class ModuleHelper
     {
         final PackageInfo packageInfo = getPackageInfo();
 
-        if (hasPackage()) {
-            final List<Module> additionalDeps = modulesToPackage();
+        switch (getPackageType()) {
+        case WAR:
+            war(getPackageFile()).fromWebApp(getPackageInfo().webAppDir).execute();
+            break;
 
-            Map<String, Set<String>> services = mergeServices(additionalDeps);
+        case JAR:
+            final List<Module> modules = modulesToPackage();
 
-            JarTask jarTask =
-                jar(getPackageFile()).fromDir(getOutput())  //
-                                     .mainClass(packageInfo.mainClass)  //
-                                     .version(getModule().version)  //
-                                     .manifestAttributes(packageInfo.attributes())  //
-                                     .withClassPath(manifestClassPath())  //
-                                     .withServices(services).excluding(packageInfo.excludes());
+            Map<String, Set<String>> services = mergeServices(modules);
+
+            jar(getPackageFile()).from(outputFileSets(modules))  //
+                                 .mainClass(packageInfo.mainClass)  //
+                                 .version(getModule().version)  //
+                                 .manifestAttributes(packageInfo.attributes())  //
+                                 .withClassPath(manifestClassPath())  //
+                                 .withServices(services)  //
+                                 .execute();
 
             // generate sources jar
-            final JarTask srcJar;
-
             if (packageInfo.generateSourcesJar) {
-                srcJar =
-                    jar(getSourcePackageFile()).fromDir(getSourceDir()).excluding(Constants.DEFAULT_EXCLUDES);
-            }
-            else {
-                srcJar = null;
+                jar(getSourcePackageFile()).from(sourceFileSets(modules))  //
+                                           .execute();
             }
 
-            // prepare dependencies included in package
-            if (!additionalDeps.isEmpty()) {
-                for (Module m : additionalDeps) {
-                    logVerbose("Adding module '%s'.\n", m.toString());
-                    jarTask.addDir(m.getHelper().getOutput());
-
-                    if (srcJar != null) {
-                        srcJar.addDir(m.getHelper().getSourceDir());
-                    }
-                }
-            }
-
-            // run tasks
-            jarTask.execute();
-
-            if (srcJar != null) {
-                srcJar.execute();
-            }
+            break;
         }
     }
 
@@ -469,7 +451,7 @@ public class ModuleHelper
         List<File> sources = new ArrayList<File>();
         sources.add(getSourceDir());
         
-        if(info.includeGeneratedSource){
+        if (info.includeGeneratedSource){
             sources.add(getGeneratedSource());
         }
 
@@ -638,6 +620,29 @@ public class ModuleHelper
         }
     }
 
+    private List<FileSet> outputFileSets(List<Module> modules)
+    {
+        final List<FileSet> result = new ArrayList<FileSet>();
+
+        for (Module m : modules) {
+            final ModuleHelper h = m.getHelper();
+            result.add(FileSet.fromDir(h.getOutput()).excluding(h.getPackageInfo().excludes()));
+        }
+
+        return result;
+    }
+
+    private List<FileSet> sourceFileSets(List<Module> modules)
+    {
+        final List<FileSet> result = new ArrayList<FileSet>();
+
+        for (Module m : modules) {
+            result.add(FileSet.fromDir(m.getHelper().getSourceDir()).excluding(Constants.DEFAULT_EXCLUDES));
+        }
+
+        return result;
+    }
+
     private List<Library> getExtraLibraries()
     {
         final List<Library> result = new ArrayList<Library>(getCompileInfo().extraLibraries());
@@ -709,6 +714,9 @@ public class ModuleHelper
     private List<Module> modulesToInclude(IncludeDependencies d)
     {
         List<Module> result = new ArrayList<Module>();
+
+        // Add this module
+        result.add(getModule());
 
         switch (d) {
         case DIRECT:

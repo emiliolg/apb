@@ -41,7 +41,6 @@ public class JarDepsTest
         checkOutput(COMPILING_1_FILE,  //
                     BUILDING + mathJar.getPath(),  //
                     COMPILING_1_FILE,  //
-                    "Adding module 'Math'.",  //
                     BUILDING + playJar.getPath(),  //
                     BUILDING + playSrcJar.getPath());
 

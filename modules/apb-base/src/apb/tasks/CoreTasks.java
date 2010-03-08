@@ -254,6 +254,24 @@ public class CoreTasks
     }
 
     /**
+     * Create a web application
+     * @param webAppDir  The directory where the web application will be created
+     */
+    public static WarTask.Builder war(@NotNull String webAppDir)
+    {
+        return war(Apb.getEnv().fileFromBase(webAppDir));
+    }
+
+    /**
+     * Create a web application
+     * @param webAppDir  The directory where the web application will be created
+     */
+    public static WarTask.Builder war(@NotNull File webAppDir)
+    {
+        return new WarTask.Builder(webAppDir);
+    }
+
+    /**
      * generate documentation for the specified source directories
      * @param sources The directories containing the source files to document
      */

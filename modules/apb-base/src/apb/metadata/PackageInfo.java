@@ -68,7 +68,13 @@ public class PackageInfo
     /**
      * The name of the package file without the extension
      */
-    @BuildProperty public String name = "${group}-${id}-${version}";
+    @BuildProperty(order = 1)
+    public String name = "${group}-${id}-${version}";
+
+    /**
+     * The directory where the web application is created (For WAR packages)
+     */
+    @BuildProperty public String webAppDir = "$output/$name";
 
     /**
      * Additional dependencies added into the package.

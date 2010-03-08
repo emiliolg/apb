@@ -46,11 +46,11 @@ import java.util.zip.ZipOutputStream;
 import apb.BuildException;
 import apb.Messages;
 
-import apb.utils.DirectoryScanner;
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+import static java.util.Arrays.asList;
 
 import static apb.utils.StringUtils.isNotEmpty;
 //
@@ -68,8 +68,7 @@ public class JarTask
     private final File    jarFile;
 
     private final int                         level = Deflater.DEFAULT_COMPRESSION;
-    @NotNull private final List<String>       excludes, includes;
-    private final List<File>                  sourceDir;
+    private final List<FileSet>               sources;
     @NotNull private Manifest                 manifest;
     @NotNull private Map<String, Set<String>> services;
 
@@ -77,13 +76,10 @@ public class JarTask
 
     //~ Constructors .........................................................................................
 
-    private JarTask(@NotNull File jarFile, @NotNull File source)
+    private JarTask(@NotNull File jarFile, @NotNull List<FileSet> sources)
     {
         this.jarFile = jarFile;
-        sourceDir = new ArrayList<File>();
-        sourceDir.add(source);
-        excludes = new ArrayList<String>();
-        includes = new ArrayList<String>();
+        this.sources = sources;
         services = Collections.emptyMap();
         manifest = new Manifest();
         manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
@@ -166,16 +162,11 @@ public class JarTask
 
     public void execute()
     {
-        if (includes.isEmpty()) {
-            includes.add("**/**");
-        }
-
         long                    jarTimeStamp = checkJarFile();
         Map<File, List<String>> files = new LinkedHashMap<File, List<String>>();
 
-        for (File dir : sourceDir) {
-            DirectoryScanner scanner = new DirectoryScanner(dir, includes, excludes);
-            files.put(dir, scanner.scan());
+        for (FileSet fileSet : sources) {
+            files.put(fileSet.getDir(), fileSet.list());
         }
 
         if (!uptodate(jarTimeStamp, files)) {
@@ -186,35 +177,6 @@ public class JarTask
     public void setComment(String comment)
     {
         this.comment = comment;
-    }
-
-    public void addDir(@Nullable File file)
-    {
-        if (file != null) {
-            sourceDir.add(file);
-        }
-    }
-
-    public JarTask including(String... patterns)
-    {
-        return including(Arrays.asList(patterns));
-    }
-
-    public JarTask including(@NotNull List<String> ps)
-    {
-        includes.addAll(ps);
-        return this;
-    }
-
-    public JarTask excluding(String... patterns)
-    {
-        return excluding(Arrays.asList(patterns));
-    }
-
-    public JarTask excluding(@NotNull List<String> ps)
-    {
-        excludes.addAll(ps);
-        return this;
     }
 
     public JarTask withServices(@NotNull Map<String, Set<String>> svcs)
@@ -435,9 +397,37 @@ public class JarTask
             this.jarFile = jarFile;
         }
 
-        public JarTask fromDir(@NotNull File sourceDirectory)
+        /**
+         * Build the jar from the specified directories
+         * @param sourceDirectories
+         */
+        public JarTask from(@NotNull File... sourceDirectories)
         {
-            return new JarTask(jarFile, sourceDirectory);
+            List<FileSet> sets = new ArrayList<FileSet>();
+
+            for (File dir : sourceDirectories) {
+                sets.add(FileSet.fromDir(dir));
+            }
+
+            return from(sets);
+        }
+
+        /**
+         * Build the jar from the specified filesets
+         * @param fileSets
+         */
+        public JarTask from(@NotNull FileSet... fileSets)
+        {
+            return from(asList(fileSets));
+        }
+
+        /**
+         * Build the jar from the specified list of filesets
+         * @param fileSets
+         */
+        public JarTask from(List<FileSet> fileSets)
+        {
+            return new JarTask(jarFile, fileSets);
         }
     }
 }

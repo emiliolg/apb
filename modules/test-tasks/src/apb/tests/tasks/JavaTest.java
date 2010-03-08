@@ -112,8 +112,7 @@ public class JavaTest
         compile();
         compile();
 
-        jar(TOUCH_JAR).fromDir(basedir)  //
-                      .including(TOUCH + ".class")  //
+        jar(TOUCH_JAR).from(FileSet.fromDir(basedir).including(TOUCH + ".class"))  //
                       .mainClass(makeClassName(TOUCH))  //
                       .withClassPath(asList("$apb-jar"))  //
                       .execute();
