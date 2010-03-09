@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +14,15 @@
 // limitations under the License
 //
 
-
 package apb.testrunner.output;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import apb.Environment;
-
 import org.jetbrains.annotations.NotNull;
+
+import apb.Environment;
 
 /**
  * The class that distribute output to different 'TestOutput' Objects
@@ -41,13 +39,11 @@ public class TestReportBroadcaster
 
     public TestReportBroadcaster(@NotNull List<TestReport> reports)
     {
-        super();
         this.reports = reports;
     }
 
     public TestReportBroadcaster(@NotNull Environment env, @NotNull List<Builder> builders)
     {
-        super();
         reports = new ArrayList<TestReport>(builders.size());
 
         for (Builder builder : builders) {
@@ -57,7 +53,7 @@ public class TestReportBroadcaster
 
     //~ Methods ..............................................................................................
 
-    public void startRun(int n)
+    @Override public void startRun(int n)
     {
         super.startRun(n);
 
@@ -66,7 +62,7 @@ public class TestReportBroadcaster
         }
     }
 
-    public void stopRun()
+    @Override public void stopRun()
     {
         super.stopRun();
 
@@ -75,7 +71,16 @@ public class TestReportBroadcaster
         }
     }
 
-    @NotNull public TestReport init(@NotNull File reportsDir)
+    @Override public void coverage(int clazz, int method, int block, int line)
+    {
+        super.coverage(clazz, method, block, line);
+
+        for (TestReport report : reports) {
+            report.coverage(clazz, method, block, line);
+        }
+    }
+
+    @NotNull @Override public TestReport init(@NotNull File reportsDir)
     {
         List<TestReport> reportList = new ArrayList<TestReport>();
 
@@ -86,7 +91,7 @@ public class TestReportBroadcaster
         return new TestReportBroadcaster(reportList);
     }
 
-    public void startSuite(@NotNull String suiteName)
+    @Override public void startSuite(@NotNull String suiteName)
     {
         super.startSuite(suiteName);
 
@@ -95,7 +100,7 @@ public class TestReportBroadcaster
         }
     }
 
-    public void endSuite()
+    @Override public void endSuite()
     {
         super.endSuite();
 
@@ -104,7 +109,7 @@ public class TestReportBroadcaster
         }
     }
 
-    public void startTest(@NotNull String testName)
+    @Override public void startTest(@NotNull String testName)
     {
         super.startTest(testName);
 
@@ -113,7 +118,7 @@ public class TestReportBroadcaster
         }
     }
 
-    public void endTest()
+    @Override public void endTest()
     {
         super.endTest();
 
@@ -131,7 +136,7 @@ public class TestReportBroadcaster
         }
     }
 
-    public void failure(@NotNull Throwable t)
+    @Override public void failure(@NotNull Throwable t)
     {
         super.failure(t);
 

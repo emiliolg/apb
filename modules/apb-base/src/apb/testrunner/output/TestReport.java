@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,16 +14,15 @@
 // limitations under the License
 //
 
-
 package apb.testrunner.output;
 
 import java.io.File;
 import java.io.Serializable;
 
-import apb.Environment;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import apb.Environment;
 
 /**
  * An Interface to implement to generate Test Reports
@@ -84,6 +82,16 @@ public interface TestReport
     @Nullable String getCurrentSuite();
 
     /**
+     * Called to register code-coverage information
+     *
+     * @param clazz percent of classes tested
+     * @param method percent of methods tested
+     * @param block percent of blocks tested
+     * @param line percent of lines tested
+     */
+    void coverage(int clazz, int method, int block, int line);
+
+    /**
      * Mark the start of the execution of a batch of suites
      * @param n The numbert of suites to be executed
      */
@@ -120,7 +128,7 @@ public interface TestReport
 
     //~ Inner Interfaces .....................................................................................
 
-    static interface Builder
+    interface Builder
     {
         String SHOW_OUTPUT_PROPERTY = "show-output";
 

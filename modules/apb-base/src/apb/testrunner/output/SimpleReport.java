@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb.testrunner.output;
 
 import java.io.File;
@@ -24,12 +22,11 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import apb.Environment;
-
-import apb.utils.StringUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import apb.Environment;
+import apb.utils.StringUtils;
 //
 // User: emilio
 // Date: Nov 11, 2008
@@ -41,10 +38,10 @@ public class SimpleReport
 {
     //~ Instance fields ......................................................................................
 
-    private final boolean showDetail;
-
     @Nullable private transient List<Failure> failures;
     @NotNull private transient PrintWriter    output;
+
+    private final boolean showDetail;
 
     //~ Constructors .........................................................................................
 
@@ -56,7 +53,7 @@ public class SimpleReport
 
     //~ Methods ..............................................................................................
 
-    public void startSuite(@NotNull String suiteName)
+    @Override public void startSuite(@NotNull String suiteName)
     {
         super.startSuite(suiteName);
 
@@ -65,7 +62,7 @@ public class SimpleReport
         }
     }
 
-    public void startRun(int n)
+    @Override public void startRun(int n)
     {
         super.startRun(n);
 
@@ -74,13 +71,13 @@ public class SimpleReport
         }
     }
 
-    public void stopRun()
+    @Override public void stopRun()
     {
         super.stopRun();
 
         if (!showDetail) {
             output.printf("%d suites and %d tests run (%d skipped) in %.3f seconds.", getSuitesRun(),
-                          getTotalTestsRun(), getTotalSkipped(), getTimeEllapsed() / ONE_SECOND);
+                          getTotalTestsRun(), getTotalSkipped(), getTimeElapsed() / ONE_SECOND);
             printFailures(getTotalFailures());
         }
 
@@ -91,14 +88,14 @@ public class SimpleReport
         }
     }
 
-    public void endSuite()
+    @Override public void endSuite()
     {
         if (suiteOpen) {
             super.endSuite();
 
             if (showDetail) {
                 output.printf("%5d tests run in %6.3f seconds.", getSuiteTestsRun(),
-                              getSuiteTimeEllapsed() / ONE_SECOND);
+                              getSuiteTimeElapsed() / ONE_SECOND);
                 printFailures(getSuiteTestFailures());
             }
 
@@ -108,27 +105,26 @@ public class SimpleReport
         }
     }
 
-    public void startTest(@NotNull String testName)
+    @Override public void startTest(@NotNull String testName)
     {
         super.startTest(testName);
     }
 
-    public synchronized void failure(@NotNull Throwable t)
+    @Override public synchronized void failure(@NotNull Throwable t)
     {
         super.failure(t);
 
-        final List<Failure> fs = failures == null ? (failures = new ArrayList<Failure>()) : failures;
-        fs.add(new Failure(getCurrentTest(), t));
+        getFailures().add(new Failure(getCurrentTest(), t));
     }
 
-    @NotNull public SimpleReport init(@NotNull File dir)
+    @NotNull @Override public SimpleReport init(@NotNull File dir)
     {
         SimpleReport result = new SimpleReport(showOutput, showDetail, fileName);
         result.initOutput(dir);
         return result;
     }
 
-    protected void printOutput(String title, String content)
+    @Override protected void printOutput(String title, String content)
     {
         if (content != null && content.length() > 0) {
             output.println();
@@ -136,6 +132,17 @@ public class SimpleReport
             output.print(content);
             printSeparator();
         }
+    }
+
+    @NotNull private List<Failure> getFailures()
+    {
+        List<Failure> result = failures;
+
+        if (result == null) {
+            failures = result = new ArrayList<Failure>();
+        }
+
+        return result;
     }
 
     private void initOutput(File dir)
@@ -204,9 +211,9 @@ public class SimpleReport
     public static class Builder
         implements TestReport.Builder
     {
+        @NotNull private String   output;
         private final boolean     showDetail;
         @Nullable private Boolean showOutput;
-        @NotNull private String   output;
 
         public Builder(boolean showDetail)
         {
@@ -220,7 +227,7 @@ public class SimpleReport
             return this;
         }
 
-        @NotNull public TestReport build(@NotNull Environment env)
+        @NotNull @Override public TestReport build(@NotNull Environment env)
         {
             boolean show =
                 showOutput == null ? env.getBooleanProperty(SHOW_OUTPUT_PROPERTY, false) : showOutput;
@@ -236,10 +243,10 @@ public class SimpleReport
 
     private static class Failure
     {
-        private final String    test;
         private final Throwable cause;
+        private final String    test;
 
-        public Failure(String test, Throwable cause)
+        Failure(String test, Throwable cause)
         {
             this.test = test;
             this.cause = cause;
@@ -247,7 +254,7 @@ public class SimpleReport
 
         public void print(PrintWriter output)
         {
-            output.println("Test: " + test + ":" + " FAILED");
+            output.println("Test: " + test + ':' + " FAILED");
             output.println(cause.getMessage());
             output.println(StringUtils.getStackTrace(cause));
             output.println();

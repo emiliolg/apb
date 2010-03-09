@@ -14,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb.testrunner.output;
 
 import java.io.File;
@@ -47,22 +46,6 @@ public class XmlTestReport
 {
     //~ Instance fields ......................................................................................
 
-    final String ATTR_CLASSNAME = "classname";
-    final String ATTR_FAILURES = "failures";
-    final String ATTR_MESSAGE = "message";
-    final String ATTR_NAME = "name";
-    final String ATTR_PKG = "package";
-    final String ATTR_SKIPPED = "skipped";
-    final String ATTR_TESTS = "tests";
-    final String ATTR_TIME = "time";
-    final String ATTR_TYPE = "type";
-    final String FAILURE = "failure";
-    final String HOSTNAME = "hostname";
-    final String PROPERTIES = "properties";
-    final String TESTCASE = "testcase";
-    final String TESTSUITE = "testsuite";
-    final String TIMESTAMP = "timestamp";
-
     /**
      * The XML document.
      */
@@ -92,7 +75,7 @@ public class XmlTestReport
 
     //~ Methods ..............................................................................................
 
-    public void startSuite(@NotNull String suiteName)
+    @Override public void startSuite(@NotNull String suiteName)
     {
         super.startSuite(suiteName);
 
@@ -102,7 +85,7 @@ public class XmlTestReport
         doc.appendChild(rootElement);
 
         rootElement.setAttribute(ATTR_NAME, suiteName);
-        rootElement.setAttribute(ATTR_PKG, suiteName.substring(0, suiteName.lastIndexOf(".")));
+        rootElement.setAttribute(ATTR_PKG, suiteName.substring(0, suiteName.lastIndexOf('.')));
 
         //add the timestamp
         final String timestamp = timestamp();
@@ -116,15 +99,15 @@ public class XmlTestReport
         rootElement.appendChild(propsElement);
     }
 
-    public void endSuite()
+    @Override public void endSuite()
     {
         if (suiteOpen) {
             super.endSuite();
             final Element rootElement = doc.getDocumentElement();
-            rootElement.setAttribute(ATTR_TESTS, "" + getSuiteTestsRun());
-            rootElement.setAttribute(ATTR_FAILURES, "" + getSuiteTestFailures());
-            rootElement.setAttribute(ATTR_SKIPPED, "" + getSuiteTestSkipped());
-            rootElement.setAttribute(ATTR_TIME, "" + (getSuiteTimeEllapsed() / ONE_SECOND));
+            rootElement.setAttribute(ATTR_TESTS, String.valueOf(getSuiteTestsRun()));
+            rootElement.setAttribute(ATTR_FAILURES, String.valueOf(getSuiteTestFailures()));
+            rootElement.setAttribute(ATTR_SKIPPED, String.valueOf(getSuiteTestSkipped()));
+            rootElement.setAttribute(ATTR_TIME, String.valueOf((getSuiteTimeElapsed() / ONE_SECOND)));
 
             if (getSuiteTestsRun() > 0) {
                 writeDocument(doc);
@@ -132,13 +115,13 @@ public class XmlTestReport
         }
     }
 
-    public void startTest(@NotNull String testName)
+    @Override public void startTest(@NotNull String testName)
     {
         super.startTest(testName);
         testStarts.put(qualify(testName), System.currentTimeMillis());
     }
 
-    public void endTest()
+    @Override public void endTest()
     {
         super.endTest();
         final String test = getCurrentTest();
@@ -163,23 +146,23 @@ public class XmlTestReport
         }
 
         long elapsed = System.currentTimeMillis() - testStarts.get(fullTestName);
-        currentTest.setAttribute(ATTR_TIME, "" + (elapsed / ONE_SECOND));
+        currentTest.setAttribute(ATTR_TIME, String.valueOf((elapsed / ONE_SECOND)));
     }
 
-    public void failure(@NotNull Throwable t)
+    @Override public void failure(@NotNull Throwable t)
     {
         super.failure(t);
         formatError(FAILURE, getCurrentTest(), t);
     }
 
-    @NotNull public XmlTestReport init(@NotNull File dir)
+    @NotNull @Override public XmlTestReport init(@NotNull File dir)
     {
         XmlTestReport result = new XmlTestReport(showOutput, fileName);
         result.reportsDir = dir;
         return result;
     }
 
-    protected void printOutput(String title, String content)
+    @Override protected void printOutput(String title, String content)
     {
         Element nested = doc.createElement(title);
         doc.getDocumentElement().appendChild(nested);
@@ -204,12 +187,7 @@ public class XmlTestReport
         }
     }
 
-    private String qualify(String test)
-    {
-        return getCurrentSuite() + '-' + test;
-    }
-
-    private String getHostname()
+    private static String getHostname()
     {
         try {
             return InetAddress.getLocalHost().getHostName();
@@ -217,6 +195,11 @@ public class XmlTestReport
         catch (UnknownHostException e) {
             return "localhost";
         }
+    }
+
+    private String qualify(String test)
+    {
+        return getCurrentSuite() + '-' + test;
     }
 
     private void formatError(String type, String test, Throwable t)
@@ -256,6 +239,22 @@ public class XmlTestReport
 
     //~ Static fields/initializers ...........................................................................
 
+    static final String ATTR_CLASSNAME = "classname";
+    static final String ATTR_FAILURES = "failures";
+    static final String ATTR_MESSAGE = "message";
+    static final String ATTR_NAME = "name";
+    static final String ATTR_PKG = "package";
+    static final String ATTR_SKIPPED = "skipped";
+    static final String ATTR_TESTS = "tests";
+    static final String ATTR_TIME = "time";
+    static final String ATTR_TYPE = "type";
+    static final String FAILURE = "failure";
+    static final String HOSTNAME = "hostname";
+    static final String PROPERTIES = "properties";
+    static final String TESTCASE = "testcase";
+    static final String TESTSUITE = "testsuite";
+    static final String TIMESTAMP = "timestamp";
+
     private static final String DATETIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
     private static final long   serialVersionUID = 7656301463663508457L;
 
@@ -276,7 +275,7 @@ public class XmlTestReport
             return this;
         }
 
-        @NotNull public TestReport build(@NotNull Environment env)
+        @NotNull @Override public TestReport build(@NotNull Environment env)
         {
             boolean show =
                 showOutput == null ? env.getBooleanProperty(SHOW_OUTPUT_PROPERTY, false) : showOutput;

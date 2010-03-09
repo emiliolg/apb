@@ -55,7 +55,7 @@ class TestRunner
 
     //~ Constructors .........................................................................................
 
-    public TestRunner(@NotNull File basedir, File outputDir, @NotNull List<String> includes,
+    TestRunner(@NotNull File basedir, File outputDir, @NotNull List<String> includes,
                       @NotNull List<String> excludes, @NotNull List<String> testGroups)
     {
         this.basedir = basedir;

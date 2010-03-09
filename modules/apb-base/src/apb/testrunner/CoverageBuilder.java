@@ -39,6 +39,7 @@ import apb.TestModuleHelper;
 import apb.coverage.CoverageReport;
 import apb.metadata.CoverageInfo;
 import apb.tasks.CoreTasks;
+import apb.testrunner.output.TestReport;
 import apb.utils.StreamUtils;
 
 import static apb.utils.FileUtils.makePath;
@@ -54,7 +55,8 @@ class CoverageBuilder
 
     @NotNull private final CoverageInfo coverage;
 
-    private boolean coverageEnabled;
+    private boolean                                       coverageEnabled;
+    @Nullable private Map<CoverageReport.Column, Integer> coverageInfo;
 
     @NotNull private final Environment env;
     @NotNull private final List<File>  filesDoDelete = new ArrayList<File>();
@@ -99,10 +101,11 @@ class CoverageBuilder
     {
         if (coverageEnabled) {
             instrument();
+            coverageInfo = null;
         }
     }
 
-    public void stopRun()
+    public void stopRun(@NotNull final TestReport testReport)
     {
         if (!coverageEnabled) {
             return;
@@ -115,7 +118,10 @@ class CoverageBuilder
         final CoverageReport report = textReport;
 
         if (report != null) {
-            EnumMap<CoverageReport.Column, Integer> coverageInfo = loadCoverageInfo(report);
+            coverageInfo = loadCoverageInfo(report);
+
+            testReport.coverage(getCoverageClass(), getCoverageMethod(), getCoverageBlock(),
+                                getCoverageLine());
 
             if (!env.isQuiet()) {
                 env.logInfo("Coverage summary Information: %s\n", formatLine(coverageInfo));
@@ -205,6 +211,41 @@ class CoverageBuilder
 
         tempFile.delete();
         return tempFile;
+    }
+
+    private int getCoverageLine()
+    {
+        return getCoverage(CoverageReport.Column.LINE);
+    }
+
+    private int getCoverageBlock()
+    {
+        return getCoverage(CoverageReport.Column.BLOCK);
+    }
+
+    private int getCoverageMethod()
+    {
+        return getCoverage(CoverageReport.Column.METHOD);
+    }
+
+    private int getCoverageClass()
+    {
+        return getCoverage(CoverageReport.Column.CLASS);
+    }
+
+    private int getCoverage(CoverageReport.Column column)
+    {
+        final Map<CoverageReport.Column, Integer> info = coverageInfo;
+
+        if (info != null) {
+            final Integer value = info.get(column);
+
+            if (value != null) {
+                return value;
+            }
+        }
+
+        return -1;
     }
 
     private void backupEmmaFiles()

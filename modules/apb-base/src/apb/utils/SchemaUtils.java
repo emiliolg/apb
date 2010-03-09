@@ -35,8 +35,6 @@ import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
-import org.jetbrains.annotations.Nullable;
-
 import apb.Apb;
 
 import static apb.utils.FileUtils.makeRelative;
@@ -179,7 +177,7 @@ public class SchemaUtils
                 final QName srName = sr.getName();
 
                 if (IMPORT_TAG.equals(srName) || INCLUDE_TAG.equals(srName) || JAXB_TAG.equals(srName)) {
-                    final String location = getSchemaLocation(sr);
+                    final String location = sr.getAttributeValue(XMLConstants.NULL_NS_URI, "schemaLocation");
 
                     if (location != null) {
                         processLocation(doc, pending, location);
@@ -210,17 +208,6 @@ public class SchemaUtils
     private static void logException(Exception e)
     {
         Apb.getEnv().logVerbose(e.toString());
-    }
-
-    @Nullable private static String getSchemaLocation(final XMLStreamReader sr)
-    {
-        for (int i = 0; i < sr.getAttributeCount(); i++) {
-            if ("schemaLocation".equals(sr.getAttributeLocalName(i))) {
-                return sr.getAttributeValue(i);
-            }
-        }
-
-        return null;
     }
 
     //~ Static fields/initializers ...........................................................................

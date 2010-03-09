@@ -54,12 +54,14 @@ public class JUnitTestReport
 
     //~ Methods ..............................................................................................
 
+    @Override
     public void stopRun()
     {
         super.stopRun();
         generateHtml();
     }
 
+    @Override
     @NotNull public JUnitTestReport init(@NotNull File dir)
     {
         JUnitTestReport result = new JUnitTestReport(showOutput, fileName);
@@ -124,6 +126,7 @@ public class JUnitTestReport
     private File[] listReportFiles(final File targetFile)
     {
         return reportsDir.listFiles(new FileFilter() {
+                @Override
                 public boolean accept(File file)
                 {
                     return !file.equals(targetFile) && file.getName().endsWith(".xml");
@@ -159,6 +162,7 @@ public class JUnitTestReport
             return this;
         }
 
+        @Override
         @NotNull public TestReport build(@NotNull Environment env)
         {
             boolean show =

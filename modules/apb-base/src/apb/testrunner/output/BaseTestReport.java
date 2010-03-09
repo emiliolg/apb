@@ -42,7 +42,7 @@ public abstract class BaseTestReport
 
     //~ Constructors .........................................................................................
 
-    public BaseTestReport(boolean showOutput, @NotNull String fileName)
+    protected BaseTestReport(boolean showOutput, @NotNull String fileName)
     {
         this.showOutput = showOutput;
         this.fileName = fileName;
@@ -50,26 +50,30 @@ public abstract class BaseTestReport
 
     //~ Methods ..............................................................................................
 
+    @Override
     public void startRun(int n)
     {
         super.startRun(n);
     }
 
+    @Override
     public void startSuite(@NotNull String suiteName)
     {
         super.startSuite(suiteName);
         OutputHandler.getInstance().init(showOutput);
     }
 
+    @Override
     public void endSuite()
     {
         super.endSuite();
         OutputHandler.getInstance().restore();
     }
 
+    @Override
     public void stopRun()
     {
-        OutputHandler.getInstance().reset();
+        OutputHandler.reset();
     }
 
     protected abstract void printOutput(String title, String content);

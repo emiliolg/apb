@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +14,7 @@
 // limitations under the License
 //
 
-
 package apb.testrunner.output;
-
-import java.io.Serializable;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,16 +25,27 @@ import org.jetbrains.annotations.Nullable;
 
 //
 public abstract class DefaultTestReport
-    implements TestReport,
-               Serializable
+    implements TestReport
 {
     //~ Instance fields ......................................................................................
 
-    boolean suiteOpen;
+    boolean     suiteOpen;
+    private int coverageBlock;
+
+    // Code coverage fields
+    private int coverageClass;
+    private int coverageLine;
+    private int coverageMethod;
+
+    // current Test & Suite name
+    @Nullable private String currentSuite;
+    @Nullable private String currentTest;
+    private long             startTime;
 
     // Counters for suites
-    private int suitesFailed;
-    private int suitesRun;
+    private int  suitesFailed;
+    private int  suitesRun;
+    private long suiteStartTime;
 
     // Counters for the current suite
 
@@ -47,39 +54,19 @@ public abstract class DefaultTestReport
     private int suiteTestsRun;
 
     // Cumulative Counters
-    private int  totalFailures;
-    private int  totalSkipped;
-    private int  totalSuites;
-    private int  totalTestsRun;
-    private long startTime;
-    private long suiteStartTime;
-
-    // current Test & Suite name
-    @Nullable private String currentSuite;
-    @Nullable private String currentTest;
-
-    //~ Constructors .........................................................................................
-
-    public DefaultTestReport()
-    {
-        suiteTestsRun = 0;
-        totalTestsRun = 0;
-        suiteTestFailures = 0;
-        totalFailures = 0;
-        totalSkipped = 0;
-        suiteTestSkipped = 0;
-        suitesFailed = 0;
-        suitesRun = 0;
-    }
+    private int totalFailures;
+    private int totalSkipped;
+    private int totalSuites;
+    private int totalTestsRun;
 
     //~ Methods ..............................................................................................
 
-    @Nullable public final String getCurrentSuite()
+    @Nullable @Override public final String getCurrentSuite()
     {
         return currentSuite;
     }
 
-    @Nullable public final String getCurrentTest()
+    @Nullable @Override public final String getCurrentTest()
     {
         return currentTest;
     }
@@ -99,27 +86,27 @@ public abstract class DefaultTestReport
         return suiteTestSkipped;
     }
 
-    public long getSuiteTimeEllapsed()
+    public long getSuiteTimeElapsed()
     {
         return System.currentTimeMillis() - suiteStartTime;
     }
 
-    public long getTimeEllapsed()
+    public long getTimeElapsed()
     {
         return System.currentTimeMillis() - startTime;
     }
 
-    public int getSuitesFailed()
+    @Override public int getSuitesFailed()
     {
         return suitesFailed;
     }
 
-    public int getSuitesRun()
+    @Override public int getSuitesRun()
     {
         return suitesRun;
     }
 
-    public int getTotalSuites()
+    @Override public int getTotalSuites()
     {
         return totalSuites;
     }
@@ -139,15 +126,24 @@ public abstract class DefaultTestReport
         return totalTestsRun;
     }
 
-    public void startRun(int n)
+    @Override public void startRun(int n)
     {
         totalSuites = n;
         startTime = System.currentTimeMillis();
+        coverageClass = coverageMethod = coverageBlock = coverageLine = -1;
     }
 
-    public void stopRun() {}
+    @Override public void coverage(int clazz, int method, int block, int line)
+    {
+        coverageClass = clazz;
+        coverageMethod = method;
+        coverageBlock = block;
+        coverageLine = line;
+    }
 
-    public void startSuite(@NotNull String suiteName)
+    @Override public void stopRun() {}
+
+    @Override public void startSuite(@NotNull String suiteName)
     {
         suiteOpen = true;
         currentSuite = suiteName;
@@ -156,7 +152,7 @@ public abstract class DefaultTestReport
         suiteStartTime = System.currentTimeMillis();
     }
 
-    public void endSuite()
+    @Override public void endSuite()
     {
         if (suiteOpen) {
             suitesRun++;
@@ -169,27 +165,47 @@ public abstract class DefaultTestReport
         }
     }
 
-    public void startTest(@NotNull String testName)
+    @Override public void startTest(@NotNull String testName)
     {
         currentTest = testName;
     }
 
-    public void endTest()
+    @Override public void endTest()
     {
         suiteTestsRun++;
         totalTestsRun++;
     }
 
-    public void failure(@NotNull Throwable t)
+    @Override public void failure(@NotNull Throwable t)
     {
         suiteTestFailures++;
         totalFailures++;
     }
 
-    public void skip()
+    @Override public void skip()
     {
         suiteTestSkipped++;
         totalSkipped++;
+    }
+
+    public int getCoverageClass()
+    {
+        return coverageClass;
+    }
+
+    public int getCoverageMethod()
+    {
+        return coverageMethod;
+    }
+
+    public int getCoverageBlock()
+    {
+        return coverageBlock;
+    }
+
+    public int getCoverageLine()
+    {
+        return coverageLine;
     }
 
     //~ Static fields/initializers ...........................................................................

@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb.testrunner;
 
 import java.io.File;
@@ -30,19 +28,16 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
-import apb.Apb;
-
-import apb.testrunner.output.TestReport;
-
-import apb.utils.FileUtils;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import apb.Apb;
+import apb.testrunner.output.TestReport;
+import apb.utils.FileUtils;
 
 import static java.util.Arrays.asList;
 
 import static apb.Apb.exit;
-
 import static apb.utils.StringUtils.isEmpty;
 
 /**
@@ -51,6 +46,10 @@ import static apb.utils.StringUtils.isEmpty;
  */
 public class Main
 {
+    //~ Constructors .........................................................................................
+
+    private Main() {}
+
     //~ Methods ..............................................................................................
 
     public static void main(String[] args)
@@ -73,7 +72,7 @@ public class Main
     private static void run(TestRunner runner, TestRunnerOptions options)
         throws TestSetFailedException
     {
-        ClassLoader classloader = createClassLoader(options);
+        final ClassLoader classloader = createClassLoader(options);
 
         final TestSetCreator<?> creator = options.findCreator(classloader);
         final String            suite = options.getSuite();
@@ -100,14 +99,13 @@ public class Main
     {
         try {
             final List<String> path = options.getClassPath();
-            final List<File>   files = new ArrayList<File>();
+            final List<File>   files = new ArrayList<File>(path.size());
 
             for (String s : path) {
                 files.add(new File(s));
             }
 
-            return new URLClassLoader(FileUtils.toURLArray(files),
-                                      Thread.currentThread().getContextClassLoader());
+            return new URLClassLoader(FileUtils.toURLArray(files));
         }
         catch (MalformedURLException e) {
             throw new TestSetFailedException(e);
@@ -159,8 +157,7 @@ public class Main
     private static URLClassLoader buildExtClassLoader()
         throws MalformedURLException
     {
-        return new URLClassLoader(FileUtils.toURLArray(Apb.getEnv().getExtClassPath()),
-                                  Main.class.getClassLoader());
+        return new URLClassLoader(FileUtils.toURLArray(Apb.getEnv().getExtClassPath()));
     }
 
     private static void saveOutput(@NotNull TestReport report, @Nullable String reportSpecFile)

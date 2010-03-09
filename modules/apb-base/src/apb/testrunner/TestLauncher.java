@@ -410,7 +410,7 @@ public class TestLauncher
             throw new BuildException(e);
         }
         finally {
-            coverageBuilder.stopRun();
+            coverageBuilder.stopRun(report);
             reportSpecsFile.delete();
         }
     }
