@@ -34,7 +34,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import apb.ModuleHelper;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,6 +41,7 @@ import org.jetbrains.annotations.Nullable;
 import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
+import apb.ModuleHelper;
 import apb.Proxy;
 import apb.TestModuleHelper;
 import apb.metadata.CoverageInfo;
@@ -231,7 +231,8 @@ public class TestLauncher
         workingDirectory = testModule.workingDirectory;
         testCreator = module.getTestCreator();
         final ModuleHelper moduleToTest = module.getModuleToTest();
-        isApbTest = moduleToTest.hasPackage() && moduleToTest.getPackageFile().equals(Apb.applicationJarFile());
+        isApbTest =
+            moduleToTest.hasPackage() && moduleToTest.getPackageFile().equals(Apb.applicationJarFile());
     }
 
     //~ Methods ..............................................................................................
@@ -317,6 +318,17 @@ public class TestLauncher
             String arg = args.get(i);
             args.set(i, arg.replace("$", "\\$"));
         }
+    }
+
+    private static String[] asStrings(final File[] runnerPath)
+    {
+        final String[] result = new String[runnerPath.length];
+
+        for (int i = 0, length = runnerPath.length; i < length; i++) {
+            result[i] = runnerPath[i].getPath();
+        }
+
+        return result;
     }
 
     private void showJavaArgs()
@@ -466,7 +478,7 @@ public class TestLauncher
             cp.addAll(coverageBuilder.classPath());
         }
 
-        final String[] runnerPath = runnerClassPath();
+        final File[] runnerPath = runnerClassPath();
 
         cp.addAll(classPath);
         cp.removeAll(Arrays.asList(runnerPath));
@@ -521,7 +533,7 @@ public class TestLauncher
 
         // Execute  the java command
         JavaTask java =
-            java(TESTRUNNER_MAIN, args).withClassPath(runnerPath)  //
+            java(TESTRUNNER_MAIN, args).withClassPath(asStrings(runnerPath))  //
                                        .maxMemory(maxMemory)  //
                                        .withProperties(properties)  //
                                        .withEnvironment(environmentVariables)  //
@@ -545,7 +557,7 @@ public class TestLauncher
         return java.getExitValue();
     }
 
-    private String[] runnerClassPath()
+    private File[] runnerClassPath()
     {
         Set<File> path = new LinkedHashSet<File>();
 
@@ -557,23 +569,17 @@ public class TestLauncher
 
         path.add(Apb.applicationJarFile());
         path.add(testFrameworkJar());
-        
+
         final Set<File> scp = new LinkedHashSet<File>(systemClassPath);
         scp.retainAll(classPath);
         path.addAll(scp);
 
-        final String[] result = new String[path.size()];
-
-        int i = 0;
-
-        for (File file : path) {
-            result[i++] = file.getPath();
-        }
-
-        return result;
+        final File[] result = new File[path.size()];
+        return path.toArray(result);
     }
 
-    private File testFrameworkJar() {
+    private File testFrameworkJar()
+    {
         return instatiateCreator(testCreator, this.getClass().getClassLoader()).getTestFrameworkJar();
     }
 
