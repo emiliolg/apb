@@ -22,19 +22,7 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import apb.Apb;
 import apb.BuildException;
@@ -43,6 +31,7 @@ import apb.Os;
 import apb.tasks.FileSet;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static apb.Constants.*;
 
@@ -54,6 +43,7 @@ import static apb.utils.StringUtils.isNotEmpty;
 // Time: 6:42:15 PM
 
 //
+
 public class FileUtils
 {
     //~ Constructors .........................................................................................
@@ -108,12 +98,14 @@ public class FileUtils
         return result;
     }
 
-    /** Check that all files in the directory are older than
-    * the timestamp specified as a parameter
-    * @param dir The directory where to check files
-    * @param timestamp The reference timestamp
-    * @return true if all files are older thatn the specified timestamp, false otherwise
-    */
+    /**
+     * Check that all files in the directory are older than
+     * the timestamp specified as a parameter
+     *
+     * @param dir       The directory where to check files
+     * @param timestamp The reference timestamp
+     * @return true if all files are older thatn the specified timestamp, false otherwise
+     */
     public static boolean uptodate(@NotNull File dir, long timestamp)
     {
         return uptodate(dir, "", timestamp);
@@ -122,8 +114,9 @@ public class FileUtils
     /**
      * Check that all files in the directory finishing with the given extension are older than
      * the timestamp specified as a parameter
-     * @param dir The directory where to check files
-     * @param ext The extension to be checked to verify that files should be included in the check
+     *
+     * @param dir       The directory where to check files
+     * @param ext       The extension to be checked to verify that files should be included in the check
      * @param timestamp The reference timestamp
      * @return true if all files are older thatn the specified timestamp, false otherwise
      */
@@ -149,8 +142,9 @@ public class FileUtils
 
     /**
      * Change a filename extension to a new one
+     *
      * @param file
-     *@param ext the new extension  @return the filename with a new extension
+     * @param ext  the new extension  @return the filename with a new extension
      */
     @NotNull public static File changeExtension(@NotNull File file, @NotNull String ext)
     {
@@ -304,6 +298,7 @@ public class FileUtils
      * Returns the extension portion of a file specification string.
      * This everything after the last dot '.' in the filename (NOT including
      * the dot). If not dot it returns the empty String
+     *
      * @param name the filename
      * @return The extension portion of it
      */
@@ -389,6 +384,7 @@ public class FileUtils
 
     /**
      * Create a FileOutputStream, creates the intermediate directories if necessary
+     *
      * @param file The file to open
      * @return A FileOutputStream
      * @throws FileNotFoundException
@@ -401,7 +397,8 @@ public class FileUtils
 
     /**
      * Create a FileOutputStream, creates the intermediate directories if necessary
-     * @param file The file to open
+     *
+     * @param file   The file to open
      * @param append append to the output file
      * @return A FileOutputStream
      * @throws FileNotFoundException
@@ -416,7 +413,6 @@ public class FileUtils
         if (!append && file.exists() && !file.canWrite() && !file.delete()) {
             throw new BuildException("Can not recreate: '" + file + "'.");
         }
-
 
         try {
             return new FileOutputStream(file, append);
@@ -434,6 +430,7 @@ public class FileUtils
 
     /**
      * Create a FileWriter, creates the intermediate directories if necessary
+     *
      * @param file The file to open
      * @return A FileWriter
      * @throws IOException
@@ -491,6 +488,7 @@ public class FileUtils
     /**
      * List all Java Sources under a given set of directories
      * Return the RELATIVE file name
+     *
      * @param sourceDirs The directories that can contain java sources
      * @return The relative list of file names
      */
@@ -586,6 +584,7 @@ public class FileUtils
 
     /**
      * Return the last modification time from a set of files
+     *
      * @param files The files to be analyzed
      * @return The latest modification time from the set
      */
@@ -602,7 +601,8 @@ public class FileUtils
 
     /**
      * Returns true if any of the files is newer than <code>targetTime</code>
-     * @param files to iterate
+     *
+     * @param files      to iterate
      * @param targetTime threshold modification time
      * @return <code>true</code> is all files are older than <code>targetTime</code>, <code>false</code> otherwise
      */
@@ -638,6 +638,7 @@ public class FileUtils
 
     /**
      * Makes file absolute and removes "." ".." segments
+     *
      * @param file File to be normalized
      * @return normalized file
      */
@@ -648,6 +649,7 @@ public class FileUtils
 
     /**
      * Makes file absolute and removes "." ".." segments
+     *
      * @param file File to be normalized
      * @return normalized file
      */
@@ -661,6 +663,7 @@ public class FileUtils
 
     /**
      * Return the apb home directory
+     *
      * @return the apb home directory
      */
     @NotNull public static File getApbDir()
@@ -738,8 +741,9 @@ public class FileUtils
     /**
      * An utility method to list all files from a group of FileSets,
      * returning a map of each file mapped to a target directory
-     * @param filesets The filesets to be listed
-     * @param target The target directory to map the original file
+     *
+     * @param filesets       The filesets to be listed
+     * @param target         The target directory to map the original file
      * @param checkTimestamp Wheter to check the timestamp of the target file before adding it to the map or not.print an info message if any fileset is empty
      */
     public static Map<File, File> listAllMappingToTarget(List<FileSet> filesets, File target,
@@ -775,15 +779,15 @@ public class FileUtils
      *     base1 --- a -- b +--- c1
      *                     |
      *                     +--- c2
-     *
+     * <p/>
      *     base2 --- a +-- b +--- c1
      *                 |
      *                 +--- c2
-     *
+     * <p/>
      *     base3 +--- a +-- b +--- c1
      *           |
      *           +--- c2
-     *
+     * <p/>
      * </pre></blockquote><p>
      * It will return:
      * <p><blockquote><pre>
@@ -811,6 +815,13 @@ public class FileUtils
         }
 
         return result;
+    }
+
+    public static boolean sameFile(@Nullable File f1, @Nullable File f2)
+    {
+        return f1 == f2 ||
+               f1 != null && f2 != null &&
+               f1.getAbsoluteFile().toURI().normalize().equals(f2.getAbsoluteFile().toURI().normalize());
     }
 
     static boolean isSymbolicLink(File file)

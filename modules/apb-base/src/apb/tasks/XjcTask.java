@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +15,7 @@
 // limitations under the License
 //
 
+
 package apb.tasks;
 
 import java.io.File;
@@ -23,12 +25,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import apb.BuildException;
+
+import apb.utils.FileUtils;
+import apb.utils.SchemaUtils;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import apb.BuildException;
-import apb.utils.FileUtils;
-import apb.utils.SchemaUtils;
+import static apb.utils.FileUtils.validateDirectory;
 
 /**
  * This task allow the invocation of the XML Binding Compiler (xjc)
@@ -38,13 +43,13 @@ public class XjcTask
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final List<File> externalBindings;
-
     private boolean               packageAnnotations;
-    @NotNull private final File[] schemas;
-    @NotNull private String       targetDir;
-    @NotNull private String       targetPackage;
     private boolean               timestamp;
+    @NotNull private final File[] schemas;
+
+    @NotNull private final List<File> externalBindings;
+    @NotNull private String           targetDir;
+    @NotNull private String           targetPackage;
 
     //~ Constructors .........................................................................................
 
@@ -209,8 +214,7 @@ public class XjcTask
 
         final File target = getTargetDir();
 
-        //noinspection ResultOfMethodCallIgnored
-        target.mkdirs();
+        validateDirectory(target);
 
         //If there is a jaxb xjc jar in ext, use that
         String jar = findJar();

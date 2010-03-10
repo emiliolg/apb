@@ -197,6 +197,10 @@ public class MainTest
 
     private void checkOutput(String... expected)
     {
+        if (output.get(0).startsWith("EMMA")) {
+            output.remove(0);
+        }
+
         CheckOutput.checkOutput(output, expected);
     }
 

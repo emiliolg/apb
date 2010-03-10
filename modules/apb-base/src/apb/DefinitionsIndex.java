@@ -48,6 +48,7 @@ import static apb.Constants.*;
 import static apb.utils.CollectionUtils.stringToList;
 import static apb.utils.FileUtils.normalizeFile;
 import static apb.utils.FileUtils.uptodate;
+import static apb.utils.FileUtils.validateDir;
 
 /**
  * This class manages an index of Definitions for Module/Project data
@@ -188,8 +189,10 @@ public class DefinitionsIndex
             try {
                 final File dir = definitionsCacheFile.getParentFile();
 
-                if (!dir.exists() && !dir.mkdirs()) {
-                    throw new IOException("Cannot create directory: " + dir);
+                String msg = validateDir(dir);
+
+                if (!msg.isEmpty()) {
+                    throw new IOException(msg);
                 }
 
                 ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(definitionsCacheFile));

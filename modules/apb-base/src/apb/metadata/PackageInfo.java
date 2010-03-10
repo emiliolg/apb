@@ -41,6 +41,12 @@ public class PackageInfo
     @BuildProperty public boolean addClassPath;
 
     /**
+     * Whether to package the classes in a JAR file when generating a WAR.
+     * (Rather than copy them to the WEB-INF/classes directory of the WAR)
+     */
+    public boolean archiveClasses = false;
+
+    /**
      * Whether to generate a jar with the sources or not.
      */
     @BuildProperty public boolean generateSourcesJar;
@@ -74,7 +80,12 @@ public class PackageInfo
     /**
      * The directory where the web application is created (For WAR packages)
      */
-    @BuildProperty public String webAppDir = "$output/$name";
+    @BuildProperty public String webAppBuildDir = "$output/$name";
+
+    /**
+     * The directory where the web application is created (For WAR packages)
+     */
+    @BuildProperty public String webAppDir = "$source/webapp";
 
     /**
      * Additional dependencies added into the package.

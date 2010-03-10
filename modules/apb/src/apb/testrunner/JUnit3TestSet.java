@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.testrunner;
 
@@ -144,13 +146,16 @@ final class JUnit3TestSet
 
     @Nullable private static TestSuite buildSuite(@NotNull Class<?> clazz, @NotNull final String singleTest)
     {
-        if (!Test.class.isAssignableFrom(clazz)) {
+        if (!TestCase.class.isAssignableFrom(clazz)) {
             return null;
         }
 
+        Class<? extends TestCase> testCase = clazz.asSubclass(TestCase.class);
+
         // This should be kept as an anonymous class because Junit constructs the test in the TestSuite constructor...
 
-        final TestSuite testSuite = singleTest.isEmpty() ? new TestSuite(clazz) : new TestSuite(clazz) {
+        final TestSuite testSuite =
+            singleTest.isEmpty() ? new TestSuite(testCase) : new TestSuite(testCase) {
                     @Override public void addTest(Test test)
                     {
                         if (test instanceof TestCase && ((TestCase) test).getName().equals(singleTest)) {

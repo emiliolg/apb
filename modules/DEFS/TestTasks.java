@@ -17,8 +17,6 @@
 
 
 
-import apb.coverage.CoverageReport;
-
 import apb.idegen.IdeaInfo;
 
 import apb.metadata.BuildProperty;
@@ -34,11 +32,13 @@ public class TestTasks
     //~ Instance initializers ................................................................................
 
     {
-        coverage.enable = true;
+        // Disable coverage because it is not working...
 
-        coverage.ensure = 51;
+        //coverage.enable = true;
 
-        coverage.reports(CoverageReport.HTML);
+        //coverage.ensure = 81;
+
+        //coverage.reports(CoverageReport.HTML);
 
         setenv("APB_PROJECT_PATH", "");
 

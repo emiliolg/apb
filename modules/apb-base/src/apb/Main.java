@@ -35,6 +35,8 @@ import static java.util.Arrays.asList;
 import static apb.Messages.BUILD_COMPLETED;
 import static apb.Messages.BUILD_FAILED;
 
+import static apb.utils.FileUtils.validateDir;
+
 /**
  * Apb main class
  */
@@ -71,15 +73,11 @@ public class Main
     private static void checkEnvironment()
         throws IOException
     {
-        File dir = FileUtils.getApbDir();
+        File   dir = FileUtils.getApbDir();
+        String msg = validateDir(dir);
 
-        if (dir.exists()) {
-            if (!dir.isDirectory()) {
-                throw new IOException(String.format("Invalid apb directory: %s\n", dir.getPath()));
-            }
-        }
-        else if (!dir.mkdirs()) {
-            throw new IOException(String.format("Cannot create directory: %s\n", dir.getPath()));
+        if (!msg.isEmpty()) {
+            throw new IOException(msg);
         }
 
         File properties = new File(dir, Constants.APB_PROPERTIES);

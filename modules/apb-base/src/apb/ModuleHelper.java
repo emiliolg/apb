@@ -21,33 +21,16 @@ package apb;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
-import apb.metadata.CompileInfo;
-import apb.metadata.Dependency;
-import apb.metadata.IncludeDependencies;
-import apb.metadata.JavadocInfo;
-import apb.metadata.Library;
-import apb.metadata.LocalLibrary;
-import apb.metadata.Module;
-import apb.metadata.PackageInfo;
-import apb.metadata.PackageType;
-import apb.metadata.ResourcesInfo;
-import apb.metadata.TestModule;
+import apb.metadata.*;
 
 import apb.tasks.FileSet;
 import apb.tasks.JavacTask;
+import apb.tasks.WarTask;
 
 import apb.utils.ClassUtils;
 import apb.utils.DebugOption;
-import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
 
 import org.jetbrains.annotations.NotNull;
@@ -63,7 +46,6 @@ import static apb.utils.CollectionUtils.addIfNotNull;
 
 /**
  * Provides additional functionality for {@link apb.metadata.Module} objects
- *
  */
 public class ModuleHelper
     extends ProjectElementHelper
@@ -100,6 +82,7 @@ public class ModuleHelper
 
     /**
      * Get current module output directory
+     *
      * @return current module output directory
      */
     @NotNull public File getOutput()
@@ -113,6 +96,7 @@ public class ModuleHelper
 
     /**
      * Get current module source directory
+     *
      * @return current module source directory
      */
     @NotNull public File getSourceDir()
@@ -126,6 +110,7 @@ public class ModuleHelper
 
     /**
      * Get current module generated sources directory
+     *
      * @return current module generated sources directory
      */
     @NotNull public File getGeneratedSource()
@@ -139,6 +124,7 @@ public class ModuleHelper
 
     /**
      * Get current module package name
+     *
      * @return current module package name
      */
     public String getPackageName()
@@ -148,6 +134,7 @@ public class ModuleHelper
 
     /**
      * Get current module package (.jar, .war etc) file
+     *
      * @return current module package file
      */
     @NotNull public File getPackageFile()
@@ -157,7 +144,7 @@ public class ModuleHelper
                 throw new IllegalArgumentException("Module: '" + getName() + "' does not have a package.");
             }
 
-            File dir = FileUtils.normalizeFile(fileFromBase(getModule().pkg.dir));
+            File dir = fileFromBase(getModule().pkg.dir);
             packageFile = new File(dir, getPackageName() + getPackageType().getExt());
         }
 
@@ -166,12 +153,13 @@ public class ModuleHelper
 
     /**
      * Get current module sources package (xxxx-src.jar) file
+     *
      * @return current module sources package file
      */
     @NotNull public File getSourcePackageFile()
     {
         if (sourcePackageFile == null) {
-            File dir = FileUtils.normalizeFile(fileFromBase(getModule().pkg.dir));
+            File dir = fileFromBase(getModule().pkg.dir);
             sourcePackageFile = new File(dir, getPackageName() + SRC_JAR);
         }
 
@@ -376,25 +364,18 @@ public class ModuleHelper
      */
     public void createPackage()
     {
-        final PackageInfo packageInfo = getPackageInfo();
+        final PackageType type = getPackageType();
 
-        switch (getPackageType()) {
-        case WAR:
-            war(getPackageFile()).fromWebApp(getPackageInfo().webAppDir).execute();
-            break;
+        if (type == PackageType.NONE) {
+            return;
+        }
 
+        final PackageInfo  packageInfo = getPackageInfo();
+        final List<Module> modules = modulesToPackage();
+
+        switch (type) {
         case JAR:
-            final List<Module> modules = modulesToPackage();
-
-            Map<String, Set<String>> services = mergeServices(modules);
-
-            jar(getPackageFile()).from(outputFileSets(modules))  //
-                                 .mainClass(packageInfo.mainClass)  //
-                                 .version(getModule().version)  //
-                                 .manifestAttributes(packageInfo.attributes())  //
-                                 .withClassPath(manifestClassPath())  //
-                                 .withServices(services)  //
-                                 .execute();
+            createJar(getPackageFile(), packageInfo, modules);
 
             // generate sources jar
             if (packageInfo.generateSourcesJar) {
@@ -402,6 +383,26 @@ public class ModuleHelper
                                            .execute();
             }
 
+            break;
+
+        case WAR:
+
+            final File    buildDir = fileFromBase(packageInfo.webAppBuildDir);
+            final WarTask war =
+                war(getPackageFile()).from(packageInfo.webAppDir).usingBuildDirectory(buildDir);
+
+            if (packageInfo.archiveClasses) {
+                final File jarFile =
+                    new File(new File(buildDir, WarTask.LIB_PATH),
+                             getPackageName() + PackageType.JAR.getExt());
+                createJar(jarFile, packageInfo, modules);
+                war.includeJar(jarFile);
+            }
+            else {
+                war.includeClasses(outputFileSets(modules));
+            }
+
+            war.execute();
             break;
         }
     }
@@ -565,8 +566,8 @@ public class ModuleHelper
     }
 
     /**
-    * todo this should be replaced by runtimepath or compileclasspath....
-    */
+     * todo this should be replaced by runtimepath or compileclasspath....
+     */
     Collection<File> deepClassPath(Iterable<Dependency> dependencyList, boolean useJars)
     {
         Set<File> result = new HashSet<File>();
@@ -620,6 +621,19 @@ public class ModuleHelper
         }
     }
 
+    private void createJar(final File jarFile, PackageInfo packageInfo, List<Module> modules)
+    {
+        Map<String, Set<String>> services = mergeServices(modules);
+
+        jar(jarFile).from(outputFileSets(modules))  //
+                    .mainClass(packageInfo.mainClass)  //
+                    .version(getModule().version)  //
+                    .manifestAttributes(packageInfo.attributes())  //
+                    .withClassPath(manifestClassPath())  //
+                    .withServices(services)  //
+                    .execute();
+    }
+
     private List<FileSet> outputFileSets(List<Module> modules)
     {
         final List<FileSet> result = new ArrayList<FileSet>();
@@ -657,7 +671,7 @@ public class ModuleHelper
 
         if (getCompileInfo().instrumentNotNull) {
             File notNullAnnotations = Apb.applicationJarFile();
-             result.add(new LocalLibrary(notNullAnnotations.getPath()));
+            result.add(new LocalLibrary(notNullAnnotations.getPath()));
         }
 
         return result;
@@ -742,6 +756,7 @@ public class ModuleHelper
 
     /**
      * Topological sort dependent modules using a Depth First Search
+     *
      * @param elements All descendant elements
      * @param visited  Already visited elements
      */

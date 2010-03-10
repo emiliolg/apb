@@ -43,6 +43,7 @@ import org.jetbrains.annotations.NotNull;
 import static apb.tasks.CoreTasks.exec;
 
 import static apb.utils.FileUtils.makePath;
+import static apb.utils.FileUtils.validateDirectory;
 import static apb.utils.StringUtils.nChars;
 //
 // User: emilio
@@ -595,14 +596,7 @@ public class JavadocTask
          */
         @NotNull public JavadocTask to(@NotNull File target)
         {
-            if (target.exists()) {
-                if (!target.isDirectory()) {
-                    throw new IllegalArgumentException(target.getPath() + " is not a directory");
-                }
-            }
-            else if (!target.mkdirs()) {
-                throw new IllegalArgumentException("Can not create directory: " + target.getPath());
-            }
+            validateDirectory(target);
 
             return new JavadocTask(sourceDirs, target);
         }

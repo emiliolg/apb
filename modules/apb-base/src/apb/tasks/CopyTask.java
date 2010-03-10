@@ -36,6 +36,8 @@ import static java.util.Collections.singletonList;
 import static apb.tasks.FileSet.fromDir;
 import static apb.tasks.FileSet.fromFile;
 
+import static apb.utils.FileUtils.validateDirectory;
+
 // User: emilio
 // Date: Sep 5, 2009
 // Time: 6:15:46 PM
@@ -66,8 +68,8 @@ public class CopyTask
     //~ Methods ..............................................................................................
 
     /**
-       * Execute the copy
-       */
+     * Execute the copy
+     */
     public void execute()
     {
         if (singleSource == null) {
@@ -131,15 +133,12 @@ public class CopyTask
          * If the source file/directories are empty or not existent just skip the copy
          */
         if (!files.isEmpty()) {
-            if (!to.exists() && !to.mkdirs()) {
-                env.handle("Cannot create output directory: " + to);
-            }
-            else {
-                env.logInfo("Copying %2d file%s\nto %s\n", files.size(), files.size() > 1 ? "s" : "", to);
+            validateDirectory(to);
 
-                for (Map.Entry<File, File> entry : files.entrySet()) {
-                    copyFile(entry.getKey(), entry.getValue());
-                }
+            env.logInfo("Copying %2d file%s\nto %s\n", files.size(), files.size() > 1 ? "s" : "", to);
+
+            for (Map.Entry<File, File> entry : files.entrySet()) {
+                copyFile(entry.getKey(), entry.getValue());
             }
         }
     }
@@ -157,6 +156,7 @@ public class CopyTask
 
         /**
          * Private constructor called from factory methods
+         *
          * @param from The source to copy from. It can be a file or a directory
          */
 
@@ -166,10 +166,11 @@ public class CopyTask
         }
 
         /**
-        * Specify the target file or directory
-        * @param to The File or directory to copy from
-        * @throws IllegalArgumentException if trying to copy a directoy to a single file.
-        */
+         * Specify the target file or directory
+         *
+         * @param to The File or directory to copy from
+         * @throws IllegalArgumentException if trying to copy a directoy to a single file.
+         */
         @NotNull public CopyTask to(@NotNull String to)
         {
             return to(Apb.getEnv().fileFromBase(to));
@@ -177,6 +178,7 @@ public class CopyTask
 
         /**
          * Specify the target file or directory
+         *
          * @param to The File or directory to copy from
          * @throws IllegalArgumentException if trying to copy a directoy to a signle file.
          */

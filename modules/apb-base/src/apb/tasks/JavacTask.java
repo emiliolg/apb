@@ -43,6 +43,7 @@ import static java.util.Collections.singletonList;
 
 import static apb.utils.CollectionUtils.addIfNotNull;
 import static apb.utils.FileUtils.makePath;
+import static apb.utils.FileUtils.validateDirectory;
 import static apb.utils.StringUtils.appendIndenting;
 
 //
@@ -73,13 +74,13 @@ public class JavacTask
     @NotNull private final List<File>    sourceDirs;
 
     @NotNull private final Map<String, String> annnotationOptions;
+    @NotNull private String                    encoding;
 
     @NotNull private String lintOptions;
     @NotNull private String name;
     @NotNull private String processing;
     @NotNull private String source;
     @NotNull private String target;
-    @NotNull private String encoding;
 
     //~ Constructors .........................................................................................
 
@@ -447,18 +448,6 @@ public class JavacTask
         return this;
     }
 
-    private static void validateDir(File dir)
-    {
-        if (dir.exists()) {
-            if (!dir.isDirectory()) {
-                throw new IllegalArgumentException(dir.getPath() + " is not a directory");
-            }
-        }
-        else if (!dir.mkdirs()) {
-            throw new IllegalArgumentException("Can not create directory: " + dir.getPath());
-        }
-    }
-
     private void logInfo(List<File> files)
     {
         for (File file : FileUtils.removePrefix(sourceDirs, files)) {
@@ -520,7 +509,7 @@ public class JavacTask
                 Apb.getEnv().logInfo("Skipping empty directory: %s\n", sourceDir.getPath());
             }
             else {
-                validateDir(targetDir);
+                validateDirectory(targetDir);
 
                 sourceDirs.add(sourceDir);
 

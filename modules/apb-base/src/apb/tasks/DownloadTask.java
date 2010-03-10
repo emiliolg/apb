@@ -39,14 +39,15 @@ import apb.metadata.UpdatePolicy;
 
 import apb.utils.ClassUtils;
 import apb.utils.FileUtils;
-import apb.utils.StringUtils;
 import apb.utils.StreamUtils;
+import apb.utils.StringUtils;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 
+import static apb.utils.FileUtils.validateDirectory;
 import static apb.utils.StringUtils.nChars;
 
 public class DownloadTask
@@ -137,7 +138,9 @@ public class DownloadTask
     public void execute()
     {
         try {
-            if (!uptodate() && createTargetDir()) {
+            if (!uptodate()) {
+                validateDirectory(dest.getParentFile());
+
                 env.logInfo("Downloading: %s\n", source);
                 env.logInfo("         to: %s\n", FileUtils.normalizePath(dest));
                 download();
@@ -199,21 +202,6 @@ public class DownloadTask
         else {
             download(is, c.getContentLength());
         }
-    }
-
-    /** Ensure dest target directory exists
-     * @return true if it exists or it has been successfully created
-     */
-    private boolean createTargetDir()
-    {
-        File          dir = dest.getParentFile();
-        final boolean result = dir.exists() || dir.mkdirs();
-
-        if (!result) {
-            env.handle("Can not create: " + dir);
-        }
-
-        return result;
     }
 
     private boolean uptodate()

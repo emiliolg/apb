@@ -21,6 +21,8 @@ package apb.tasks;
 import java.io.File;
 
 import org.jetbrains.annotations.NotNull;
+
+import static apb.utils.FileUtils.validateDir;
 //
 // User: emilio
 // Date: Sep 4, 2009
@@ -44,10 +46,10 @@ public class MkdirTask
 
     @Override public void execute()
     {
-        if (!file.exists()) {
-            if (!file.mkdirs()) {
-                env.logWarning("Unable to create directory: " + file.getAbsolutePath());
-            }
+        String msg = validateDir(file);
+
+        if (!msg.isEmpty()) {
+            env.logWarning("%s\n", msg);
         }
     }
 }
