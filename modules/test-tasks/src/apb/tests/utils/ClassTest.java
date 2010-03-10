@@ -23,6 +23,7 @@ import java.util.Date;
 
 import apb.Apb;
 
+import apb.Logger;
 import apb.metadata.IncludeDependencies;
 
 import apb.utils.ClassUtils;
@@ -103,13 +104,10 @@ public class ClassTest
     {
         File libDir = FileUtils.normalizeFile(new File(Apb.getEnv().getProperty("apb-jar")).getParentFile());
 
-        File f = ClassUtils.jarFromClass(Apb.class);
+        File f = ClassUtils.jarFromClass(Logger.class);
         assertEquals(new File(libDir, "apb.jar"), f);
 
-        f = ClassUtils.jarFromClass(IncludeDependencies.class);
-        assertEquals(new File(libDir, "apb.jar"), f);
-
-        final Apb[] array = new Apb[0];
+        final Logger[] array = new Logger[0];
         f = ClassUtils.jarFromClass(array.getClass());
         assertEquals(new File(libDir, "apb.jar"), f);
     }

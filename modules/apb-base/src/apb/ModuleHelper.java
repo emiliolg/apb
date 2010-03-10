@@ -710,7 +710,7 @@ public class ModuleHelper
         return mergedServices;
     }
 
-    private List<Module> modulesToPackage()
+    List<Module> modulesToPackage()
     {
         final PackageInfo packageInfo = getPackageInfo();
 

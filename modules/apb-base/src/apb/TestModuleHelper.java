@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb;
 
 import java.io.File;
@@ -23,21 +21,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import apb.metadata.Dependency;
 import apb.metadata.DependencyList;
 import apb.metadata.LocalLibrary;
 import apb.metadata.Module;
 import apb.metadata.TestModule;
-
 import apb.tasks.CoreTasks;
 import apb.tasks.FileSet;
-
 import apb.testrunner.TestLauncher;
 import apb.testrunner.output.TestReport;
 import apb.testrunner.output.TestReportBroadcaster;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import static java.util.Arrays.asList;
 
@@ -58,9 +54,9 @@ public class TestModuleHelper
     //~ Instance fields ......................................................................................
 
     @Nullable private File         coverageDir;
+    @Nullable private ModuleHelper moduleToTest;
     @Nullable private File         reportsDir;
     @Nullable private File         workingDirectory;
-    @Nullable private ModuleHelper moduleToTest;
 
     //~ Constructors .........................................................................................
 
@@ -141,7 +137,14 @@ public class TestModuleHelper
      */
     @NotNull public List<File> getClassesToTest()
     {
-        return Collections.singletonList(getModuleToTest().getOutput());
+        final List<ModuleHelper> helpers = getModulesToTest();
+        final List<File>         result = new ArrayList<File>(helpers.size());
+
+        for (ModuleHelper helper : helpers) {
+            result.add(helper.getOutput());
+        }
+
+        return Collections.unmodifiableList(result);
     }
 
     /**
@@ -157,7 +160,14 @@ public class TestModuleHelper
      */
     public List<File> getSourcesToTest()
     {
-        return getModuleToTest().getSourceDirs();
+        final List<ModuleHelper> helpers = getModulesToTest();
+        final List<File>         result = new ArrayList<File>(helpers.size());
+
+        for (ModuleHelper helper : helpers) {
+            result.addAll(helper.getSourceDirs());
+        }
+
+        return Collections.unmodifiableList(result);
     }
 
     /**
@@ -225,6 +235,20 @@ public class TestModuleHelper
         final Module         m = moduleToTest.getModule();
         deps.add(m);
         deps.addAll(m.dependencies());
+    }
+
+    @NotNull private List<ModuleHelper> getModulesToTest()
+    {
+        final List<ModuleHelper> result = new ArrayList<ModuleHelper>();
+
+        final ModuleHelper moduleToTest = getModuleToTest();
+        result.add(moduleToTest);
+
+        for (Module module : moduleToTest.modulesToPackage()) {
+            result.add(module.getHelper());
+        }
+
+        return Collections.unmodifiableList(result);
     }
 
     private LocalLibrary testFrameworkLibrary()
