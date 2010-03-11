@@ -90,14 +90,14 @@ public class JarTask
 
     public JarTask version(@NotNull String version)
     {
-        setManifestAttribute(Attributes.Name.IMPLEMENTATION_VERSION, version);
+        withManifestAttribute(Attributes.Name.IMPLEMENTATION_VERSION, version);
         return this;
     }
 
     public JarTask mainClass(String className)
     {
         if (isNotEmpty(className)) {
-            setManifestAttribute(Attributes.Name.MAIN_CLASS, className);
+            withManifestAttribute(Attributes.Name.MAIN_CLASS, className);
         }
 
         return this;
@@ -128,33 +128,34 @@ public class JarTask
                 result.append(entry);
             }
 
-            setManifestAttribute(Attributes.Name.CLASS_PATH, result.toString());
+            withManifestAttribute(Attributes.Name.CLASS_PATH, result.toString());
         }
 
         return this;
     }
 
-    public JarTask manifestAttributes(Map<Attributes.Name, String> attributes)
+    public JarTask withManifestAttributes(Map<Attributes.Name, String> attributes)
     {
         for (Map.Entry<Attributes.Name, String> atts : attributes.entrySet()) {
-            setManifestAttribute(atts.getKey(), atts.getValue());
+            withManifestAttribute(atts.getKey(), atts.getValue());
         }
 
         return this;
     }
 
-    public void setManifestAttribute(String name, String value)
+    public JarTask withManifestAttribute(String name, String value)
     {
-        setManifestAttribute(new Attributes.Name(name), value);
+        return withManifestAttribute(new Attributes.Name(name), value);
     }
 
-    public void setManifestAttribute(Attributes.Name name, String value)
+    public JarTask withManifestAttribute(Attributes.Name name, String value)
     {
         logVerbose("Set manifest attribute %s=%s\n", name, value);
         manifest.getMainAttributes().put(name, value);
+        return this;
     }
 
-    public void setManifest(@NotNull InputStream is)
+    public void withManifest(@NotNull InputStream is)
         throws IOException
     {
         manifest = new Manifest(is);
@@ -174,9 +175,10 @@ public class JarTask
         }
     }
 
-    public void setComment(String comment)
+    public JarTask withComment(String value)
     {
-        this.comment = comment;
+        comment = value;
+        return this;
     }
 
     public JarTask withServices(@NotNull Map<String, Set<String>> svcs)
@@ -247,7 +249,7 @@ public class JarTask
                             String normalizedName = fileName.replace(File.separatorChar, '/');
 
                             if (JarFile.MANIFEST_NAME.equalsIgnoreCase(normalizedName)) {
-                                env.logWarning(Messages.MANIFEST_OVERRIDE(file));
+                                env.logWarning(Messages.MANIFEST_OVERRIDE(file.getPath()));
                                 writeManifest = false;
                             }
 
@@ -343,7 +345,7 @@ public class JarTask
             StringBuilder buff = new StringBuilder();
 
             for (String provider : e.getValue()) {
-                buff.append(provider).append('\n');
+                buff.append(provider).append("\r\n");
             }
 
             writeToJar(jarOut, fileName, new ByteArrayInputStream(buff.toString().getBytes()), addedDirs);

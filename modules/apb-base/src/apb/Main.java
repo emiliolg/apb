@@ -163,7 +163,7 @@ public class Main
         }
 
         if (e == null) {
-            env.logInfo(BUILD_COMPLETED(System.currentTimeMillis() - clock));
+            env.logInfo(BUILD_COMPLETED(String.valueOf(System.currentTimeMillis() - clock)));
         }
         else {
             if (showStackTrace) {

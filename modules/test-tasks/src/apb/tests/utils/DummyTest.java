@@ -18,6 +18,9 @@
 
 package apb.tests.utils;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+
 import apb.Constants;
 import apb.Messages;
 
@@ -27,17 +30,15 @@ import apb.tasks.CoreTasks;
 
 import apb.tests.testutils.FileAssert;
 
-import apb.utils.ClassUtils;
-import apb.utils.CollectionUtils;
-import apb.utils.ColorUtils;
-import apb.utils.NameUtils;
-import apb.utils.StringUtils;
+import apb.utils.*;
 
 import junit.framework.TestCase;
 
 //
+
 /**
  * Just to mark coverage of the constructor of Util classes....
+ * Plus Messages
  */
 public class DummyTest
     extends TestCase
@@ -56,5 +57,35 @@ public class DummyTest
         new CoreTasks();
         new Constants();
         new Messages();
+    }
+
+    public void testMessages()
+    {
+        Method[] msgs = Messages.class.getMethods();
+
+        for (Method method : msgs) {
+            if (Modifier.isStatic(method.getModifiers()) && method.getReturnType().equals(String.class)) {
+                try {
+                    String msg = (String) method.invoke(null, buildArgs(method));
+                    assertNotNull(msg);
+                }
+                catch (Exception e) {
+                    assertTrue("Exception invoking: " + method.getName(), false);
+                }
+            }
+        }
+    }
+
+    private Object[] buildArgs(Method method)
+    {
+        final Class<?>[] argTypes = method.getParameterTypes();
+        Object[]         result = new Object[argTypes.length];
+
+        for (int i = 0; i < result.length; i++) {
+            assertEquals("On method " + method.getName() + " argument " + i, String.class, argTypes[i]);
+            result[i] = "";
+        }
+
+        return result;
     }
 }

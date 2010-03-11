@@ -22,22 +22,19 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import apb.utils.FileUtils;
-import static apb.utils.FileUtils.FILE_COMPARATOR;
 
 import junit.framework.Assert;
 
 import static java.util.Arrays.asList;
 
+import static apb.utils.FileUtils.FILE_COMPARATOR;
+
 public class FileAssert
 {
-    private static final Comparator<String> STRING_COMPARATOR = new Comparator<String>(){
-        @Override
-        public int compare(final String o1,final String o2) {
-            return o1.compareTo(o2);
-        }
-    };
     //~ Methods ..............................................................................................
 
     public static void assertDoesNotExist(File file)
@@ -100,10 +97,11 @@ public class FileAssert
         Assert.assertTrue(msg, FileUtils.equalsContent(file1, file2));
     }
 
-    public static void createFile(File dir, String file, String[] data)
+    public static void createFile(File dir, String file, String... data)
         throws IOException
     {
-        File       f = new File(dir, file);
+        File f = new File(dir, file);
+        f.getParentFile().mkdirs();
         FileWriter w = new FileWriter(f);
 
         for (String s : data) {
@@ -113,20 +111,61 @@ public class FileAssert
         w.close();
     }
 
-    public static void assertSameFiles(final List<String> expected, Collection<File> files) {
-        Assert.assertEquals(sort(expected, STRING_COMPARATOR).toString(),  sort(files, FILE_COMPARATOR).toString());
+    public static void assertSameFiles(final List<String> expected, Collection<File> files)
+    {
+        Assert.assertEquals(sort(expected, STRING_COMPARATOR).toString(),
+                            sort(files, FILE_COMPARATOR).toString());
     }
 
-    public static void assertSame(final List<String> expected, Collection<String> files) {
-        Assert.assertEquals(sort(expected, STRING_COMPARATOR).toString(),  sort(files, STRING_COMPARATOR).toString());
+    public static void assertSame(final List<String> expected, Collection<String> files)
+    {
+        Assert.assertEquals(sort(expected, STRING_COMPARATOR).toString(),
+                            sort(files, STRING_COMPARATOR).toString());
     }
 
-
-
-    public static <T> Collection<T> sort(Collection<T> files, Comparator<T> comparator) {
+    public static <T> Collection<T> sort(Collection<T> files, Comparator<T> comparator)
+    {
         final List<T> result = new ArrayList<T>(files);
         Collections.sort(result, comparator);
         return result;
     }
 
+    public static void assertJarContent(final File                expectedJarFile,
+                                        final Map<String, String> expectedContent)
+        throws IOException
+    {
+        assertExists(expectedJarFile);
+
+        final Map<String, JarEntry> jarContent = new HashMap<String, JarEntry>();
+        final JarFile               jarFile = new JarFile(expectedJarFile);
+
+        for (Enumeration<JarEntry> e = jarFile.entries(); e.hasMoreElements();) {
+            JarEntry     entry = e.nextElement();
+            final String file = entry.getName();
+            Assert.assertTrue("Unexpected jar entry: '" + file + "'", expectedContent.containsKey(file));
+
+            jarContent.put(file, entry);
+        }
+
+        for (Map.Entry<String, String> e : expectedContent.entrySet()) {
+            final String file = e.getKey();
+            JarEntry     entry = jarContent.get(file);
+            Assert.assertNotNull("File '" + file + "' not found in jar", entry);
+
+            if (e.getValue() != null) {
+                Assert.assertEquals("Content of file '" + file + "' does not match:\n", e.getValue(),
+                                    FileUtils.toString(jarFile.getInputStream(jarContent.get(file))));
+            }
+        }
+    }
+
+    //~ Static fields/initializers ...........................................................................
+
+    private static final Comparator<String> STRING_COMPARATOR =
+        new Comparator<String>() {
+            @Override public int compare(final String o1, final String o2)
+            {
+                return o1.compareTo(o2);
+            }
+        };
 }

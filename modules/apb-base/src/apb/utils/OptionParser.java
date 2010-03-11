@@ -220,7 +220,7 @@ public abstract class OptionParser
         }
         else {
             if (i == arguments.size() - 1) {
-                printError(Messages.EXPECTEDARG(opt.getLetter(), opt.getName()));
+                printError(Messages.EXPECTEDARG(String.valueOf(opt.getLetter()), opt.getName()));
                 stopParsing();
             }
 
@@ -364,7 +364,7 @@ public abstract class OptionParser
         public Option<T> negate()
         {
             if (!isBoolean()) {
-                optionParser.printError(Messages.NONBOOLNEG(letter, name));
+                optionParser.printError(Messages.NONBOOLNEG(String.valueOf(letter), name));
                 optionParser.stopParsing();
             }
 

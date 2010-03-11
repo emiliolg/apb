@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -75,7 +76,7 @@ public class Apb
             File dir = new File(p);
 
             if (dir.isAbsolute() && !dir.isDirectory()) {
-                getEnv().logWarning(Messages.INV_PROJECT_DIR(dir));
+                getEnv().logWarning(Messages.INV_PROJECT_DIR(dir.getPath()));
             }
 
             result.add(dir);
@@ -111,11 +112,12 @@ public class Apb
     @Nullable public static File getHome()
     {
         try {
-			return applicationLibraryDir().getParentFile();
-		} catch (BuildException ignore) {
-			//Maybe we're being called from build.sh. Assume the current directory is the home.
-			return new File(System.getProperty("user.dir"));
-		}
+            return applicationLibraryDir().getParentFile();
+        }
+        catch (BuildException ignore) {
+            //Maybe we're being called from build.sh. Assume the current directory is the home.
+            return new File(System.getProperty("user.dir"));
+        }
     }
 
     public static Environment createBaseEnvironment()

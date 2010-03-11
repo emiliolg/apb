@@ -396,7 +396,7 @@ public class ModuleHelper
                     new File(new File(buildDir, WarTask.LIB_PATH),
                              getPackageName() + PackageType.JAR.getExt());
                 createJar(jarFile, packageInfo, modules);
-                war.includeJar(jarFile);
+                war.includeJars(jarFile);
             }
             else {
                 war.includeClasses(outputFileSets(modules));
@@ -405,6 +405,21 @@ public class ModuleHelper
             war.execute();
             break;
         }
+    }
+
+    /**
+     * Default implementation of a resources action for the current module
+     */
+    public void resources()
+    {
+        final ResourcesInfo resources = getResourcesInfo();
+        final FileSet       fileSet =
+            FileSet.fromDir(resources.dir)  //
+                   .including(resources.includes())  //
+                   .excluding(resources.excludes());
+
+        copy(fileSet).to(resources.output).execute();
+        // todo add filtered
     }
 
     /**
@@ -451,8 +466,8 @@ public class ModuleHelper
 
         List<File> sources = new ArrayList<File>();
         sources.add(getSourceDir());
-        
-        if (info.includeGeneratedSource){
+
+        if (info.includeGeneratedSource) {
             sources.add(getGeneratedSource());
         }
 
@@ -598,6 +613,21 @@ public class ModuleHelper
         return result;
     }
 
+    List<Module> modulesToPackage()
+    {
+        final PackageInfo packageInfo = getPackageInfo();
+
+        List<Module> result = modulesToInclude(packageInfo.includeDependencies);
+
+        for (Dependency dep : packageInfo.additionalDependencies()) {
+            if (dep.isModule()) {
+                result.add(dep.asModule());
+            }
+        }
+
+        return result;
+    }
+
     private static String trimDashes(String s)
     {
         int l = s.length();
@@ -628,7 +658,7 @@ public class ModuleHelper
         jar(jarFile).from(outputFileSets(modules))  //
                     .mainClass(packageInfo.mainClass)  //
                     .version(getModule().version)  //
-                    .manifestAttributes(packageInfo.attributes())  //
+                    .withManifestAttributes(packageInfo.attributes())  //
                     .withClassPath(manifestClassPath())  //
                     .withServices(services)  //
                     .execute();
@@ -708,21 +738,6 @@ public class ModuleHelper
         mergeServices(mergedServices, services);
 
         return mergedServices;
-    }
-
-    List<Module> modulesToPackage()
-    {
-        final PackageInfo packageInfo = getPackageInfo();
-
-        List<Module> result = modulesToInclude(packageInfo.includeDependencies);
-
-        for (Dependency dep : packageInfo.additionalDependencies()) {
-            if (dep.isModule()) {
-                result.add(dep.asModule());
-            }
-        }
-
-        return result;
     }
 
     private List<Module> modulesToInclude(IncludeDependencies d)

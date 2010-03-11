@@ -22,9 +22,15 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import apb.Apb;
+
 import apb.utils.FileUtils;
 
 import org.jetbrains.annotations.NotNull;
+
+import static java.util.Arrays.asList;
+
+import static apb.tasks.CoreTasks.jar;
 
 import static apb.utils.FileUtils.validateDirectory;
 //
@@ -81,7 +87,7 @@ public class WarTask
     public void execute()
     {
         buildWebApp();
-        CoreTasks.jar(warFile).from(webAppBuildDir).execute();
+        jar(warFile).from(webAppBuildDir).execute();
     }
 
     public void buildWebApp()
@@ -91,10 +97,15 @@ public class WarTask
         performPostPackaging();
     }
 
-    public WarTask includeJar(File file)
+    public WarTask includeJars(File... file)
     {
-        jarsToPackage.add(file);
+        jarsToPackage.addAll(asList(file));
         return this;
+    }
+
+    public WarTask includeClasses(FileSet... sets)
+    {
+        return includeClasses(asList(sets));
     }
 
     public WarTask includeClasses(List<FileSet> sets)
@@ -116,7 +127,7 @@ public class WarTask
             env.logWarning("Source web application directory '%s' does not exist\n", dir.getAbsolutePath());
         }
         else if (!FileUtils.sameFile(dir, webAppBuildDir)) {
-            CoreTasks.copy(webAppDir).to(webAppBuildDir);
+            CoreTasks.copy(webAppDir).to(webAppBuildDir).execute();
         }
     }
 
@@ -153,7 +164,7 @@ public class WarTask
 
             if (dir.exists() && !FileUtils.sameFile(dir, classesDir)) {
                 validateDirectory(classesDir);
-                CoreTasks.copy(fileSet).to(classesDir);
+                CoreTasks.copy(fileSet).to(classesDir).execute();
             }
         }
     }
@@ -165,7 +176,7 @@ public class WarTask
         for (File jar : jarsToPackage) {
             if (jar.exists() && !FileUtils.sameFile(jar.getParentFile(), jarsDir)) {
                 validateDirectory(jarsDir);
-                CoreTasks.copy(jar).to(jarsDir);
+                CoreTasks.copy(jar).to(jarsDir).execute();
             }
         }
     }
@@ -197,6 +208,14 @@ public class WarTask
         Builder(@NotNull File warFile)
         {
             this.warFile = warFile;
+        }
+
+        /**
+         * @param webAppTargetDir The directory where the web application will be built
+         */
+        public WarTask usingBuildDirectory(@NotNull String webAppTargetDir)
+        {
+            return usingBuildDirectory(Apb.getEnv().fileFromBase(webAppTargetDir));
         }
 
         /**

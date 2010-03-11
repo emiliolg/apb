@@ -52,6 +52,26 @@ public class FileUtils
 
     //~ Methods ..............................................................................................
 
+    /**
+     * Get the contents of an <code>InputStream</code> as a String.
+     * The platform's default encoding is used for the byte-to-char conversion.
+     */
+    public static String toString(final InputStream input)
+        throws IOException
+    {
+        final StringWriter      sw = new StringWriter();
+        final InputStreamReader in = new InputStreamReader(input);
+        final char[]            buffer = new char[8192];
+        int                     n;
+
+        while ((n = in.read(buffer)) != -1) {
+            sw.write(buffer, 0, n);
+        }
+
+        sw.flush();
+        return sw.toString();
+    }
+
     public static Set<File> listDirsWithFiles(@NotNull File dir, @NotNull String ext)
     {
         Set<File> result = new TreeSet<File>();

@@ -18,8 +18,6 @@
 
 package apb;
 
-import java.io.File;
-
 import org.jetbrains.annotations.NonNls;
 
 //
@@ -41,28 +39,13 @@ public class Messages
         return "Invalid option: " + option + " (use -h or --help to see a list of available options.)";
     }
 
-    public static String NONBOOLNEG(char letter, String name)
+    public static String NONBOOLNEG(String letter, String name)
     {
         return "Can't negate option -" + letter + "(--" + name +
                " ), negation only applies to boolean options.";
     }
 
-    public static String NOVAL(String arg1, String arg2)
-    {
-        return "Option -" + arg1 + " (--" + arg2 + ") contains no default and was specified no value.";
-    }
-
-    public static String SEPOPT(String arg1, String arg2)
-    {
-        return "Option -" + arg1 + " (--" + arg2 + ")'s argument should be separated by white space";
-    }
-
-    public static String WRONGOPT(String option)
-    {
-        return "Wrong option: \n" + option + "\n" + " ";
-    }
-
-    public static String EXPECTEDARG(char letter, String name)
+    public static String EXPECTEDARG(String letter, String name)
     {
         return "Option -" + letter + " (--" + name + ") expects an argument.";
     }
@@ -72,19 +55,19 @@ public class Messages
         return "Invalid " + name + " value: " + value;
     }
 
-    public static String INV_PROJECT_DIR(File dir)
+    public static String INV_PROJECT_DIR(String dir)
     {
         return "Project path directory: '" + dir + "' does not exist.\n";
     }
 
-    public static String BUILD_COMPLETED(long ts)
+    public static String BUILD_COMPLETED(String ts)
     {
         return "\nBUILD COMPLETED in " + ts + " milliseconds.\n";
     }
 
-    public static String MANIFEST_OVERRIDE(final File file)
+    public static String MANIFEST_OVERRIDE(final String file)
     {
-        return "Module's manifest is overriden by " + file.getAbsolutePath() + "\n";
+        return "Module's manifest is overridden by " + file + "\n";
     }
 
     //~ Static fields/initializers ...........................................................................
@@ -116,7 +99,6 @@ public class Messages
     @NonNls public static final String MODULE_OR_PROJECT =
         "Mod     : module or project specification defined as 'Mod.java' in the project path.";
 
-    public static final String CANTCOMBINE = "options with arguments can not be combined with other options.";
     public static final String OPT_IN_BRACKETS = "[options] ";
     public static final String WHERE = "Where:";
     public static final String OPTIONS = "Options: ";

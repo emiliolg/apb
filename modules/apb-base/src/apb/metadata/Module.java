@@ -21,11 +21,7 @@ package apb.metadata;
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
 
-import apb.tasks.FileSet;
-
 import org.jetbrains.annotations.NotNull;
-
-import static apb.tasks.CoreTasks.copy;
 
 /**
  * This class defines a Module for the building system
@@ -152,13 +148,7 @@ public class Module
     @BuildTarget(description = "Copy (eventually filtering) resources to the output directory.")
     public void resources()
     {
-        final FileSet fileSet =
-            FileSet.fromDir(resources.dir)  //
-                   .including(resources.includes())  //
-                   .excluding(resources.excludes());
-
-        copy(fileSet).to(resources.output).execute();
-        // todo add filtered
+        getHelper().resources();
     }
 
     @BuildTarget(
