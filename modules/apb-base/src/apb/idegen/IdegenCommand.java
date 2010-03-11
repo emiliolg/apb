@@ -35,6 +35,10 @@ public abstract class IdegenCommand
 {
     //~ Constructors .........................................................................................
 
+    /**
+     * Constructs a Idegen Command for a given name
+     * @param name         The name of the command
+     */
     public IdegenCommand(@NotNull String name)
     {
         super("idegen", name, "Generate " + name + " project and module files.", true, Project.class,

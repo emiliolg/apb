@@ -55,6 +55,11 @@ public abstract class IdegenTask
 
     //~ Constructors .........................................................................................
 
+   /**
+    * Constructs a Idegen Task
+    * @param id           The task Id
+    * @param modulesHome  a path to the modules files
+    */
     public IdegenTask(String id, File modulesHome)
     {
         env = Apb.getEnv();
@@ -65,8 +70,16 @@ public abstract class IdegenTask
 
     //~ Methods ..............................................................................................
 
+   /**
+    * Runs the IdegenTask and create the IDE metadata files
+    */
     public abstract void execute();
 
+   /**
+    * Creates a ModuleBuilder instance using the given id
+    * @param moduleId  The Id of the ModuleBuilder
+    * @returns a new {@link ModuleBuilder} instance
+    */
     public static ModuleBuilder generateModule(final String moduleId)
     {
         final ModuleBuilder result = new ModuleBuilder();
@@ -74,6 +87,12 @@ public abstract class IdegenTask
         return result;
     }
 
+   /**
+    * Creates a ProjectBuilder instance
+    * @param projectId         The Id of the project
+    * @param projectDirectory  Source project directory
+    * @returns a new {@link ProjectBuilder} instance
+    */
     public static ProjectBuilder generateProject(final String projectId, final File projectDirectory)
     {
         final ProjectBuilder result = new ProjectBuilder();
@@ -82,22 +101,35 @@ public abstract class IdegenTask
         return result;
     }
 
+   /**
+    * Updates the lastModified value and returns the IdegenTask instance
+    * @param timeStamp   A <code>long</code> value representing the time it was
+    *                    last modified, measured in milliseconds
+    * @returns the current instance
+    */
     public IdegenTask ifOlder(long timeStamp)
     {
         lastModified = timeStamp;
         return this;
     }
 
-    public IdegenTask usingTemplate(@NotNull String t)
+   /**
+    * Updates the template file name and returns the IdegenTask instance
+    * @param templateFile    The name of the template file
+    * @returns the current instance
+    *
+    * @throws BuildException if the template file does not exist in the base directory
+    */
+    public IdegenTask usingTemplate(@NotNull String templateFile)
     {
-        if (t.isEmpty()) {
+        if (templateFile.isEmpty()) {
             template = null;
         }
         else {
-            final File file = env.fileFromBase(t);
+            final File file = env.fileFromBase(templateFile);
 
             if (!file.exists()) {
-                throw new BuildException("Cannot find tempate file '" + file.getPath() + "'");
+                throw new BuildException("Cannot find template file '" + file.getPath() + "'");
             }
 
             template = file;
@@ -115,7 +147,10 @@ public abstract class IdegenTask
 
     //~ Inner Classes ........................................................................................
 
-    //
+   /**
+    * This class represents a java module for IDE metadata generation
+    *
+    */
     public abstract static class Module
         extends IdegenTask
     {
@@ -129,6 +164,13 @@ public abstract class IdegenTask
         @NotNull protected PackageType         packageType;
         boolean                                includeEmptyDirs;
 
+        //~ Constructors .........................................................................................
+
+       /**
+        * Constructs a Module
+        * @param id           The module Id
+        * @param modulesHome  a path to the modules files
+        */
         public Module(String id, File modulesHome)
         {
             super(id, modulesHome);
@@ -142,69 +184,142 @@ public abstract class IdegenTask
             contentDirs = new ArrayList<String>();
         }
 
+        //~ Methods ..............................................................................................
+
+      /**
+       * Updates the source directories and returns the Module instance
+       *
+       * @param sources    A list of source directories
+       * @returns the current instance
+       */
         public Module usingSources(@NotNull List<File> sources)
         {
             sourceDirs.addAll(sources);
             return this;
         }
 
-        public Module usingOutput(@NotNull File f)
+       /**
+        * Updates the output file returns the Module instance
+        *
+        * @param outputFile  A list of source directories
+        * @returns the current instance
+        */
+        public Module usingOutput(@NotNull File outputFile)
         {
-            output = f;
+            output = outputFile;
             return this;
         }
 
-        public Module usingTemplate(@NotNull String t)
+        /**
+         * Updates the template file name and returns the Module instance
+         * @param templateFile    The name of the template file
+         *
+         * @throws BuildException if the template file does not exist in the base directory
+         */
+        @Override public Module usingTemplate(@NotNull String templateFile)
         {
-            return (Module) super.usingTemplate(t);
+            return (Module) super.usingTemplate(templateFile);
         }
 
+       /**
+        * Updates the testModule flag and returns the Module instance
+        *
+        * @param b  true or false
+        * @returns the current instance
+        */
         public Module testModule(boolean b)
         {
             testModule = b;
             return this;
         }
 
-        public Module withPackageType(@NotNull PackageType t)
+       /**
+        * Updates the packageType value and returns the Module instance
+        *
+        * @param pkgType  A {@link PackageType}.  Ie. WAR, EAR.
+        * @returns the current instance
+        */
+        public Module withPackageType(@NotNull PackageType pkgType)
         {
-            packageType = t;
+            packageType = pkgType;
             return this;
         }
 
-        public Module ifOlder(long timestamp)
+        /**
+         * Updates the lastModified value and returns the Module instance
+         * @param timestamp   A <code>long</code> value representing the time it was
+         *                    last modified, measured in milliseconds
+         */
+        @Override public Module ifOlder(long timestamp)
         {
             return (Module) super.ifOlder(timestamp);
         }
 
+       /**
+        * Updates the includeEmptyDirs flag and returns the Module instance
+        *
+        * @param b  true or false
+        * @returns the current instance
+        */
         public Module includeEmptyDirs(boolean b)
         {
             includeEmptyDirs = b;
             return this;
         }
 
+       /**
+        * Updates the exclude folder list and returns the Module instance
+        *
+        * @param excludeDirectories  a exclude folder list
+        * @returns the current instance
+        */
         public Module excluding(String... excludeDirectories)
         {
             excludes.addAll(java.util.Arrays.asList(excludeDirectories));
             return this;
         }
 
+        /**
+        * Updates the libraries and returns the Module instance
+        *
+        * @param libs  a {@link Library} list
+        * @returns the current instance
+        */
         public Module usingLibraries(Iterable<Library> libs)
         {
             apb.utils.CollectionUtils.addAll(libraries, libs);
             return this;
         }
 
+       /**
+        * Updates the module dependencies and returns the Module instance
+        *
+        * @param modules  a modules list
+        * @returns the current instance
+        */
         public Module usingModules(String... modules)
         {
             return usingModules(asList(modules));
         }
 
+       /**
+        * Updates the module dependencies and returns the Module instance
+        *
+        * @param modules  a modules List
+        * @returns the current instance
+        */
         public Module usingModules(List<String> modules)
         {
             moduleDependencies.addAll(modules);
             return this;
         }
 
+       /**
+        * Updates the module dependencies and returns the Module instance
+        *
+        * @param dirs  a modules List
+        * @returns the current instance
+        */
         public Module withContentDirs(List<String> dirs)
         {
             contentDirs.addAll(dirs);
@@ -212,7 +327,10 @@ public abstract class IdegenTask
         }
     }
 
-    //
+   /**
+    * This class represents a java project for IDE metadata generation
+    *
+    */
     public abstract static class Project
         extends IdegenTask
     {
@@ -220,6 +338,13 @@ public abstract class IdegenTask
         @NotNull protected final Set<String> modules;
         @NotNull protected String            jdkName;
 
+       //~ Constructors .........................................................................................
+       /**
+        * Constructs a Project
+        * @param id                 The module Id
+        * @param modulesHome        a path to the modules files
+        * @param projectDirectory   a path to a project directory
+        */
         public Project(@NotNull String id, @NotNull File modulesHome, File projectDirectory)
         {
             super(id, modulesHome);
@@ -228,15 +353,27 @@ public abstract class IdegenTask
             modules = new TreeSet<String>();
         }
 
+       /**
+        * Updates the modules and returns the Project instance
+        *
+        * @param moduleIds  a moduleId Collection
+        * @returns the current instance
+        */
         public Project usingModules(@NotNull Collection<String> moduleIds)
         {
             modules.addAll(moduleIds);
             return this;
         }
 
-        @Override public Project usingTemplate(@NotNull String t)
+   /**
+    * Updates the template file name and returns the IdegenTask instance
+    * @param templateFile    The name of the template file
+    *
+    * @throws BuildException if the template file does not exist in the base directory
+    */
+    @Override public Project usingTemplate(@NotNull String templateFile)
         {
-            return (Project) super.usingTemplate(t);
+            return (Project) super.usingTemplate(templateFile);
         }
 
         public Project useJdk(@NotNull String jdk)
@@ -245,12 +382,20 @@ public abstract class IdegenTask
             return this;
         }
 
-        @Override public Project ifOlder(long timestamp)
+   /**
+    * Updates the lastModified value and returns the Project instance
+    * @param timestamp   A <code>long</code> value representing the time it was
+    *                    last modified, measured in milliseconds
+    */
+    @Override public Project ifOlder(long timestamp)
         {
             return (Project) super.ifOlder(timestamp);
         }
     }
 
+    /**
+    * ModuleBuilder class
+    */
     public static class ModuleBuilder
     {
         @NotNull private String id;
@@ -261,6 +406,9 @@ public abstract class IdegenTask
         }
     }
 
+    /**
+    * ProjectBuilder class
+    */
     public static class ProjectBuilder
     {
         @NotNull private File   projectDirectory;

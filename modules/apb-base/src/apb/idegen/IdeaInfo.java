@@ -35,7 +35,7 @@ public class IdeaInfo
     //~ Instance fields ......................................................................................
 
     /**
-     * Wheter to include empty source directories (like generated sources)
+     * Whether to include empty source directories (like generated sources)
      * in the idea definitions
      */
     @BuildProperty public boolean includeEmptyDirs = false;
@@ -69,11 +69,21 @@ public class IdeaInfo
 
     //~ Methods ..............................................................................................
 
+   /**
+    * Adds additional content directories
+    *
+    * @param dirs new content directories
+    */
     public void contentDirs(String... dirs)
     {
         contentDirs.addAll(asList(dirs));
     }
 
+   /**
+    * Returns the content directories
+    *
+    * @return a List of content directories
+    */
     public List<String> contentDirs()
     {
         return contentDirs;

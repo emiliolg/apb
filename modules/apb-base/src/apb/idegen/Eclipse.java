@@ -32,6 +32,9 @@ public class Eclipse
 {
     //~ Constructors .........................................................................................
 
+    /**
+     * Constructs a Eclipse IdegenCommand instance
+     */
     public Eclipse()
     {
         super("eclipse");
@@ -39,6 +42,11 @@ public class Eclipse
 
     //~ Methods ..............................................................................................
 
+   /**
+    * This is the method implementation that will be invoked when running this IdegenCommand over a Module or Project
+    *
+    * @param projectElement The Module or Project to be processes.
+    */
     public void invoke(ProjectElement projectElement)
     {
         System.out.println("Not yet implemented");

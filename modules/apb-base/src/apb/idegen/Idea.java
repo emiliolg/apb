@@ -44,6 +44,9 @@ public class Idea
 {
     //~ Constructors .........................................................................................
 
+    /**
+     * Constructs an Idea IdegenCommand instance
+     */
     public Idea()
     {
         super("idea");
@@ -51,9 +54,14 @@ public class Idea
 
     //~ Methods ..............................................................................................
 
-    public void invoke(ProjectElement element)
+  /**
+   * This is the method implementation that will be invoked when running this IdegenCommand over a Module or Project
+   *
+   * @param projectElement The Module or Project to be processes.
+   */
+    public void invoke(ProjectElement projectElement)
     {
-        final ProjectElementHelper helper = element.getHelper();
+        final ProjectElementHelper helper = projectElement.getHelper();
         final IdeaInfo             info = helper.getInfoObject("idegen", IdeaInfo.class);
         final File                 targetDir = helper.fileFromBase(info.dir);
 

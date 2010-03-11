@@ -216,7 +216,10 @@ public class IdeaTask
             super(id, modulesHome, projectDirectory);
         }
 
-        public void execute()
+    /**
+     * Runs the IdeaTask and creates/updates the Idea .ipr project file
+     */
+    public void execute()
         {
             final File ideaFile = ideaFile(id, ".ipr");
 
@@ -439,7 +442,10 @@ public class IdeaTask
             super(id, modulesHome);
         }
 
-        public void execute()
+   /**
+    * Runs the IdeaTask and creates/updates the Idea .iml file
+    */
+    public void execute()
         {
             final File ideaFile = ideaFile(id, ".iml");
 
@@ -501,9 +507,11 @@ public class IdeaTask
             }
         }
 
-        /**
-         * Checks if a content dir should be added. Also filter-out redundant dirs 
-         */
+       /**
+        * Checks if a content dir should be added. Also filter-out redundant dirs
+        *
+        * @return true or false
+        */
         private static boolean filterDirs(Set<File> contents, File newContentDir)
         {
             boolean found = false;
