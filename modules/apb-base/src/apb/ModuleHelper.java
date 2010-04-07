@@ -18,26 +18,22 @@
 
 package apb;
 
+import apb.metadata.*;
+import apb.tasks.FileSet;
+import apb.tasks.JavacTask;
+import apb.tasks.WarTask;
+import apb.utils.ClassUtils;
+import apb.utils.DebugOption;
+import apb.utils.IdentitySet;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
-import apb.metadata.*;
-
-import apb.tasks.FileSet;
-import apb.tasks.JavacTask;
-import apb.tasks.WarTask;
-
-import apb.utils.ClassUtils;
-import apb.utils.DebugOption;
-import apb.utils.IdentitySet;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import static apb.tasks.CoreTasks.*;
-
 import static apb.utils.CollectionUtils.addIfNotNull;
 //
 // User: emilio
@@ -399,7 +395,7 @@ public class ModuleHelper
                 war.includeJars(jarFile);
             }
             else {
-                war.includeClasses(outputFileSets(modules));
+                war.includeClasses(outputFileSets(modules, packageInfo.excludes()));
             }
 
             war.execute();
@@ -655,22 +651,22 @@ public class ModuleHelper
     {
         Map<String, Set<String>> services = mergeServices(modules);
 
-        jar(jarFile).from(outputFileSets(modules))  //
+        jar(jarFile).from(outputFileSets(modules, packageInfo.excludes()))  //
                     .mainClass(packageInfo.mainClass)  //
                     .version(getModule().version)  //
                     .withManifestAttributes(packageInfo.attributes())  //
                     .withClassPath(manifestClassPath())  //
-                    .withServices(services)  //
+                    .withServices(services) //
                     .execute();
     }
 
-    private List<FileSet> outputFileSets(List<Module> modules)
+    private List<FileSet> outputFileSets(List<Module> modules, List<String> excludes)
     {
         final List<FileSet> result = new ArrayList<FileSet>();
 
         for (Module m : modules) {
             final ModuleHelper h = m.getHelper();
-            result.add(FileSet.fromDir(h.getOutput()).excluding(h.getPackageInfo().excludes()));
+            result.add(FileSet.fromDir(h.getOutput()).excluding(excludes));
         }
 
         return result;

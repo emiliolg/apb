@@ -16,17 +16,7 @@
 
 package apb.utils;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayDeque;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Queue;
-import java.util.Set;
+import apb.Apb;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
@@ -34,8 +24,13 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-
-import apb.Apb;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.*;
 
 import static apb.utils.FileUtils.makeRelative;
 import static apb.utils.StreamUtils.buffered;
@@ -177,7 +172,7 @@ public class SchemaUtils
                 final QName srName = sr.getName();
 
                 if (IMPORT_TAG.equals(srName) || INCLUDE_TAG.equals(srName) || JAXB_TAG.equals(srName)) {
-                    final String location = sr.getAttributeValue(XMLConstants.NULL_NS_URI, "schemaLocation");
+                   final String location = findAttribute(sr, "schemaLocation");
 
                     if (location != null) {
                         processLocation(doc, pending, location);
@@ -185,6 +180,17 @@ public class SchemaUtils
                 }
             }
         }
+    }
+
+    private static String findAttribute(XMLStreamReader sr, String attributeName) {
+        for (int i = 0; i < sr.getAttributeCount(); i++){
+            final String localName = sr.getAttributeLocalName(i);
+            if(localName.equals(attributeName)){
+                return sr.getAttributeValue(i);
+            }
+
+        }
+        return null;
     }
 
     private static void processLocation(URL doc, Queue<File> pending, String location)
