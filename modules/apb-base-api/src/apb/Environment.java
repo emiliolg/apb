@@ -21,11 +21,6 @@ package apb;
 import java.io.File;
 import java.util.Collection;
 
-import apb.utils.DebugOption;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 // User: emilio
 // Date: Aug 22, 2009
 // Time: 11:48:41 AM
@@ -37,7 +32,6 @@ import org.jetbrains.annotations.Nullable;
  * being built.
  * The current <code>Environment</code> can be obtained from the <code>Apb.getEnv()</code> method.
  *
- * @see     Apb#getEnv()
  */
 public interface Environment
 {
@@ -105,14 +99,14 @@ public interface Environment
      * And delegates the handling to {@link #handle(Throwable t)}
      * @param msg The message used to create the build exception
      */
-    void handle(@NotNull String msg);
+    void handle(String msg);
 
     /**
      * Handle an Error.
      * Either raise the exception or log it depending on the value of the failOnError flag
      * @param e The Exception causing the failure
      */
-    void handle(@NotNull Throwable e);
+    void handle(Throwable e);
 
     /**
      * Returns true if we want the build to proceed unconditionally without checking file timestamps
@@ -129,7 +123,7 @@ public interface Environment
     /**
      * Returns true if must show the following option
      */
-    boolean mustShow(DebugOption option);
+    //boolean mustShow(DebugOption option);
 
     /**
      * Returns true if log level is quiet
@@ -147,26 +141,21 @@ public interface Environment
      * @return the base directory of the current Module
      * @throws IllegalStateException If there is no current module
      */
-    @NotNull File getBaseDir();
+    File getBaseDir();
 
     /**
      * Get current module output directory
      * @return current module output directory
      * @throws IllegalStateException If there is no current module
      */
-    @NotNull File getOutputDir();
-
-    /**
-     * Returns a representation of the current Operating System
-     */
-    @NotNull Os getOs();
+    File getOutputDir();
 
     /**
      * Return the value of the specified property
      * @param id The property to search
      * @return The value of the property or the empty String if the Property is not found and failOnError is not set
      */
-    @NotNull String getProperty(@NotNull String id);
+    String getProperty(String id);
 
     /**
      * Return the value of the specified property
@@ -174,7 +163,7 @@ public interface Environment
      * @param defaultValue The default value to return in case the property is not set
      * @return The value of the property
      */
-    @NotNull String getProperty(@NotNull String id, @NotNull String defaultValue);
+    String getProperty(String id, String defaultValue);
 
     /**
      * Returns true if the specified property has an associated value in the current environment,
@@ -182,7 +171,7 @@ public interface Environment
      *
      * @param id The id of the property to search
      */
-    boolean hasProperty(@NotNull String id);
+    boolean hasProperty(String id);
 
     /**
      * Return the value of the specified boolean property
@@ -190,7 +179,7 @@ public interface Environment
      * @param defaultValue The default value
      * @return The value of the property or false if the property is not set
      */
-    boolean getBooleanProperty(@NotNull String id, boolean defaultValue);
+    boolean getBooleanProperty(String id, boolean defaultValue);
 
     /**
      * Process the string expanding property values.
@@ -203,28 +192,28 @@ public interface Environment
      * @param string The string to be expanded.
      * @return An String with properties expanded.
      */
-    @NotNull String expand(@Nullable String string);
+    String expand(String string);
 
     /**
      * Returns a File object whose path is relative to the basedir
      * @param name The (Usually relative to the basedir) file name.
      * @return A file whose path is relative to the basedir.
      */
-    @NotNull File fileFromBase(@NotNull String name);
+    File fileFromBase(String name);
 
     /**
      * Returns a File object whose path is relative to the source directory of the current module
      * @param name The (Usually relative to the source directory of the module) file name.
      * @return A file whose path is relative to the source directory of the current module.
      */
-    @NotNull File fileFromSource(@NotNull String name);
+    File fileFromSource(String name);
 
     /**
      * Returns a File object whose path is relative to the generated source directory of the current module
      * @param name The (Usually relative to the generated source directory of the module) file name.
      * @return A file whose path is relative to the generated source directory of the current module.
      */
-    @NotNull File fileFromGeneratedSource(@NotNull String name);
+    File fileFromGeneratedSource(String name);
 
     /**
      * Get the Extension Jars to be searched when we compile definitions
@@ -248,14 +237,14 @@ public interface Environment
      * @param id The property to get
      * @return The property if it has value, null otherwise.
      */
-    @Nullable String getOptionalProperty(String id);
+    String getOptionalProperty(String id);
 
     /**
      * Assign a new value for the specified property in the current environment
      * @param name  The property id
      * @param value The new value to assign to the specified property
      */
-    void putProperty(@NotNull String name, @NotNull String value);
+    void putProperty(String name, String value);
 
     /**
      * Returns the Logger associated to the current Environment

@@ -92,9 +92,14 @@ public class WarTask
 
     public void buildWebApp()
     {
-        performPackaging();
+        copyExtraWebResources();
 
-        performPostPackaging();
+        copyWebApp();
+
+        handleDeploymentDescriptors();
+
+        copyClasses();
+        copyJars();
     }
 
     public WarTask includeJars(File... file)
@@ -129,20 +134,6 @@ public class WarTask
         else if (!FileUtils.sameFile(dir, webAppBuildDir)) {
             CoreTasks.copy(webAppDir).to(webAppBuildDir).execute();
         }
-    }
-
-    private void performPackaging()
-    {
-        env.logInfo("Processing war project\n");
-
-        copyExtraWebResources();
-
-        copyWebApp();
-
-        handleDeploymentDescriptors();
-
-        copyClasses();
-        copyJars();
     }
 
     private void handleDeploymentDescriptors()
@@ -180,8 +171,6 @@ public class WarTask
             }
         }
     }
-
-    private void performPostPackaging() {}
 
     //~ Static fields/initializers ...........................................................................
 

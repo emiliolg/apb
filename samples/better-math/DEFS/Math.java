@@ -26,6 +26,6 @@ public class Math
 
     {
         description = "A simple Math library";
-        tests(new TestMath());
+        test = TestMath.class;
     }
 }

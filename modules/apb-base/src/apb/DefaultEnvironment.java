@@ -74,6 +74,8 @@ abstract class DefaultEnvironment
 
     //~ Methods ..............................................................................................
 
+    public abstract boolean mustShow(DebugOption option);
+
     @Nullable public final String getOptionalProperty(@NotNull String id)
     {
         String result = overrideProperty(id);
@@ -203,11 +205,6 @@ abstract class DefaultEnvironment
         }
 
         logSevere(e.getMessage());
-    }
-
-    @NotNull public final Os getOs()
-    {
-        return Os.getInstance();
     }
 
     public final void abort(String msg)

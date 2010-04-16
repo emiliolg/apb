@@ -78,7 +78,7 @@ class CommandBuilder
 
     public Command getDefaultCommand()
     {
-        return commands.get(Command.DEFAULT_COMMAND);
+        return commands.get(Constants.DEFAULT_COMMAND);
     }
 
     private static boolean hasRightSignature(Method method)
@@ -124,7 +124,7 @@ class CommandBuilder
      */
     private static void addDefaultCommand(Class<?> c, Map<String, InstanceCommand> commands)
     {
-        if (!commands.containsKey(Command.DEFAULT_COMMAND)) {
+        if (!commands.containsKey(Constants.DEFAULT_COMMAND)) {
             DefaultTarget a = c.getAnnotation(DefaultTarget.class);
 
             if (a != null) {
@@ -134,7 +134,7 @@ class CommandBuilder
                     throw new IllegalStateException("Cannot assign default command " + a.value());
                 }
 
-                commands.put(Command.DEFAULT_COMMAND, def);
+                commands.put(Constants.DEFAULT_COMMAND, def);
             }
         }
     }

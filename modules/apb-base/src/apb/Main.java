@@ -186,7 +186,7 @@ public class Main
         }
         else {
             dot = argument.length();
-            commandName = Command.DEFAULT_COMMAND;
+            commandName = Constants.DEFAULT_COMMAND;
         }
 
         return new String[] { argument.substring(0, dot), commandName };

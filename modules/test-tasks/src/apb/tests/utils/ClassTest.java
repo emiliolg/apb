@@ -23,8 +23,7 @@ import java.util.Date;
 
 import apb.Apb;
 
-import apb.Logger;
-import apb.metadata.IncludeDependencies;
+import apb.metadata.Dependency;
 
 import apb.utils.ClassUtils;
 import apb.utils.FileUtils;
@@ -44,8 +43,8 @@ public class ClassTest
     public void testNewInstance()
         throws Exception
     {
-        Object o = ClassUtils.newInstance("java.lang.String", "hola");
-        assertEquals("hola", o);
+        Object o = ClassUtils.newInstance("java.lang.String", "hello");
+        assertEquals("hello", o);
 
         o = ClassUtils.newInstance("java.lang.String", (Object[]) null);
         assertEquals("", o);
@@ -104,10 +103,10 @@ public class ClassTest
     {
         File libDir = FileUtils.normalizeFile(new File(Apb.getEnv().getProperty("apb-jar")).getParentFile());
 
-        File f = ClassUtils.jarFromClass(Logger.class);
+        File f = ClassUtils.jarFromClass(Dependency.class);
         assertEquals(new File(libDir, "apb.jar"), f);
 
-        final Logger[] array = new Logger[0];
+        final Dependency[] array = new Dependency[0];
         f = ClassUtils.jarFromClass(array.getClass());
         assertEquals(new File(libDir, "apb.jar"), f);
     }

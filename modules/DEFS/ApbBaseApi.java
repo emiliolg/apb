@@ -19,14 +19,13 @@
 
 import apb.metadata.PackageType;
 
-public final class ApbBase
+public final class ApbBaseApi
     extends ApbModule
 {
     //~ Instance initializers ................................................................................
 
     {
-        dependencies(new ApbBaseApi());
-        pkg.type = PackageType.NONE;
+        pkg.type = PackageType.JAR;
         resources.excludes("**/package.html");
     }
 }

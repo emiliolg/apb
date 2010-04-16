@@ -24,6 +24,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import apb.metadata.Dependency;
+
 import apb.utils.ClassUtils;
 
 import org.jetbrains.annotations.NotNull;
@@ -43,16 +45,10 @@ public class Apb
 
     //~ Methods ..............................................................................................
 
-    public static File applicationJarFile()
+    @Nullable public static File applicationJarFile()
     {
-        final String apbHome = System.getProperty("apb.home");
-
-        if (apbHome != null) {
-            return new File(new File(apbHome, "lib"), "apb.jar");
-        }
-
         // We should use an interface as parameter because these are not instrumented by emma.
-        return ClassUtils.jarFromClass(Logger.class);
+        return ClassUtils.jarFromClass(Dependency.class);
     }
 
     /**
@@ -100,11 +96,6 @@ public class Apb
         return result;
     }
 
-    public static File applicationLibraryDir()
-    {
-        return applicationJarFile().getParentFile();
-    }
-
     /**
      * Get the Apb home directory
      * Returns null if we cannot find it.
@@ -112,7 +103,9 @@ public class Apb
     @Nullable public static File getHome()
     {
         try {
-            return applicationLibraryDir().getParentFile();
+            final File jarFile = applicationJarFile();
+
+            return jarFile == null ? null : jarFile.getParentFile().getParentFile();
         }
         catch (BuildException ignore) {
             //Maybe we're being called from build.sh. Assume the current directory is the home.

@@ -20,9 +20,7 @@ package apb.idegen;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import apb.ModuleHelper;
 import apb.ProjectBuilder;
@@ -54,11 +52,11 @@ public class Idea
 
     //~ Methods ..............................................................................................
 
-  /**
-   * This is the method implementation that will be invoked when running this IdegenCommand over a Module or Project
-   *
-   * @param projectElement The Module or Project to be processes.
-   */
+    /**
+     * This is the method implementation that will be invoked when running this IdegenCommand over a Module or Project
+     *
+     * @param projectElement The Module or Project to be processes.
+     */
     public void invoke(ProjectElement projectElement)
     {
         final ProjectElementHelper helper = projectElement.getHelper();
@@ -80,16 +78,6 @@ public class Idea
         if (helper.isTopLevel()) {
             generateProject(helper, info, targetDir);
         }
-    }
-
-    private void generateProject(ProjectElementHelper helper, final IdeaInfo info, final File dir)
-    {
-        IdegenTask.generateProject(helper.getId(), helper.getProjectDirectory()).on(dir)  //
-                  .usingModules(helper.listAllModules())  //
-                  .usingTemplate(info.projectTemplate)  //
-                  .useJdk(info.jdkName)  //
-                  .ifOlder(helper.getSourceFile().lastModified())  //
-                  .execute();
     }
 
     private static IdegenTask.Module createTask(ModuleHelper mod, final IdeaInfo info, final File dir)
@@ -118,9 +106,19 @@ public class Idea
         final List<String> result = new ArrayList<String>();
 
         result.add(mod.getDirFile().getPath());
-        result.add(mod.getModule().outputBase);
+        result.add(mod.getModule().generatedSource);
         result.addAll(info.contentDirs());
 
         return result;
+    }
+
+    private void generateProject(ProjectElementHelper helper, final IdeaInfo info, final File dir)
+    {
+        IdegenTask.generateProject(helper.getId(), helper.getProjectDirectory()).on(dir)  //
+                  .usingModules(helper.listAllModules())  //
+                  .usingTemplate(info.projectTemplate)  //
+                  .useJdk(info.jdkName)  //
+                  .ifOlder(helper.getSourceFile().lastModified())  //
+                  .execute();
     }
 }

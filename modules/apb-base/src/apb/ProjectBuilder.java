@@ -40,6 +40,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static apb.Logger.Level.VERBOSE;
+
+import static apb.utils.StringUtils.isEmpty;
 //
 // User: emilio
 // Date: Aug 21, 2009
@@ -110,10 +112,14 @@ public class ProjectBuilder
         this.projectPath = projectPath;
         contextStack = new LinkedList<Context>();
         currentName = "";
-        track = env.mustShow(DebugOption.TRACK);
 
         if (env instanceof DefaultEnvironment) {
-            ((DefaultEnvironment) env).register(this);
+            final DefaultEnvironment de = (DefaultEnvironment) env;
+            de.register(this);
+            track = de.mustShow(DebugOption.TRACK);
+        }
+        else {
+            track = false;
         }
     }
 
@@ -179,7 +185,7 @@ public class ProjectBuilder
             throw new DefinitionException(element, e);
         }
 
-        build(projectElement, command);
+        build(projectElement, isEmpty(command) ? Constants.DEFAULT_COMMAND : command);
     }
 
     /**
@@ -365,6 +371,9 @@ public class ProjectBuilder
             initHelpers();
             element.getHelper().setTopLevel(true);
             return element.getHelper();
+        }
+        catch (StackOverflowError e) {
+            throw new RuntimeException(e + ": Potential cycle in module dependencies", e);
         }
         catch (ExceptionInInitializerError e) {
             throw e.getException();

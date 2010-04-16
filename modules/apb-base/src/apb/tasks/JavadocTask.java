@@ -369,8 +369,10 @@ public class JavadocTask
             env.logInfo(msg, file.getPath());
         }
 
-        if (excludeDoclet) {
-            classPath.add(Apb.applicationJarFile());
+        final File jarFile = Apb.applicationJarFile();
+
+        if (excludeDoclet && jarFile != null) {
+            classPath.add(jarFile);
         }
 
         copyAllResources();
@@ -386,9 +388,9 @@ public class JavadocTask
             addArgument("-classpath", makePath(classPath));
         }
 
-        if (excludeDoclet) {
+        if (excludeDoclet && jarFile != null) {
             addArgument("-doclet", EXCLUDE_DOCLET);
-            addArgument("-docletpath", Apb.applicationJarFile().getPath());
+            addArgument("-docletpath", jarFile.getPath());
         }
         else if (!doclet.isEmpty()) {
             addArgument("-doclet", doclet);

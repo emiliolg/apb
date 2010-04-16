@@ -921,6 +921,41 @@ public class FileUtils
 
     //~ Static fields/initializers ...........................................................................
 
+    public static final Set<String>  DEFAULT_DIR_EXCLUDES =
+        new HashSet<String>(Arrays.asList("CVS", "SCCS", ".svn", ".ade_path", ".arch-ids", ".bzr"));
+    public static final List<String> DEFAULT_EXCLUDES =
+        Arrays.asList(
+
+                      // Miscellaneous typical temporary files
+                      "**/*~", "**/#*#", "**/.#*", "**/%*%", "**/._*",
+
+                      // CVS
+                      "**/CVS", "**/CVS/**", "**/.cvsignore",
+
+                      // SCCS
+                      "**/SCCS", "**/SCCS/**",
+
+                      // Visual SourceSafe
+                      "**/vssver.scc",
+
+                      // Subversion
+                      "**/.svn", "**/.svn/**",
+
+                      // Oracle ADE
+                      "**/.ade_path", "**/.ade_path/**",
+
+                      // Arch
+                      "**/.arch-ids", "**/.arch-ids/**",
+
+                      //Bazaar
+                      "**/.bzr", "**/.bzr/**",
+
+                      //SurroundSCM
+                      "**/.MySCMServerInfo",
+
+                      // Mac
+                      "**/.DS_Store");
+
     public static final Comparator<File> FILE_COMPARATOR =
         new Comparator<File>() {
             @Override public int compare(File o1, File o2)

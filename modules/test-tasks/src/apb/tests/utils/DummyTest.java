@@ -21,7 +21,6 @@ package apb.tests.utils;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
-import apb.Constants;
 import apb.Messages;
 
 import apb.sunapi.Base64;
@@ -55,7 +54,6 @@ public class DummyTest
         new StringUtils();
         new ColorUtils();
         new CoreTasks();
-        new Constants();
         new Messages();
     }
 

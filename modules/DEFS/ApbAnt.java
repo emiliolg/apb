@@ -18,6 +18,7 @@
 
 
 import apb.metadata.BuildProperty;
+import apb.metadata.IncludeDependencies;
 
 import libraries.Ant;
 
@@ -32,10 +33,13 @@ public final class ApbAnt
 
     {
         description = "APB Ant Tasks";
-        dependencies(new Apb(), new ApbBase(), Ant.LIB);
+        dependencies(new ApbBaseApi(), Ant.LIB);
 
         pkg.name = "ant-apb";
-        pkg.addClassPath = true;
+
+        //pkg.addClassPath = true;
         pkg.dir = "../antlib";
+
+        pkg.includeDependencies = IncludeDependencies.DIRECT;
     }
 }

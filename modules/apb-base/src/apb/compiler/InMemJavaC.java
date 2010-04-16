@@ -36,6 +36,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
 
+import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 
@@ -141,7 +142,7 @@ public class InMemJavaC
 
         List<String> options = new ArrayList<String>();
 
-        // Set the options apropiately
+        // Set the options appropriately
         // Sourcepath
         if (sourcePath != null) {
             options.add("-sourcepath");
@@ -152,9 +153,15 @@ public class InMemJavaC
 
         String extClassPath = FileUtils.makePath(env.getExtClassPath());
 
+        final File jarFile = Apb.applicationJarFile();
+
+        if (jarFile != null) {
+            extClassPath = jarFile.getAbsolutePath() + pathSeparator + extClassPath;
+        }
+
         if (!extClassPath.isEmpty()) {
             options.add("-classpath");
-            options.add(System.getProperty("java.class.path") + pathSeparator + extClassPath);
+            options.add(extClassPath);
         }
 
         // Get the compilation task and invoke it
@@ -167,7 +174,7 @@ public class InMemJavaC
             throw new ClassNotFoundException("Compilation Error");
         }
 
-        // If the compilation was successfull load the compiled class and return it
+        // If the compilation was successful load the compiled class and return it
 
         return memoryClassLoader.getClassFromSource(source);
     }
@@ -405,8 +412,8 @@ public class InMemJavaC
          * @return a MemoryJavaOutput
          * @throws IOException if an I/O error occurred
          */
-        public JavaFileObject getJavaFileForOutput(Location location, String className, JavaFileObject.Kind kind,
-                                                   FileObject fileObject)
+        public JavaFileObject getJavaFileForOutput(Location location, String className,
+                                                   JavaFileObject.Kind kind, FileObject fileObject)
             throws IOException
         {
             assert kind == JavaFileObject.Kind.CLASS;

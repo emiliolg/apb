@@ -24,6 +24,7 @@ import apb.tasks.JavacTask;
 import apb.tasks.WarTask;
 import apb.utils.ClassUtils;
 import apb.utils.DebugOption;
+import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -347,10 +348,15 @@ public class ModuleHelper
         delete(getJavadocInfo().output).execute();
 
         if (hasPackage()) {
+            final PackageInfo packageInfo = getPackageInfo();
             delete(getPackageFile()).execute();
 
-            if (getPackageInfo().generateSourcesJar) {
+            if (packageInfo.generateSourcesJar) {
                 delete(getSourcePackageFile()).execute();
+            }
+
+            if (packageInfo.type == PackageType.WAR) {
+                delete(packageInfo.webAppBuildDir).execute();
             }
         }
     }
@@ -677,7 +683,7 @@ public class ModuleHelper
         final List<FileSet> result = new ArrayList<FileSet>();
 
         for (Module m : modules) {
-            result.add(FileSet.fromDir(m.getHelper().getSourceDir()).excluding(Constants.DEFAULT_EXCLUDES));
+            result.add(FileSet.fromDir(m.getHelper().getSourceDir()).excluding(FileUtils.DEFAULT_EXCLUDES));
         }
 
         return result;
@@ -697,6 +703,11 @@ public class ModuleHelper
 
         if (getCompileInfo().instrumentNotNull) {
             File notNullAnnotations = Apb.applicationJarFile();
+
+            if (notNullAnnotations == null) {
+                throw new BuildException("Cannot find '" + Constants.APB_JAR + "'");
+            }
+
             result.add(new LocalLibrary(notNullAnnotations.getPath()));
         }
 

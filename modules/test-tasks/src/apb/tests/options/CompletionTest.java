@@ -68,7 +68,7 @@ public class CompletionTest
         assertEquals("Samples.clean Samples.compile Samples.compile-tests", result);
 
         result = oc.execute(0, asList(""));
-        assertEquals("Chat HelloWorld Info Math PlayWithMath Properties Samples submod.Mod tests.Math",
+        assertEquals("Chat HelloWorld Info Math PlayWithMath Properties Samples SimpleWebApp submod.Mod tests.Math",
                      result);
 
         result = oc.execute(0, asList("tests.Ma"));

@@ -28,7 +28,7 @@ import java.util.Map;
 
 import javax.tools.ToolProvider;
 
-import apb.BuildException;
+import apb.Constants;
 
 import org.jetbrains.annotations.Nullable;
 //
@@ -37,6 +37,7 @@ import org.jetbrains.annotations.Nullable;
 // Time: 4:40:56 PM
 
 //
+
 public class ClassUtils
 {
     //~ Methods ..............................................................................................
@@ -52,7 +53,7 @@ public class ClassUtils
         throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException,
                IllegalAccessException, InstantiationException
     {
-        Class<?> clazz =  Class.forName(className, false, classLoader);
+        Class<?> clazz = Class.forName(className, false, classLoader);
 
         Object result;
 
@@ -112,16 +113,13 @@ public class ClassUtils
         throw new NoSuchMethodException("new " + clazz.getName() + argumentTypesToString(params));
     }
 
-    public static File jarFromClass(Class<?> aClass)
+    @Nullable public static File jarFromClass(Class<?> aClass)
     {
         String url = aClass.getResource(NameUtils.simpleName(aClass.getName()) + ".class").toExternalForm();
         int    ind = url.lastIndexOf('!');
 
-        if (ind == -1 || !url.startsWith(JAR_FILE_URL_PREFIX)) {
-            throw new BuildException("Can't not find jar " + url);
-        }
-
-        return new File(url.substring(JAR_FILE_URL_PREFIX.length(), ind));
+        return ind == -1 || !url.startsWith(Constants.JAR_FILE_URL_PREFIX)
+               ? null : new File(url.substring(Constants.JAR_FILE_URL_PREFIX.length(), ind));
     }
 
     /**
@@ -136,9 +134,10 @@ public class ClassUtils
         File     result = null;
 
         try {
-            File toolsJar = jarFromClass(topClazz == null ? javaCompiler : topClazz);
+            final File toolsJar = jarFromClass(topClazz == null ? javaCompiler : topClazz);
+            final File jreJar = jarFromClass(Class.class);
 
-            if (!toolsJar.equals(jarFromClass(Class.class))) {
+            if (toolsJar != null && jreJar != null && !toolsJar.equals(jreJar)) {
                 result = toolsJar;
             }
         }
@@ -207,8 +206,6 @@ public class ClassUtils
     }
 
     //~ Static fields/initializers ...........................................................................
-
-    public static final String JAR_FILE_URL_PREFIX = "jar:file:";
 
     private static final Map<Class, Class> wrappers = new HashMap<Class, Class>();
 

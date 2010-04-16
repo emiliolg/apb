@@ -17,16 +17,15 @@
 
 
 
-import apb.metadata.PackageType;
+import static apb.metadata.PackageType.WAR;
 
-public final class ApbBase
-    extends ApbModule
+public class SimpleWebApp
+    extends base.BaseModule
 {
     //~ Instance initializers ................................................................................
 
     {
-        dependencies(new ApbBaseApi());
-        pkg.type = PackageType.NONE;
-        resources.excludes("**/package.html");
+        pkg.dir = "$tmpdir/output/lib";
+        pkg.type = WAR;
     }
 }

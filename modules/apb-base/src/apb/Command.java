@@ -26,7 +26,6 @@ import apb.metadata.ProjectElement;
 
 import apb.utils.IdentitySet;
 
-import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -184,7 +183,7 @@ public abstract class Command
      */
     final boolean isDefault()
     {
-        return nameSpace.isEmpty() && name.equals(DEFAULT_COMMAND);
+        return nameSpace.isEmpty() && name.equals(Constants.DEFAULT_COMMAND);
     }
 
     /**
@@ -203,12 +202,4 @@ public abstract class Command
 
         elements.add(this);
     }
-
-    //~ Static fields/initializers ...........................................................................
-
-    /**
-     * The name of the <code>default</code> command.
-     * Invoking this command will invoke the one defined with the {@link apb.metadata.DefaultTarget} annotation.
-     */
-    @NonNls public static final String DEFAULT_COMMAND = "default";
 }

@@ -18,45 +18,34 @@
 
 package apb.testrunner;
 
-import apb.utils.ClassUtils;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.lang.reflect.Method;
+
+import apb.utils.ClassUtils;
+
+import junit.framework.Test;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class JunitTestSetCreator
     implements TestSetCreator<Object>
 {
-    static boolean isJUnit4Test(@NotNull Class<?> clazz) {
-        final Method[] methods = clazz.getDeclaredMethods();
+    //~ Methods ..............................................................................................
 
-        boolean result = clazz.isAnnotationPresent(org.junit.runner.RunWith.class);
-        if(!result)
-        {
-            for (final Method method : methods) {
-                if(method.isAnnotationPresent(org.junit.Test.class))
-                {
-                    result = true;
-                    break;
-                }
-            }
-        }
-        return result;
-    }
     @Nullable public TestSet<Object> createTestSet(@NotNull Class<Object> testClass,
                                                    @NotNull String        singleTest)
         throws TestSetFailedException
     {
+        TestSet<Object> result;
 
-       TestSet<Object> result;
-        if(isJUnit4Test(testClass))
-        {
+        if (isJUnit4Test(testClass)) {
             result = JUnit4TestSet.buildTestSet(testClass, singleTest);
-        } else
-        {                                                          
+        }
+        else {
             result = JUnit3TestSet.buildTestSet(testClass, singleTest);
         }
+
         return result;
     }
 
@@ -67,6 +56,30 @@ public class JunitTestSetCreator
 
     @NotNull public File getTestFrameworkJar()
     {
-        return ClassUtils.jarFromClass(junit.framework.Test.class);
+        final File file = ClassUtils.jarFromClass(Test.class);
+
+        if (file == null) {
+            throw new RuntimeException("Cannot find junit jar");
+        }
+
+        return file;
+    }
+
+    static boolean isJUnit4Test(@NotNull Class<?> clazz)
+    {
+        final Method[] methods = clazz.getDeclaredMethods();
+
+        boolean result = clazz.isAnnotationPresent(org.junit.runner.RunWith.class);
+
+        if (!result) {
+            for (final Method method : methods) {
+                if (method.isAnnotationPresent(org.junit.Test.class)) {
+                    result = true;
+                    break;
+                }
+            }
+        }
+
+        return result;
     }
 }

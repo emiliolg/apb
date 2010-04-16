@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!-- ======================================================================= -->
+<!-- Build PlayWithMath                                                      -->
+<!-- ======================================================================= -->
+
+<project name="play" default="build" basedir="." xmlns:apb="antlib:apb.ant">
+
+    <target name="build">
+	<apb:apb module="PlayWithMath" command="package" />
+    </target>
+
+</project>

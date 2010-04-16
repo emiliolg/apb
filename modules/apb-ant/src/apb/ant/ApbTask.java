@@ -19,41 +19,38 @@
 package apb.ant;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
-import apb.Apb;
-import apb.Command;
+import apb.ApbService;
 import apb.Environment;
-import apb.ProjectBuilder;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
-
-import org.jetbrains.annotations.NotNull;
 
 public class ApbTask
     extends Task
 {
     //~ Instance fields ......................................................................................
 
-    private boolean recurse;
+    private final ApbService apb;
 
-    @NotNull private final Environment         env;
-    @NotNull private final Map<String, String> properties;
+    private boolean                   recurse;
+    private final Map<String, String> properties;
 
-    @NotNull private String command = Command.DEFAULT_COMMAND;
-    private String          defdir;
-    private String          module;
+    private String command;
+    private String defdir;
+    private String module;
 
     //~ Constructors .........................................................................................
 
     public ApbTask()
+        throws Exception
     {
         properties = new HashMap<String, String>();
-        env = Apb.createBaseEnvironment(new AntLogger(this), properties);
+
+        apb = ApbService.Factory.create();
+        apb.init(new AntLogger(this, apb), properties);
         recurse = true;
     }
 
@@ -64,22 +61,7 @@ public class ApbTask
     {
         super.execute();
 
-        final Set<File> projectPath;
-
-        if (defdir == null) {
-            projectPath = Apb.loadProjectPath();
-        }
-        else {
-            File f = new File(defdir);
-
-            if (!f.isDirectory()) {
-                throw new BuildException("Non existent project definiton directory: '" + defdir + '\'');
-            }
-
-            env.logVerbose("Definition directory = '%s'", defdir);
-            projectPath = Collections.singleton(f);
-        }
-
+        final Environment env = apb.getEnvironment();
         env.setNonRecursive(!recurse);
 
         if (module == null) {
@@ -87,20 +69,20 @@ public class ApbTask
         }
 
         try {
-            ProjectBuilder b = new ProjectBuilder(env, projectPath);
-            b.build(env, module, command);
+            final File dir = defdir == null ? null : new File(defdir);
+            apb.build(dir, module, command);
         }
         catch (Throwable throwable) {
             throw new BuildException(throwable);
         }
     }
 
-    public void setModule(@NotNull String module)
+    public void setModule(String module)
     {
         this.module = module;
     }
 
-    public void setDefdir(@NotNull String defdir)
+    public void setDefdir(String defdir)
     {
         this.defdir = defdir;
     }
@@ -110,7 +92,7 @@ public class ApbTask
         recurse = v;
     }
 
-    public void setCommand(@NotNull String command)
+    public void setCommand(String command)
     {
         this.command = command;
     }
@@ -120,7 +102,7 @@ public class ApbTask
         return defdir;
     }
 
-    @NotNull public Map<String, String> getProperties()
+    public Map<String, String> getProperties()
     {
         return properties;
     }

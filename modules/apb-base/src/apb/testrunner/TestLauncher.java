@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.testrunner;
 
@@ -34,29 +36,35 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.jetbrains.annotations.NonNls;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 import apb.ModuleHelper;
 import apb.Proxy;
 import apb.TestModuleHelper;
+
 import apb.metadata.CoverageInfo;
 import apb.metadata.TestModule;
+
 import apb.tasks.JavaTask;
+
 import apb.testrunner.output.TestReport;
+
 import apb.utils.ClassUtils;
 import apb.utils.FileUtils;
+
+import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static java.lang.Character.isLowerCase;
 import static java.util.Arrays.asList;
 
 import static apb.tasks.CoreTasks.java;
+
 import static apb.testrunner.TestRunner.listTests;
 import static apb.testrunner.TestRunner.worseResult;
+
 import static apb.utils.CollectionUtils.listToString;
 import static apb.utils.FileUtils.makePath;
 import static apb.utils.FileUtils.makePathFromStrings;
@@ -81,13 +89,6 @@ public class TestLauncher
     boolean forkPerSuite;
 
     /**
-     * The classpath for the tests
-     */
-    @NotNull private final Set<File>       classPath;
-    @NotNull private final CoverageInfo    coverage;
-    @NotNull private final CoverageBuilder coverageBuilder;
-
-    /**
      * Enable assertions when running the tests
      */
     private final boolean enableAssertions;
@@ -96,21 +97,6 @@ public class TestLauncher
      * Enable the java debugger in the forked process
      */
     private final boolean enableDebugger;
-
-    /**
-     * The environment
-     */
-    @NotNull private final Environment env;
-
-    /**
-     * The environment variables to be used in the test
-     */
-    private final Map<String, String> environmentVariables;
-
-    /**
-     * The list of tests to exclude
-     */
-    @NotNull private List<String> excludes;
 
     /**
      * Fail if no tests are found
@@ -122,47 +108,19 @@ public class TestLauncher
      */
     private final boolean failOnError;
 
-    /**
-     * The list of tests to include
-     */
-    @NotNull private List<String> includes;
-
-    private final boolean isApbTest;
+    private final boolean                  isApbTest;
+    @NotNull private final CoverageBuilder coverageBuilder;
+    @NotNull private final CoverageInfo    coverage;
 
     /**
-     * List of additional args to pass to the Java VM.
+     * The environment
      */
-    @NotNull private final List<String> javaArgs;
-
-    /**
-     * The memory (in megabytes) to be used by the forked process
-     */
-    private final int maxMemory;
-
-    /**
-     * List of System properties to pass to the tests.
-     */
-    @NotNull private final Map<String, String> properties;
-
-    /**
-     * The report to be generated
-     */
-    @NotNull private final TestReport report;
+    @NotNull private final Environment env;
 
     /**
      * The file where the report will be generated
      */
     @Nullable private File reportDir;
-
-    /*
-    * To be able to run a simple TestCase
-    */
-    @NotNull private String singleTest = "";
-
-    /**
-     * The list of elements to be included in the system classpath
-     */
-    @NotNull private final Set<File> systemClassPath = new LinkedHashSet<File>();
 
     /**
      * The test classes to be run
@@ -170,15 +128,65 @@ public class TestLauncher
     @NotNull private final File testClasses;
 
     /**
-     * The test creator
+     * The memory (in megabytes) to be used by the forked process
      */
-    @NotNull private final String testCreator;
+    private final int maxMemory;
+
+    /**
+     * The list of tests to exclude
+     */
+    @NotNull private List<String> excludes;
+
+    /**
+     * The list of tests to include
+     */
+    @NotNull private List<String> includes;
+
+    /**
+     * List of additional args to pass to the Java VM.
+     */
+    @NotNull private final List<String> javaArgs;
 
     /**
      * The list of test groups to execute
      */
     @NotNull private final List<String> testGroups;
-    private final String                workingDirectory;
+
+    /**
+     * The environment variables to be used in the test
+     */
+    private final Map<String, String> environmentVariables;
+
+    /**
+     * List of System properties to pass to the tests.
+     */
+    @NotNull private final Map<String, String> properties;
+
+    /**
+     * The classpath for the tests
+     */
+    @NotNull private final Set<File> classPath;
+
+    /**
+     * The list of elements to be included in the system classpath
+     */
+    @NotNull private final Set<File> systemClassPath = new LinkedHashSet<File>();
+
+    /*
+    * To be able to run a simple TestCase
+    */
+    @NotNull private String singleTest = "";
+
+    /**
+     * The test creator
+     */
+    @NotNull private final String testCreator;
+    private final String          workingDirectory;
+
+    /**
+     * The report to be generated
+     */
+    @NotNull private final TestReport report;
 
     //~ Constructors .........................................................................................
 
@@ -567,7 +575,12 @@ public class TestLauncher
             path.addAll(coverageBuilder.classPath());
         }
 
-        path.add(Apb.applicationJarFile());
+        final File jarFile = Apb.applicationJarFile();
+
+        if (jarFile != null) {
+            path.add(jarFile);
+        }
+
         path.add(testFrameworkJar());
 
         final Set<File> scp = new LinkedHashSet<File>(systemClassPath);
@@ -580,7 +593,7 @@ public class TestLauncher
 
     private File testFrameworkJar()
     {
-        return instatiateCreator(testCreator, this.getClass().getClassLoader()).getTestFrameworkJar();
+        return instatiateCreator(testCreator, getClass().getClassLoader()).getTestFrameworkJar();
     }
 
     @NotNull private File reportSpecs()

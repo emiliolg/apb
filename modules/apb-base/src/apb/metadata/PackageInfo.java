@@ -80,12 +80,12 @@ public class PackageInfo
     /**
      * The directory where the web application is created (For WAR packages)
      */
-    @BuildProperty public String webAppBuildDir = "$output/$name";
+    @BuildProperty public String webAppBuildDir = "$output-base/$pkg.name";
 
     /**
-     * The directory where the web application is created (For WAR packages)
+     * The directory where the web application files are located
      */
-    @BuildProperty public String webAppDir = "$source/webapp";
+    @BuildProperty public String webAppDir = "$dir/webapp";
 
     /**
      * Additional dependencies added into the package.

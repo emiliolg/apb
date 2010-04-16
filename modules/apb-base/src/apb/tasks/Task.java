@@ -23,8 +23,6 @@ import java.util.concurrent.Callable;
 import apb.Apb;
 import apb.Environment;
 
-import apb.utils.DebugOption;
-
 import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
@@ -70,6 +68,6 @@ public abstract class Task
 
     protected boolean isVerbose()
     {
-        return env.mustShow(DebugOption.TASK_INFO);
+        return env.isVerbose();
     }
 }

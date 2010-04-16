@@ -97,7 +97,7 @@ abstract class DelegatedEnvironment
      */
     public boolean mustShow(DebugOption option)
     {
-        return parent.mustShow(option);
+        return parent instanceof DefaultEnvironment && ((DefaultEnvironment) parent).mustShow(option);
     }
 
     @NotNull @Override public Collection<File> getExtClassPath()

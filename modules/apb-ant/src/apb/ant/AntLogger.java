@@ -18,15 +18,11 @@
 
 package apb.ant;
 
-import apb.Apb;
+import apb.ApbService;
 import apb.Logger;
-
-import apb.utils.StringUtils;
 
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
-
-import org.jetbrains.annotations.NotNull;
 //
 // User: emilio
 // Date: Sep 1, 2009
@@ -37,33 +33,37 @@ class AntLogger
 {
     //~ Instance fields ......................................................................................
 
+    private ApbService apb;
+
     private final Task antTask;
 
     //~ Constructors .........................................................................................
 
-    AntLogger(Task task)
+    AntLogger(Task task, ApbService apb)
     {
         antTask = task;
+        this.apb = apb;
     }
 
     //~ Methods ..............................................................................................
 
-    @Override public void log(@NotNull Level level, @NotNull String msg, Object... args)
+    @Override public void log(Level level, String msg, Object... args)
     {
         int l = convertLevel(level);
 
         if (args.length != 0) {
+            //noinspection ImplicitArrayToString
             msg = String.format(msg, args);
         }
 
-        msg = StringUtils.appendIndenting(Apb.makeStandardHeader() + ' ', msg);
+        msg = apb.prependStandardHeader(msg);
 
         // Remove trailing \n, as Task.log() method will append one.
         msg = removeTrailingNL(msg);
         antTask.log(msg, l);
     }
 
-    @Override public void setLevel(@NotNull Level level)
+    @Override public void setLevel(Level level)
     {
         // Ignore
     }
@@ -85,7 +85,7 @@ class AntLogger
         return msg.substring(0, len);
     }
 
-    private static int convertLevel(@NotNull Level level)
+    private static int convertLevel(Level level)
     {
         switch (level) {
         case INFO:

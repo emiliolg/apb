@@ -25,7 +25,6 @@ import apb.utils.ClassUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import org.testng.TestNG;
 import org.testng.annotations.Test;
 //
 // User: emilio
@@ -52,6 +51,12 @@ public class TestNGTestSetCreator
 
     @NotNull public File getTestFrameworkJar()
     {
-        return ClassUtils.jarFromClass(TestNG.class);
+        final File file = ClassUtils.jarFromClass(Test.class);
+
+        if (file == null) {
+            throw new RuntimeException("Cannot find TestNG jar");
+        }
+
+        return file;
     }
 }

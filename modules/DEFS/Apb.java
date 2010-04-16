@@ -29,7 +29,7 @@ public final class Apb
 
     {
         description = "APB Project Builder";
-        dependencies(new ApbBase(), Junit4.LIB, Asm.LIB);
+        dependencies(new ApbBase(), new ApbBaseApi(), Junit4.LIB, Asm.LIB);
         compiler.useTools = true;
 
         pkg.mainClass = "apb.Main";

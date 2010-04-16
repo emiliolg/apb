@@ -18,15 +18,13 @@
 
 package apb;
 
-import org.jetbrains.annotations.NotNull;
-
 //
 // User: emilio
 // Date: Sep 1, 2009
 // Time: 2:43:34 PM
 
 /**
- * This interace is used by APB to log messages during the build process.
+ * This interface is used by APB to log messages during the build process.
  * Apb will use by default a Logger that prints messages to the standard output.
  */
 public interface Logger
@@ -48,13 +46,13 @@ public interface Logger
      *         Arguments referenced by the format specifiers in the format
      *         string.
      */
-    void log(@NotNull Level level, @NotNull String msg, Object... args);
+    void log(Level level, String msg, Object... args);
 
     /**
      * Enable logging for all mesages of this level or higher ones
      * @param level
      */
-    void setLevel(@NotNull Level level);
+    void setLevel(Level level);
 
     //~ Enums ................................................................................................
 

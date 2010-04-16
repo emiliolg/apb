@@ -179,7 +179,7 @@ public class DefinitionsIndex
         {
             final Set<String> excludeDirs =
                 new HashSet<String>(stringToList(e.getProperty(PROJECT_PATH_EXCLUDE_PROPERTY, ""), ","));
-            excludeDirs.addAll(DEFAULT_DIR_EXCLUDES);
+            excludeDirs.addAll(FileUtils.DEFAULT_DIR_EXCLUDES);
             return excludeDirs;
         }
 

@@ -1,4 +1,5 @@
 
+
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
+
 
 package apb.testrunner;
 
@@ -29,18 +31,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import apb.Apb;
 import apb.BuildException;
 import apb.Environment;
 import apb.TestModuleHelper;
+
 import apb.coverage.CoverageReport;
+
 import apb.metadata.CoverageInfo;
+
 import apb.tasks.CoreTasks;
+
 import apb.testrunner.output.TestReport;
+
 import apb.utils.StreamUtils;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static apb.Constants.EMMA_JAR;
 
 import static apb.utils.FileUtils.makePath;
 
@@ -51,28 +60,26 @@ class CoverageBuilder
 {
     //~ Instance fields ......................................................................................
 
-    @NotNull private final List<File> classesToTest;
+    private boolean coverageEnabled;
 
     @NotNull private final CoverageInfo coverage;
-
-    private boolean                                       coverageEnabled;
-    @Nullable private Map<CoverageReport.Column, Integer> coverageInfo;
+    @Nullable private CoverageReport    textReport;
 
     @NotNull private final Environment env;
-    @NotNull private final List<File>  filesDoDelete = new ArrayList<File>();
     @NotNull private final File        outputDir;
     @Nullable private File             saveCoverageEc;
-    @NotNull private final List<File>  sourcesToTest;
-    @NotNull private final File        testClasses;
-    @Nullable private CoverageReport   textReport;
-    @NotNull private final String      workingDirectory;
+
+    @NotNull private final List<File>                     classesToTest;
+    @NotNull private final List<File>                     filesDoDelete = new ArrayList<File>();
+    @NotNull private final List<File>                     sourcesToTest;
+    @Nullable private Map<CoverageReport.Column, Integer> coverageInfo;
+    @NotNull private final String                         workingDirectory;
 
     //~ Constructors .........................................................................................
 
     CoverageBuilder(@NotNull TestModuleHelper helper)
     {
         env = helper;
-        testClasses = helper.getOutput();
         coverage = helper.getModule().coverage;
         outputDir = helper.getCoverageDir();
         sourcesToTest = helper.getSourcesToTest();
@@ -130,10 +137,10 @@ class CoverageBuilder
             final int min = coverage.ensure;
 
             if (min > 0) {
-                int coverage = Collections.min(coverageInfo.values());
+                int cv = Collections.min(coverageInfo.values());
 
-                if (coverage < min) {
-                    env.handle("Coverage (" + coverage + "%) below minimum value of: " + min + "% !!");
+                if (cv < min) {
+                    env.handle("Coverage (" + cv + "%) below minimum value of: " + min + "% !!");
                 }
             }
         }
@@ -150,7 +157,17 @@ class CoverageBuilder
 
     public File emmaJar()
     {
-        return new File(Apb.applicationLibraryDir(), "emma.jar");
+        final File file = Apb.applicationJarFile();
+
+        if (file != null) {
+            final File result = new File(file.getParentFile(), EMMA_JAR);
+
+            if (result.exists()) {
+                return result;
+            }
+        }
+
+        throw new BuildException("cannot find '" + EMMA_JAR + "'");
     }
 
     public Set<File> classPath()
@@ -301,15 +318,6 @@ class CoverageBuilder
         return new File(outputDir, "instr");
     }
 
-    private String buildClassPath()
-    {
-        final List<File> cp = new ArrayList<File>();
-        cp.add(Apb.applicationJarFile());
-        cp.add(testClasses);
-        cp.addAll(classesToTest);
-        return makePath(cp);
-    }
-
     private EnumMap<CoverageReport.Column, Integer> loadCoverageInfo(CoverageReport report)
     {
         BufferedReader reader = null;
@@ -324,7 +332,7 @@ class CoverageBuilder
                 ;
             }
 
-            EnumMap<CoverageReport.Column, Integer> coverageInfo =
+            EnumMap<CoverageReport.Column, Integer> info =
                 new EnumMap<CoverageReport.Column, Integer>(CoverageReport.Column.class);
 
             if (line != null) {
@@ -333,14 +341,14 @@ class CoverageBuilder
 
                     if (p != -1) {
                         int val = Integer.parseInt(line.substring(0, p).trim());
-                        coverageInfo.put(o, val);
+                        info.put(o, val);
                         p = line.indexOf(')');
                         line = line.substring(p + 2);
                     }
                 }
             }
 
-            return coverageInfo;
+            return info;
         }
         catch (IOException e) {
             throw new RuntimeException(e);
