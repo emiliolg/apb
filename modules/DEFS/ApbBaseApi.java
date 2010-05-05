@@ -27,5 +27,6 @@ public final class ApbBaseApi
     {
         pkg.type = PackageType.JAR;
         resources.excludes("**/package.html");
+	compiler.warnExcludes("apb/sunapi/*");
     }
 }
