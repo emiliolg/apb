@@ -68,6 +68,7 @@ public class InfoTest
                     "run-tests: Test the module (generating reports and  coverage info).",  //
                     "showdeps:graphviz: Output the dependency graph using graphviz",//
                     "showdeps:html: Output the dependency graph using html",//
+                    "showdeps:text: Output the dependency graph using text",//
                     "--- Modules ---",  //
                     "hello-world",  //
                     "info",  //

@@ -28,6 +28,6 @@ public final class ApbBase
         dependencies(new ApbBaseApi());
         pkg.type = PackageType.NONE;
         resources.excludes("**/package.html");
-	compiler.warnExcludes("apb/sunapi/*");
+	    compiler.warnExcludes("apb/sunapi/*");
     }
 }

@@ -45,6 +45,14 @@ public class ShowDepsTest
         assertExists("$showdeps.dir/samples.html");
     }
 
+    public void testTextProject()
+        throws DefinitionException
+    {
+        build("Samples", "showdeps:text");
+        checkOutput(env.expand("Generating: $showdeps.dir/samples.txt"));
+        assertExists("$showdeps.dir/samples.txt");
+    }
+
     public void testGraphVizSimple()
         throws DefinitionException
     {
