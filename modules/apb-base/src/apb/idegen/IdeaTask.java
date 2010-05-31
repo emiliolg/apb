@@ -287,10 +287,7 @@ public class IdeaTask
                 File               srcFile = new File(path.substring(0, path.length() - 4) + "-src.jar");
                 final LocalLibrary library = new LocalLibrary(makePath(base, jarFile), false);
 
-                if (srcFile.exists()) {
-                    library.setSources(makePath(base, srcFile));
-                }
-
+                library.setSources(makePath(base, srcFile));
                 libraries.add(library);
             }
 
