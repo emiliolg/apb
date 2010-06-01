@@ -201,7 +201,7 @@ public class TestModuleHelper
 
         TestLauncher testLauncher =
             new TestLauncher(getModule(), getOutput(), testGroups, buildReports(), deepClassPath(true, false),
-                             getClassesToTest(), this);
+                    this);
         testLauncher.setReportDir(getReportsDir());
         testLauncher.addSystemClassPath(deepClassPath(getModule().getSystemDependencies(), true));
         testLauncher.execute();

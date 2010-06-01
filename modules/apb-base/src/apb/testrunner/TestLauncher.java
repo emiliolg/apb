@@ -191,12 +191,11 @@ public class TestLauncher
     //~ Constructors .........................................................................................
 
     public TestLauncher(final TestModule testModule, @NotNull final File testClasses, List<String> testGroups,
-                        final TestReport reports, Collection<File> classPath, Collection<File> classesToTest,
+                        final TestReport reports, Collection<File> classPath,
                         TestModuleHelper module)
     {
         env = Apb.getEnv();
         this.classPath = new LinkedHashSet<File>(classPath);
-        this.classPath.removeAll(classesToTest);
 
         report = reports;
 
