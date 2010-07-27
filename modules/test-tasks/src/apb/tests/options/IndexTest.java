@@ -86,7 +86,7 @@ public class IndexTest
     //~ Static fields/initializers ...........................................................................
 
     static final List<String> MATH_EXPECTED_COMMANDS =
-        asList("clean", "compile", "compile-tests", "help", "idegen:eclipse", "idegen:idea", "javadoc",
+        asList("clean", "compile", "compile-tests", "help", "idegen:eclipse", "idegen:idea", "idegen:idea2", "javadoc",
                "module:clone", "package", "resources", "run-minimal-tests", "run-tests", "showdeps:graphviz",
                "showdeps:html" , "showdeps:text");
 }

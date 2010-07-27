@@ -38,7 +38,7 @@ public final class Apb
         pkg.generateSourcesJar = true;
         pkg.includeDependencies = ALL;
 
-        pkg.services("apb.Command", "apb.idegen.Idea", "apb.idegen.Eclipse");
+        pkg.services("apb.Command", "apb.idegen.Idea", "apb.idegen.Idea2", "apb.idegen.Eclipse");
         pkg.services("apb.Command", "apb.showdeps.GraphViz");
         pkg.services("apb.Command", "apb.showdeps.Html");
         pkg.services("apb.Command", "apb.showdeps.Text");

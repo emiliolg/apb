@@ -59,6 +59,7 @@ public class InfoTest
                     "help: List the available commands with a brief description.",  //
                     "idegen:eclipse: Generate eclipse project and module files.",  //
                     "idegen:idea: Generate idea project and module files.",  //
+                    "idegen:idea2: Generate idea2 project and module files.",  //
                     "info: ",  //
                     "javadoc: Generates the Java Documentation (Javadoc) for the module.",  //
                     "module:clone: Generate a new Module based on a specified one.",  //

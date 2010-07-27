@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project relativePaths="false" version="4">
+    <component assert-keyword="true" jdk-15="true"
+        languageLevel="JDK_1_6" name="ProjectRootManager"
+        project-jdk-name="1.5" project-jdk-type="JavaSDK" version="2"/>
+    <component name="libraryTable">
+        <library name="apb.tests.tasks.Idea2Test.Junit">
+            <CLASSES>
+                <root url="jar://$PROJECT_DIR$/../../../../lib/junit-4.7.jar!/"/>
+            </CLASSES>
+        </library>
+    </component>
+    <component name="ProjectModuleManager">
+        <modules>
+            <module filepath="$PROJECT_DIR$/template2.module1.iml" group="template2"/>
+            <module filepath="$PROJECT_DIR$/template2.module2.iml" group="template2"/>
+            <module filepath="$PROJECT_DIR$/tmp.iml"/>
+        </modules>
+    </component>
+</project>
