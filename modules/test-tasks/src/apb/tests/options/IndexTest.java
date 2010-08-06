@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +14,6 @@
 // limitations under the License
 //
 
-
 package apb.tests.options;
 
 import java.io.File;
@@ -26,7 +24,6 @@ import apb.Apb;
 import apb.Constants;
 import apb.DefinitionsIndex;
 import apb.ModuleInfo;
-
 import apb.tests.build.ApbTestCase;
 import apb.tests.testutils.FileAssert;
 
@@ -86,7 +83,7 @@ public class IndexTest
     //~ Static fields/initializers ...........................................................................
 
     static final List<String> MATH_EXPECTED_COMMANDS =
-        asList("clean", "compile", "compile-tests", "help", "idegen:eclipse", "idegen:idea", "idegen:idea2", "javadoc",
+        asList("clean", "compile", "compile-tests", "help", "idegen:eclipse", "idegen:idea", "javadoc",
                "module:clone", "package", "resources", "run-minimal-tests", "run-tests", "showdeps:graphviz",
-               "showdeps:html" , "showdeps:text");
+               "showdeps:html", "showdeps:text");
 }

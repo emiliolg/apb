@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,15 +14,15 @@
 // limitations under the License
 //
 
-
 package apb.tests.tasks;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
+import apb.metadata.LocalLibrary;
 import apb.metadata.PackageType;
-
 import apb.tests.testutils.FileAssert;
 
 import static java.util.Arrays.asList;
@@ -31,10 +30,6 @@ import static java.util.Collections.singletonList;
 
 import static apb.idegen.IdegenTask.generateModule;
 import static apb.idegen.IdegenTask.generateProject;
-
-// User: emilio
-// Date: Sep 12, 2009
-// Time: 6:33:37 PM
 
 public class IdeaTest
     extends TaskTestCase
@@ -78,19 +73,21 @@ public class IdeaTest
         generateModule(MOD1).on(basedir)  //
                             .usingTemplate("$datadir/template.iml").usingSources(sources).execute();
 
-        verify(MOD1 + IML);
+        assertValid(MOD1 + IML);
         generateModule(MOD2).on(basedir)  //
                             .usingModules(MOD1)  //
                             .usingSources(sources)  //
+                            .usingLibraries(Arrays.asList(Junit.LIB))  //
                             .execute();
-        verify(MOD2 + IML);
+        assertValid(MOD2 + IML);
 
         generateProject(PROJ1, basedir).on(basedir)  //
                                        .usingTemplate("$datadir/template.ipr")
                                        .usingModules(asList(MOD1, MOD2))  //
+                                       .usingLibraries(Arrays.asList(Junit.LIB))  //
                                        .useJdk("1.5")  //
                                        .execute();
-        verify(PROJ1 + IPR);
+        assertValid(PROJ1 + IPR);
     }
 
     private void genIml(List<File> sources)
@@ -99,7 +96,7 @@ public class IdeaTest
                               .usingSources(sources).usingOutput(env.fileFromBase("output"))  //
                               .withPackageType(PackageType.JAR)  //
                               .execute();
-        verify(SIMPLE + IML);
+        assertValid(SIMPLE + IML);
     }
 
     private void genIpr()
@@ -108,10 +105,10 @@ public class IdeaTest
                                         .usingModules(singletonList(SIMPLE))  //
                                         .useJdk("1.6")  //
                                         .execute();
-        verify(SIMPLE + IPR);
+        assertValid(SIMPLE + IPR);
     }
 
-    private void verify(String file)
+    private void assertValid(String file)
     {
         final File iml = new File(basedir, file);
         FileAssert.assertFileEquals(iml, dataFile(file));
@@ -125,4 +122,17 @@ public class IdeaTest
     private static final String MOD1 = "template.module1";
     private static final String MOD2 = "template.module2";
     private static final String PROJ1 = "template.project";
+
+    //~ Inner Classes ........................................................................................
+
+    private static class Junit
+        extends LocalLibrary
+    {
+        private Junit()
+        {
+            super("../../../../lib/junit-4.7.jar");
+        }
+
+        public static final Junit LIB = new Junit();
+    }
 }

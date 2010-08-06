@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License
 //
-
 
 
 import libraries.Asm;
@@ -38,7 +36,7 @@ public final class Apb
         pkg.generateSourcesJar = true;
         pkg.includeDependencies = ALL;
 
-        pkg.services("apb.Command", "apb.idegen.Idea", "apb.idegen.Idea2", "apb.idegen.Eclipse");
+        pkg.services("apb.Command", "apb.idegen.Idea", "apb.idegen.Eclipse");
         pkg.services("apb.Command", "apb.showdeps.GraphViz");
         pkg.services("apb.Command", "apb.showdeps.Html");
         pkg.services("apb.Command", "apb.showdeps.Text");

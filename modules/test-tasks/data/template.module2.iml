@@ -6,5 +6,7 @@
             <sourceFolder isTestSource="false" url="file://$MODULE_DIR$/../../../test-tasks/src"/>
         </content>
         <orderEntry module-name="template.module1" type="module"/>
+        <orderEntry level="project"
+            name="apb.tests.tasks.IdeaTest.Junit" type="library"/>
     </component>
 </module>

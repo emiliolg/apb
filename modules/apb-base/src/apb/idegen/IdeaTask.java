@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +14,14 @@
 // limitations under the License
 //
 
-
 package apb.idegen;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,17 +37,6 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import apb.Apb;
-import apb.BuildException;
-import apb.Environment;
-
-import apb.metadata.Library;
-import apb.metadata.LocalLibrary;
-import apb.metadata.PackageType;
-
-import apb.utils.FileUtils;
-import apb.utils.XmlUtils;
-
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -58,6 +47,14 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import org.xml.sax.SAXException;
+
+import apb.Apb;
+import apb.Environment;
+import apb.metadata.Library;
+import apb.metadata.LocalLibrary;
+import apb.metadata.PackageType;
+import apb.utils.FileUtils;
+import apb.utils.XmlUtils;
 
 import static apb.utils.FileUtils.makeRelative;
 //
@@ -70,6 +67,10 @@ import static apb.utils.FileUtils.makeRelative;
  */
 public class IdeaTask
 {
+    //~ Constructors .........................................................................................
+
+    private IdeaTask() {}
+
     //~ Methods ..............................................................................................
 
     // Common utility methods
@@ -151,25 +152,53 @@ public class IdeaTask
 
     private static void writeDocument(Environment env, File ideaFile, Document document)
     {
-        env.logInfo("Writing: %s\n", ideaFile);
+        env.logInfo("Writing: %s%n", ideaFile);
         XmlUtils.writeDocument(document, ideaFile);
     }
 
-    // Is there a simpler way to accomplish this ?
-    private static boolean inside(@NotNull File directory, @NotNull File descendant)
+    private static String removePrefix(String str, String prefix)
     {
-        File file = descendant;
+        return str.startsWith(prefix) ? str.substring(prefix.length()) : str;
+    }
 
-        do {
-            if (file.equals(directory)) {
-                return true;
-            }
+    private static String getLibraryId(Library l)
+    {
+        String name = l.getClass().getName();
 
-            file = file.getParentFile();
+        name = name.replace('$', '.');
+
+        // remove some common prefixes
+        name = removePrefix(name, "library.");
+        name = removePrefix(name, "libraries.");
+        name = removePrefix(name, "libs.");
+        name = removePrefix(name, "lib.");
+
+        if (!name.isEmpty()) {
+            name = Character.toLowerCase(name.charAt(0)) + name.substring(1);
         }
-        while (file != null);
 
-        return false;
+        return name;
+    }
+
+    private static boolean isProjectLibrary(Library lib)
+    {
+        // This is tricky. We assume that the library is a singleton by searching for a static final LIB field
+        final Field field;
+
+        try {
+            field = lib.getClass().getDeclaredField("LIB");
+        }
+        catch (NoSuchFieldException ignore) {
+            return false;
+        }
+
+        if (!Library.class.isAssignableFrom(field.getType())) {
+            return false;
+        }
+
+        final int mods = field.getModifiers();
+
+        return Modifier.isStatic(mods) && Modifier.isFinal(mods);
     }
 
     //~ Static fields/initializers ...........................................................................
@@ -216,10 +245,10 @@ public class IdeaTask
             super(id, modulesHome, projectDirectory);
         }
 
-    /**
-     * Runs the IdeaTask and creates/updates the Idea .ipr project file
-     */
-    public void execute()
+        /**
+         * Runs the IdeaTask and creates/updates the Idea .ipr project file
+         */
+        @Override public void execute()
         {
             final File ideaFile = ideaFile(id, ".ipr");
 
@@ -230,7 +259,7 @@ public class IdeaTask
 
                 if (jdkName.isEmpty()) {
                     jdkName = System.getProperty("java.specification.version");
-                    env.logInfo("jdkName is not set, using [java version %s] as default.\n", jdkName);
+                    env.logInfo("jdkName is not set, using [java version %s] as default.%n", jdkName);
                 }
 
                 setJdkName(docElement, jdkName);
@@ -251,6 +280,21 @@ public class IdeaTask
 
                 generateProjectDefinitionsModule(modulesElement, projectDirectory,
                                                  projectDirectory.getName());
+
+                Element libraryTable = findComponent(docElement, "libraryTable");
+
+                removeOldElements(libraryTable, "library");
+
+                for (Library lib : libraries) {
+                    if (isProjectLibrary(lib)) {
+                        addLibrary(lib, libraryTable);
+                    }
+                }
+
+                if (libraryTable.getChildNodes().item(0) == null) {
+                    docElement.removeChild(libraryTable);
+                }
+
                 writeDocument(env, ideaFile, document);
             }
         }
@@ -273,7 +317,6 @@ public class IdeaTask
         }
 
         private static List<Library> librariesForDef(@NotNull Environment env, @Nullable File jarFile)
-            throws IOException
         {
             List<Library> libraries = new ArrayList<Library>();
             final File    base = env.getBaseDir();
@@ -295,9 +338,88 @@ public class IdeaTask
         }
 
         private static String makePath(final File baseDir, File f)
-            throws IOException
         {
             return makeRelative(baseDir, f).getPath();
+        }
+
+        private static void setWildcardResourcePatterns(@NotNull Element content, @NotNull String patterns)
+        {
+            Element compilerConfig = findComponent(content, "CompilerConfiguration");
+
+            if (patterns.isEmpty()) {
+                removeOldElements(compilerConfig, WILDCARD_RESOURCE_PATTERNS);
+                Element         wildcardPatterns = createElement(compilerConfig, WILDCARD_RESOURCE_PATTERNS);
+                StringTokenizer tokenizer = new StringTokenizer(patterns, ";");
+
+                while (tokenizer.hasMoreTokens()) {
+                    String  wildcardPattern = tokenizer.nextToken();
+                    Element entryElement = createElement(wildcardPatterns, "entry");
+                    entryElement.setAttribute("name", wildcardPattern);
+                }
+            }
+        }
+
+        private static void setJdkName(@NotNull Element content, @NotNull String jdkName)
+        {
+            Element component = findComponent(content, "ProjectRootManager");
+
+            component.setAttribute("project-jdk-name", jdkName);
+
+            boolean jdk15 = jdkName.compareTo("1.5") >= 0;
+            boolean assertKeyword = jdk15 || jdkName.startsWith("1.4");
+            component.setAttribute("jdk-15", String.valueOf(jdk15));
+            component.setAttribute("assert-keyword", String.valueOf(assertKeyword));
+        }
+
+        private String relativeUrl(@NotNull final String type, @NotNull File file)
+        {
+            return type + "://$PROJECT_DIR$/" +
+                   makeRelative(modulesHome, file).getPath().replaceAll("\\\\", "/");
+        }
+
+        private void addLibrary(Library library, Element component)
+        {
+            File libraryFile = library.getArtifact(env, PackageType.JAR);
+
+            if (libraryFile != null) {
+                final String url = relativeUrl("jar", libraryFile) + "!/";
+
+                Element lib = createElement(component, "library");
+                lib.setAttribute("name", getLibraryId(library));
+
+                // replace classes
+                removeOldElements(lib, LIBRARY_CLASSES_TAG);
+                Element classes = createElement(lib, LIBRARY_CLASSES_TAG);
+
+                createElement(classes, "root").setAttribute(URL_ATTRIBUTE, url);
+
+                addLibEntry(library, lib, PackageType.SRC, LIBRARY_SOURCES_TAG);
+                addLibEntry(library, lib, PackageType.DOC, LIBRARY_JAVADOC_TAG);
+            }
+        }
+
+        private void addLibEntry(Library library, Element lib, PackageType type, String tag)
+        {
+            final File url = library.getArtifact(env, type);
+
+            if (url != null) {
+                final String protocol;
+                final String endMarker;
+
+                if (url.isDirectory()) {
+                    protocol = "file";
+                    endMarker = "";
+                }
+                else {
+                    protocol = "jar";
+                    endMarker = "!/" + library.getSubPath(type);
+                }
+
+                removeOldElements(lib, tag);
+                Element el = createElement(createElement(lib, tag), "root");
+
+                el.setAttribute(URL_ATTRIBUTE, relativeUrl(protocol, url) + endMarker);
+            }
         }
 
         private Set<String> calculateGroups()
@@ -344,32 +466,33 @@ public class IdeaTask
             return result;
         }
 
-        private void generateProjectDefinitionsModule(Element modulesElement, final File defDir,
-                                                      final String moduleId)
+        private List<Library> generateProjectDefinitionsModule(Element modulesElement, final File defDir,
+                                                               final String moduleId)
         {
-            try {
-                File     apbJarFile = null;
-                String[] mods = new String[0];
+            final List<Library> libraries;
 
-                if (modules.contains(APB_MODULE)) {
-                    mods = new String[] { APB_MODULE, APB_BASE_MODULE };
-                }
-                else {
-                    apbJarFile = Apb.applicationJarFile();
-                }
+            File     apbJarFile = null;
+            String[] mods = new String[0];
 
-                final Module task = new IdeaTask.Module(moduleId, modulesHome);
-
-                task.usingSources(java.util.Collections.singletonList(defDir))  //
-                    .usingLibraries(librariesForDef(env, apbJarFile))  //
-                    .usingModules(mods)  //
-                    .excluding("file://$MODULE_DIR$/")  //
-                    .execute();
-                addModuleToProject(moduleId, modulesElement, EMPTY_STRING_SET);
+            if (modules.contains(APB_MODULE)) {
+                mods = new String[] { APB_MODULE, APB_BASE_MODULE };
             }
-            catch (IOException e) {
-                throw new BuildException(e);
+            else {
+                apbJarFile = Apb.applicationJarFile();
             }
+
+            final Module task = new IdeaTask.Module(moduleId, modulesHome);
+
+            libraries = librariesForDef(env, apbJarFile);
+            usingLibraries(libraries);
+            task.usingSources(Collections.singletonList(defDir))  //
+                .usingLibraries(libraries)  //
+                .usingModules(mods)  //
+                .excluding("file://$MODULE_DIR$/")  //
+                .execute();
+            addModuleToProject(moduleId, modulesElement, EMPTY_STRING_SET);
+
+            return libraries;
         }
 
         private void addModuleToProject(final String moduleId, Element modulesElement, Set<String> groups)
@@ -386,41 +509,9 @@ public class IdeaTask
             }
         }
 
-        private void setWildcardResourcePatterns(@NotNull Element content,
-                                                 @NotNull String  wildcardResourcePatterns)
-        {
-            Element compilerConfigurationElement = findComponent(content, "CompilerConfiguration");
-
-            if (wildcardResourcePatterns.isEmpty()) {
-                removeOldElements(compilerConfigurationElement, WILDCARD_RESOURCE_PATTERNS);
-                Element         wildcardResourcePatternsElement =
-                    createElement(compilerConfigurationElement, WILDCARD_RESOURCE_PATTERNS);
-                StringTokenizer wildcardResourcePatternsTokenizer =
-                    new StringTokenizer(wildcardResourcePatterns, ";");
-
-                while (wildcardResourcePatternsTokenizer.hasMoreTokens()) {
-                    String  wildcardResourcePattern = wildcardResourcePatternsTokenizer.nextToken();
-                    Element entryElement = createElement(wildcardResourcePatternsElement, "entry");
-                    entryElement.setAttribute("name", wildcardResourcePattern);
-                }
-            }
-        }
-
         private File ideaFile(@NotNull final String name, @NotNull String ext)
         {
             return new File(modulesHome, name + ext);
-        }
-
-        private void setJdkName(@NotNull Element content, @NotNull String jdkName)
-        {
-            Element component = findComponent(content, "ProjectRootManager");
-
-            component.setAttribute("project-jdk-name", jdkName);
-
-            boolean jdk_15 = jdkName.compareTo("1.5") >= 0;
-            boolean assertKeyword = jdk_15 || jdkName.startsWith("1.4");
-            component.setAttribute("jdk-15", String.valueOf(jdk_15));
-            component.setAttribute("assert-keyword", String.valueOf(assertKeyword));
         }
 
         private static final String APB_MODULE = "apb";
@@ -439,10 +530,10 @@ public class IdeaTask
             super(id, modulesHome);
         }
 
-   /**
-    * Runs the IdeaTask and creates/updates the Idea .iml file
-    */
-    public void execute()
+        /**
+         * Runs the IdeaTask and creates/updates the Idea .iml file
+         */
+        @Override public void execute()
         {
             final File ideaFile = ideaFile(id, ".iml");
 
@@ -504,25 +595,90 @@ public class IdeaTask
             }
         }
 
-       /**
-        * Checks if a content dir should be added. Also filter-out redundant dirs
-        *
-        * @return true or false
-        */
+        // Is there a simpler way to accomplish this ?
+        private static boolean inside(@NotNull File directory, @NotNull File descendant)
+        {
+            File file = descendant;
+
+            do {
+                if (file.equals(directory)) {
+                    return true;
+                }
+
+                file = file.getParentFile();
+            }
+            while (file != null);
+
+            return false;
+        }
+
+        /**
+         * Checks if a content dir should be added. Also filter-out redundant dirs
+         *
+         * @return true or false
+         */
         private static boolean filterDirs(Set<File> contents, File newContentDir)
         {
             boolean found = false;
+
             for (Iterator<File> iterator = contents.iterator(); iterator.hasNext();) {
                 File content = iterator.next();
+
                 if (inside(newContentDir, content)) {
                     iterator.remove();
                     found = true;
-                } else if (!found && inside(content, newContentDir)) {
+                }
+                else if (!found && inside(content, newContentDir)) {
                     return false;
                 }
             }
 
             return true;
+        }
+
+        private static Element getElementByNameAndAttribute(Element element, String name, String attribute,
+                                                            String value)
+        {
+            Element  result = null;
+            NodeList children = element.getElementsByTagName(name);
+
+            for (int i = 0; i < children.getLength(); i++) {
+                Node node = children.item(i);
+
+                if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(name)) {
+                    Node node1 = node.getAttributes().getNamedItem(attribute);
+
+                    if (node1 != null && value.equals(node1.getTextContent())) {
+                        result = (Element) node;
+                        break;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private static void setScope(Element d, Boolean scope)
+        {
+            if (scope == null) {
+                d.removeAttribute("scope");
+            }
+            else {
+                d.setAttribute("scope", scope ? "PROVIDED" : "RUNTIME");
+            }
+        }
+
+        private static Element findContent(Element component, String attribute, String value)
+        {
+            String  name = "content";
+            Element element = getElementByNameAndAttribute(component, name, attribute, value);
+
+            if (element == null) {
+                element = createElement(component, name);
+                element.setAttribute(attribute, value);
+            }
+
+            return element;
         }
 
         private void addSourceDir(Element contentRoot, File source)
@@ -547,19 +703,6 @@ public class IdeaTask
                     excludeFolder.setAttribute(URL_ATTRIBUTE, exclude);
                 }
             }
-        }
-
-        private Element findContent(Element component, String attribute, String value)
-        {
-            String  name = "content";
-            Element element = getElementByNameAndAttribute(component, name, attribute, value);
-
-            if (element == null) {
-                element = createElement(component, name);
-                element.setAttribute(attribute, value);
-            }
-
-            return element;
         }
 
         private Document readIdeaFile(@NotNull File ideaFile, final String defaultTemplate)
@@ -632,29 +775,8 @@ public class IdeaTask
 
         private String relativeUrl(@NotNull final String type, @NotNull File file)
         {
-            return type + "://$MODULE_DIR$/" + makeRelative(modulesHome, file).getPath().replaceAll("\\\\", "/");
-        }
-
-        private Element getElementByNameAndAttribute(Element element, String name, String attribute,
-                                                     String value)
-        {
-            Element  result = null;
-            NodeList children = element.getElementsByTagName(name);
-
-            for (int i = 0; i < children.getLength(); i++) {
-                Node node = children.item(i);
-
-                if (node.getNodeType() == Node.ELEMENT_NODE && node.getNodeName().equals(name)) {
-                    Node node1 = node.getAttributes().getNamedItem(attribute);
-
-                    if (node1 != null && value.equals(node1.getTextContent())) {
-                        result = (Element) node;
-                        break;
-                    }
-                }
-            }
-
-            return result;
+            return type + "://$MODULE_DIR$/" +
+                   makeRelative(modulesHome, file).getPath().replaceAll("\\\\", "/");
         }
 
         private void addEarModule(@NotNull Element element)
@@ -727,9 +849,9 @@ public class IdeaTask
         {
             Map<String, Element> modulesByName = new HashMap<String, Element>();
             Set<Element>         unusedModules = new HashSet<Element>();
-
-            Map<String, Element> modulesByUrl = new HashMap<String, Element>();
+            Map<String, Element> librariesByName = new HashMap<String, Element>();
             NodeList             entries = component.getElementsByTagName(MODULE_ENTRY);
+            Map<String, Element> librariesByUrl = new HashMap<String, Element>();
 
             for (int i = 0; i < entries.getLength(); i++) {
                 Element orderEntry = (Element) entries.item(i);
@@ -738,27 +860,24 @@ public class IdeaTask
 
                 if (MODULE_TYPE.equals(type)) {
                     modulesByName.put(orderEntry.getAttribute(MODULE_NAME_ATTRIBUTE), orderEntry);
+                    unusedModules.add(orderEntry);
                 }
-                else if (MODULE_LIBRARY_TYPE.equals(type)) {
-                    // keep track for later so we know what is left
+                else if ("library".equals(type)) {
+                    librariesByName.put(orderEntry.getAttribute("name"), orderEntry);
+                    unusedModules.add(orderEntry);
+                }
+                else if ("module-library".equals(type)) {
                     unusedModules.add(orderEntry);
 
                     Element lib = getElementByName(orderEntry, "library");
-                    String  name = lib.getAttribute(NAME_ATTRIBUTE);
+                    Element classesChild = getElementByName(lib, LIBRARY_CLASSES_TAG);
 
-                    if (name != null) {
-                        modulesByName.put(name, orderEntry);
-                    }
-                    else {
-                        Element classesChild = getElementByName(lib, LIBRARY_CLASSES_TAG);
+                    if (classesChild != null) {
+                        Element rootChild = getElementByName(classesChild, "root");
 
-                        if (classesChild != null) {
-                            Element rootChild = getElementByName(classesChild, "root");
-
-                            if (rootChild != null) {
-                                String url = rootChild.getAttribute(URL_ATTRIBUTE);
-                                modulesByUrl.put(url, orderEntry);
-                            }
+                        if (rootChild != null) {
+                            String url = rootChild.getAttribute(URL_ATTRIBUTE);
+                            librariesByUrl.put(url, orderEntry);
                         }
                     }
                 }
@@ -774,12 +893,37 @@ public class IdeaTask
                     d.setAttribute(TYPE_ATTRIBUTE, MODULE_TYPE);
                     d.setAttribute(MODULE_NAME_ATTRIBUTE, mod);
                 }
+                else {
+                    unusedModules.remove(d);
+                }
+
+                setScope(d, modsScope.get(mod));
             }
 
             // Now libraries
 
             for (Library l : libraries) {
-                addLibrary(l, component, modulesByUrl, unusedModules);
+                if (!isProjectLibrary(l)) {
+                    addLibrary(l, component, librariesByUrl, unusedModules);
+                }
+                else if (l.getArtifact(env, PackageType.JAR) != null) {
+                    String name = getLibraryId(l);
+
+                    Element d = librariesByName.get(name);
+
+                    if (d == null) {
+                        d = createElement(component, MODULE_ENTRY);
+                        d.setAttribute("name", name);
+                        d.setAttribute(TYPE_ATTRIBUTE, "library");
+                    }
+                    else {
+                        unusedModules.remove(d);
+                    }
+
+                    d.setAttribute("level", "project");
+
+                    setScope(d, libsScope.get(l));
+                }
             }
 
             // Now remove unused modules
@@ -788,7 +932,7 @@ public class IdeaTask
             }
         }
 
-        private void addLibrary(Library library, Element component, Map<String, Element> modulesByUrl,
+        private void addLibrary(Library library, Element component, Map<String, Element> librariesByUrl,
                                 Set<Element> unusedModules)
         {
             File libraryFile = library.getArtifact(env, PackageType.JAR);
@@ -796,7 +940,7 @@ public class IdeaTask
             if (libraryFile != null) {
                 final String url = relativeUrl("jar", libraryFile) + "!/";
 
-                Element dep = modulesByUrl.get(url);
+                Element dep = librariesByUrl.get(url);
 
                 if (dep != null) {
                     unusedModules.remove(dep);
@@ -806,6 +950,8 @@ public class IdeaTask
                 }
 
                 dep.setAttribute(TYPE_ATTRIBUTE, MODULE_LIBRARY_TYPE);
+
+                setScope(dep, libsScope.get(library));
 
                 Element lib = getElementByName(dep, "library");
 

@@ -3,7 +3,13 @@
     <component assert-keyword="true" jdk-15="true"
         languageLevel="JDK_1_6" name="ProjectRootManager"
         project-jdk-name="1.5" project-jdk-type="JavaSDK" version="2"/>
-    <component name="libraryTable"/>
+    <component name="libraryTable">
+        <library name="apb.tests.tasks.IdeaTest.Junit">
+            <CLASSES>
+                <root url="jar://$PROJECT_DIR$/../../../../lib/junit-4.7.jar!/"/>
+            </CLASSES>
+        </library>
+    </component>
     <component name="ProjectModuleManager">
         <modules>
             <module filepath="$PROJECT_DIR$/template.module1.iml" group="template"/>
