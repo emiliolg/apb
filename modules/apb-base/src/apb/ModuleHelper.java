@@ -1,5 +1,4 @@
 
-
 // Copyright 2008-2009 Emilio Lopez-Gabeiras
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,10 +14,34 @@
 // limitations under the License
 //
 
-
 package apb;
 
-import apb.metadata.*;
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import apb.metadata.CompileInfo;
+import apb.metadata.Dependency;
+import apb.metadata.IncludeDependencies;
+import apb.metadata.JavadocInfo;
+import apb.metadata.Library;
+import apb.metadata.LocalLibrary;
+import apb.metadata.Module;
+import apb.metadata.PackageInfo;
+import apb.metadata.PackageType;
+import apb.metadata.ResourcesInfo;
+import apb.metadata.TestModule;
 import apb.tasks.FileSet;
 import apb.tasks.JavacTask;
 import apb.tasks.WarTask;
@@ -26,15 +49,13 @@ import apb.utils.ClassUtils;
 import apb.utils.DebugOption;
 import apb.utils.FileUtils;
 import apb.utils.IdentitySet;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.*;
-
-import static apb.tasks.CoreTasks.*;
+import static apb.tasks.CoreTasks.copy;
+import static apb.tasks.CoreTasks.delete;
+import static apb.tasks.CoreTasks.jar;
+import static apb.tasks.CoreTasks.javac;
+import static apb.tasks.CoreTasks.javadoc;
+import static apb.tasks.CoreTasks.war;
 import static apb.utils.CollectionUtils.addIfNotNull;
 //
 // User: emilio
@@ -49,16 +70,17 @@ public class ModuleHelper
 {
     //~ Instance fields ......................................................................................
 
+    @Nullable private Iterable<Library> allLibraries;
+
+    @Nullable private Iterable<ModuleHelper> dependencies;
+
     @Nullable private File generatedSource;
     @Nullable private File output;
     @Nullable private File packageFile;
     @Nullable private File source;
     @Nullable private File sourcePackageFile;
 
-    @Nullable private Iterable<Library> allLibraries;
-
-    @Nullable private Iterable<ModuleHelper> dependencies;
-    @Nullable private TestModuleHelper       testModule;
+    @Nullable private TestModuleHelper testModule;
 
     //~ Constructors .........................................................................................
 
@@ -242,7 +264,7 @@ public class ModuleHelper
     /**
      * All (direct and indirect) Modules this Module depends on
      */
-    @NotNull public Iterable<ModuleHelper> getDependencies()
+    @NotNull @Override public Iterable<ModuleHelper> getDependencies()
     {
         if (dependencies == null) {
             // Topological Sort elements
@@ -313,7 +335,7 @@ public class ModuleHelper
         return sourceDirs;
     }
 
-    public Set<String> listAllModules()
+    @Override public Set<String> listAllModules()
     {
         Set<String> result = new TreeSet<String>();
 
@@ -655,6 +677,29 @@ public class ModuleHelper
         }
     }
 
+    private static List<FileSet> outputFileSets(List<Module> modules, List<String> excludes)
+    {
+        final List<FileSet> result = new ArrayList<FileSet>();
+
+        for (Module m : modules) {
+            final ModuleHelper h = m.getHelper();
+            result.add(FileSet.fromDir(h.getOutput()).excluding(excludes));
+        }
+
+        return result;
+    }
+
+    private static List<FileSet> sourceFileSets(List<Module> modules)
+    {
+        final List<FileSet> result = new ArrayList<FileSet>();
+
+        for (Module m : modules) {
+            result.add(FileSet.fromDir(m.getHelper().getSourceDir()).excluding(FileUtils.DEFAULT_EXCLUDES));
+        }
+
+        return result;
+    }
+
     private File[] jarsDependencies()
     {
         final Collection<File> files = deepClassPath(true, false);
@@ -672,31 +717,8 @@ public class ModuleHelper
                     .version(getModule().version)  //
                     .withManifestAttributes(packageInfo.attributes())  //
                     .withClassPath(manifestClassPath())  //
-                    .withServices(services) //
+                    .withServices(services)  //
                     .execute();
-    }
-
-    private List<FileSet> outputFileSets(List<Module> modules, List<String> excludes)
-    {
-        final List<FileSet> result = new ArrayList<FileSet>();
-
-        for (Module m : modules) {
-            final ModuleHelper h = m.getHelper();
-            result.add(FileSet.fromDir(h.getOutput()).excluding(excludes));
-        }
-
-        return result;
-    }
-
-    private List<FileSet> sourceFileSets(List<Module> modules)
-    {
-        final List<FileSet> result = new ArrayList<FileSet>();
-
-        for (Module m : modules) {
-            result.add(FileSet.fromDir(m.getHelper().getSourceDir()).excluding(FileUtils.DEFAULT_EXCLUDES));
-        }
-
-        return result;
     }
 
     private List<Library> getExtraLibraries()
