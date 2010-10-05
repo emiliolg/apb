@@ -404,6 +404,8 @@ public class ModuleHelper
                 war.includeClasses(outputFileSets(modules, packageInfo.excludes()));
             }
 
+            war.includeJars(jarsDependencies());
+
             war.execute();
             break;
         }
@@ -651,6 +653,14 @@ public class ModuleHelper
                 mergedProviders.addAll(providers);
             }
         }
+    }
+
+    private File[] jarsDependencies()
+    {
+        final Collection<File> files = deepClassPath(true, false);
+        final File[]           jars = new File[files.size()];
+        files.toArray(jars);
+        return jars;
     }
 
     private void createJar(final File jarFile, PackageInfo packageInfo, List<Module> modules)
