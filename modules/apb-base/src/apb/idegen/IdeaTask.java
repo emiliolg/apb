@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -201,6 +202,32 @@ public class IdeaTask
         return Modifier.isStatic(mods) && Modifier.isFinal(mods);
     }
 
+    private static void checkDuplicates(Collection<Library> allLibs)
+    {
+        final Map<File, Set<String>> dups = new HashMap<File, Set<String>>();
+        final Environment            env = Apb.getEnv();
+
+        for (Library library : allLibs) {
+            File jar = library.getArtifact(env, PackageType.JAR);
+
+            if (jar != null) {
+                Set<String> libs = dups.get(jar);
+
+                if (libs == null) {
+                    dups.put(jar, (libs = new HashSet<String>()));
+                }
+
+                libs.add(library.getClass().getName());
+            }
+        }
+
+        for (Set<String> names : dups.values()) {
+            if (names.size() > 1) {
+                env.logWarning("Warning duplicate libraries: %s%n", names);
+            }
+        }
+    }
+
     //~ Static fields/initializers ...........................................................................
 
     private static final String DEFAULT_PROJECT_TEMPLATE = "/resources/templates/project.xml";
@@ -285,10 +312,11 @@ public class IdeaTask
 
                 removeOldElements(libraryTable, "library");
 
+                filterLibraries(libraries);
+                checkDuplicates(libraries);
+
                 for (Library lib : libraries) {
-                    if (isProjectLibrary(lib)) {
-                        addLibrary(lib, libraryTable);
-                    }
+                    addLibrary(lib, libraryTable);
                 }
 
                 if (libraryTable.getChildNodes().item(0) == null) {
@@ -296,6 +324,15 @@ public class IdeaTask
                 }
 
                 writeDocument(env, ideaFile, document);
+            }
+        }
+
+        private static void filterLibraries(Set<Library> libraries) {
+            for (Iterator<Library> iterator = libraries.iterator(); iterator.hasNext(); ) {
+                Library library = iterator.next();
+                if (!isProjectLibrary(library)) {
+                    iterator.remove();
+                }
             }
         }
 

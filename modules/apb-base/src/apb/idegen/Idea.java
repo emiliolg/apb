@@ -190,37 +190,7 @@ public class Idea
             }
         }
 
-        final Collection<Library> result = allLibraries.values();
-
-        checkDuplicates(result);
-
-        return result;
-    }
-
-    private static void checkDuplicates(Collection<Library> allLibs)
-    {
-        final Map<File, Set<String>> dups = new HashMap<File, Set<String>>();
-        final Environment            env = Apb.getEnv();
-
-        for (Library library : allLibs) {
-            File jar = library.getArtifact(env, PackageType.JAR);
-
-            if (jar != null) {
-                Set<String> libs = dups.get(jar);
-
-                if (libs == null) {
-                    dups.put(jar, (libs = new HashSet<String>()));
-                }
-
-                libs.add(library.getClass().getName());
-            }
-        }
-
-        for (Set<String> names : dups.values()) {
-            if (names.size() > 1) {
-                env.logWarning("Warning duplicate libraries: %s%n", names);
-            }
-        }
+        return allLibraries.values();
     }
 
     private static void addLibraries(Map<String, Library> allLibraries, ModuleHelper dep)
