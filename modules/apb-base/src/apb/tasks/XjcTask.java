@@ -202,7 +202,9 @@ public class XjcTask
 
         final File[] bindings = getBindings();
 
-        if (env.getBooleanProperty(XJC_SYMLINK_BUG, false) && isAnySymlink(schemas)) {
+        env.logInfo("Processing: %s\n", makeString(schemas));
+
+        if (env.getBooleanProperty(XJC_SYMLINK_BUG, false) && (isAnySymlink(schemas) || isAnySymlink(bindings))) {
             try {
                 SchemaUtils.copySchema(schemas, bindings,
                                        env.fileFromBase("$output/" + schemas[0].getName()));
@@ -210,6 +212,7 @@ public class XjcTask
             catch (IOException e) {
                 env.handle(e);
             }
+            env.logInfo("xjcSymlinkBug is true");
         }
 
         final File target = getTargetDir();
@@ -225,8 +228,6 @@ public class XjcTask
         if (!packageAnnotations) {
             args.add("-npa");
         }
-
-        env.logInfo("Processing: %s\n", makeString(schemas));
 
         if (jar != null) {
             env.logInfo("Using     : %s\n", jar);
