@@ -56,6 +56,16 @@ then
 else
 	APB_MEMORY="-Xmx${APB_MEMORY}m"
 fi
-# launch APB
 
-$JAVA $APB_MEMORY -jar $APB_JAR $*
+#
+# Setup debug
+#
+if [ -z $APB_DEBUG_PORT ]
+then
+    APB_DEBUG_FLAG=""
+else
+    APB_DEBUG_FLAG="-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=$APB_DEBUG_PORT"
+fi
+
+# launch APB
+$JAVA $APB_MEMORY $APB_DEBUG_FLAG -jar $APB_JAR $*
