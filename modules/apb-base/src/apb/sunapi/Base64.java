@@ -29,11 +29,11 @@ public class Base64
 
     public static String encode(byte[] data)
     {
-        return com.sun.org.apache.xerces.internal.impl.dv.util.Base64.encode(data);
+          return javax.xml.bind.DatatypeConverter.printBase64Binary(data);
     }
 
     public static byte[] decode(String encodedString)
     {
-        return com.sun.org.apache.xerces.internal.impl.dv.util.Base64.decode(encodedString);
+          return javax.xml.bind.DatatypeConverter.parseBase64Binary(encodedString);
     }
 }
