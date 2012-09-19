@@ -56,6 +56,15 @@ public class JavaTask
      */
     private int memory = 256;
 
+    /**
+     * Initial PermGen memory size
+     */
+    private int permGenSize = 64;
+    /**
+     * Max PermGen memory size
+     */
+    private int maxPermGenSize = 128;
+
     @NotNull private final List<File>          classPath;
     @NotNull private final List<String>        javaArgs;
     @NotNull private final Map<String, String> properties;
@@ -71,6 +80,8 @@ public class JavaTask
         properties = new HashMap<String, String>();
         javaArgs = new ArrayList<String>();
         memory = 256;
+        permGenSize = 64;
+        maxPermGenSize = 128;
         classPath = new ArrayList<File>();
     }
 
@@ -106,6 +117,8 @@ public class JavaTask
         }
 
         argList.add("-Xmx" + memory + "m");
+        argList.add("-XX:PermSize=" + permGenSize + "m");
+        argList.add("-XX:MaxPermSize=" + maxPermGenSize + "m");
 
         // Pass properties
         for (Map.Entry<String, String> entry : properties.entrySet()) {
@@ -170,6 +183,16 @@ public class JavaTask
     public JavaTask maxMemory(int mb)
     {
         memory = mb;
+        return this;
+    }
+
+    public JavaTask permGenMemory(int mb) {
+        permGenSize = mb;
+        return this;
+    }
+
+    public JavaTask maxPermGenMemory(int mb) {
+        maxPermGenSize = mb;
         return this;
     }
 

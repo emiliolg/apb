@@ -116,6 +116,16 @@ public class TestModule
     @BuildProperty public int memory = 256;
 
     /**
+     * Max. PermGen memory to allocate for the tests (in megabytes).
+     */
+    @BuildProperty public int maxPermGenMemory = 128;
+
+    /**
+     * Initial PermGen memory to allocate for the tests (in megabytes).
+     */
+    @BuildProperty public int permGenMemory = 64;
+
+    /**
      * A custom creator classname
      */
     @BuildProperty public String customCreator;

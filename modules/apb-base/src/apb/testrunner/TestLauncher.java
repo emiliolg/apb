@@ -188,6 +188,9 @@ public class TestLauncher
      */
     @NotNull private final TestReport report;
 
+    private int permGenMemory;
+    private int maxPermGenMemory;
+
     //~ Constructors .........................................................................................
 
     public TestLauncher(final TestModule testModule, @NotNull final File testClasses, List<String> testGroups,
@@ -233,7 +236,11 @@ public class TestLauncher
 
         coverageBuilder = new CoverageBuilder(module);
         coverageBuilder.setEnabled(isCoverageEnabled());
+
         maxMemory = testModule.memory;
+        permGenMemory = testModule.permGenMemory;
+        maxPermGenMemory = testModule.maxPermGenMemory;
+
         environmentVariables = testModule.environment();
         workingDirectory = testModule.workingDirectory;
         testCreator = module.getTestCreator();
@@ -542,6 +549,8 @@ public class TestLauncher
         JavaTask java =
             java(TESTRUNNER_MAIN, args).withClassPath(asStrings(runnerPath))  //
                                        .maxMemory(maxMemory)  //
+                                        .permGenMemory(permGenMemory) //
+                                        .maxPermGenMemory(maxPermGenMemory) //
                                        .withProperties(properties)  //
                                        .withEnvironment(environmentVariables)  //
                                        .onDir(workingDirectory);
